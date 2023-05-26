@@ -26,7 +26,7 @@ gpsmycity_tour_import(urls=['https://www.gpsmycity.com/tours/munich-introduction
 ```
 
 #### Description
-- Imports GPSmyCity guide tours, convertig these to a .gpx file.
+- Imports GPSmyCity guide tours, converting these to a .gpx file.
 
 #### Parameters
 - `urls`: *str list*. List of GPSmyCity guide tours URLs to be imported and converted to .gpx.
@@ -38,7 +38,7 @@ gpsmycity_tour_import(urls=['https://www.gpsmycity.com/tours/munich-introduction
 ### Cycling routes
 
 [Komoot](https://www.komoot.com/discover): to download routes as .gpx files, see the [Komoot](#komoot) section.    
-[Strava](https://www.strava.com/segments/explore): the best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some atheletes, viewing their activities. To download activities as .gpx files, use the [Strava GPX downloader Chrome extension](https://chrome.google.com/webstore/detail/strava-gpx-downloader/pnglhfabfkchkadgnkfacoakincdpeeg).
+[Strava](https://www.strava.com/segments/explore): the best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. To download activities as .gpx files, use the [Strava GPX downloader Chrome extension](https://chrome.google.com/webstore/detail/strava-gpx-downloader/pnglhfabfkchkadgnkfacoakincdpeeg).
 
 
 ## Hiking
@@ -69,8 +69,7 @@ Map base: OpenStreetMap (OSM).
 ([Website](https://www.komoot.de) | [Android](https://play.google.com/store/apps/details?id=de.komoot.android) | [iOS](https://apps.apple.com/app/komoot-route-planner-gps/id447374873))
 
 ### Description
-Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX
-](https://github.com/ThePBone/KomootGPX)).
+Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX)).
 Map base: OpenStreetMap (OSM).
 
 ## Organic Maps
