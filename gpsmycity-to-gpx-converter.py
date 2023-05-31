@@ -1,5 +1,5 @@
 ## GPSmyCity to GPX converter
-# Last update: 2023-05-24
+# Last update: 2023-05-31
 
 
 ###############
@@ -74,7 +74,7 @@ def gpsmycity_tour_import(*, urls):
 
         ## df_segments
 
-        if df_segments.drop_duplicates(keep='first', ignore_index=True).shape == (1, 1) and df_segments.drop_duplicates(keep='first', ignore_index=True)['path'][0] == 'None':
+        if df_segments.drop_duplicates(subset=None, keep='first', ignore_index=True).shape == (1, 1) and df_segments.drop_duplicates(subset=None, keep='first', ignore_index=True)['path'][0] == 'None':
             pass
 
         else:
@@ -119,7 +119,7 @@ def gpsmycity_tour_import(*, urls):
 
 
         # Write segments to .gpx
-        if df_segments.drop_duplicates(keep='first', ignore_index=True).shape == (1, 1) and df_segments.drop_duplicates(keep='first', ignore_index=True)['path'][0] == 'None':
+        if df_segments.drop_duplicates(subset=None, keep='first', ignore_index=True).shape == (1, 1) and df_segments.drop_duplicates(subset=None, keep='first', ignore_index=True)['path'][0] == 'None':
             pass
 
         else:
