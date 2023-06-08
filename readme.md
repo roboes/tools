@@ -10,7 +10,7 @@ This repository contains sports and travel tools and tips (including apps and ut
 
 ### Usage
 
-[gpsmycity-to-gpx-converter.py](https://github.com/roboes/travel-tools/blob/main/gpsmycity-to-gpx-converter.py) is a script that downloads one or more self-guided GPSmyCity tours URLs as .gpx files. The .gpx files can be imported directly or converted to .kml and be used in multiple apps (see [here](#apps)).
+[gpsmycity-to-gpx-converter.py](https://github.com/roboes/travel-tools/blob/main/gpsmycity-to-gpx-converter.py) is a script that downloads one or more self-guided GPSmyCity tours URLs as .gpx files. The .gpx files can be used in multiple apps (see [here](#apps)).
 
 ### Python dependencies
 
@@ -52,8 +52,6 @@ gpsmycity_tour_import(urls=['https://www.gpsmycity.com/tours/munich-introduction
 Files can be downloaded as a .gpx files and imported in apps (see [here](#apps)) or fitness devices (e.g. Garmin devices).
 
 # Apps
-
-Although .gpx has grown in popularity in recent years, not all of the apps listed below allow you to import them directly. Some apps (e.g. Organic Maps) require the conversion of .gpx to .kml in order to be imported. There are plenty of online tools that perform such conversion (e.g. [Gpx2kml.com](https://gpx2kml.com)).
 
 ## OsmAnd
 ([Website](https://osmand.net) | [GitHub](https://github.com/osmandapp/OsmAnd) | [Android](https://play.google.com/store/apps/details?id=net.osmand.plus) | [iOS](https://apps.apple.com/app/apple-store/id934850257))
