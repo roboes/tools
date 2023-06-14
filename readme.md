@@ -6,6 +6,23 @@ This repository contains sports and travel tools and tips (including apps and ut
 
 # Tools
 
+## Garmin Data Export Tools
+
+### Usage
+
+[garmin_data_export_tools.py](https://github.com/roboes/sports-travel-tools/blob/main/garmin_data_export_tools.py) is a script that perform a series of transformations to the [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/). The main features are:
+- Change wrong activities filetype from .txt to .tcx, delete or move empty .fit activities files.
+- Distribute files into multiple subfolders of up to 15 activities (to facilitate the upload of activities files to Strava).
+- Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload).
+- Simple script to check which activities from Garmin Connect are already on Strava.
+
+### Python dependencies
+
+```.ps1
+python -m pip install pandas python-dateutil requests
+```
+
+
 ## GPSmyCity to GPX converter
 
 ### Usage

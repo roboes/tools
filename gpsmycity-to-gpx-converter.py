@@ -133,7 +133,7 @@ def gpsmycity_tour_import(*, urls):
 
 
         # Save .gpx file
-        with open('{}.gpx'.format(secure_filename(filename=tour_name)), mode='w', encoding='utf8') as file_out:
+        with open(path='{}.gpx'.format(secure_filename(filename=tour_name)), mode='w', encoding='utf8') as file_out:
             file_out.write(gpx.to_xml())
 
 
