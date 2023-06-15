@@ -1,5 +1,5 @@
 ## Garmin Data Export Tools
-# Last update: 2023-06-14
+# Last update: 2023-06-15
 
 
 ###############
@@ -13,12 +13,15 @@ globals().clear()
 # Import packages
 import glob
 from io import BytesIO
+import json
 import os
 from pathlib import Path
+import re
 import shutil
 from zipfile import ZipFile
 
 from dateutil import parser
+import numpy as np
 import pandas as pd
 import requests
 
@@ -179,7 +182,7 @@ def tcx_combine(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Fil
     # Combine files
     for file in files:
 
-        with open(path=file, mode='rb', encoding=None) as file_in:
+        with open(file, mode='rb', encoding=None) as file_in:
 
             file_text = file_in.readlines()
 
@@ -194,47 +197,216 @@ def tcx_combine(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Fil
     # text.append(b'\n')
     # text.append(b'</TrainingCenterDatabase>')
 
-    with open(path=os.path.join(directory, file_name), mode='wb', encoding=None) as file_out:
+    with open(os.path.join(directory, file_name), mode='wb', encoding=None) as file_out:
         file_out.writelines(text)
 
 
 
+# Import Garmin Connect activities to DataFrame
+def activities_garmin_import(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Fitness', 'summarizedActivities.json')):
+
+    with open(directory) as file_in:
+        file = json.load(fp=file_in)
+
+    file = json.dumps(obj=file)
+    file = re.sub(pattern=r'\[{"summarizedActivitiesExport": ', repl='', string=file)
+    file = re.sub(pattern=r'}]$', repl='', string=file)
+
+
+    activities_garmin = (pd.json_normalize(data=json.loads(s=file), max_level=None)
+
+        # Rename columns
+        .rename(columns={'activityId': 'activity_id', 'name': 'activity_name', 'activityType': 'activity_type', 'userProfileId': 'athlete_id', 'startTimeGmt': 'activity_date_gmt', 'startTimeLocal': 'activity_date', 'elevationGain': 'elevation_gain', 'avgSpeed': 'average_speed', 'maxSpeed': 'max_speed', 'avgHr': 'average_heart_rate', 'maxHr':'max_heart_rate', 'avgRunCadence': 'average_cadence', 'maxRunCadence':  'max_cadence', 'elapsedDuration': 'elapsed_time', 'movingDuration': 'moving_time', 'deviceId': 'device_id', 'locationName': 'activity_location', 'manufacturer': 'activity_device'})
+
+        # Change dtypes
+        .assign(activity_date_gmt = lambda row: pd.to_datetime(row['activity_date_gmt'], unit='ms'))
+        .assign(activity_date = lambda row: pd.to_datetime(row['activity_date'], unit='ms'))
+
+        # Create 'treadmill_running' column
+        .assign(treadmill_running = lambda row: np.where(row['activity_type'] == 'treadmill_running', 1, 0))
+
+
+        ## Transform columns
+
+        # activity_type
+        .assign(activity_type = lambda row: row['activity_type'].replace(to_replace=r'^running$|^treadmill_running$', value='Run', regex=True))
+        .assign(activity_type = lambda row: row['activity_type'].replace(to_replace=r'^other$', value='Other', regex=True))
+
+        # elapsed_time
+        .assign(elapsed_time = lambda row: row['elapsed_time']/1000) # to seconds
+
+        # moving_time
+        .assign(moving_time = lambda row: row['moving_time']/1000) # to seconds
+
+        # duration
+        .assign(duration = lambda row: row['duration']/1000) # to seconds
+
+        # distance
+        .assign(distance = lambda row: row['distance']/100) # to meters
+
+        # elevation_gain
+        .assign(elevation_gain = lambda row: row['elevation_gain']/100) # to meters
+
+
+        # Select columns
+        .filter(items=['activity_date_gmt', 'activity_date', 'athlete_id', 'activity_type', 'treadmill_running', 'activity_id', 'activity_name', 'activity_location', 'elapsed_time', 'moving_time', 'duration', 'distance', 'max_speed', 'average_speed', 'steps', 'elevation_gain', 'max_heart_rate', 'average_heart_rate', 'max_cadence', 'average_cadence', 'calories', 'activity_device', 'device_id'])
+
+        # Remove columns
+        .drop(columns=['activity_date_gmt'], axis=1)
+
+        # Rearrange rows
+        .sort_values(by=['activity_date'], ignore_index=True)
+
+    )
+
+
+    # Return objects
+    return activities_garmin
+
+
+
+# Check which activities from Garmin Connect are already on Strava (https://www.statshunters.com/activities)
+def activities_garmin_compare(*, activities_garmin, activities_strava='activities_strava.xlsx'):
+
+    activities_garmin = (activities_garmin
+
+        # Create 'activity_date_cleaned' column
+        .assign(activity_date_cleaned = lambda row: row['activity_date'].dt.strftime('%Y-%m-%d 00:%M:00'))
+
+    )
+
+
+    activities_strava = (pd.read_excel(io=activities_strava, sheet_name='Activities', header=0, index_col=None, skiprows=0, skipfooter=0, dtype=None, engine='openpyxl')
+
+        # Rename columns
+        .rename(columns={'Date': 'activity_date', 'Name': 'activity_name_strava', 'Moving time': 'moving_time_strava', 'Elapsed time': 'elapsed_time_strava', 'Distance (m)': 'distance_strava', 'Elevation (m)': 'elevation_gain_strava', 'Type': 'activity_type', 'Max heartrate': 'max_heart_rate_strava', 'Avg heartrate': 'average_heart_rate_strava'})
+
+        # Change dtypes
+        .assign(activity_date = lambda row: row['activity_date'].apply(parser.parse))
+
+        # Select columns
+        .filter(items=['activity_date', 'activity_date_cleaned', 'activity_type', 'activity_name_strava', 'elapsed_time_strava', 'moving_time_strava', 'distance_strava', 'elevation_gain_strava', 'max_heart_rate_strava', 'average_heart_rate_strava'])
+
+        # Rearrange rows
+        .sort_values(by=['activity_date'], ignore_index=True)
+
+    )
+
+
+    activities_strava = (activities_strava
+
+        # Create 'activity_date_cleaned' column
+        .assign(activity_date_cleaned = lambda row: row['activity_date'].dt.strftime('%Y-%m-%d 00:%M:00'))
+
+    )
+
+
+    activities_garmin_compare_1 = (activities_garmin
+        .query('activity_type != "Other"')
+        .merge(activities_strava.drop(['activity_date'], axis=1), how='left', on=['activity_date_cleaned', 'activity_type'], indicator=True)
+    )
+
+
+    activities_garmin_compare_2 = (activities_garmin
+        .query('activity_type == "Other"')
+        .merge(activities_strava.drop(['activity_date', 'activity_type'], axis=1), how='left', on=['activity_date_cleaned'], indicator=True)
+    )
+
+
+    activities_garmin_compare = (pd.concat(objs=[activities_garmin_compare_1, activities_garmin_compare_2], axis=0, ignore_index=True, sort=False)
+
+        # Transform columns
+        .assign(
+            elapsed_time_difference = lambda row: row['elapsed_time'] - row['elapsed_time_strava'],
+            moving_time_difference = lambda row: row['moving_time'] - row['moving_time_strava'],
+            distance_difference = lambda row: round(number=row['distance'], ndigits=2) - round(number=row['distance_strava'], ndigits=2)
+        )
+
+        # Select columns
+        .filter(items=['_merge', 'activity_date', 'athlete_id', 'activity_type', 'treadmill_running', 'activity_id', 'activity_name', 'activity_name_strava', 'activity_location', 'elapsed_time', 'elapsed_time_strava', 'elapsed_time_difference', 'moving_time', 'moving_time_strava', 'moving_time_difference', 'duration', 'distance', 'distance_strava', 'distance_difference', 'max_speed', 'average_speed', 'steps', 'elevation_gain', 'elevation_gain_strava', 'max_heart_rate', 'max_heart_rate_strava', 'average_heart_rate', 'average_heart_rate_strava', 'max_cadence', 'average_cadence', 'calories', 'activity_device', 'device_id'])
+
+        # Rearrange rows
+        .sort_values(by=['_merge', 'activity_date'], ignore_index=True)
+
+    )
+
+
+    # Delete objects
+    del activities_garmin_compare_1, activities_garmin_compare_2
+
+    # Return objects
+    return activities_garmin_compare
+
+
+
+# For not matched activities, use Torben's Strava Äpp (https://entorb.net/strava/) to import remaining activities (template Excel: https://entorb.net/strava/download/StravaImportTemplate.xlsx)
+def activities_garmin_compare_not_matched(*, activities_garmin_compare):
+
+    activities_garmin_strava_excel_import = (activities_garmin_compare
+
+        # Filter rows
+        .query('_merge == "left_only"')
+
+        # Create empty 'activity_description' column
+        .assign(activity_description = '')
+
+        # Create empty 'commute' column
+        .assign(commute = 0)
+
+        # Create empty 'activity_gear' column
+        .assign(activity_gear = '')
+
+        # Rename columns
+        .rename(columns={'activity_date': 'Date', 'activity_type': 'Type', 'treadmill_running': 'OnTrainer*', 'activity_name': 'Name', 'activity_description': 'Description*', 'commute': 'Commute*', 'activity_gear': 'Gear ID*', 'moving_time': 'Duration (s) (1)', 'duration': 'Duration (s) (2)', 'distance': 'Distance (m)*', 'elevation_gain': 'Elevation gain*'
+        })
+
+
+        # Select columns
+        .filter(items=['Type', 'Date', 'Duration (s) (1)', 'Duration (s) (2)', 'Distance (m)*', 'Name', 'Description*', 'Commute*', 'OnTrainer*', 'Elevation gain*', 'Gear ID*'])
+
+    )
+
+
+    # Return objects
+    return activities_garmin_strava_excel_import
+
+
+
+
+##########################
+# Garmin Data Export Tools
+##########################
+
 # Extract .zip files
 zip_extract()
+
 
 # Change filetype from .txt to .tcx
 change_filetype()
 
+
 # Empty .fit activities files: move to 'ACTIVITIES_EMPTY' folder or delete
 activities_empty(action='delete')
+
 
 # Distribute files into multiple subfolders of up to 15 activities
 # distribute_files(increment=15)
 
+
 # Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload)
 tcx_combine(file_name='all_activities_tcx.tcx')
 
-# Check which activities from Garmin Connect (https://connect.garmin.com/modern/activities) are already on Strava (https://www.statshunters.com/activities)
-activities_garmin = (pd.read_csv(filepath_or_buffer='activities_garmin.csv', sep=',', header=0, index_col=None, skiprows=0, skipfooter=0, dtype=None, engine='python', encoding='utf8')
-    .rename(columns={'Date': 'activity_date', 'Activity Type': 'activity_type', 'Title': 'activity_name_garmin', 'Distance': 'distance_garmin'})
-    .assign(activity_date = lambda row: row['activity_date'].apply(parser.parse))
-    .sort_values(by=['activity_date'], ignore_index=True)
-    .assign(activity_date_cleaned = lambda row: row['activity_date'].dt.strftime('%Y-%m-%d 00:%M:00'))
-    .filter(items=['activity_date', 'activity_date_cleaned', 'activity_type', 'activity_name_garmin', 'distance_garmin'])
-    .assign(activity_type = lambda row: row['activity_type'].replace(to_replace=r'^Running$|^Treadmill Running$', value='Run', regex=True))
-)
 
-activities_strava = (pd.read_excel(io='activities_strava.xlsx', sheet_name='Activities', header=0, index_col=None, skiprows=0, skipfooter=0, dtype=None, engine='openpyxl')
-    .rename(columns={'Date': 'activity_date', 'Type': 'activity_type', 'Name': 'activity_name_strava', 'Distance (m)': 'distance_strava'})
-    .assign(activity_date = lambda row: row['activity_date'].apply(parser.parse))
-    .sort_values(by=['activity_date'], ignore_index=True)
-    .assign(activity_date_cleaned = lambda row: row['activity_date'].dt.strftime('%Y-%m-%d 00:%M:00'))
-    .filter(items=['activity_date_cleaned', 'activity_type', 'activity_name_strava', 'distance_strava'])
-    .assign(distance_strava = lambda row: row['distance_strava']/1000)
-)
+# Import Garmin Connect activities to DataFrame
+activities_garmin = activities_garmin_import()
 
-activities_garmin = (activities_garmin
-    .merge(activities_strava, how='left', on=['activity_date_cleaned', 'activity_type'], indicator=True)
-    .assign(distance_difference = lambda row: row['distance_strava'] - row['distance_garmin'])
-    .filter(items=['activity_date', 'activity_type', 'activity_name_garmin', 'activity_name_strava', 'distance_garmin', 'distance_strava', 'distance_difference', '_merge'])
-)
+
+# Check which activities from Garmin Connect are already on Strava (https://www.statshunters.com/activities)
+# 'distance_difference' of up to 20 meters is acceptable
+activities_garmin_test = activities_garmin_compare(activities_garmin=activities_garmin, activities_strava='activities_strava.xlsx')
+# activities_garmin_test.to_clipboard(excel=True, sep=None, index=False)
+
+
+# For not matched activities, use Torben's Strava Äpp (https://entorb.net/strava/) to import remaining activities (template Excel: https://entorb.net/strava/download/StravaImportTemplate.xlsx)
+# activities_garmin_strava_excel_import = activities_garmin_compare_not_matched(activities_garmin_compare=activities_garmin_test)
+# activities_garmin_strava_excel_import.to_clipboard(excel=True, sep=None, index=False)
