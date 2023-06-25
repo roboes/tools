@@ -252,7 +252,7 @@ def activities_garmin_import(*, directory=os.path.join('DI_CONNECT', 'DI-Connect
         .filter(items=['activity_date_gmt', 'activity_date', 'athlete_id', 'activity_type', 'treadmill_running', 'activity_id', 'activity_name', 'activity_location', 'elapsed_time', 'moving_time', 'duration', 'distance', 'max_speed', 'average_speed', 'steps', 'elevation_gain', 'max_heart_rate', 'average_heart_rate', 'max_cadence', 'average_cadence', 'calories', 'activity_device', 'device_id'])
 
         # Remove columns
-        .drop(columns=['activity_date_gmt'], axis=1)
+        .drop(columns=['activity_date_gmt'], axis=1, errors='ignore')
 
         # Rearrange rows
         .sort_values(by=['activity_date'], ignore_index=True)
@@ -303,13 +303,13 @@ def activities_garmin_compare(*, activities_garmin, activities_strava='activitie
 
     activities_garmin_compare_1 = (activities_garmin
         .query('activity_type != "Other"')
-        .merge(activities_strava.drop(['activity_date'], axis=1), how='left', on=['activity_date_cleaned', 'activity_type'], indicator=True)
+        .merge(activities_strava.drop(columns=['activity_date'], axis=1, errors='ignore'), how='left', on=['activity_date_cleaned', 'activity_type'], indicator=True)
     )
 
 
     activities_garmin_compare_2 = (activities_garmin
         .query('activity_type == "Other"')
-        .merge(activities_strava.drop(['activity_date', 'activity_type'], axis=1), how='left', on=['activity_date_cleaned'], indicator=True)
+        .merge(activities_strava.drop(columns=['activity_date', 'activity_type'], axis=1, errors='ignore'), how='left', on=['activity_date_cleaned'], indicator=True)
     )
 
 

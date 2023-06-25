@@ -6,6 +6,20 @@ This repository contains sports and travel tools and tips (including apps and ut
 
 # Tools
 
+## Apple Health Export Tools
+
+### Usage
+
+[apple_health_export_tools.py](https://github.com/roboes/sports-travel-tools/blob/main/apple_health_export_tools.py) is a script that perform a series of transformations to the [Apple Health .xml Export](https://support.apple.com/guide/iphone/share-your-health-data-iph5ede58c3d/ios). The main features are:
+- Import Apple Health workouts/activities to a DataFrame and convert/save them as .tcx files (to upload to Strava).
+
+### Python dependencies
+
+```.ps1
+python -m pip install numpy pandas python-dateutil
+```
+
+
 ## Garmin Data Export Tools
 
 ### Usage
@@ -13,7 +27,7 @@ This repository contains sports and travel tools and tips (including apps and ut
 [garmin_data_export_tools.py](https://github.com/roboes/sports-travel-tools/blob/main/garmin_data_export_tools.py) is a script that perform a series of transformations to the [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/). The main features are:
 - Change wrong activities filetype from .txt to .tcx, delete or move empty .fit activities files.
 - Distribute files into multiple subfolders of up to 15 activities (to facilitate the upload of activities files to Strava).
-- Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload).
+- Combine multiple .tcx activity files into one .tcx file (to bulk upload to Strava - Strava will automatically separate/split these activities after upload).
 - Simple script to check which activities from Garmin Connect are already on Strava.
 
 ### Python dependencies
@@ -93,6 +107,12 @@ Map base: OpenStreetMap (OSM).
 ### Description
 Fork of Maps.me, is a simple and intuitive app for accessing the OpenStreetMap (OSM) map base offline. In some countries, OSM is better than Google Maps and HERE WeGo (e.g. the Morocco's medinas were not mapped in Google Maps/HERE WeGo maps base). It also allows to easily find Sight amenities (e.g. all Plitvice Lakes view points).
 
+
 # Useful links
 
 [Amenities available on OSM](https://wiki.openstreetmap.org/wiki/Key:amenity)
+
+
+# See also
+
+[Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): download Nike Run Club activities and convert them to .gpx.
