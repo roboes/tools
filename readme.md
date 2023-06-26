@@ -115,4 +115,5 @@ Fork of Maps.me, is a simple and intuitive app for accessing the OpenStreetMap (
 
 # See also
 
-[Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): download Nike Run Club activities and convert them to .gpx.
+[Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): download Nike Run Club activities and convert them to .gpx.  
+[Torben's Strava Äpp](https://entorb.net/strava/): set of Strava tools, including the feature to import activities from an Excel/.csv to Strava.
