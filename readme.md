@@ -82,7 +82,15 @@ gpsmycity_tour_import(urls=['https://www.gpsmycity.com/tours/munich-introduction
 
 Files can be downloaded as a .gpx files and imported in apps (see [here](#apps)) or fitness devices (e.g. Garmin devices).
 
+
 # Apps
+
+## Organic Maps
+([Website](https://organicmaps.app) | [GitHub](https://github.com/organicmaps/organicmaps) | [Android](https://play.google.com/store/apps/details?id=app.organicmaps) | [iOS](https://apps.apple.com/app/organic-maps/id1567437057))
+
+### Description
+Fork of Maps.me, is a simple and intuitive app for accessing the OpenStreetMap (OSM) map base offline. In some countries, OSM is better than Google Maps and HERE WeGo (e.g. the Morocco's medinas were not mapped in Google Maps/HERE WeGo maps base). It also allows to easily find Sight amenities (e.g. all Plitvice Lakes view points).
+
 
 ## OsmAnd
 ([Website](https://osmand.net) | [GitHub](https://github.com/osmandapp/OsmAnd) | [Android](https://play.google.com/store/apps/details?id=net.osmand.plus) | [iOS](https://apps.apple.com/app/apple-store/id934850257))
@@ -94,6 +102,7 @@ Map base: OpenStreetMap (OSM).
 ### Add-ons  
 [Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
 
+
 ## Komoot
 ([Website](https://www.komoot.de) | [Android](https://play.google.com/store/apps/details?id=de.komoot.android) | [iOS](https://apps.apple.com/app/komoot-route-planner-gps/id447374873))
 
@@ -101,11 +110,12 @@ Map base: OpenStreetMap (OSM).
 Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX)).
 Map base: OpenStreetMap (OSM).
 
-## Organic Maps
-([Website](https://organicmaps.app) | [GitHub](https://github.com/organicmaps/organicmaps) | [Android](https://play.google.com/store/apps/details?id=app.organicmaps) | [iOS](https://apps.apple.com/app/organic-maps/id1567437057))
+
+## Mapy.cz
+([Website](https://mapy.cz) | [Android](https://play.google.com/store/apps/details?id=cz.seznam.mapy) | [iOS](https://apps.apple.com/app/mapy-cz-navigation-maps/id411411020))
 
 ### Description
-Fork of Maps.me, is a simple and intuitive app for accessing the OpenStreetMap (OSM) map base offline. In some countries, OSM is better than Google Maps and HERE WeGo (e.g. the Morocco's medinas were not mapped in Google Maps/HERE WeGo maps base). It also allows to easily find Sight amenities (e.g. all Plitvice Lakes view points).
+With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting cycle and hiking paths. For cycling navigation, it displays the additional distance and time for altenative routes on the go.
 
 
 # Useful links
