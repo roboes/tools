@@ -6,6 +6,10 @@
 # gh auth login
 
 
+# Git ignore
+# https://github.com/github/gitignore/blob/main/Python.gitignore
+
+
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
 wsl
 
