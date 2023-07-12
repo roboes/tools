@@ -1,8 +1,9 @@
-:::: Windows Package Manager Applications
-:: Last update: 2023-07-10
+## Windows Package Manager Applications
+# Last update: 2023-07-12
 
 
-:: Install 
+# Install applications
+winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id=Python.Python.3.11
 winget install --exact --id=Posit.RStudio
 winget install --exact --id=7zip.7zip
@@ -11,12 +12,18 @@ winget install --exact --id=VideoLAN.VLC
 winget install --exact --id=IDRIX.VeraCrypt
 winget install --exact --id=RProject.R
 winget install --exact --id=RProject.Rtools
+winget install --exact --id=SumatraPDF.SumatraPDF
+winget install --exact --id=DuongDieuPhap.ImageGlass
 
 
-:: Install Windows Subsystem for Linux (WSL)
-:: wsl --install
+# Update applications
+winget upgrade -h --all
 
-:: Start Windows Subsystem for Linux (WSL) (required only on Windows)
+
+# Install Windows Subsystem for Linux (WSL)
+# wsl --install
+
+# Start Windows Subsystem for Linux (WSL) (required only on Windows)
 wsl
 
 # Homebrew install
