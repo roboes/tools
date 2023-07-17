@@ -1,9 +1,16 @@
 ## Git Tools
-# Last update: 2023-07-06
+# Last update: 2023-07-17
 
 
 ## Login to GitHub
+# gh auth setup-git
 # gh auth login
+
+# Display git custom settings
+# git config --list
+
+# Remove git custom settings
+# rm ~/.gitconfig
 
 
 # Git ignore
