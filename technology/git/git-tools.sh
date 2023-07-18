@@ -2,7 +2,7 @@
 # Last update: 2023-07-17
 
 
-## Login to GitHub
+## GitHub login
 # gh auth setup-git
 # gh auth login
 
@@ -11,6 +11,11 @@
 
 # Remove git custom settings
 # rm ~/.gitconfig
+
+
+## Git settings
+# git config --global user.email "you@example.com"
+# git config --global user.name "Your Name"
 
 
 # Git ignore
