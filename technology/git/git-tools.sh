@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-07-17
+# Last update: 2023-07-19
 
 
 ## GitHub login
@@ -42,6 +42,9 @@ fi
 # Set working directory
 cd $repository
 
+
+## Pre-commit
+# pre-commit run -a
 
 
 ## Git push
