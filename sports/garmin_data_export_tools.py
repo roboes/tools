@@ -32,7 +32,7 @@ import requests
 with ZipFile(
     file=BytesIO(
         initial_bytes=requests.get(
-            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip',
+            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip', timeout=5,
         ).content,
     ),
     mode='r',
@@ -194,7 +194,7 @@ def tcx_combine(
 
     # Combine files
     for file in files:
-        with open(file, mode='rb', encoding=None) as file_in:
+        with open(file, mode='r', encoding=None) as file_in:
             file_text = file_in.readlines()
 
             # index_activity_start = [index for index, item in enumerate(file_text) if item.endswith(b'<Activities>\n')][0]
@@ -207,7 +207,7 @@ def tcx_combine(
     # text.append(b'\n')
     # text.append(b'</TrainingCenterDatabase>')
 
-    with open(os.path.join(directory, file_name), mode='wb', encoding=None) as file_out:
+    with open(os.path.join(directory, file_name), mode='w', encoding=None) as file_out:
         file_out.writelines(text)
 
 

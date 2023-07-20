@@ -111,11 +111,11 @@ def activities_apple_health_import(
     # Merge distance columns into one
     activities_apple_health['distance'] = activities_apple_health[
         'distance_cycling'
-    ].fillna(activities_apple_health['distance_walking_running'])
+    ].fillna(value=activities_apple_health['distance_walking_running'], method=None, axis=0)
 
     activities_apple_health['distance_unit'] = activities_apple_health[
         'distance_cycling_unit'
-    ].fillna(activities_apple_health['distance_walking_running_unit'])
+    ].fillna(value=activities_apple_health['distance_walking_running_unit'], method=None, axis=0)
 
     # Create 'max_speed_unit' column
     activities_apple_health['max_speed_unit'] = activities_apple_health[
@@ -306,7 +306,7 @@ def activities_apple_health_to_strava(
     )
 
     # Change dtypes
-    activities_apple_health = activities_apple_health.fillna(value='')
+    activities_apple_health = activities_apple_health.fillna(value='', method=None, axis=0)
 
     for index, row in activities_apple_health.iterrows():
         # Create .tcx file content (https://developers.strava.com/docs/uploads/)
@@ -454,7 +454,7 @@ def tcx_combine(*, directory='Activities Output', file_name='all_activities_tcx.
 
     # Combine files
     for file in files:
-        with open(file, mode='rb', encoding=None) as file_in:
+        with open(file, mode='r', encoding=None) as file_in:
             file_text = file_in.readlines()
 
             # index_activity_start = [index for index, item in enumerate(file_text) if item.endswith(b'<Activities>\n')][0]
@@ -467,7 +467,7 @@ def tcx_combine(*, directory='Activities Output', file_name='all_activities_tcx.
     # text.append(b'\n')
     # text.append(b'</TrainingCenterDatabase>')
 
-    with open(os.path.join(directory, file_name), mode='wb', encoding=None) as file_out:
+    with open(os.path.join(directory, file_name), mode='w', encoding=None) as file_out:
         file_out.writelines(text)
 
 
