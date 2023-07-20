@@ -32,7 +32,8 @@ import requests
 with ZipFile(
     file=BytesIO(
         initial_bytes=requests.get(
-            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip', timeout=5,
+            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip',
+            timeout=5,
         ).content,
     ),
     mode='r',
@@ -188,26 +189,30 @@ def tcx_combine(
 
     # Create .tcx file content
     text = []
-    # text.append(b'<?xml version="1.0" encoding="UTF-8"?>\n')
-    # text.append(b'<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">\n')
-    # text.append(b'\n')
+    # text.append('<?xml version="1.0" encoding="UTF-8"?>\n')
+    # text.append('<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">\n')
+    # text.append('\n')
 
     # Combine files
     for file in files:
-        with open(file, mode='r', encoding=None) as file_in:
+        with open(file, encoding='utf8') as file_in:
             file_text = file_in.readlines()
 
             # index_activity_start = [index for index, item in enumerate(file_text) if item.endswith(b'<Activities>\n')][0]
             # index_activity_end = [index for index, item in enumerate(file_text) if item.endswith(b'</Activities>\n')][0]
 
             text.extend(file_text)
-            text.append(b'\n')
-            text.append(b'\n')
+            text.append('\n')
+            text.append('\n')
 
     # text.append(b'\n')
     # text.append(b'</TrainingCenterDatabase>')
 
-    with open(os.path.join(directory, file_name), mode='w', encoding=None) as file_out:
+    with open(
+        os.path.join(directory, file_name),
+        mode='w',
+        encoding='utf8',
+    ) as file_out:
         file_out.writelines(text)
 
 

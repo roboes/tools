@@ -111,11 +111,19 @@ def activities_apple_health_import(
     # Merge distance columns into one
     activities_apple_health['distance'] = activities_apple_health[
         'distance_cycling'
-    ].fillna(value=activities_apple_health['distance_walking_running'], method=None, axis=0)
+    ].fillna(
+        value=activities_apple_health['distance_walking_running'],
+        method=None,
+        axis=0,
+    )
 
     activities_apple_health['distance_unit'] = activities_apple_health[
         'distance_cycling_unit'
-    ].fillna(value=activities_apple_health['distance_walking_running_unit'], method=None, axis=0)
+    ].fillna(
+        value=activities_apple_health['distance_walking_running_unit'],
+        method=None,
+        axis=0,
+    )
 
     # Create 'max_speed_unit' column
     activities_apple_health['max_speed_unit'] = activities_apple_health[
@@ -306,7 +314,11 @@ def activities_apple_health_to_strava(
     )
 
     # Change dtypes
-    activities_apple_health = activities_apple_health.fillna(value='', method=None, axis=0)
+    activities_apple_health = activities_apple_health.fillna(
+        value='',
+        method=None,
+        axis=0,
+    )
 
     for index, row in activities_apple_health.iterrows():
         # Create .tcx file content (https://developers.strava.com/docs/uploads/)
@@ -448,26 +460,30 @@ def tcx_combine(*, directory='Activities Output', file_name='all_activities_tcx.
 
     # Create .tcx file content
     text = []
-    # text.append(b'<?xml version="1.0" encoding="UTF-8"?>\n')
-    # text.append(b'<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">\n')
-    # text.append(b'\n')
+    # text.append('<?xml version="1.0" encoding="UTF-8"?>\n')
+    # text.append('<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">\n')
+    # text.append('\n')
 
     # Combine files
     for file in files:
-        with open(file, mode='r', encoding=None) as file_in:
+        with open(file, encoding='utf8') as file_in:
             file_text = file_in.readlines()
 
             # index_activity_start = [index for index, item in enumerate(file_text) if item.endswith(b'<Activities>\n')][0]
             # index_activity_end = [index for index, item in enumerate(file_text) if item.endswith(b'</Activities>\n')][0]
 
             text.extend(file_text)
-            text.append(b'\n')
-            text.append(b'\n')
+            text.append('\n')
+            text.append('\n')
 
     # text.append(b'\n')
     # text.append(b'</TrainingCenterDatabase>')
 
-    with open(os.path.join(directory, file_name), mode='w', encoding=None) as file_out:
+    with open(
+        os.path.join(directory, file_name),
+        mode='w',
+        encoding='utf8',
+    ) as file_out:
         file_out.writelines(text)
 
 
