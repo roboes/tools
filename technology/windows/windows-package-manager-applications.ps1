@@ -39,6 +39,8 @@ ulimit -n 8192
 brew install exiftool
 brew install gh
 brew install git
+brew install python@3.11
+sudo update-alternatives --install /usr/bin/python python $(readlink -f $(which python3)) 3
 # brew install imagemagick
 # brew install qpdf
 
