@@ -4,7 +4,7 @@
 
 ### Usage
 
-[apple_health_export_tools.py](apple_health_export_tools.py) is a script that perform a series of transformations to the [Apple Health .xml Export](https://support.apple.com/guide/iphone/share-your-health-data-iph5ede58c3d/ios). The main features are:
+[apple_health_export_tools.py](apple_health_export_tools.py) is a script that performs a series of transformations to the [Apple Health .xml Export](https://support.apple.com/guide/iphone/share-your-health-data-iph5ede58c3d/ios). The main features are:
 - Import Apple Health workouts/activities to a DataFrame and convert/save them as .tcx files (to upload to Strava).
 
 ### Python dependencies
@@ -18,7 +18,7 @@ python -m pip install numpy pandas python-dateutil
 
 ### Usage
 
-[garmin_data_export_tools.py](garmin_data_export_tools.py) is a script that perform a series of transformations to the [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/). The main features are:
+[garmin_data_export_tools.py](garmin_data_export_tools.py) is a script that performs a series of transformations to the [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/). The main features are:
 - Change wrong activities filetype from .txt to .tcx, delete or move empty .fit activities files.
 - Distribute files into multiple subfolders of up to 15 activities (to facilitate the upload of activities files to Strava).
 - Combine multiple .tcx activity files into one .tcx file (to bulk upload to Strava - Strava will automatically separate/split these activities after upload).
@@ -77,7 +77,7 @@ Map base: OpenStreetMap (OSM).
 ([Website](https://mapy.cz) | [Android](https://play.google.com/store/apps/details?id=cz.seznam.mapy) | [iOS](https://apps.apple.com/app/mapy-cz-navigation-maps/id411411020))
 
 ### Description
-With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting cycle and hiking paths. For cycling navigation, it displays the additional distance and time for altenative routes on the go.
+With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting cycle and hiking paths. For cycling navigation, it displays the additional distance and time for alternative routes on the go.
 
 
 # Useful links

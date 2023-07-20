@@ -4,7 +4,7 @@
 
 ### Usage
 
-[gpsmycity-to-gpx-converter.py](gpsmycity-to-gpx-converter.py) is a script that downloads one or more self-guided GPSmyCity tours URLs as .gpx files. The .gpx files can be used in multiple apps (see [here](#apps)).
+[gpsmycity-to-gpx-converter.py](gpsmycity-to-gpx-converter.py) is a script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files. The .gpx files can be used in multiple apps (see [here](#apps)).
 
 ### Python dependencies
 
