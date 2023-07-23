@@ -1,5 +1,5 @@
 ## GitHub Actions Workflow
-# Last update: 2023-07-20
+# Last update: 2023-07-23
 
 
 # Save this file to '.github/workflows/github-actions-workflow.yaml'
@@ -39,9 +39,11 @@ jobs:
 
       - name: Install Google Chrome - https://github.com/browser-actions/setup-chrome
         uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
 
 
-      - name: Setup Python - https://github.com/actions/checkout
+      - name: Setup Python - https://github.com/actions/setup-python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x' #  Latest stable major version of Python
