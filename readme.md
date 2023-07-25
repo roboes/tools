@@ -2,4 +2,4 @@
 
 ## Description
 
-This repository contains various tools.
+This repository contains a set of tools.

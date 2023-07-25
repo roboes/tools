@@ -221,3 +221,6 @@ magick mogrify -monitor -format jpg "$directory/*.HEIC"
 
 # Reduce file size
 magick mogrify -monitor -resize 50% "$directory/*.HEIC"
+
+# Replace all colors except background in .png image with white
+magick convert "$directory/input.png" -fill white -colorize 100 "$directory/output.png"
