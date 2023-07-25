@@ -37,17 +37,17 @@ python -m pip install pandas python-dateutil requests
 
 ### Cycling routes
 
-[Komoot](https://www.komoot.com/discover): to download routes as .gpx files, see the [Komoot](#komoot) section.
-[Strava](https://www.strava.com/segments/explore): the best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. To download activities as .gpx files, use the [Strava GPX downloader Chrome extension](https://chrome.google.com/webstore/detail/strava-gpx-downloader/pnglhfabfkchkadgnkfacoakincdpeeg).
+[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.
+[Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.
 
 
 ## Hiking
 
 ### Hiking routes
-[Komoot](https://www.komoot.com/discover): to download routes as .gpx files, see the [Komoot](#komoot) section.
-[AllTrails](https://www.alltrails.com/explore): requires login to download routes as .gpx.
-[Outdooractive](https://www.outdooractive.com/en/routes/): requires login to download routes as .gpx.
-[Hiking Buddies](https://www.hiking-buddies.com/routes/routes_list/): does not require a login to download routes as .gpx.
+[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.
+[AllTrails](https://www.alltrails.com/explore): Requires login to download routes as .gpx.
+[Outdooractive](https://www.outdooractive.com/en/routes/): Requires login to download routes as .gpx.
+[Hiking Buddies](https://www.hiking-buddies.com/routes/routes_list/): Does not require a login to download routes as .gpx.
 
 Files can be downloaded as a .gpx files and imported in apps (see [here](#apps)) or fitness devices (e.g. Garmin devices).
 
@@ -62,14 +62,14 @@ Excellent app for cycling and hiking. Features include import and display .gpx r
 Map base: OpenStreetMap (OSM).
 
 ### Add-ons
-[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
+[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
 
 
 ## Komoot
 ([Website](https://www.komoot.de) | [Android](https://play.google.com/store/apps/details?id=de.komoot.android) | [iOS](https://apps.apple.com/app/komoot-route-planner-gps/id447374873))
 
 ### Description
-Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX)).
+Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX). To run it: ```python -m komootgpx --mail="mail_address" --pass="password" --filter="planned" --output="/mnt/c/Users/${USER}/Downloads"```).
 Map base: OpenStreetMap (OSM).
 
 
@@ -83,6 +83,8 @@ With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting c
 # Useful links
 
 [Amenities available in OSM](https://wiki.openstreetmap.org/wiki/Key:amenity)
+[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
+[dérive - Generate a heatmap from GPS tracks](https://erik.github.io/derive/): Generate heatmap by drag and dropping one or more .gpx/.tcx/.fit/.igc/.skiz file(s).
 
 
 # See also
