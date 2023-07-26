@@ -1,5 +1,5 @@
 ## Garmin Data Export Tools
-# Last update: 2023-06-15
+# Last update: 2023-07-26
 
 
 """Script that performs a series of transformations to the Garmin Data Export Request."""
@@ -176,44 +176,6 @@ def distribute_files(
 
             file_path = os.path.join(file)
             shutil.move(src=file_path, dst=directory_new)
-
-
-# Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload)
-def tcx_combine(
-    *,
-    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
-    file_name='all_activities_tcx.tcx',
-):
-    # List of .tcx files including path
-    files = glob.glob(pathname=os.path.join(directory, '**', '*.tcx'), recursive=True)
-
-    # Create .tcx file content
-    text = []
-    # text.append('<?xml version="1.0" encoding="UTF-8"?>\n')
-    # text.append('<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">\n')
-    # text.append('\n')
-
-    # Combine files
-    for file in files:
-        with open(file, encoding='utf8') as file_in:
-            file_text = file_in.readlines()
-
-            # index_activity_start = [index for index, item in enumerate(file_text) if item.endswith(b'<Activities>\n')][0]
-            # index_activity_end = [index for index, item in enumerate(file_text) if item.endswith(b'</Activities>\n')][0]
-
-            text.extend(file_text)
-            text.append('\n')
-            text.append('\n')
-
-    # text.append(b'\n')
-    # text.append(b'</TrainingCenterDatabase>')
-
-    with open(
-        os.path.join(directory, file_name),
-        mode='w',
-        encoding='utf8',
-    ) as file_out:
-        file_out.writelines(text)
 
 
 # Import Garmin Connect activities to DataFrame
@@ -566,10 +528,6 @@ activities_empty(action='delete')
 
 # Distribute files into multiple subfolders of up to 15 activities
 # distribute_files(increment=15)
-
-
-# Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload)
-tcx_combine(file_name='all_activities_tcx.tcx')
 
 
 # Import Garmin Connect activities to DataFrame

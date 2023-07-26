@@ -14,15 +14,15 @@ python -m pip install --upgrade pip
 # python -m pip install pip-review
 
 
-# Installed modules
+# Installed packages
 # python -m pip list -v
 
 
-# Check for modules versions
+# Check for packages versions
 # python -m pip_review
 # python -m pip list --outdated
 
-# Update all modules
+# Update all packages
 python -m pip_review --local --auto
 # python -m pip_review --local --interactive
 
