@@ -44,7 +44,10 @@ cd $repository
 
 
 ## Pre-commit
-pre-commit run -a
+# git init
+# git add --all
+# pre-commit install
+pre-commit run --all-files
 
 
 ## Git push
