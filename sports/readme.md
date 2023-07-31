@@ -21,7 +21,6 @@ python -m pip install numpy pandas python-dateutil
 [garmin_data_export_tools.py](garmin_data_export_tools.py) is a script that performs a series of transformations to the [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/). The main features are:
 - Change wrong activities filetype from .txt to .tcx, delete or move empty .fit activities files.
 - Distribute files into multiple subfolders of up to 15 activities (to facilitate the upload of activities files to Strava).
-- Combine multiple .tcx activity files into one .tcx file (to bulk upload to Strava - Strava will automatically separate/split these activities after upload).
 - Simple script to check which activities from Garmin Connect are already on Strava.
 
 ### Python dependencies
@@ -29,6 +28,22 @@ python -m pip install numpy pandas python-dateutil
 ```.ps1
 python -m pip install pandas python-dateutil requests
 ```
+
+
+## .tcx Tools
+
+### Usage
+
+[tcx_tools.py](tcx_tools.py) is a script that performs a series of transformations to the Training Center XML (.tcx) workout data file. The main features are:
+- Remove leading first line blank spaces of .tcx activities files for properly importing it.
+- Combine multiple .tcx activity files into one .tcx file (to bulk upload to Strava - Strava will automatically separate/split these activities after upload).
+
+This script intends to be used to migrate activities from [Garmin Data Export Request](https://www.garmin.com/en-US/account/datamanagement/exportdata/) and from [Nike Run Club Export](https://www.nike.com/help/privacy) to Strava.
+
+
+### Python dependencies
+
+None.
 
 
 # Utilities
