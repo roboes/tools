@@ -1,5 +1,9 @@
 ## Windows Package Manager Applications
-# Last update: 2023-07-12
+# Last update: 2023-08-01
+
+
+# Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
+# format d: /fs:exFAT /p:1
 
 
 # Install applications
