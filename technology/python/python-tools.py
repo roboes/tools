@@ -1,5 +1,5 @@
 ## Python Tools
-# Last update: 2023-07-31
+# Last update: 2023-08-01
 
 
 """Script containing useful tools."""
@@ -26,10 +26,21 @@ os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 #######
 
 ## Rename files
+
+# Import packages
 import glob
 import re
 
+# Get all files from a given directory
+files = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
-for filename in glob.glob('*.jpg'):
-	new_name = re.sub(r'\. \(([0-9]+)\)\.jpg', r'.\1.jpg', filename)
-	os.rename(filename, new_name)
+# Filter for files with specific regular expression pattern
+files = [
+    file for file in files if re.search(r'20[0-9]{2}\.[0-9]{2}\.[0-9]{2}.*\.pdf', file)
+]
+print('\n'.join(files))
+
+# Rename files
+for filename in files:
+    new_name = re.sub(r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})', r'\1-\2-\3', filename)
+    os.rename(filename, new_name)
