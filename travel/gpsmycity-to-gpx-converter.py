@@ -1,5 +1,5 @@
 ## GPSmyCity to GPX converter
-# Last update: 2023-05-31
+# Last update: 2023-08-03
 
 
 """Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
@@ -76,7 +76,7 @@ def gpsmycity_tour_import(*, urls):
         # Split df_tour_map into df_segments and df_waypoints DataFrames
         df_segments = df_tour_map.filter(items=['path'])
 
-        df_waypoints = df_tour_map.query('pins.notnull()').filter(items=['pins'])
+        df_waypoints = df_tour_map.query('pins.notna()').filter(items=['pins'])
 
         # Delete objects
         del page_source, tour_map, df_tour_map
