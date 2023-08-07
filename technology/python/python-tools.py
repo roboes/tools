@@ -1,5 +1,5 @@
 ## Python Tools
-# Last update: 2023-08-05
+# Last update: 2023-08-07
 
 
 """Script containing useful tools."""
@@ -34,65 +34,94 @@ import re
 
 
 
-def rename_paths(*, type='file', pattern, repl, path_rename=False):
+def rename_paths(*, pattern, repl, path_rename=False):
 
     # Get all directories and files from current directory
     paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
     # Filter for directories with specific regular expression pattern
-    if type == 'directory':
-        paths_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern, Path(path).name)]
-        
-        if len(paths_rename) > 0:
-            print('Directories to be renamed:')
-            print('\n'.join(paths_rename))
-        
-        else:
-            print('No directories to be renamed.')
+    directories_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern, Path(path).name)]
+
+    if len(directories_rename) > 0:
+        print('Directories to be renamed:')
+        print('\n'.join(directories_rename))
+        print('')
+
+    else:
+        print('No directories to be renamed.')
+        print('')
+
 
     # Filter for files with specific regular expression pattern
-    if type == 'file':
-        paths_rename = [path for path in paths if os.path.isdir(path) == False and re.search(pattern, Path(path).stem)]
-        
-        if len(paths_rename) > 0:
-            print('Files to be renamed:')
-            print('\n'.join(paths_rename))
-        
-        else:
-            print('No files to be renamed.')
+    files_rename = [path for path in paths if os.path.isdir(path) == False and re.search(pattern, Path(path).stem)]
 
-    # Rename paths
-    if path_rename == True and len(paths_rename) > 0:
-
+    if len(files_rename) > 0:
+        print('Files to be renamed:')
+        print('\n'.join(files_rename))
         print('')
-        print('New names:')
 
-        for path in paths_rename:
+    else:
+        print('No files to be renamed.')
+        print('')
 
-            if type == 'directory':
-                path_name = Path(path).name
-                path_name = re.sub(pattern, repl, path_name)
-                path_name_new = Path(Path(path).parent, f'{path_name}')
 
-            if type == 'file':
-                path_name = Path(path).stem
-                path_name = re.sub(pattern, repl, path_name)
-                path_name_new = Path(Path(path).parent, f'{path_name}{Path(path).suffix}')
+    # Rename directories
+    if path_rename == True and len(directories_rename) > 0:
 
+        print('New directory names:')
+
+        for path in directories_rename:
+
+            path_name = Path(path).name
+            path_name = re.sub(pattern, repl, path_name)
+            path_name_new = Path(Path(path).parent, f'{path_name}')
+
+            # Rename
             Path(path).rename(path_name_new)
 
             print(path_name_new)
+        
+        print('')
 
 
-# Remove leading, trailing and double spaces from directories
-rename_paths(type='directory', pattern=r'^ | $', repl=r'', path_rename=False)
-rename_paths(type='directory', pattern=r'  ', repl=r' ', path_rename=False)
+    # Rename files
+    if path_rename == True and len(files_rename) > 0:
+
+        print('New file names:')
+
+        # Get all directories and files from current directory (updated in case directory names changed)
+        paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
+
+        # Filter for files with specific regular expression pattern (updated in case directory names changed)
+        files_rename = [path for path in paths if os.path.isdir(path) == False and re.search(pattern, Path(path).stem)]
+
+        for path in files_rename:
+
+            path_name = Path(path).stem
+            path_name = re.sub(pattern, repl, path_name)
+            path_name_new = Path(Path(path).parent, f'{path_name}{Path(path).suffix}')
+
+            # Rename
+            Path(path).rename(path_name_new)
+
+            print(path_name_new)
+            
+        print('')
 
 
-# Remove leading, trailing and double spaces from files
-rename_paths(type='file', pattern=r'^ | $', repl=r'', path_rename=False)
-rename_paths(type='file', pattern=r'  ', repl=r' ', path_rename=False)
+
+# Remove leading, trailing and double spaces from directories and files
+rename_paths(pattern=r'^\s+|\s+$', repl=r'', path_rename=False)
+rename_paths(pattern=r'  ', repl=r' ', path_rename=False)
 
 
-# Rename files from YYYY.MM.DD to YYYY-MM-DD
-rename_paths(type='file', pattern=r'(20[0-9]{2})\.([0-9]{2})\.([0-9]{2})', repl=r'\1-\2-\3', path_rename=False)
+# Rename directories and files from YYYY.MM.DD to YYYY-MM-DD
+rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})', repl=r'\1-\2-\3', path_rename=False)
+
+
+# Rename directories and files from YYYY.MM to YYYY-MM
+rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', path_rename=False)
+
+
+# Rename directories and files from DD.MM.YYYY to YYYY-MM-DD
+rename_paths(pattern=r'([0-9]{2})\.([0-9]{2})\.([0-9]{4})', repl=r'\3-\2-\1', path_rename=False)
