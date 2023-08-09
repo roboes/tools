@@ -444,7 +444,7 @@ def activities_apple_health_to_strava(
                 + '.tcx',
             ),
             mode='w',
-            encoding='utf8',
+            encoding='utf-8',
         ) as file_out:
             file_out.writelines(text)
 

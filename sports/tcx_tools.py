@@ -35,13 +35,13 @@ def tcx_lstrip(*, input_path):
 
     if len(files) > 0:
         for file in files:
-            with open(file, encoding='utf8') as file_in:
+            with open(file, encoding='utf-8') as file_in:
                 file_text = file_in.readlines()
                 file_text_0 = file_text[0]
                 file_text[0] = file_text[0].lstrip()
 
             if file_text[0] != file_text_0:
-                with open(file, mode='w', encoding='utf8') as file_out:
+                with open(file, mode='w', encoding='utf-8') as file_out:
                     file_out.writelines(file_text)
 
 
@@ -62,7 +62,7 @@ def tcx_combine(*, input_path, output_filepath):
 
     # Combine files
     for file in files:
-        with open(file, encoding='utf8') as file_in:
+        with open(file, encoding='utf-8') as file_in:
             file_text = file_in.readlines()
 
             file_text = ''.join(file_text)
@@ -104,7 +104,7 @@ def tcx_combine(*, input_path, output_filepath):
     text.append('</Activities>\n')
     text.append('</TrainingCenterDatabase>\n')
 
-    with open(output_filepath, mode='w', encoding='utf8') as file_out:
+    with open(output_filepath, mode='w', encoding='utf-8') as file_out:
         file_out.writelines(text)
 
 
