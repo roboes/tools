@@ -39,7 +39,7 @@ def gpsmycity_tour_import(*, urls):
         page_source = (
             urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla'}))
             .read()
-            .decode(encoding='utf8')
+            .decode(encoding='utf-8')
         )
         page_source = page_source.split(sep='\n')
 
@@ -65,7 +65,7 @@ def gpsmycity_tour_import(*, urls):
             orient='index',
             convert_dates=False,
             dtype='unicode',
-            encoding='utf8',
+            encoding='utf-8',
         ).transpose()
         df_tour_map['pins'] = df_tour_map['pins'].replace(
             to_replace=r'^None$',
@@ -184,7 +184,7 @@ def gpsmycity_tour_import(*, urls):
         with open(
             f'{secure_filename(filename=tour_name)}.gpx',
             mode='w',
-            encoding='utf8',
+            encoding='utf-8',
         ) as file_out:
             file_out.write(gpx.to_xml())
 
