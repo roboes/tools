@@ -31,7 +31,7 @@ cd "/mnt/c/Users/${USER}/Downloads"
 # brew install gpsbabel
 
 
-# Add faketime with 2 seconds increment between each trackpoin to .gpx files and export it to .tcx
+# For all .gpx files, add faketime with 2 seconds increment between each trackpoint and export it to .tcx
 for file in ./*.gpx; do
 	gpsbabel -t -i gpx -f "$file" -x track,faketime=f20220605200000+2 -o gtrnctr,course=0  -F "${file%.*}.tcx"
 	echo ${file%.*}
