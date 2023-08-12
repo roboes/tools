@@ -1,5 +1,5 @@
 ## GPS Tools
-# Last update: 2023-08-09
+# Last update: 2023-08-12
 
 
 # Rename: ExifTool
@@ -36,3 +36,7 @@ for file in ./*.gpx; do
 	gpsbabel -t -i gpx -f "$file" -x track,faketime=f20220605200000+2 -o gtrnctr,course=0  -F "${file%.*}.tcx"
 	echo ${file%.*}
 done
+
+
+# Merge two .fit files (including heart rate data) into a single .gpx file for Strava upload
+gpsbabel -t -i garmin_fit -f file_1.fit -f file_2.fit -o gpx,garminextensions -F merged.gpx
