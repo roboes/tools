@@ -38,15 +38,15 @@ Simple and intuitive app for accessing the OpenStreetMap (OSM) map base offline.
 # Useful links
 
 ## Tools
-[direkt.bahn.guru](https://direkt.bahn.guru/?origin=8000261&local=true): All direct long-distance railway connections from a given city.
-[Overpass Turbo](https://wiki.openstreetmap.org/wiki/Overpass_turbo): Run Overpass API queries in OpenStreetMap (OSM).
+[direkt.bahn.guru](https://direkt.bahn.guru/?origin=8000261&local=true): All direct long-distance railway connections from a given city.\
+[Overpass Turbo](https://wiki.openstreetmap.org/wiki/Overpass_turbo): Run Overpass API queries in OpenStreetMap (OSM).\
 [Level0](https://wiki.openstreetmap.org/wiki/Level0): OpenStreetMap (OSM) browser-based editor, useful for adding Point of Interests (POIs) given latitude and longitude.
 
 ## Trip Planners
-[Wanderlog](https://wanderlog.com)
-[Klarna Trips](https://trips.klarna.com)
-[Sygic Travel](https://travel.sygic.com)
-[Lonely Planet](https://www.lonelyplanet.com)
-[RoutePerfect](https://www.routeperfect.com)
-[Smarter Travel](https://www.smartertravel.com)
+[Wanderlog](https://wanderlog.com)\
+[Klarna Trips](https://trips.klarna.com)\
+[Sygic Travel](https://travel.sygic.com)\
+[Lonely Planet](https://www.lonelyplanet.com)\
+[RoutePerfect](https://www.routeperfect.com)\
+[Smarter Travel](https://www.smartertravel.com)\
 [Culture Trip](https://theculturetrip.com)
