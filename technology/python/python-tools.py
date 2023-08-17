@@ -1,5 +1,5 @@
 ## Python Tools
-# Last update: 2023-08-13
+# Last update: 2023-08-17
 
 
 """Script containing useful tools."""
@@ -71,6 +71,13 @@ def rename_paths(*, pattern, repl, path_rename=False):
 
     # Rename directories
     if len(directories_rename) > 0:
+
+        if path_rename is False:
+            print('New directory names (preview):')
+
+        if path_rename is True:
+            print('New directory names:')
+
         for path in directories_rename:
             path = Path(path)
 
@@ -78,21 +85,22 @@ def rename_paths(*, pattern, repl, path_rename=False):
             path_name = re.sub(pattern, repl, path_name)
             path_name_new = Path(path.parent, f'{path_name}')
 
-            if path_rename is False:
-                print('New directory names (preview):')
+            print(path_name_new)
 
             if path_rename is True:
-                print('New directory names:')
-
-                # Rename
                 path.rename(path_name_new)
-
-            print(path_name_new)
 
         print('')
 
     # Rename files
     if len(files_rename) > 0:
+
+        if path_rename is False:
+            print('New file names (preview):')
+
+        if path_rename is True:
+            print('New file names:')
+
         # Get all directories and files from current directory (updated in case directory names changed)
         paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
@@ -110,16 +118,10 @@ def rename_paths(*, pattern, repl, path_rename=False):
             path_name = re.sub(pattern, repl, path_name)
             path_name_new = Path(path.parent, f'{path_name}{path.suffix}')
 
-            if path_rename is False:
-                print('New file names (preview):')
+            print(path_name_new)
 
             if path_rename is True:
-                print('New file names:')
-
-                # Rename
                 path.rename(path_name_new)
-
-            print(path_name_new)
 
         print('')
 
