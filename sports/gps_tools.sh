@@ -38,5 +38,5 @@ for file in ./*.gpx; do
 done
 
 
-# Merge two .fit files (including heart rate data) into a single .gpx file for Strava upload
-gpsbabel -t -i garmin_fit -f file_1.fit -f file_2.fit -o gpx,garminextensions -F merged.gpx
+# Merge two .fit files (including heart rate data) into a single .gpx file for Strava upload (order matters)
+gpsbabel -t -i garmin_fit -f activity_file_1.fit -f activity_file_2.fit -o gpx,garminextensions -F activity_merged.gpx
