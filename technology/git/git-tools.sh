@@ -1,8 +1,15 @@
 ## Git Tools
-# Last update: 2023-07-20
+# Last update: 2023-08-22
 
 
-## GitHub login
+# Install GitHub command-line tool
+# brew install git
+
+# Install GitLab Runner
+# brew install gitlab-runner
+
+
+# GitHub login
 # gh auth setup-git
 # gh auth login
 
@@ -13,9 +20,10 @@
 # rm ~/.gitconfig
 
 
-## Git settings
-# git config --global user.email "you@example.com"
-# git config --global user.name "Your Name"
+# Git settings
+# git config --global user.email "email@example.com"
+# git config --global user.name "username"
+# git config --global --list
 
 
 # Git ignore
@@ -27,20 +35,38 @@ wsl
 
 
 # Settings
-github_username="roboes"
-repository="tools"
+git_service="github"
+git_username="git config user.name"
+git_repository="tools"
+git_branch="main"
+local_repository=$git_repository
 
 
 # Set working directory
 cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
 
 # Clone repository if directory does not exist
-if [ ! -d "${repository}" ]; then
-	git clone "https://github.com/${github_username}/${repository}"
+if [ ! -d "${local_repository}" ]; then
+	git clone "https://${git_service}.com/${git_username}/${git_repository}" ${local_repository}
 fi
 
 # Set working directory
-cd $repository
+cd $local_repository
+
+
+## Python Virtual Environment
+
+# Create
+# python -m virtualenv "env"
+# .\env\Scripts\activate
+
+# Install Python dependencies
+# .\env\Scripts\python -m pip install --upgrade pip
+# .\env\Scripts\python -m pip install pandas
+
+# Update Python packages
+# .\env\Scripts\python -m pip_review --local --auto
+# .\env\Scripts\python -m pip_review --local --interactive
 
 
 ## Pre-commit
@@ -49,23 +75,21 @@ cd $repository
 # pre-commit install
 pre-commit run --all-files
 
+# Set working directory
+# cd ..
+
+
+## Python requirements.txt file
+
+# Generate requirements.txt file based on imports
+# python -m pip install pipreqs
+pipreqs . --force
+
+# Python Virtual Environment - Create requirements.txt file
+# .\env\Scripts\python -m pip freeze --local > requirements.txt
+
 
 ## Git push
-
-# Virtual Python environment - Create
-# python -m virtualenv "env"
-# .\env\Scripts\activate
-
-# Virtual Python environment - Install Python dependencies
-# .\env\Scripts\python -m pip install --upgrade pip
-# .\env\Scripts\python -m pip install pandas
-
-# Virtual Python environment - Update Python packages
-# .\env\Scripts\python -m pip_review --local --auto
-# .\env\Scripts\python -m pip_review --local --interactive
-
-# Virtual Python environment - create requirements.txt file
-# .\env\Scripts\python -m pip freeze --local > requirements.txt
 
 # Start git repository
 git init
@@ -77,18 +101,18 @@ git add --all
 git commit --all --message="Update"
 
 # Change git remote repository URL
-# git remote add origin "https://github.com/${github_username}/${repository}.git"
-git remote set-url origin "https://github.com/${github_username}/${repository}.git"
+# git remote add origin "https://${git_service}.com/${git_username}/${git_repository}.git"
+git remote set-url origin "https://${git_service}.com/${git_username}/${git_repository}.git"
 
 # Write commits to remote repository
-git push --force origin main
+git push --force origin ${git_branch}
 
 
 
 ## Squash commit history per day - https://stackoverflow.com/a/56878987/9195104
 
 # Count of commits
-git rev-list --count HEAD main
+git rev-list --count HEAD ${git_branch}
 
 
 # Extracts the timestamps of the commits to keep (the last of the day)
@@ -114,8 +138,8 @@ rm --force $TOKEEP
 
 
 # Repository force update
-git push --force origin main
+git push --force origin ${git_branch}
 
 
 # New count of commits
-git rev-list --count HEAD main
+git rev-list --count HEAD ${git_branch}
