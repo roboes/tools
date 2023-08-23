@@ -69,16 +69,6 @@ cd $local_repository
 # .\env\Scripts\python -m pip_review --local --interactive
 
 
-## Pre-commit
-# git init
-# git add --all
-# pre-commit install
-pre-commit run --all-files
-
-# Set working directory
-# cd ..
-
-
 ## Python requirements.txt file
 
 # Generate requirements.txt file based on imports
@@ -87,6 +77,16 @@ pipreqs . --force
 
 # Python Virtual Environment - Create requirements.txt file
 # .\env\Scripts\python -m pip freeze --local > requirements.txt
+
+
+## Pre-commit
+# git init
+# git add --all
+# pre-commit install
+pre-commit run --all-files
+
+# Set working directory
+# cd ..
 
 
 ## Git push
