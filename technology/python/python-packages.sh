@@ -1,5 +1,5 @@
 ## Python Packages
-# Last update: 2023-07-10
+# Last update: 2023-08-29
 
 
 # Test Python version
@@ -41,6 +41,11 @@ python -m pip_review --local --auto
 # Requirements
 # python -m pip freeze > requirements.txt
 # python -m pip freeze --local > requirements.txt
+
+
+# Get the names and default values of a Python function's parameters
+# import inspect
+# inspect.getfullargspec(os.path.join)
 
 
 # Install pytest
