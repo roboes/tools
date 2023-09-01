@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-08-22
+# Last update: 2023-09-01
 
 
 # Install GitHub command-line tool
@@ -36,7 +36,7 @@ wsl
 
 # Settings
 git_service="github"
-git_username="git config user.name"
+git_username=$(git config user.name)
 git_repository="tools"
 git_branch="main"
 local_repository=$git_repository
