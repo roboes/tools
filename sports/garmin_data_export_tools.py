@@ -1,5 +1,5 @@
 ## Garmin Data Export Tools
-# Last update: 2023-07-26
+# Last update: 2023-09-03
 
 
 """Script that performs a series of transformations to the Garmin Data Export Request."""
@@ -21,10 +21,12 @@ import os
 from pathlib import Path
 import re
 import shutil
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from dateutil import parser
 import numpy as np
+
+# import openpyxl
 import pandas as pd
 import requests
 
@@ -37,6 +39,7 @@ with ZipFile(
         ).content,
     ),
     mode='r',
+    compression=ZIP_DEFLATED,
 ) as zip_file:
     zip_file.extractall(
         path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'),
@@ -75,7 +78,7 @@ def zip_extract(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Fil
             file_name = Path(file).stem
 
             # Extract file
-            with ZipFile(file=file) as zip_file:
+            with ZipFile(file=file, mode='r', compression=ZIP_DEFLATED) as zip_file:
                 zip_file.extractall(path=os.path.join(directory, file_name))
 
             # Delete file
@@ -187,7 +190,7 @@ def activities_garmin_import(
         'summarizedActivities.json',
     ),
 ):
-    with open(directory) as file_in:
+    with open(file=directory, encoding='utf-8') as file_in:
         file = json.load(fp=file_in)
 
     file = json.dumps(obj=file)
@@ -222,12 +225,17 @@ def activities_garmin_import(
         # Change dtypes
         .assign(
             activity_date_gmt=lambda row: pd.to_datetime(
-                row['activity_date_gmt'],
+                arg=row['activity_date_gmt'],
+                utc=False,
                 unit='ms',
             ),
         )
         .assign(
-            activity_date=lambda row: pd.to_datetime(row['activity_date'], unit='ms'),
+            activity_date=lambda row: pd.to_datetime(
+                arg=row['activity_date'],
+                utc=False,
+                unit='ms',
+            ),
         )
         # Create 'treadmill_running' column
         .assign(
@@ -376,7 +384,11 @@ def activities_garmin_compare(
     activities_garmin_compare_1 = activities_garmin.query(
         'activity_type != "Other"',
     ).merge(
-        activities_strava.drop(columns=['activity_date'], axis=1, errors='ignore'),
+        right=activities_strava.drop(
+            columns=['activity_date'],
+            axis=1,
+            errors='ignore',
+        ),
         how='left',
         on=['activity_date_cleaned', 'activity_type'],
         indicator=True,
@@ -385,7 +397,7 @@ def activities_garmin_compare(
     activities_garmin_compare_2 = activities_garmin.query(
         'activity_type == "Other"',
     ).merge(
-        activities_strava.drop(
+        right=activities_strava.drop(
             columns=['activity_date', 'activity_type'],
             axis=1,
             errors='ignore',
