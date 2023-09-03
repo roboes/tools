@@ -26,7 +26,7 @@ python -m pip install numpy pandas python-dateutil
 ### Python dependencies
 
 ```.ps1
-python -m pip install pandas python-dateutil requests
+python -m pip install openpyxl pandas python-dateutil requests
 ```
 
 

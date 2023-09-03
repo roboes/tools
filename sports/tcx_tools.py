@@ -1,5 +1,5 @@
 ## .tcx Tools
-# Last update: 2023-07-26
+# Last update: 2023-09-03
 
 
 """Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
@@ -28,27 +28,27 @@ import re
 ###########
 
 
-def tcx_lstrip(*, input_path):
+def tcx_lstrip(*, directory):
     """Remove leading first line blank spaces of .tcx activity files."""
     # List of .tcx files including path
-    files = glob.glob(pathname=os.path.join(input_path, '*.tcx'), recursive=False)
+    files = glob.glob(pathname=os.path.join(directory, '*.tcx'), recursive=False)
 
     if len(files) > 0:
         for file in files:
-            with open(file, encoding='utf-8') as file_in:
+            with open(file=file, encoding='utf-8') as file_in:
                 file_text = file_in.readlines()
                 file_text_0 = file_text[0]
                 file_text[0] = file_text[0].lstrip()
 
             if file_text[0] != file_text_0:
-                with open(file, mode='w', encoding='utf-8') as file_out:
+                with open(file=file, mode='w', encoding='utf-8') as file_out:
                     file_out.writelines(file_text)
 
 
-def tcx_combine(*, input_path, output_filepath):
+def tcx_combine(*, directory, filepath_output):
     """Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload)."""
     # List of .tcx files including path
-    files = glob.glob(pathname=os.path.join(input_path, '*.tcx'), recursive=False)
+    files = glob.glob(pathname=os.path.join(directory, '*.tcx'), recursive=False)
 
     # Create .tcx file content
     text = []
@@ -62,7 +62,7 @@ def tcx_combine(*, input_path, output_filepath):
 
     # Combine files
     for file in files:
-        with open(file, encoding='utf-8') as file_in:
+        with open(file=file, encoding='utf-8') as file_in:
             file_text = file_in.readlines()
 
             file_text = ''.join(file_text)
@@ -104,7 +104,7 @@ def tcx_combine(*, input_path, output_filepath):
     text.append('</Activities>\n')
     text.append('</TrainingCenterDatabase>\n')
 
-    with open(output_filepath, mode='w', encoding='utf-8') as file_out:
+    with open(file=filepath_output, mode='w', encoding='utf-8') as file_out:
         file_out.writelines(text)
 
 
@@ -113,7 +113,7 @@ def tcx_combine(*, input_path, output_filepath):
 ############
 
 tcx_lstrip(
-    input_path=os.path.join(
+    directory=os.path.join(
         os.path.expanduser('~'),
         'Downloads',
         'Nike Run Club Export',
@@ -121,12 +121,12 @@ tcx_lstrip(
 )
 
 tcx_combine(
-    input_path=os.path.join(
+    directory=os.path.join(
         os.path.expanduser('~'),
         'Downloads',
         'Nike Run Club Export',
     ),
-    output_filepath=os.path.join(
+    filepath_output=os.path.join(
         os.path.expanduser('~'),
         'Downloads',
         'all_activities_tcx.tcx',

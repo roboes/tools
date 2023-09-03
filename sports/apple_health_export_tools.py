@@ -1,5 +1,5 @@
 ## Apple Health Export Tools
-# Last update: 2023-07-26
+# Last update: 2023-09-03
 
 
 """Script that performs a series of transformations to the Apple Health .xml Export."""
@@ -273,7 +273,7 @@ def activities_apple_health_import(
 def activities_apple_health_to_strava(
     *,
     activities_apple_health,
-    directory='Activities Output',
+    output_directory='Activities Output',
 ):
     """Create .tcx files from activities."""
     activities_apple_health = (
@@ -436,8 +436,8 @@ def activities_apple_health_to_strava(
         text.append('</TrainingCenterDatabase>\n')
 
         with open(
-            os.path.join(
-                directory,
+            file=os.path.join(
+                output_directory,
                 row['activity_date'].strftime('%Y-%m-%dT%H-%M-%SZ')
                 + '_'
                 + row['activity_type']
@@ -477,5 +477,5 @@ activities_apple_health_import = activities_apple_health_to_strava(
     activities_apple_health=activities_apple_health.query(
         'source_name.isin(["Daily Yoga", "Nike Run Club"])',
     ),
-    directory='Activities Output',
+    output_directory='Activities Output',
 )

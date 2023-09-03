@@ -1,5 +1,9 @@
 ## Git Tools
-# Last update: 2023-09-01
+# Last update: 2023-09-03
+
+
+# Start Windows Subsystem for Linux (WSL) (required only on Windows)
+wsl
 
 
 # Install GitHub command-line tool
@@ -28,10 +32,6 @@
 
 # Git ignore
 # https://github.com/github/gitignore/blob/main/Python.gitignore
-
-
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
 
 
 # Settings
