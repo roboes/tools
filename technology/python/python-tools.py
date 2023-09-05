@@ -1,5 +1,5 @@
 ## Python Tools
-# Last update: 2023-09-03
+# Last update: 2023-09-05
 
 
 """Script containing useful tools."""
@@ -34,7 +34,7 @@ import re
 
 
 def rename_paths(*, pattern, repl, path_rename=False):
-    # Get all folders and files from current directory
+    # Get all files and folders from current directory
     paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
     # Filter for folders with specific regular expression pattern
@@ -99,7 +99,7 @@ def rename_paths(*, pattern, repl, path_rename=False):
         if path_rename is True:
             print('New files name:')
 
-        # Get all folders and files from current directory (updated in case directories name changed)
+        # Get all files and folders from current directory (updated in case directories name changed)
         paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
         # Filter for files with specific regular expression pattern (updated in case directories name changed)
@@ -124,12 +124,12 @@ def rename_paths(*, pattern, repl, path_rename=False):
         print('')
 
 
-# Remove leading, trailing and double spaces from folders and files
+# Remove leading, trailing and double spaces from files and folders
 rename_paths(pattern=r'^\s+|\s+$', repl=r'', path_rename=False)
 rename_paths(pattern=r'  ', repl=r' ', path_rename=False)
 
 
-# Rename folders and files from YYYY.MM.DD to YYYY-MM-DD
+# Rename files and folders from 'YYYY.MM.DD' to 'YYYY-MM-DD'
 rename_paths(
     pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})',
     repl=r'\1-\2-\3',
@@ -137,13 +137,16 @@ rename_paths(
 )
 
 
-# Rename folders and files from YYYY.MM to YYYY-MM
+# Rename files and folders from 'YYYY.MM' to 'YYYY-MM'
 rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', path_rename=False)
 
 
-# Rename folders and files from DD.MM.YYYY to YYYY-MM-DD
+# Rename files and folders from 'DD.MM.YYYY' to 'YYYY-MM-DD'
 rename_paths(
     pattern=r'([0-9]{2})\.([0-9]{2})\.([0-9]{4})',
     repl=r'\3-\2-\1',
     path_rename=False,
 )
+
+# Rename files and folders from 'text YYYYMMDD' to 'YYYY-MM-DD'
+rename_paths(pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', path_rename=True)
