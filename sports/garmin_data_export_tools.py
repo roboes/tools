@@ -1,5 +1,5 @@
 ## Garmin Data Export Tools
-# Last update: 2023-09-03
+# Last update: 2023-09-07
 
 
 """Script that performs a series of transformations to the Garmin Data Export Request."""
@@ -198,7 +198,7 @@ def activities_garmin_import(
     file = re.sub(pattern=r'}]$', repl='', string=file)
 
     activities_garmin = (
-        pd.json_normalize(data=json.loads(s=file), max_level=None)
+        pd.json_normalize(data=json.loads(s=file), sep='_', max_level=None)
         # Rename columns
         .rename(
             columns={
