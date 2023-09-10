@@ -6,6 +6,13 @@
 # format d: /fs:exFAT /p:1
 
 
+# List all installed applications
+# winget list
+
+
+# Find applications
+# winget list --query="PDFsam"
+
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id=Python.Python.3.11
@@ -17,6 +24,7 @@ winget install --exact --id=IDRIX.VeraCrypt
 winget install --exact --id=RProject.R
 winget install --exact --id=RProject.Rtools
 winget install --exact --id=SumatraPDF.SumatraPDF
+winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DuongDieuPhap.ImageGlass
 
 
