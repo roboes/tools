@@ -27,6 +27,8 @@ winget install --exact --id=SumatraPDF.SumatraPDF
 winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DuongDieuPhap.ImageGlass
 
+# Applications not available on winget
+# https://github.com/marktext/marktext/releases
 
 # Update applications
 winget upgrade -h --all
