@@ -149,4 +149,6 @@ rename_paths(
 )
 
 # Rename files and folders from 'text YYYYMMDD' to 'YYYY-MM-DD'
-rename_paths(pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', path_rename=True)
+rename_paths(
+    pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', path_rename=True
+)
