@@ -1,5 +1,5 @@
 ## Python Packages
-# Last update: 2023-08-29
+# Last update: 2023-09-25
 
 
 # Test Python version
@@ -29,6 +29,7 @@ python -m pip_review --local --auto
 
 # Install packages
 # python -m pip install openpyxl html5lib lxml numpy pandas pyjanitor selenium matplotlib seaborn sweetviz pytz
+# python -m pip install -r requirements.txt
 
 # Install packages (specific version)
 # python -m pip install -Iv mvt==1.2.5
@@ -38,8 +39,13 @@ python -m pip_review --local --auto
 # python -m pip uninstall janitor
 
 
-# Requirements
-# python -m pip freeze > requirements.txt
+## Python requirements.txt file
+
+# Create requirements.txt file based on imports using pipreqs
+# python -m pip install pipreqs
+# pipreqs --encoding utf-8 --force "./"
+
+# Create requirements.txt file using pip freeze
 # python -m pip freeze --local > requirements.txt
 
 

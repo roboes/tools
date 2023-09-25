@@ -71,11 +71,11 @@ cd $local_repository
 
 ## Python requirements.txt file
 
-# Generate requirements.txt file based on imports
+# Create requirements.txt file based on imports using pipreqs
 # python -m pip install pipreqs
-pipreqs . --force
+pipreqs --encoding utf-8 --force "./"
 
-# Python Virtual Environment - Create requirements.txt file
+# Python Virtual Environment - Create requirements.txt file using pip freeze
 # .\env\Scripts\python -m pip freeze --local > requirements.txt
 
 
