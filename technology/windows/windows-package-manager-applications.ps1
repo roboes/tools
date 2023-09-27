@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-08-01
+# Last update: 2023-09-27
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -29,6 +29,7 @@ winget install --exact --id=DuongDieuPhap.ImageGlass
 
 # Applications not available on winget
 # https://github.com/marktext/marktext/releases
+# https://github.com/spyder-ide/spyder/releases/
 
 # Update applications
 winget upgrade -h --all
