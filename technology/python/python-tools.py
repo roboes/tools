@@ -1,5 +1,5 @@
 ## Python Tools
-# Last update: 2023-09-05
+# Last update: 2023-09-29
 
 
 """Script containing useful tools."""
@@ -143,8 +143,8 @@ rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', path_rename=False
 
 # Rename files and folders from 'DD.MM.YYYY' to 'YYYY-MM-DD'
 rename_paths(
-    pattern=r'([0-9]{2})\.([0-9]{2})\.([0-9]{4})',
-    repl=r'\3-\2-\1',
+    pattern=r'([^\.])([0-9]{2})\.([0-9]{2})\.([0-9]{4})',
+    repl=r'\1\4-\3-\2',
     path_rename=False,
 )
 
