@@ -1,5 +1,9 @@
 ## Git Tools
-# Last update: 2023-08-22
+# Last update: 2023-09-03
+
+
+# Start Windows Subsystem for Linux (WSL) (required only on Windows)
+wsl
 
 
 # Install GitHub command-line tool
@@ -30,13 +34,9 @@
 # https://github.com/github/gitignore/blob/main/Python.gitignore
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
-
-
 # Settings
 git_service="github"
-git_username="git config user.name"
+git_username=$(git config user.name)
 git_repository="tools"
 git_branch="main"
 local_repository=$git_repository
@@ -71,11 +71,11 @@ cd $local_repository
 
 ## Python requirements.txt file
 
-# Generate requirements.txt file based on imports
+# Create requirements.txt file based on imports using pipreqs
 # python -m pip install pipreqs
-pipreqs . --force
+pipreqs --encoding utf-8 --force "./"
 
-# Python Virtual Environment - Create requirements.txt file
+# Python Virtual Environment - Create requirements.txt file using pip freeze
 # .\env\Scripts\python -m pip freeze --local > requirements.txt
 
 

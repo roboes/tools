@@ -1,10 +1,17 @@
 ## Windows Package Manager Applications
-# Last update: 2023-08-01
+# Last update: 2023-09-27
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
 # format d: /fs:exFAT /p:1
 
+
+# List all installed applications
+# winget list
+
+
+# Find applications
+# winget list --query="PDFsam"
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
@@ -17,8 +24,12 @@ winget install --exact --id=IDRIX.VeraCrypt
 winget install --exact --id=RProject.R
 winget install --exact --id=RProject.Rtools
 winget install --exact --id=SumatraPDF.SumatraPDF
+winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DuongDieuPhap.ImageGlass
 
+# Applications not available on winget
+# https://github.com/marktext/marktext/releases
+# https://github.com/spyder-ide/spyder/releases/
 
 # Update applications
 winget upgrade -h --all
@@ -39,6 +50,9 @@ ulimit -n
 # ulimit increase limit
 ulimit -n 8192
 
+# Homebrew update
+brew update && brew upgrade && brew cleanup
+
 # Install apps
 brew install exiftool
 brew install gh
@@ -47,6 +61,3 @@ brew install python@3.11
 sudo update-alternatives --install /usr/bin/python python $(readlink -f $(which python3)) 3
 # brew install imagemagick
 # brew install qpdf
-
-# Homebrew update
-brew update && brew upgrade && brew cleanup
