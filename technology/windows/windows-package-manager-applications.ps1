@@ -16,23 +16,29 @@
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id=Python.Python.3.11
-winget install --exact --id=Posit.RStudio
-winget install --exact --id=7zip.7zip
+# winget install --exact --id=Posit.RStudio
+# winget install --exact --id=7zip.7zip
 winget install --exact --id=WinSCP.WinSCP
 winget install --exact --id=VideoLAN.VLC
 winget install --exact --id=IDRIX.VeraCrypt
-winget install --exact --id=RProject.R
-winget install --exact --id=RProject.Rtools
+# winget install --exact --id=RProject.R
+# winget install --exact --id=RProject.Rtools
+winget install --exact --id=XPDP273C0XHQH2 # Adobe Acrobat
 winget install --exact --id=SumatraPDF.SumatraPDF
 winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DuongDieuPhap.ImageGlass
+winget install --exact --id=DupeGuru.DupeGuru
+winget install --exact --id=XPDM27W10192Q0 # GIMP
+winget install --exact --id=Notepad++.Notepad++
 
 # Applications not available on winget
+# https://freefilesync.org/download.php
 # https://github.com/marktext/marktext/releases
 # https://github.com/spyder-ide/spyder/releases/
 
 # Update applications
 winget upgrade -h --all
+# winget upgrade -h --all --include-unknown
 
 
 # Install Windows Subsystem for Linux (WSL)
