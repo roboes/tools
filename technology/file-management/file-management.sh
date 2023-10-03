@@ -45,3 +45,6 @@ find . -type d -empty -print # -delete
 
 # Decrypt PDF password
 qpdf "input.pdf" --password="1234" --decrypt "output.pdf"
+
+# Reduce PDF size and quality
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=/ebook -dNOPAUSE -dBATCH -dQUIET -sOutputFile="./output.pdf" "./input.pdf"
