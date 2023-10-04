@@ -15,7 +15,7 @@
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
-winget install --exact --id=Python.Python.3.11
+winget install --exact --id=Python.Python.3.12
 winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
 winget install --exact --id=IDRIX.VeraCrypt
@@ -74,7 +74,9 @@ brew update && brew upgrade && brew cleanup
 brew install exiftool
 brew install gh
 brew install git
-brew install python@3.11
+brew install python
+# brew unlink python@3.11 && brew link python@3.12
+# sudo update-alternatives --config python
 sudo update-alternatives --install /usr/bin/python python $(readlink -f $(which python3)) 3
 # brew install imagemagick
 # brew install qpdf
