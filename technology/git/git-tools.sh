@@ -84,8 +84,13 @@ pipreqs --encoding utf-8 --force "./"
 ## Pre-commit
 # git init
 # git add --all
+# python -m pip install pre-commit
 # pre-commit install
+
+# pre-commit autoupdate
+
 pre-commit run --all-files
+
 
 # Set working directory
 # cd ..
