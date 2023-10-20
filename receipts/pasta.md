@@ -41,4 +41,4 @@
 2. Juntar (1) e (2), misturar. Depois que esfriar, colocar (3) e misturar.
 3. Colocar (4) e misturar.
 4. Forno 180°, 30-40 minutos.
-5. 
+5.
