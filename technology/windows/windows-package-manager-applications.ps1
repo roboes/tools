@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-10-03
+# Last update: 2023-10-23
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -40,6 +40,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # https://github.com/spyder-ide/spyder/releases/
 
 # Archive
+# winget install --exact --id Microsoft.WindowsTerminal
 # winget install --exact --id=Microsoft.PowerToys
 # winget install --exact --id=7zip.7zip
 # winget install --exact --id=DuongDieuPhap.ImageGlass
@@ -50,6 +51,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # Update applications
 winget upgrade -h --all
 # winget upgrade -h --all --include-unknown
+# winget upgrade --exact --id=GIMP.GIMP 
 
 
 # Install Windows Subsystem for Linux (WSL)
