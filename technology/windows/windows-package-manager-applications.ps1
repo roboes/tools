@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-09-27
+# Last update: 2023-10-23
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -15,24 +15,43 @@
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
-winget install --exact --id=Python.Python.3.11
-winget install --exact --id=Posit.RStudio
-winget install --exact --id=7zip.7zip
+winget install --exact --id=Python.Python.3.12
+winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
-winget install --exact --id=VideoLAN.VLC
 winget install --exact --id=IDRIX.VeraCrypt
-winget install --exact --id=RProject.R
-winget install --exact --id=RProject.Rtools
+winget install --exact --id=XPDP273C0XHQH2 # Adobe Acrobat
 winget install --exact --id=SumatraPDF.SumatraPDF
 winget install --exact --id=PDFsam.PDFsam
-winget install --exact --id=DuongDieuPhap.ImageGlass
+winget install --exact --id=DupeGuru.DupeGuru
+winget install --exact --id=XPDM27W10192Q0 # GIMP
+winget install --exact --id=VideoLAN.VLC
+winget install --exact --id=Google.Chrome
+# winget install --exact --id=Google.ChromeRemoteDesktop
+winget install --exact --id=Mozilla.Firefox
+winget install --exact --id=5319275A.WhatsAppDesktop_cv1g1gvanyjgm
+winget install --exact --id=Telegram.TelegramDesktop
+winget install --exact --id=Google.NearbyShare
+winget install --exact --id=Sigil-Ebook.Sigil
+winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 
 # Applications not available on winget
+# https://freefilesync.org/download.php
 # https://github.com/marktext/marktext/releases
 # https://github.com/spyder-ide/spyder/releases/
 
+# Archive
+# winget install --exact --id Microsoft.WindowsTerminal
+# winget install --exact --id=Microsoft.PowerToys
+# winget install --exact --id=7zip.7zip
+# winget install --exact --id=DuongDieuPhap.ImageGlass
+# winget install --exact --id=RProject.R
+# winget install --exact --id=RProject.Rtools
+# winget install --exact --id=Posit.RStudio
+
 # Update applications
 winget upgrade -h --all
+# winget upgrade -h --all --include-unknown
+# winget upgrade --exact --id=GIMP.GIMP 
 
 
 # Install Windows Subsystem for Linux (WSL)
@@ -57,7 +76,9 @@ brew update && brew upgrade && brew cleanup
 brew install exiftool
 brew install gh
 brew install git
-brew install python@3.11
+brew install python
+# brew unlink python@3.11 && brew link python@3.12
+# sudo update-alternatives --config python
 sudo update-alternatives --install /usr/bin/python python $(readlink -f $(which python3)) 3
 # brew install imagemagick
 # brew install qpdf

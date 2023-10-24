@@ -1,5 +1,5 @@
 ## File Management
-# Last update: 2023-08-01
+# Last update: 2023-10-24
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -17,9 +17,6 @@ wsl
 
 # Homebrew update
 brew update && brew upgrade && brew cleanup
-
-# Install exiftool
-# brew install qpdf
 
 
 # Settings
@@ -43,5 +40,4 @@ find . -type d -empty -print # -delete
 # find . -type f -exec mv --backup=numbered --target-directory="Output Folder" {} +
 
 
-# Decrypt PDF password
-qpdf "input.pdf" --password="1234" --decrypt "output.pdf"
+

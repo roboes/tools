@@ -1,8 +1,10 @@
 fit2gpx==0.0.7
+geopy==2.4.0
 gpxpy==1.5.0
-numpy==1.26.0
+numpy==1.26.1
 openpyxl==3.1.2
+overpy==0.6
 pandas==2.1.1
 python_dateutil==2.8.2
 Requests==2.31.0
-Werkzeug==2.3.7
+Werkzeug==3.0.0

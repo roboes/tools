@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-09-03
+# Last update: 2023-10-05
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -53,6 +53,8 @@ fi
 # Set working directory
 cd $local_repository
 
+# Download .pre-commit-config.yaml file
+curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
 ## Python Virtual Environment
 
@@ -82,8 +84,13 @@ pipreqs --encoding utf-8 --force "./"
 ## Pre-commit
 # git init
 # git add --all
+# python -m pip install pre-commit
 # pre-commit install
+
+# pre-commit autoupdate
+
 pre-commit run --all-files
+
 
 # Set working directory
 # cd ..
