@@ -1,5 +1,5 @@
 ## Geolocation
-# Last update: 2023-11-03
+# Last update: 2023-11-06
 
 
 """Geolocation tools."""
@@ -81,6 +81,7 @@ def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
             'address_city': '',
             'address_state': '',
             'address_country': '',
+            'postalcode': '',
         },
         method=None,
         axis=0,
@@ -99,6 +100,7 @@ def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
                     'city': row['address_city'],
                     'state': row['address_state'],
                     'country': row['address_country'],
+                    'postalcode': row['address_postalcode'],
                 },
                 exactly_one=True,
                 addressdetails=True,
@@ -323,8 +325,6 @@ def geocoder_location_columns(*, df_geo):
     return df_geo
 
 
-
-
 #############
 # Geolocation
 #############
@@ -332,10 +332,10 @@ def geocoder_location_columns(*, df_geo):
 # Create example DataFrame
 df = pd.DataFrame(
     data=[
-        ['Germany', 'Bavaria', 'München', 'Nordallee 25'],
+        ['Germany', 'Bavaria', 'München', '85445', 'Nordallee 25'],
     ],
     index=None,
-    columns=['address_country', 'address_state', 'address_city', 'address_street'],
+    columns=['address_country', 'address_state', 'address_city', 'address_postalcode', 'address_street'],
     dtype='str',
 )
 
@@ -351,6 +351,7 @@ except Exception:
 
 # Run geocoder
 df_geo = geocoder(df=df, chunk_size=50, filepath='df_geolocation_slice.pkl', fillna='#')
+print(df_geo)
 
 # Replace # by None
 # df_geo = df_geo.assign(location_geolocation=lambda row: row['location_geolocation'].mask(row['location_geolocation'] == '#'))
