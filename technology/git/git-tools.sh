@@ -53,8 +53,6 @@ fi
 # Set working directory
 cd $local_repository
 
-# Download .pre-commit-config.yaml file
-curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
 ## Python Virtual Environment
 
@@ -86,6 +84,9 @@ pipreqs --encoding utf-8 --force "./"
 # git add --all
 # python -m pip install pre-commit
 # pre-commit install
+
+# Download .pre-commit-config.yaml file
+curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
 # pre-commit autoupdate
 
