@@ -88,6 +88,9 @@ pipreqs --encoding utf-8 --force "./"
 # Download .pre-commit-config.yaml file
 curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
+# Download pre-commit-workflow.yaml
+curl -o .github/workflows/pre-commit-workflow.yaml --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml
+
 # pre-commit autoupdate
 
 pre-commit run --all-files

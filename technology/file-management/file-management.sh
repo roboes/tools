@@ -38,6 +38,3 @@ find . -type d -empty -print # -delete
 
 # Move files from folders and subfolders to new folder
 # find . -type f -exec mv --backup=numbered --target-directory="Output Folder" {} +
-
-
-
