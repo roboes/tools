@@ -51,7 +51,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # Update applications
 winget upgrade -h --all
 # winget upgrade -h --all --include-unknown
-# winget upgrade --exact --id=GIMP.GIMP 
+# winget upgrade --exact --id=GIMP.GIMP
 
 
 # Install Windows Subsystem for Linux (WSL)
