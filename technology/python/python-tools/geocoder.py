@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2023-11-07
+# Last update: 2023-11-14
 
 
 """Geolocation tools."""
@@ -58,7 +58,7 @@ def df_geolocation_concatenate(*, df, df_slice):
         pass
 
 
-def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
+def geocoder(*, df, chunk_size=50, filepath=None, mathing_level_flag=None, fillna=None):
     """Given a DataFrame input with location columns, split it into multiple chunks and run the geocoder, saving all chunks where the geocoder has already been run as a pickle file."""
     # Create variables
     execution_start = datetime.now()
@@ -106,6 +106,9 @@ def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
             else row['location_geolocation'],
             axis=1,
         )
+
+        if mathing_level_flag is not None:
+            df_chunk['manual_geocoding_match'] = df_chunk.apply(lambda row: mathing_level_flag if pd.notna(row['location_geolocation']) else None, axis=1)
 
         if fillna is not None:
             # Fill not found locations with value
