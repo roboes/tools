@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2023-11-14
+# Last update: 2023-11-15
 
 
 """Geolocation tools."""
@@ -58,10 +58,14 @@ def df_geolocation_concatenate(*, df, df_slice):
         pass
 
 
-def geocoder(*, df, chunk_size=50, filepath=None, mathing_level_flag=None, fillna=None):
+def geocoder(*, df, chunk_size=50, filepath=None, matching_level_flag=None, fillna=None):
     """Given a DataFrame input with location columns, split it into multiple chunks and run the geocoder, saving all chunks where the geocoder has already been run as a pickle file."""
     # Create variables
     execution_start = datetime.now()
+
+    # Create 'manual_geocoding_match' column if non-existent:
+    if 'manual_geocoding_match' not in df:
+        df['manual_geocoding_match'] = None
 
     # Create 'location_geolocation' column if non-existent:
     if 'location_geolocation' not in df:
@@ -107,9 +111,6 @@ def geocoder(*, df, chunk_size=50, filepath=None, mathing_level_flag=None, filln
             axis=1,
         )
 
-        if mathing_level_flag is not None:
-            df_chunk['manual_geocoding_match'] = df_chunk.apply(lambda row: mathing_level_flag if pd.notna(row['location_geolocation']) else None, axis=1)
-
         if fillna is not None:
             # Fill not found locations with value
             df_chunk['location_geolocation'] = df_chunk['location_geolocation'].fillna(
@@ -117,6 +118,12 @@ def geocoder(*, df, chunk_size=50, filepath=None, mathing_level_flag=None, filln
                 method=None,
                 axis=0,
             )
+
+        if matching_level_flag is not None and fillna is not None:
+           df_chunk['manual_geocoding_match'] = df_chunk.apply(lambda row: row['manual_geocoding_match'] if pd.notna(row['manual_geocoding_match']) else matching_level_flag if pd.isna(row['manual_geocoding_match']) and pd.notna(row['location_geolocation']) and row['location_geolocation'] != fillna else None, axis=1)
+
+        elif matching_level_flag is not None and fillna is None:
+            df_chunk['manual_geocoding_match'] = df_chunk.apply(lambda row: row['manual_geocoding_match'] if pd.notna(row['manual_geocoding_match']) else matching_level_flag if pd.isna(row['manual_geocoding_match']) and pd.notna(row['location_geolocation']) else None, axis=1)
 
         # Concatenate DataFrames
         if not df_chunk.empty:

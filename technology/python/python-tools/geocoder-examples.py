@@ -1,5 +1,5 @@
 ## Geocoder Examples
-# Last update: 2023-11-14
+# Last update: 2023-11-15
 
 
 """Geolocation tools."""
@@ -76,7 +76,7 @@ except Exception:
     pass
 
 # Run geocoder
-df_geo = geocoder(df=df, chunk_size=50, filepath='df_geolocation_slice.pkl', mathing_level_flag=None, fillna='#')
+df_geo = geocoder(df=df, chunk_size=50, filepath='df_geolocation_slice.pkl', matching_level_flag=None, fillna='#')
 print(df_geo)
 
 df_geo = geocoder_location_columns(df_geo=df_geo)
