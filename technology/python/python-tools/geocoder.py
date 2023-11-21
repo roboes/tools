@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2023-11-16
+# Last update: 2023-11-21
 
 
 """Geolocation tools."""
@@ -64,21 +64,8 @@ def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
     execution_start = datetime.now()
 
     # Create 'location_geolocation' column if non-existent:
-    if 'location_geolocation' not in df:
+    if 'location_geolocation' not in df.columns:
         df['location_geolocation'] = None
-
-    # Data transformation
-    df = df.fillna(
-        value={
-            'address_country': '',
-            'address_state': '',
-            'address_city': '',
-            'address_postal_code': '',
-            'address_street': '',
-        },
-        method=None,
-        axis=0,
-    )
 
     # Create empty DataFrame
     df_geolocation = pd.DataFrame(data=None, index=None, columns=None, dtype=None)
@@ -89,11 +76,13 @@ def geocoder(*, df, chunk_size=50, filepath=None, fillna=None):
         df_chunk['location_geolocation'] = df_chunk.apply(
             lambda row: geocode(
                 query={
-                    'country': row['address_country'],
-                    'state': row['address_state'],
-                    'city': row['address_city'],
-                    'postalcode': row['address_postal_code'],
-                    'street': row['address_street'],
+                    **({'country': row['address_country']} if 'address_country' in df.columns and pd.notna(row['address_country']) else {}),
+                    **({'state': row['address_state']} if 'address_state' in df.columns and pd.notna(row['address_state']) else {}),
+                    **({'county': row['address_county']} if 'address_county' in df.columns and pd.notna(row['address_county']) else {}),
+                    **({'city': row['address_city']} if 'address_city' in df.columns and pd.notna(row['address_city']) else {}),
+                    **({'postalcode': row['address_postal_code']} if 'address_postal_code' in df.columns and pd.notna(row['address_postal_code']) else {}),
+                    **({'street': row['address_street']} if 'address_street' in df.columns and pd.notna(row['address_street']) else {}),
+                    **({'amenity': row['address_amenity']} if 'address_amenity' in df.columns and pd.notna(row['address_amenity']) else {}),
                 },
                 exactly_one=True,
                 addressdetails=True,
