@@ -108,12 +108,13 @@ print(geolocation.raw)
 # Search - structured query - https://nominatim.org/release-docs/latest/api/Search/#structured-query
 geolocation = geocode(
     query={
-        'amenity': 'Munich International Airport',
         'country': 'Germany',
         'state': 'Bavaria',
+        # 'county': ''
         'city': 'München',
         'postalcode': '85356',
         'street': 'Nordallee 25',
+        'amenity': 'Munich International Airport',
     },
     exactly_one=True,
     addressdetails=True,
