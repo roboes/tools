@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-10-05
+# Last update: 2023-11-22
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -35,8 +35,8 @@ wsl
 
 
 # Settings
-git_service="github"
-git_username=$(git config user.name)
+git_hostname="github.com"
+git_account=$(git config user.name) # Username or Organization
 git_repository="tools"
 git_branch="main"
 local_repository=$git_repository
@@ -47,7 +47,7 @@ cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
 
 # Clone repository if directory does not exist
 if [ ! -d "${local_repository}" ]; then
-	git clone "https://${git_service}.com/${git_username}/${git_repository}" ${local_repository}
+	git clone "https://${git_hostname}/${git_account}/${git_repository}" ${local_repository}
 fi
 
 # Set working directory
@@ -112,8 +112,8 @@ git add --all
 git commit --all --message="Update"
 
 # Change git remote repository URL
-# git remote add origin "https://${git_service}.com/${git_username}/${git_repository}.git"
-git remote set-url origin "https://${git_service}.com/${git_username}/${git_repository}.git"
+# git remote add origin "https://${git_hostname}/${git_account}/${git_repository}.git"
+git remote set-url origin "https://${git_hostname}/${git_account}/${git_repository}.git"
 
 # Write commits to remote repository
 git push --force origin ${git_branch}
