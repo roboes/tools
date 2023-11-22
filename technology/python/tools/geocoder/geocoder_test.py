@@ -1,8 +1,8 @@
-## Geocoder Examples
-# Last update: 2023-11-16
+## Geocoder Test
+# Last update: 2023-11-22
 
 
-"""Geolocation tools."""
+"""Geocoder tools test."""
 
 
 ###############
@@ -21,8 +21,12 @@ from geopy.geocoders import Nominatim
 import overpy
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'python-tools'))
-from geocoder import df_geolocation_concatenate, geocoder, geocoder_location_columns
+sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'Tools', 'geocoder'))
+from geocoder_functions import (
+    df_geolocation_concatenate,
+    geocoder,
+    geocoder_location_columns,
+)
 
 
 # Geocoder setup
@@ -75,9 +79,21 @@ try:
 except Exception:
     pass
 
-# Run geocoder
-df_geo = geocoder(df=df, chunk_size=50, filepath='df_geolocation_slice.pkl', fillna='#')
+# Run geocoder (structured query)
+df_geo = geocoder(
+    df=df,
+    query_type='structured',
+    chunk_size=50,
+    filepath='df_geolocation_slice.pkl',
+    fillna='#',
+)
 print(df_geo)
+
+# Run geocoder (free-form query)
+# df = df.assign(address_location=lambda row: row['address_country'].fillna(value='', method=None,  axis=0) + ' ' + row['address_state'].fillna(value='', method=None,  axis=0) + ' ' + row['address_city'].fillna(value='', method=None,  axis=0) + ' ' + row['address_postal_code'].fillna(value='', method=None,  axis=0) + ' ' + row['address_street'].fillna(value='', method=None,  axis=0))
+
+# df_geo = geocoder(df=df, query_type='free', chunk_size=50, filepath='df_geolocation_slice.pkl', fillna='#')
+# print(df_geo)
 
 df_geo = geocoder_location_columns(df_geo=df_geo)
 
