@@ -44,8 +44,8 @@ Simple and intuitive app for accessing the OpenStreetMap (OSM) map base offline.
 
 ## Trip Planners
 [Wanderlog](https://wanderlog.com)\
+[GPSmyCity](https://www.gpsmycity.com)\
 [Visit A City](https://www.visitacity.com)\
-[Klarna Trips](https://trips.klarna.com)\
 [Sygic Travel](https://travel.sygic.com)\
 [Lonely Planet](https://www.lonelyplanet.com)\
 [RoutePerfect](https://www.routeperfect.com)\
