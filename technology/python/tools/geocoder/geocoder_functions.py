@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2023-11-22
+# Last update: 2023-11-24
 
 
 """Geocoder tools."""
@@ -89,6 +89,12 @@ def geocoder(*, df, query_type=None, chunk_size=50, filepath=None, fillna=None):
         df_chunk['location_geolocation'] = df_chunk.apply(
             lambda row: geocode(
                 query={
+                    **(
+                        {'countrycodes': row['address_country_code']}
+                        if 'address_country_code' in df.columns
+                        and pd.notna(row['address_country_code'])
+                        else {}
+                    ),
                     **(
                         {'country': row['address_country']}
                         if 'address_country' in df.columns
