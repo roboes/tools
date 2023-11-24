@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2023-11-22
+# Last update: 2023-11-24
 
 
 """Geocoder tools test."""
@@ -22,6 +22,7 @@ import overpy
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'Tools', 'geocoder'))
+sys.dont_write_bytecode = True
 from geocoder_functions import (
     df_geolocation_concatenate,
     geocoder,
@@ -47,10 +48,11 @@ reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
 # Create example DataFrame
 df = pd.DataFrame(
     data=[
-        ['Germany', 'Bavaria', 'München', '85356', 'Nordallee 25'],
+        ['de', 'Germany', 'Bavaria', 'München', '85356', 'Nordallee 25'],
     ],
     index=None,
     columns=[
+        'address_country_code',
         'address_country',
         'address_state',
         'address_city',
@@ -124,6 +126,7 @@ print(geolocation.raw)
 # Search - structured query - https://nominatim.org/release-docs/latest/api/Search/#structured-query
 geolocation = geocode(
     query={
+        'countrycodes': 'de',
         'country': 'Germany',
         'state': 'Bavaria',
         # 'county': ''

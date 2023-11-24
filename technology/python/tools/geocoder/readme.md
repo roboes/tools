@@ -18,3 +18,8 @@ This geocoder tool requires Python 3.12 because of the [`itertools.batched` func
 ## Limitations
 
 [OSM's Nominatim](https://nominatim.openstreetmap.org) supports [an absolute maximum of 1 request per second](https://operations.osmfoundation.org/policies/nominatim/). For a higher use, a local instance of Nominatim could be installed (e.g. [nominatim-docker](https://github.com/mediagis/nominatim-docker)).
+
+
+## See also
+
+[Foreign Territories Mapping](https://github.com/scaleway/postal-address/blob/master/postal_address/territory.py): List of ISO 3166-1 alpha-2 foreign territories and their respective ISO 3166-1 alpha-2 country.

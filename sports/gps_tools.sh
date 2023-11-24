@@ -1,5 +1,5 @@
 ## GPS Tools
-# Last update: 2023-10-10
+# Last update: 2023-11-24
 
 
 # Rename: ExifTool
@@ -40,6 +40,7 @@ done
 
 # Combine multiple .tcx activity files into one .tcx file (for bulk upload to Strava - Strava will automatically separate/split these activities after upload)
 # Notes: combined activity file output does not work with file types .gpx and .fit; .gpx to .tcx loses heart rate data; Strava automatically detects duplicate activities, even when the original file format was converted and combined from .tcx, .gpx and .fit to .tcx
+# Strava seems to accept combined files of up to 75 megabytes
 
 file_type="tcx"
 
