@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-11-22
+# Last update: 2023-11-25
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -89,6 +89,7 @@ pipreqs --encoding utf-8 --force "./"
 curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
 # Download pre-commit-workflow.yaml
+mkdir -p .github/workflows
 curl -o .github/workflows/pre-commit-workflow.yaml --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml
 
 # pre-commit autoupdate

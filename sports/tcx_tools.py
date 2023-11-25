@@ -70,11 +70,13 @@ def tcx_combine(*, directory, filepath_output):
                 pattern=r'<Activity Sport',
                 repl=r'\n<Activity Sport',
                 string=file_text,
+                flags=0,
             )
             file_text = re.sub(
                 pattern=r'</Activity>',
                 repl=r'</Activity>\n',
                 string=file_text,
+                flags=0,
             )
             file_text = file_text.split(sep='\n')
 
