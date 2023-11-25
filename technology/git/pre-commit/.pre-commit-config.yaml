@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2023-11-13
+# Last update: 2023-11-25
 
 
 # Save this file to '/.pre-commit-config.yaml'
@@ -153,7 +153,7 @@ repos:
           # Testing
           - flake8-assertive
 
-        args: ['--ignore=B007,B023,B902,C408,CM001,D103,E203,E266,E402,E501,F821,S105,S110,S310,S410,SCS109,SIM105,W503,W504']
+        args: ['--ignore=B007,B023,B902,C408,CM001,D103,E203,E266,E402,E501,F821,S105,S110,S310,S410,SCS109,SIM105,SIM904,W503,W504']
 
 
   - repo: https://github.com/codespell-project/codespell

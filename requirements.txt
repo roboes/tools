@@ -1,5 +1,5 @@
 fit2gpx==0.0.7
-geopy==2.4.0
+geopy==2.4.1
 gpxpy==1.6.1
 numpy==1.26.2
 openpyxl==3.1.2
