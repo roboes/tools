@@ -7,7 +7,7 @@ Just click in the URL to open the settings directly in the Strava app for Androi
 - Add Location
 
 <p align="left">
-<img src="./images/strava_recommended_settings_location.png">
+<img src="./images/strava-recommended-settings-location.png">
 </p>
 
 
@@ -22,14 +22,14 @@ Just click in the URL to open the settings directly in the Strava app for Androi
 `Mentions`: Followers
 
 <p align="left">
-<img src="./images/strava_recommended_settings_privacy_controls.PNG" width=300>
+<img src="./images/strava-recommended-settings-privacy-controls.PNG" width=300>
 </p>
 
 - Additional Controls > Map Visibility
 `Hide the start and end points of activities no matter where they happen` > 200 meters hidden
 
 <p align="left">
-<img src="./images/strava_recommended_settings_map_visibility.PNG" width=300>
+<img src="./images/strava-recommended-settings-map-visibility.PNG" width=300>
 </p>
 
 - Additional Controls > Public Photos on Routes
@@ -48,5 +48,5 @@ Check `Do Not Share My Personal Information`
 `Feed Ordering` > `Latest Activities`
 
 <p align="left">
-<img src="./images/strava_recommended_settings_feed_ordering.PNG" width=300>
+<img src="./images/strava-recommended-settings-feed-ordering.PNG" width=300>
 </p>

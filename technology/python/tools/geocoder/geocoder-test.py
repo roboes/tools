@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2023-11-24
+# Last update: 2023-11-26
 
 
 """Geocoder tools test."""
@@ -13,6 +13,7 @@
 globals().clear()
 
 # Import packages
+from importlib import import_module
 import os
 import sys
 
@@ -21,13 +22,18 @@ from geopy.geocoders import Nominatim
 import overpy
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'Tools', 'geocoder'))
+
+# Import custom packages
 sys.dont_write_bytecode = True
-from geocoder_functions import (
-    df_geolocation_concatenate,
-    geocoder,
-    geocoder_location_columns,
-)
+sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'Tools', 'geocoder'))
+
+geocoder_functions = import_module('geocoder-functions')
+df_geolocation_concatenate = geocoder_functions.df_geolocation_concatenate
+geocoder = geocoder_functions.geocoder
+geocoder_location_columns = geocoder_functions.geocoder_location_columns
+
+# Delete objects
+del import_module, geocoder_functions
 
 
 # Geocoder setup

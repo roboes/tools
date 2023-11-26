@@ -28,6 +28,7 @@ os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 # Functions
 ###########
 
+
 def rename_paths(*, pattern, repl, path_rename=False):
     # Get all files and folders from current directory
     paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
@@ -36,7 +37,8 @@ def rename_paths(*, pattern, repl, path_rename=False):
     folders_rename = [
         path
         for path in paths
-        if os.path.isdir(path) and re.search(pattern=pattern, string=Path(path).name, flags=0)
+        if os.path.isdir(path)
+        and re.search(pattern=pattern, string=Path(path).name, flags=0)
     ]
 
     if len(folders_rename) > 0:
@@ -52,7 +54,8 @@ def rename_paths(*, pattern, repl, path_rename=False):
     files_rename = [
         path
         for path in paths
-        if os.path.isdir(path) is False and re.search(pattern=pattern, string=Path(path).stem, flags=0)
+        if os.path.isdir(path) is False
+        and re.search(pattern=pattern, string=Path(path).stem, flags=0)
     ]
 
     if len(files_rename) > 0:
@@ -101,7 +104,8 @@ def rename_paths(*, pattern, repl, path_rename=False):
         files_rename = [
             path
             for path in paths
-            if os.path.isdir(path) is False and re.search(pattern=pattern, string=Path(path).stem, flags=0)
+            if os.path.isdir(path) is False
+            and re.search(pattern=pattern, string=Path(path).stem, flags=0)
         ]
 
         for path in files_rename:
