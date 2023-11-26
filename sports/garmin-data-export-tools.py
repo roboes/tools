@@ -1,5 +1,5 @@
 ## Garmin Data Export Tools
-# Last update: 2023-11-25
+# Last update: 2023-11-26
 
 
 """Script that performs a series of transformations to the Garmin Data Export Request."""
@@ -66,7 +66,7 @@ os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export'
 
 
 # Extract .zip files
-def zip_extract(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files')):
+def zip_extract(*, directory):
     # List of files including path
     files = glob.glob(pathname=os.path.join(directory, '*.zip'), recursive=False)
 
@@ -84,10 +84,7 @@ def zip_extract(*, directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Fil
 
 
 # Change filetype from .txt to .tcx
-def change_filetype(
-    *,
-    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
-):
+def change_filetype(*, directory):
     # List of files including path
     files = glob.glob(pathname=os.path.join(directory, '**', '*.txt'), recursive=True)
 
@@ -101,11 +98,7 @@ def change_filetype(
 
 
 # Empty .fit activities files: move to 'ACTIVITIES_EMPTY' folder or delete
-def activities_empty(
-    *,
-    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
-    action='delete',
-):
+def activities_empty(*, directory, action='delete'):
     files = glob.glob(pathname=os.path.join(directory, '**', '*.fit'), recursive=True)
 
     if len(files) > 0:
@@ -153,11 +146,7 @@ def activities_empty(
 
 
 # Distribute files into multiple subfolders of up to 15 activities
-def distribute_files(
-    *,
-    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
-    increment=15,
-):
+def distribute_files(*, directory, increment=15):
     files = glob.glob(pathname=os.path.join(directory, '**', '*.fit'), recursive=True)
     files.extend(
         glob.glob(pathname=os.path.join(directory, '**', '*.gpx'), recursive=True),
@@ -180,14 +169,7 @@ def distribute_files(
 
 
 # Import Garmin Connect activities to DataFrame
-def activities_garmin_import(
-    *,
-    directory=os.path.join(
-        'DI_CONNECT',
-        'DI-Connect-Fitness',
-        'summarizedActivities.json',
-    ),
-):
+def activities_garmin_import(*, directory):
     with open(file=directory, encoding='utf-8') as file_in:
         file = json.load(fp=file_in)
 
@@ -530,23 +512,32 @@ def activities_garmin_compare_not_matched(*, activities_garmin_compare):
 ##########################
 
 # Extract .zip files
-zip_extract()
+zip_extract(directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'))
 
 
 # Change filetype from .txt to .tcx
-change_filetype()
+change_filetype(directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'))
 
 
 # Empty .fit activities files: move to 'ACTIVITIES_EMPTY' folder or delete
-activities_empty(action='delete')
+activities_empty(
+    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
+    action='delete',
+)
 
 
 # Distribute files into multiple subfolders of up to 15 activities
-# distribute_files(increment=15)
+# distribute_files(directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'), increment=15)
 
 
 # Import Garmin Connect activities to DataFrame
-activities_garmin = activities_garmin_import()
+activities_garmin = activities_garmin_import(
+    directory=os.path.join(
+        'DI_CONNECT',
+        'DI-Connect-Fitness',
+        'summarizedActivities.json',
+    ),
+)
 
 
 # Check which activities from Garmin Connect are already on Strava (https://www.statshunters.com/activities)
