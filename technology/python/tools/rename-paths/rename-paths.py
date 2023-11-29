@@ -1,8 +1,8 @@
-## Python Tools
-# Last update: 2023-09-29
+## Rename paths
+# Last update: 2023-11-25
 
 
-"""Script containing useful tools."""
+"""Script to rename files and folders."""
 
 
 ###############
@@ -15,22 +15,18 @@ globals().clear()
 
 # Import packages
 import os
+import glob
+from pathlib import Path
+import re
 
 
 # Set working directory
 os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 
 
-#######
-# Tools
-#######
-
-## Rename files
-
-# Import packages
-import glob
-from pathlib import Path
-import re
+###########
+# Functions
+###########
 
 
 def rename_paths(*, pattern, repl, path_rename=False):
@@ -41,7 +37,8 @@ def rename_paths(*, pattern, repl, path_rename=False):
     folders_rename = [
         path
         for path in paths
-        if os.path.isdir(path) and re.search(pattern, Path(path).name)
+        if os.path.isdir(path)
+        and re.search(pattern=pattern, string=Path(path).name, flags=0)
     ]
 
     if len(folders_rename) > 0:
@@ -57,7 +54,8 @@ def rename_paths(*, pattern, repl, path_rename=False):
     files_rename = [
         path
         for path in paths
-        if os.path.isdir(path) is False and re.search(pattern, Path(path).stem)
+        if os.path.isdir(path) is False
+        and re.search(pattern=pattern, string=Path(path).stem, flags=0)
     ]
 
     if len(files_rename) > 0:
@@ -81,7 +79,7 @@ def rename_paths(*, pattern, repl, path_rename=False):
             path = Path(path)
 
             path_name = path.name
-            path_name = re.sub(pattern=pattern, repl=repl, string=path_name)
+            path_name = re.sub(pattern=pattern, repl=repl, string=path_name, flags=0)
             path_name_new = Path(path.parent, f'{path_name}')
 
             print(path_name_new)
@@ -106,14 +104,15 @@ def rename_paths(*, pattern, repl, path_rename=False):
         files_rename = [
             path
             for path in paths
-            if os.path.isdir(path) is False and re.search(pattern, Path(path).stem)
+            if os.path.isdir(path) is False
+            and re.search(pattern=pattern, string=Path(path).stem, flags=0)
         ]
 
         for path in files_rename:
             path = Path(path)
 
             path_name = path.stem
-            path_name = re.sub(pattern=pattern, repl=repl, string=path_name)
+            path_name = re.sub(pattern=pattern, repl=repl, string=path_name, flags=0)
             path_name_new = Path(path.parent, f'{path_name}{path.suffix}')
 
             print(path_name_new)
@@ -123,6 +122,10 @@ def rename_paths(*, pattern, repl, path_rename=False):
 
         print('')
 
+
+##############
+# Rename paths
+##############
 
 # Remove leading, trailing and double spaces from files and folders
 rename_paths(pattern=r'^\s+|\s+$', repl=r'', path_rename=False)

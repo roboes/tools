@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2023-10-24
+# Last update: 2023-11-10
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -21,6 +21,9 @@ brew update && brew upgrade && brew cleanup
 # Install ghostscript
 # brew install ghostscript
 
+# Install imagemagick
+# brew install imagemagick
+
 # Install ocrmypdf
 # brew install ocrmypdf
 
@@ -30,9 +33,27 @@ brew update && brew upgrade && brew cleanup
 # Install tesseract-lang
 # brew install tesseract-lang
 
+# Install xpdf (pdfinfo)
+# brew install xpdf
+
 
 # Settings
 cd "/mnt/c/Users/${USER}/Downloads"
+
+
+# Convert multiple images to a single .pdf
+file_type="jpg"
+
+files=""
+for file in ./*."$file_type"; do
+	files="$files $file"
+done
+
+convert $files -quality 100 -density 150 -define pdf:author="" -define pdf:creator="" -define pdf:producer="" -define pdf:title="" images_combined.pdf
+
+
+# View .pdf metadata
+pdfinfo images_combined.pdf
 
 
 # Optical Character Recognition (OCR) PDF document

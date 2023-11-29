@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2023-10-05
+# Last update: 2023-11-25
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -35,8 +35,8 @@ wsl
 
 
 # Settings
-git_service="github"
-git_username=$(git config user.name)
+git_hostname="github.com"
+git_account=$(git config user.name) # Username or Organization
 git_repository="tools"
 git_branch="main"
 local_repository=$git_repository
@@ -47,14 +47,12 @@ cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
 
 # Clone repository if directory does not exist
 if [ ! -d "${local_repository}" ]; then
-	git clone "https://${git_service}.com/${git_username}/${git_repository}" ${local_repository}
+	git clone "https://${git_hostname}/${git_account}/${git_repository}" ${local_repository}
 fi
 
 # Set working directory
 cd $local_repository
 
-# Download .pre-commit-config.yaml file
-curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
 
 ## Python Virtual Environment
 
@@ -81,11 +79,23 @@ pipreqs --encoding utf-8 --force "./"
 # .\env\Scripts\python -m pip freeze --local > requirements.txt
 
 
+## Test for FutureWarning
+# python -m pip install pytest
+# pytest --override-ini "python_files=*.py python_classes=* python_functions=*" -W error::FutureWarning
+
+
 ## Pre-commit
 # git init
 # git add --all
 # python -m pip install pre-commit
 # pre-commit install
+
+# Download .pre-commit-config.yaml file
+curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
+
+# Download pre-commit-workflow.yaml
+mkdir -p .github/workflows
+curl -o .github/workflows/pre-commit-workflow.yaml --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml
 
 # pre-commit autoupdate
 
@@ -108,8 +118,8 @@ git add --all
 git commit --all --message="Update"
 
 # Change git remote repository URL
-# git remote add origin "https://${git_service}.com/${git_username}/${git_repository}.git"
-git remote set-url origin "https://${git_service}.com/${git_username}/${git_repository}.git"
+# git remote add origin "https://${git_hostname}/${git_account}/${git_repository}.git"
+git remote set-url origin "https://${git_hostname}/${git_account}/${git_repository}.git"
 
 # Write commits to remote repository
 git push --force origin ${git_branch}

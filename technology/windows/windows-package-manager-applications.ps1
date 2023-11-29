@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-10-23
+# Last update: 2023-11-25
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -16,6 +16,7 @@
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id=Python.Python.3.12
+winget install --exact --id=Spyder.Spyder
 winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
 winget install --exact --id=IDRIX.VeraCrypt
@@ -37,7 +38,6 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # Applications not available on winget
 # https://freefilesync.org/download.php
 # https://github.com/marktext/marktext/releases
-# https://github.com/spyder-ide/spyder/releases/
 
 # Archive
 # winget install --exact --id Microsoft.WindowsTerminal
@@ -51,7 +51,11 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # Update applications
 winget upgrade -h --all
 # winget upgrade -h --all --include-unknown
-# winget upgrade --exact --id=GIMP.GIMP 
+# winget upgrade --exact --id=GIMP.GIMP
+
+
+# Update all Python packages
+python -m pip_review --local --auto
 
 
 # Install Windows Subsystem for Linux (WSL)

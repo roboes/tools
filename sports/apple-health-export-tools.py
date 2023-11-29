@@ -1,5 +1,5 @@
 ## Apple Health Export Tools
-# Last update: 2023-09-03
+# Last update: 2023-11-26
 
 
 """Script that performs a series of transformations to the Apple Health .xml Export."""
@@ -15,7 +15,7 @@ globals().clear()
 
 # Import packages
 import os
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 from dateutil import parser
 import numpy as np
@@ -32,11 +32,7 @@ os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 
 
 # Import Apple Health workouts/activities to DataFrame
-def activities_apple_health_import(
-    *,
-    file=os.path.join('Export', 'apple_health_export', 'Export.xml'),
-    remove_duplicates=True,
-):
+def activities_apple_health_import(*, file, remove_duplicates=True):
     # Create ElementTree object
     root = ET.parse(source=file).getroot()
 
