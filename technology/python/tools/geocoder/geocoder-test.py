@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2023-11-28
+# Last update: 2023-11-29
 
 
 """Geocoder tools test."""
@@ -13,7 +13,7 @@
 globals().clear()
 
 # Import packages
-from importlib import import_module, reload
+from importlib.util import spec_from_file_location
 import os
 import sys
 
@@ -25,15 +25,24 @@ import pandas as pd
 
 # Import custom packages
 sys.dont_write_bytecode = True
-sys.path.append(os.path.join(os.path.expanduser('~'), 'Documents', 'Tools', 'geocoder'))
 
-geocoder_functions = reload(import_module('geocoder-functions'))
-df_geolocation_concatenate = geocoder_functions.df_geolocation_concatenate
+geocoder_functions = spec_from_file_location(
+    name='geocoder_functions',
+    location=os.path.join(
+        os.path.expanduser('~'),
+        'Documents',
+        'Tools',
+        'geocoder',
+        'geocoder-functions.py',
+    ),
+).loader.load_module()
+
+df_concatenate = geocoder_functions.df_concatenate
 geocoder = geocoder_functions.geocoder
 geocoder_location_columns = geocoder_functions.geocoder_location_columns
 
 # Delete objects
-del import_module, geocoder_functions
+del geocoder_functions, spec_from_file_location
 
 
 # Geocoder setup
@@ -73,9 +82,9 @@ df = pd.DataFrame(
 
 # Import chunks where the geocoder has already been run and concatenate it with the original dataset
 try:
-    df = df_geolocation_concatenate(
-        df=df,
-        df_slice=pd.read_pickle(
+    df = df_concatenate(
+        df_original=df,
+        df_new=pd.read_pickle(
             filepath_or_buffer=os.path.join(
                 os.path.expanduser('~'),
                 'Downloads',

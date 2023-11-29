@@ -34,11 +34,11 @@ reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
 ###########
 
 
-def df_geolocation_concatenate(*, df, df_slice):
-    """Import chunks where the geocoder has already been run and concatenate it with the original dataset."""
-    if not df.empty and not df_slice.empty:
+def df_concatenate(*, df_original, df_new):
+    """Replace rows of an original DataFrame with a modified DataFrame."""
+    if not df_original.empty and not df_new.empty:
         df_concatenated = pd.concat(
-            [df_slice, df[~df.index.isin(df_slice.index)]],
+            [df_new, df_original[~df_original.index.isin(df_new.index)]],
             axis=0,
             ignore_index=False,
             sort=False,

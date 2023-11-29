@@ -79,6 +79,11 @@ pipreqs --encoding utf-8 --force "./"
 # .\env\Scripts\python -m pip freeze --local > requirements.txt
 
 
+## Test for FutureWarning
+# python -m pip install pytest
+# pytest --override-ini "python_files=*.py python_classes=* python_functions=*" -W error::FutureWarning
+
+
 ## Pre-commit
 # git init
 # git add --all
