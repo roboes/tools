@@ -1,7 +1,7 @@
 defusedxml==0.7.1
 fit2gpx==0.0.7
 geopy==2.4.1
-gpxpy==1.6.1
+gpxpy==1.6.2
 numpy==1.26.2
 openpyxl==3.1.2
 overpy==0.6
