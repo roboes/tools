@@ -1,12 +1,12 @@
 ## Git Tools
-# Last update: 2023-11-25
+# Last update: 2023-12-01
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
 wsl
 
 
-# Install GitHub command-line tool
+# Install GitHub CLI
 # brew install git
 
 # Install GitLab Runner
@@ -54,36 +54,6 @@ fi
 cd $local_repository
 
 
-## Python Virtual Environment
-
-# Create
-# python -m virtualenv "env"
-# .\env\Scripts\activate
-
-# Install Python dependencies
-# .\env\Scripts\python -m pip install --upgrade pip
-# .\env\Scripts\python -m pip install pandas
-
-# Update Python packages
-# .\env\Scripts\python -m pip_review --local --auto
-# .\env\Scripts\python -m pip_review --local --interactive
-
-
-## Python requirements.txt file
-
-# Create requirements.txt file based on imports using pipreqs
-# python -m pip install pipreqs
-pipreqs --encoding utf-8 --force "./"
-
-# Python Virtual Environment - Create requirements.txt file using pip freeze
-# .\env\Scripts\python -m pip freeze --local > requirements.txt
-
-
-## Test for FutureWarning
-# python -m pip install pytest
-# pytest --override-ini "python_files=*.py python_classes=* python_functions=*" -W error::FutureWarning
-
-
 ## Pre-commit
 # git init
 # git add --all
@@ -100,6 +70,16 @@ curl -o .github/workflows/pre-commit-workflow.yaml --remote-name --location http
 # pre-commit autoupdate
 
 pre-commit run --all-files
+
+
+## Test for FutureWarning
+# python -m pip install pytest
+# pytest --override-ini "python_files=*.py python_classes=* python_functions=*" -W error::FutureWarning
+
+
+## Python requirements.txt file
+# python -m pip install pipreqs
+pipreqs --encoding utf-8 --force "./"
 
 
 # Set working directory
