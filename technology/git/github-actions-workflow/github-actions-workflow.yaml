@@ -1,5 +1,5 @@
 ## GitHub Actions Workflow
-# Last update: 2023-09-25
+# Last update: 2023-12-06
 
 
 # Save this file to '.github/workflows/github-actions-workflow.yaml'
@@ -43,10 +43,25 @@ jobs:
           chrome-version: stable
 
 
+      - name: Get pip cache directory
+        id: pip-cache
+        run: |
+          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache action - pip cache - https://github.com/actions/cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+
       - name: Setup Python - https://github.com/actions/setup-python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x' #  Latest stable major version of Python
+          cache: 'pip' # Caching pip dependencies
 
 
       - name: Install Python dependencies
@@ -55,8 +70,8 @@ jobs:
           python -m pip install -r requirements.txt
 
 
-      - name: Python - Get Python pathway
-        run: which python
+      # - name: Python - Get Python pathway
+      #   run: which python
 
 
       - name: Run Python script
