@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-11-25
+# Last update: 2023-12-26
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -25,6 +25,7 @@ winget install --exact --id=SumatraPDF.SumatraPDF
 winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DupeGuru.DupeGuru
 winget install --exact --id=XPDM27W10192Q0 # GIMP
+winget install --exact --id=Microsoft.HEVCVideoExtension_8wekyb3d8bbwe
 winget install --exact --id=VideoLAN.VLC
 winget install --exact --id=Google.Chrome
 # winget install --exact --id=Google.ChromeRemoteDesktop
@@ -49,7 +50,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 # winget install --exact --id=Posit.RStudio
 
 # Update applications
-winget upgrade -h --all
+winget upgrade -h --all --accept-package-agreements
 # winget upgrade -h --all --include-unknown
 # winget upgrade --exact --id=GIMP.GIMP
 
