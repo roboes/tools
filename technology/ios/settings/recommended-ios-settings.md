@@ -25,13 +25,19 @@ Settings > Mobile Data (Cellular) >
 
 <br>
 
+Settings > Sounds & Haptics > Keyboard Feedback > Enable "Haptic".
+
+<br>
+
 Settings > Focus >
 - Do Not Disturb/Work > People > Allow Calls From: "Everyone".
 - Sleep > People > Allow Calls From: "Contacts Only" and Enable "Allow Repeated Calls".
 
 <br>
 
-Settings > General > Keyboard > Keyboards > Add New Keyboard… > "Portuguese (Brazil)", "German (Germany)", "English (US)", "Emoji".
+Settings > General > Keyboard >
+- Keyboards > Add New Keyboard… > "Portuguese (Brazil)", "German (Germany)", "English (US)", "Emoji".
+- Emoji > Disable "Stickers".
 
 <br>
 
@@ -51,6 +57,7 @@ Settings > Face ID & Passcode (Touch ID & Passcode) > Enable "Erase Data".
 
 Settings > Privacy & Security >
 - Location Services > System Services > Product Improvement > Disable "iPhone Analytics", "Routing & Traffic" and "Improve Maps".
+- Tracking > Disable "Allow Apps to Request to Track".
 - Analytics & Improvements > Disable "Share iPhone Analytics", "Share iCloud Analytics", "Improve Safety", "Improve Siri & Dictation" and "Improve AR Location Accuracy".
 - Apple Advertising > Disable "Personalized Ads".
 
