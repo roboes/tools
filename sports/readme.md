@@ -1,5 +1,62 @@
 # Sports Tools
 
+# Tracking
+
+[Strava](https://www.strava.com)
+
+Strava add-ons:\
+[StatsHunters](https://www.statshunters.com): Heatmaps and statistics of Strava activities.\
+[Project Kodos](https://labs.strava.com/kodos/): Kudos statistics.\
+[The Roster](https://labs.strava.com/roster/): Visually analyze your athletic social habits, total group activities and preferred training partners.
+
+# Utilities
+
+## Cycling
+
+### Cycling routes
+
+[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
+[Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.
+
+## Hiking
+
+### Hiking routes
+[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
+[AllTrails](https://www.alltrails.com/explore): Requires login to download routes as .gpx.\
+[Outdooractive](https://www.outdooractive.com/en/routes/): Requires login to download routes as .gpx.\
+[Hiking Buddies](https://www.hiking-buddies.com/routes/routes_list/): Does not require a login to download routes as .gpx.
+
+Files can be downloaded as a .gpx files and imported in apps (see [here](#apps)) or fitness devices (e.g. Garmin devices).
+
+
+# Apps
+
+## Komoot
+([Website](https://www.komoot.de) | [Android](https://play.google.com/store/apps/details?id=de.komoot.android) | [iOS](https://apps.apple.com/app/komoot-route-planner-gps/id447374873))
+
+### Description
+Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX). To run it: ```python -m komootgpx --mail="mail_address" --pass="password" --filter="planned" --output="/mnt/c/Users/${USER}/Downloads"```).\
+Map base: OpenStreetMap (OSM).
+
+
+## Mapy.cz
+([Website](https://mapy.cz) | [Android](https://play.google.com/store/apps/details?id=cz.seznam.mapy) | [iOS](https://apps.apple.com/app/mapy-cz-navigation-maps/id411411020))
+
+### Description
+With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting cycle and hiking paths. For cycling navigation, it displays the additional distance and time for alternative routes on the go.
+
+
+## OsmAnd
+([Website](https://osmand.net) | [GitHub](https://github.com/osmandapp/OsmAnd) | [Android](https://play.google.com/store/apps/details?id=net.osmand.plus) | [iOS](https://apps.apple.com/app/apple-store/id934850257))
+
+### Description
+Excellent app for cycling and hiking. Features include import and display .gpx routes, overlay specific POIs (e.g. Drinking Water).\
+Map base: OpenStreetMap (OSM).
+
+### Add-ons
+[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
+
+
 ## Apple Health Export Tools
 
 ### Usage
@@ -46,63 +103,14 @@ This script intends to be used to migrate activities from [Garmin Data Export Re
 None.
 
 
-# Utilities
-
-## Cycling
-
-### Cycling routes
-
-[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.
-[Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.
-
-
-## Hiking
-
-### Hiking routes
-[Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.
-[AllTrails](https://www.alltrails.com/explore): Requires login to download routes as .gpx.
-[Outdooractive](https://www.outdooractive.com/en/routes/): Requires login to download routes as .gpx.
-[Hiking Buddies](https://www.hiking-buddies.com/routes/routes_list/): Does not require a login to download routes as .gpx.
-
-Files can be downloaded as a .gpx files and imported in apps (see [here](#apps)) or fitness devices (e.g. Garmin devices).
-
-
-# Apps
-
-## OsmAnd
-([Website](https://osmand.net) | [GitHub](https://github.com/osmandapp/OsmAnd) | [Android](https://play.google.com/store/apps/details?id=net.osmand.plus) | [iOS](https://apps.apple.com/app/apple-store/id934850257))
-
-### Description
-Excellent app for cycling and hiking. Features include import and display .gpx routes, overlay specific POIs (e.g. Drinking Water).
-Map base: OpenStreetMap (OSM).
-
-### Add-ons
-[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
-
-
-## Komoot
-([Website](https://www.komoot.de) | [Android](https://play.google.com/store/apps/details?id=de.komoot.android) | [iOS](https://apps.apple.com/app/komoot-route-planner-gps/id447374873))
-
-### Description
-Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX). To run it: ```python -m komootgpx --mail="mail_address" --pass="password" --filter="planned" --output="/mnt/c/Users/${USER}/Downloads"```).
-Map base: OpenStreetMap (OSM).
-
-
-## Mapy.cz
-([Website](https://mapy.cz) | [Android](https://play.google.com/store/apps/details?id=cz.seznam.mapy) | [iOS](https://apps.apple.com/app/mapy-cz-navigation-maps/id411411020))
-
-### Description
-With a less confuding GUI than OsmAnd, offers an "Outdoor" layer, highlighting cycle and hiking paths. For cycling navigation, it displays the additional distance and time for alternative routes on the go.
-
-
 # Useful links
 
-[Amenities available in OSM](https://wiki.openstreetmap.org/wiki/Key:amenity)
-[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).
+[Amenities available in OSM](https://wiki.openstreetmap.org/wiki/Key:amenity)\
+[Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).\
 [dérive - Generate a heatmap from GPS tracks](https://erik.github.io/derive/): Generate heatmap by drag and dropping one or more .gpx/.tcx/.fit/.igc/.skiz file(s).
 
 
 # See also
 
-[Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): Download Nike Run Club activities and convert them to .gpx.
+[Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): Download Nike Run Club activities and convert them to .gpx.\
 [Torben's Strava Äpp](https://entorb.net/strava/): Set of Strava tools, including the feature to import activities from an Excel/.csv to Strava.
