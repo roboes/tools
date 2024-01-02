@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2023-12-11
+# Last update: 2024-01-01
 
 
 # Save this file to '/.pre-commit-config.yaml'
@@ -45,7 +45,7 @@ repos:
       # - id: pretty-format-json # Not, since it decodes utf-8
       #   args: ['--autofix']
       - id: requirements-txt-fixer
-      # - id: sort-simple-yaml
+      - id: sort-simple-yaml
       - id: trailing-whitespace
 
 

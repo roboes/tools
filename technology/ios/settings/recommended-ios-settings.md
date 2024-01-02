@@ -51,6 +51,10 @@ Settings > Home Screen & App Library > Search > Disable "Show on Home Screen".
 
 <br>
 
+Settings > StandBy > Disable "StandBy".
+
+<br>
+
 Settings > Face ID & Passcode (Touch ID & Passcode) > Enable "Erase Data".
 
 <br>

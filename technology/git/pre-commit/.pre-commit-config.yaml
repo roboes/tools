@@ -160,7 +160,7 @@ repos:
     rev: v2.2.6
     hooks:
       - id: codespell
-        exclude: 'at-post-letter-template.py|tcx-tools.py|terminvereinbarung-munich.py'
+        exclude: 'at-post-letter-template.py|dkb_bank_transactions.py|tcx-tools.py'
 
 default_language_version:
   python: python3
