@@ -43,6 +43,9 @@ with ZipFile(
         path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'),
     )
 
+# Delete objects
+del zip_file
+
 os.chdir(
     path=os.path.join(
         os.path.expanduser('~'),
