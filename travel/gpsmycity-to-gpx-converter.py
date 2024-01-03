@@ -2,7 +2,7 @@
 # Last update: 2023-08-03
 
 
-"""Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
+"""About: Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
 
 
 ###############

@@ -76,6 +76,7 @@ transactions = (
         industry=lambda row: None,
         amount=lambda row: row['purpose'].str.extract(
             pat=r'Original ([0-9]+,[0-9]+ [A-Z]{3}) 1 Euro=',
+            flags=0,
             expand=False,
         ),
     )
