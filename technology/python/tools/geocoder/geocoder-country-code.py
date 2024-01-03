@@ -2,7 +2,7 @@
 # Last update: 2023-12-21
 
 
-"""Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
+"""About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
 
 
 ###############

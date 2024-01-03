@@ -2,7 +2,7 @@
 # Last update: 2023-11-26
 
 
-"""Script that performs a series of transformations to the Garmin Data Export Request."""
+"""About: Script that performs a series of transformations to the Garmin Data Export Request."""
 
 
 ###############
