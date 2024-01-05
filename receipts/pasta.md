@@ -21,24 +21,3 @@
 3. Abrir a pizza e assar rapidamente (até formar bolhas). Colocar molho de tomate, queijo e demais artefatos na pizza.
 
 (900 gramas de farinha - 6 pacotes de Germ - 550 ml água morna - 3 colheres pequenas de açúcar - 3 colheres pequenas de sal - 3 colheres grandes de azeite)
-
-
-## Pão de Queijo
-
-### Ingredients
-(1) 200 ml leite\
-(1) 4 colheres de sopa sopa de óleo de oliva\
-(2) 250g polvilho azedo\
-(2) 85g polvilho doce\
-(2) 6g de sal\
-(3) 1 ovo\
-(4) 150 g queijo mozarela\
-(4) 100 g elementar\
-(4) 85 g parmesão
-
-### Preparation
-1. Ferver (1).
-2. Juntar (1) e (2), misturar. Depois que esfriar, colocar (3) e misturar.
-3. Colocar (4) e misturar.
-4. Forno 180°, 30-40 minutos.
-5.
