@@ -57,7 +57,7 @@ pdfinfo images_combined.pdf
 
 
 # Optical Character Recognition (OCR) PDF document
-ocrmypdf -l por file_A.pdf file_B.pdf
+ocrmypdf -l por "file_A.pdf" "file_B.pdf"
 
 
 # Decrypt PDF password
