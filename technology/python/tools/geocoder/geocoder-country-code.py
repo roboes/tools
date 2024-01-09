@@ -1,5 +1,5 @@
 ## Geocoder Country Code
-# Last update: 2023-12-21
+# Last update: 2024-01-09
 
 
 """About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
@@ -61,12 +61,12 @@ def geocoder_country_code(*, df, shapefile_path):
         gpd.read_file(
             filename=shapefile_path,
             layer=None,
+            include_fields=['ISO3_CODE', 'geometry'],
+            driver=None,
             encoding='utf-8',
         )
         # Rename columns
         .rename(columns={'ISO3_CODE': 'country_code'})
-        # Select columns
-        .filter(items=['country_code', 'geometry'])
         # Rearrange rows
         .sort_values(by=['country_code'], ignore_index=True)
     )
