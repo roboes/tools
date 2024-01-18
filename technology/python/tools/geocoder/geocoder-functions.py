@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2023-11-24
+# Last update: 2024-01-18
 
 
 """About: Geocoder tools."""
@@ -58,7 +58,124 @@ def df_concatenate(*, df_original, df_new):
         pass
 
 
-def geocoder(*, df, query_type=None, chunk_size=50, filepath=None, fillna=None):
+def geocoder_query(*, df, row, query_type, foreign_territories_mapping=False):
+    """Pass arguments to the geocode query."""
+    if foreign_territories_mapping is True and 'address_country_code' in df.columns:
+        # Foreign territories mapping dictionary - Source: https://github.com/scaleway/postal-address/blob/master/postal_address/territory.py
+        foreign_territories_mapping = {
+            'CC': 'AU',  # Cocos Island,                      Australian territory
+            'HM': 'AU',  # Heard Island and McDonald Islands, Australian territory
+            'HK': 'CN',  # Hong Kong,                         Chinese territory
+            'MO': 'CN',  # Macao,                             Chinese territory
+            'FO': 'DK',  # Faroe Islands,                     Danish territory
+            'AX': 'FI',  # Åland,                             Finnish territory
+            'AQ': 'FR',  # Antarctica,                        French territory
+            'BL': 'FR',  # Saint Barthelemy,                  French territory
+            'GF': 'FR',  # French Guiana,                     French territory
+            'GP': 'FR',  # Guadeloupe,                        French territory
+            'GY': 'FR',  # Guyana,                            French territory
+            'MF': 'FR',  # Saint Martin,                      French territory
+            'MQ': 'FR',  # Martinique,                        French territory
+            'NC': 'FR',  # New Caledonia,                     French territory
+            'PF': 'FR',  # French Polynesia,                  French territory
+            'PM': 'FR',  # Saint Pierre and Miquelon,         French territory
+            'RE': 'FR',  # Reunion,                           French territory
+            'TF': 'FR',  # French Southern Territories,       French territory
+            'WF': 'FR',  # Wallis and Futuna,                 French territory
+            'YT': 'FR',  # Mayotte,                           French territory
+            'GI': 'GB',  # Gibraltar,                         British territory
+            'IM': 'GB',  # Isle of Man,                       British territory
+            'IO': 'GB',  # British Indian Ocean Territory,    British territory
+            'JE': 'GB',  # Jersey,                            British territory
+            'PN': 'GB',  # Pitcairn,                          British territory
+            'SH': 'GB',  # Saint Helena,                      British territory
+            'VG': 'GB',  # British Virgin Islands,            British territory
+            'BQ': 'NL',  # Bonaire,                           Dutch territory
+            'SX': 'NL',  # Sint Maarten,                      Dutch territory
+            'BV': 'NO',  # Bouvet Island,                     Norwegian territory
+            'SJ': 'NO',  # Svalbard and Jan Mayen,            Norwegian territory
+            'AS': 'US',  # American Samoa,                    American territory
+            'GU': 'US',  # Guam,                              American territory
+            'MP': 'US',  # Northern Mariana Islands,          American territory
+            'VI': 'US',  # US Virgin Islands,                 American territory
+        }
+
+    else:
+        foreign_territories_mapping = {}
+
+    result = geocode(
+        query={
+            **(
+                {
+                    'countrycodes': foreign_territories_mapping.get(
+                        row['address_country_code'],
+                        row['address_country_code'],
+                    ),
+                }
+                if 'address_country_code' in df.columns
+                and pd.notna(row['address_country_code'])
+                else {}
+            ),
+            **(
+                {'country': row['address_country']}
+                if 'address_country' in df.columns and pd.notna(row['address_country'])
+                else {}
+            ),
+            **(
+                {'state': row['address_state']}
+                if 'address_state' in df.columns and pd.notna(row['address_state'])
+                else {}
+            ),
+            **(
+                {'county': row['address_county']}
+                if 'address_county' in df.columns and pd.notna(row['address_county'])
+                else {}
+            ),
+            **(
+                {'city': row['address_city']}
+                if 'address_city' in df.columns and pd.notna(row['address_city'])
+                else {}
+            ),
+            **(
+                {'postalcode': row['address_postal_code']}
+                if 'address_postal_code' in df.columns
+                and pd.notna(row['address_postal_code'])
+                else {}
+            ),
+            **(
+                {'street': row['address_street']}
+                if 'address_street' in df.columns and pd.notna(row['address_street'])
+                else {}
+            ),
+            **(
+                {'amenity': row['address_amenity']}
+                if 'address_amenity' in df.columns and pd.notna(row['address_amenity'])
+                else {}
+            ),
+        }
+        if query_type == 'structured'
+        else row['address_location'],
+        exactly_one=True,
+        addressdetails=True,
+        extratags=False,
+        namedetails=True,
+        language='en',
+        timeout=None,
+    )
+
+    # Return objects
+    return result
+
+
+def geocoder(
+    *,
+    df,
+    query_type=None,
+    chunk_size=50,
+    filepath=None,
+    fillna=None,
+    foreign_territories_mapping=False,
+):
     """Given a DataFrame input with location columns, split it into multiple chunks and run the geocoder, saving all chunks where the geocoder has already been run as a pickle file."""
     # Create variables
     execution_start = datetime.now()
@@ -80,85 +197,82 @@ def geocoder(*, df, query_type=None, chunk_size=50, filepath=None, fillna=None):
     if 'location_geolocation' not in df.columns:
         df['location_geolocation'] = None
 
+    # Create 'geocoding_match_level' column if non-existent:
+    if 'geocoding_match_level' not in df.columns:
+        df['geocoding_match_level'] = None
+
     # Create empty DataFrame
     df_geolocation = pd.DataFrame(data=None, index=None, columns=None, dtype=None)
+
+    if query_type == 'structured':
+        # Address columns
+        address_columns = [
+            'address_amenity',
+            'address_street',
+            'address_postal_code',
+            'address_city',
+            'address_county',
+            'address_state',
+            'address_country_code',
+            'address_country',
+        ]
+
+        # Geocoding match level mapping dictionary
+        geocoding_match_level_mapping = {
+            'address_amenity': 'Amenity',
+            'address_street': 'Street',
+            'address_postal_code': 'Postal Code',
+            'address_city': 'City',
+            'address_county': 'County',
+            'address_state': 'State',
+            'address_country_code': 'Country',
+            'address_country': 'Country',
+        }
 
     # Slice DataFrame into multiple chunks and run the geocoder for empty 'location_geolocation'
     for batch in batched(iterable=range(len(df)), n=chunk_size):
         df_chunk = df.iloc[min(batch) : max(batch) + 1].copy()
-        df_chunk['location_geolocation'] = df_chunk.apply(
-            lambda row: geocode(
-                query={
-                    **(
-                        {'countrycodes': row['address_country_code']}
-                        if 'address_country_code' in df.columns
-                        and pd.notna(row['address_country_code'])
-                        else {}
-                    ),
-                    **(
-                        {'country': row['address_country']}
-                        if 'address_country' in df.columns
-                        and pd.notna(row['address_country'])
-                        else {}
-                    ),
-                    **(
-                        {'state': row['address_state']}
-                        if 'address_state' in df.columns
-                        and pd.notna(row['address_state'])
-                        else {}
-                    ),
-                    **(
-                        {'county': row['address_county']}
-                        if 'address_county' in df.columns
-                        and pd.notna(row['address_county'])
-                        else {}
-                    ),
-                    **(
-                        {'city': row['address_city']}
-                        if 'address_city' in df.columns
-                        and pd.notna(row['address_city'])
-                        else {}
-                    ),
-                    **(
-                        {'postalcode': row['address_postal_code']}
-                        if 'address_postal_code' in df.columns
-                        and pd.notna(row['address_postal_code'])
-                        else {}
-                    ),
-                    **(
-                        {'street': row['address_street']}
-                        if 'address_street' in df.columns
-                        and pd.notna(row['address_street'])
-                        else {}
-                    ),
-                    **(
-                        {'amenity': row['address_amenity']}
-                        if 'address_amenity' in df.columns
-                        and pd.notna(row['address_amenity'])
-                        else {}
-                    ),
-                }
-                if query_type == 'structured'
-                else row['address_location'],
-                exactly_one=True,
-                addressdetails=True,
-                extratags=False,
-                namedetails=True,
-                language='en',
-                timeout=None,
-            )
-            if pd.isna(row['location_geolocation'])
-            else row['location_geolocation'],
-            axis=1,
-        )
 
-        if fillna is not None:
-            # Fill not found locations with value
-            df_chunk['location_geolocation'] = df_chunk['location_geolocation'].fillna(
-                value=fillna,
-                method=None,
-                axis=0,
-            )
+        for index, row in df_chunk.iterrows():
+            if query_type == 'structured':
+                for i, address_column in enumerate(address_columns):
+                    if (
+                        row['location_geolocation'] is None
+                        and address_column in df_chunk.columns
+                        and row[address_column] is not None
+                    ):
+                        row['location_geolocation'] = geocoder_query(
+                            df=df_chunk.drop(
+                                columns=address_columns[:i],
+                                axis=1,
+                                errors='ignore',
+                            ),
+                            row=row,
+                            query_type=query_type,
+                            foreign_territories_mapping=foreign_territories_mapping,
+                        )
+
+                        if pd.notna(row['location_geolocation']):
+                            row[
+                                'geocoding_match_level'
+                            ] = geocoding_match_level_mapping.get(
+                                address_column,
+                                address_column,
+                            )
+
+                    else:
+                        pass
+
+            elif query_type == 'free-form':
+                row['location_geolocation'] = geocoder_query(
+                    df=df_chunk,
+                    row=row,
+                    query_type=query_type,
+                    foreign_territories_mapping=foreign_territories_mapping,
+                )
+
+                # if fillna is not None and pd.isna(row['location_geolocation']):
+                # row['location_geolocation'] = fillna
 
         # Concatenate DataFrames
         if not df_chunk.empty:

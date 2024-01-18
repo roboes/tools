@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2023-11-29
+# Last update: 2024-01-18
 
 
 """About: Geocoder tools test."""
@@ -63,7 +63,15 @@ reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
 # Create example DataFrame
 df = pd.DataFrame(
     data=[
-        ['de', 'Germany', 'Bavaria', 'München', '85356', 'Nordallee 25'],
+        [
+            'de',
+            'Germany',
+            'Bavaria',
+            'München',
+            '85356',
+            'Nordallee 25',
+            'Munich International Airport',
+        ],
     ],
     index=None,
     columns=[
@@ -73,6 +81,7 @@ df = pd.DataFrame(
         'address_city',
         'address_postal_code',
         'address_street',
+        'address_amenity',
     ],
     dtype='str',
 )
@@ -103,6 +112,7 @@ df_geo = geocoder(
     chunk_size=50,
     filepath='df_geolocation_slice.pkl',
     fillna='#',
+    foreign_territories_mapping=False,
 )
 print(df_geo)
 
