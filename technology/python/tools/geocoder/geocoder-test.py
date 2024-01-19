@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2024-01-18
+# Last update: 2024-01-19
 
 
 """About: Geocoder tools test."""
@@ -75,7 +75,7 @@ df = pd.DataFrame(
     ],
     index=None,
     columns=[
-        'address_country_code',
+        'address_country_codes_filter',
         'address_country',
         'address_state',
         'address_city',
