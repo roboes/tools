@@ -1,6 +1,9 @@
 # Recommended iOS Settings
 
-(Optional) Reset all settings (holding iCloud and e-mail accounts): Settings > General > Transfer or Reset iPhone > Reset > Reset All Settings.
+<details>
+  <summary>:warning: (Optional) Reset all settings (holding iCloud and e-mail accounts)</summary>
+  Settings > General > Transfer or Reset iPhone > Reset > Reset All Settings.
+</details>
 
 
 ## iPad Recommended Settings
