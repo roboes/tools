@@ -1,10 +1,11 @@
 # Snacks
-- [Bolo de Pão de Queijo](#bolo-de-pão-de-queijo)
 
+- [Bolo de Pão de Queijo](#bolo-de-pão-de-queijo)
 
 ## Bolo de Pão de Queijo
 
 ### Ingredients
+
 - 3x xicaras de polvilho doce.
 - 1x xicara de óleo.
 - 1x xicara de leite.
@@ -13,15 +14,15 @@
 - 1x colher de sopa bem rasa de fermento em pó.
 - Sal a gosto.
 
-
 ### Preparation
+
 1. Colocar numa forma de bolo com furo no meio, forma bem untada com óleo.
 2. Colocar no forno pré-aquecido a 180 graus até dourar.
-
 
 ## Pao de Queijo
 
 ### Ingredients
+
 (1) 200 ml leite\
 (1) 4x colheres de sopa de óleo de oliva\
 (2) 250g polvilho azedo\
@@ -33,17 +34,18 @@
 (4) 85g parmesão
 
 ### Preparation
+
 1. Ferver (1).
 2. Juntar (1) e (2), misturar. Depois que esfriar, colocar (3) e misturar.
 3. Colocar (4) e misturar.
 4. Forno 180°, 30-40 minutos.
-
 
 ## Pao de Queijo European
 
 Pão de Queijo that uses tapioca starch instead of polvilho azedo/doce.
 
 ### Ingredients
+
 (1) 150ml milk.\
 (1) 3x tablespoons vegetable oil (e.g. EN: "rapeseed oil" / DE: "Pflanzenöl aus Raps").\
 (2) 250g tapioca starch.\
@@ -53,6 +55,7 @@ Pão de Queijo that uses tapioca starch instead of polvilho azedo/doce.
 (4) 250g grated cheese (it can be one type of cheese or a mixture of gouda, emmental and/or mozzarella cheese).
 
 ### Preparation
+
 0. Preheat the oven at 180° while following the preparation steps below.
 1. Boil ingredients in (1) until bubbling.
 2. Add (1) and (2), mix. After it cools, add (3) and mix. If necessary, add tapioca starch (~15g) if the dough is soft.
