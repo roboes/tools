@@ -1,13 +1,15 @@
 # Sweets
+
 - [Bolo de Chocolate (Petit Gâteau)](#bolo-de-chocolate-petit-g%C3%A2teau)
 - [Brownie](#brownie)
 - [Cookie Vegan](#cookie-vegan)
 
-
 ## Bolo de Chocolate (Petit Gâteau)
+
 Credits: Sérgio
 
 ### Ingredients
+
 - 250 gramas de açúcar
 - 50 gramas de farinha
 - 250 gramas de manteiga
@@ -15,20 +17,20 @@ Credits: Sérgio
 - 6 ovos
 - 2 colheres de fermento
 
-
 ### Preparation
+
 - Bater os ovos com o açúcar.
 - Derreter o chocolate com a manteiga em banho maria.
 - Juntar o chocolate derretido com a manteiga.
 - Na mistura dos ovos, bater na velocidade mínima do liquidificador e adicionar aos poucos a farinha e o fermento.
 - Levar ao forno em 200 graus por 12 minutos.
 
-
-
 ## Brownie
+
 Credits: Iara
 
 ### Ingredients
+
 - 200g manteiga.
 - 170g chocolate meio amargo.
 - 3 ovos.
@@ -37,6 +39,7 @@ Credits: Iara
 - 1.5 xícaras açúcar.
 
 ### Preparation
+
 1. Pré-aquecer o forno.
 2. Untar assadeira com manteiga e farinha.
 3. Passar farinha e fermento peneira.
@@ -47,10 +50,9 @@ Credits: Iara
 8. Transferir para assadeira untada.
 9. Levar ao forno pré-aquecido (~20 minutos).
 
-
 ## Cookie Vegan
-Credits: Valentina
 
+Credits: Valentina
 
 ### Ingredients
 

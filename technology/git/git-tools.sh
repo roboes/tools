@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-01-03
+# Last update: 2024-01-24
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -10,6 +10,10 @@ wsl
 # echo insecure >> ~/.curlrc
 # HOMEBREW_CURLRC=1
 # export HOMEBREW_CURLRC
+
+
+# Homebrew update
+# brew update && brew upgrade && brew cleanup
 
 
 # Install GitHub CLI

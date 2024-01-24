@@ -9,11 +9,9 @@ LocalSend ([Website](https://localsend.org) | [GitHub](https://github.com/locals
 
 See [this post](https://github.com/roboes/tools/tree/main/sports).
 
-
 ## Photos
 
 PhotoScan by Google Photos ([Website](https://www.google.com/photos/scan/) | [Android](https://play.google.com/store/apps/details?id=com.google.android.apps.photos.scanner) | [iOS](https://apps.apple.com/app/photoscan-by-google-photos/id1165525994)): Photo scanner.
-
 
 ## Productivity
 
