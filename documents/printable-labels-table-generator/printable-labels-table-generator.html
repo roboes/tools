@@ -1,5 +1,5 @@
 <!-- Printable Labels Table Generator -->
-<!-- Last update: 2024-01-24 -->
+<!-- Last update: 2024-01-25 -->
 
 <!-- About: 24 (8 rows x 3 columns) A4 size printable self-adhesive labels table generator. -->
 
@@ -45,7 +45,7 @@
         height: auto;
         margin: 0;
         padding: 8px;
-        background-color: #CCCCCC;
+        background-color: #cccccc;
       }
 
       table.table-filter td {
@@ -57,11 +57,11 @@
         height: auto;
         margin: 0;
         padding: 8px;
-        border: 0.5px #CCCCCC;
+        border: 0.5px #cccccc;
       }
 
       table.table-filter tr:nth-child(even) {
-        background-color: #F2F2F2;
+        background-color: #f2f2f2;
       }
 
       table.table-generated {
@@ -86,16 +86,14 @@
         box-sizing: border-box;
         margin: 0;
         padding: 8px;
-        border: 0.5px dashed #CCCCCC;
+        border: 0.5px dashed #cccccc;
       }
 
       table.table-generated tr:nth-child(even) {
-        background-color: #F2F2F2;
+        background-color: #f2f2f2;
       }
 
-
       @media print {
-
         body {
           margin: 0;
           padding: 0;
@@ -103,7 +101,7 @@
 
         table.table-generated {
           font-family: Arial, sans-serif;
-          font-size: 12.5px;
+          font-size: 12px;
           border-collapse: collapse;
           border-style: hidden;
           width: 100vw;
@@ -114,26 +112,18 @@
           break-inside: avoid;
         }
 
-        <!-- Non-printable area -->
+        /* Non-printable margin */
         table.table-generated .printer-padding-top {
-          box-sizing: border-box;
-          margin: 0;
-          padding-top: 30px;
+          padding-top: 4.5mm auto;
         }
         table.table-generated .printer-padding-right {
-          box-sizing: border-box;
-          margin: 0;
-          padding-right: 30px;
+          padding-right: 4.5mm auto;
         }
         table.table-generated .printer-padding-bottom {
-          box-sizing: border-box;
-          margin: 0;
-          padding-bottom: 30px;
+          padding-bottom: 4.5mm auto;
         }
         table.table-generated .printer-padding-left {
-          box-sizing: border-box;
-          margin: 0;
-          padding-left: 30px;
+          padding-left: 4.5mm auto;
         }
 
         table.table-generated td {
@@ -143,20 +133,18 @@
           text-overflow: ellipsis;
           white-space: nowrap;
           vertical-align: middle;
-          <!-- A4 size -->
+          /* A4 size */
           width: calc(100% / 3);
           min-width: calc(100vw / 3);
           max-width: calc(100vw / 3);
           height: calc(100% / 8);
           min-height: calc(100vh / 8);
           max-height: calc(100vh / 8);
-          <!-- -->
           box-sizing: border-box;
           margin: 0;
-          padding: 8px;
-          border: 0;
+          padding: 0 0 0 5mm;
+          border: 0.5px dashed #cccccc;
         }
-
       }
     </style>
   </head>
