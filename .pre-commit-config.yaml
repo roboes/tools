@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-01-24
+# Last update: 2024-01-25
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -159,7 +159,12 @@ repos:
     rev: v2.2.6
     hooks:
       - id: codespell
-        exclude: "at-post-letter-template.py|dkb-bank-transactions.py|printable-labels-table-generator.html|tcx-tools.py"
+        # exclude: "dkb-bank-transactions.py"
+        args: # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
+          [
+            --ignore-words-list,
+            "als,ges,ist,nax,oder,produkt,ressource,sie,termine",
+          ]
 
 default_language_version:
   python: python3
