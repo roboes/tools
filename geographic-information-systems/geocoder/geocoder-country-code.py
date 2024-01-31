@@ -1,5 +1,5 @@
 ## Geocoder Country Code
-# Last update: 2024-01-09
+# Last update: 2024-01-31
 
 
 """About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
@@ -37,6 +37,7 @@ def download_world_boundaries_shapefile(*, shapefile_path):
             initial_bytes=requests.get(
                 url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip',
                 timeout=5,
+                verify=True,
             ).content,
         ),
         mode='r',

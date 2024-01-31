@@ -107,57 +107,63 @@ def geocoder_query(*, df, row, query_type, foreign_territories_mapping=False):
         foreign_territories_mapping = {}
 
     geolocation = geocode(
-        query={
-            **(
-                {
-                    'countrycodes': foreign_territories_mapping.get(
-                        row['address_country_codes_filter'].lower(),
-                        row['address_country_codes_filter'],
-                    ),
-                }
-                if 'address_country_codes_filter' in df.columns
-                and pd.notna(row['address_country_codes_filter'])
-                else {}
-            ),
-            **(
-                {'country': row['address_country']}
-                if 'address_country' in df.columns and pd.notna(row['address_country'])
-                else {}
-            ),
-            **(
-                {'state': row['address_state']}
-                if 'address_state' in df.columns and pd.notna(row['address_state'])
-                else {}
-            ),
-            **(
-                {'county': row['address_county']}
-                if 'address_county' in df.columns and pd.notna(row['address_county'])
-                else {}
-            ),
-            **(
-                {'city': row['address_city']}
-                if 'address_city' in df.columns and pd.notna(row['address_city'])
-                else {}
-            ),
-            **(
-                {'postalcode': row['address_postal_code']}
-                if 'address_postal_code' in df.columns
-                and pd.notna(row['address_postal_code'])
-                else {}
-            ),
-            **(
-                {'street': row['address_street']}
-                if 'address_street' in df.columns and pd.notna(row['address_street'])
-                else {}
-            ),
-            **(
-                {'amenity': row['address_amenity']}
-                if 'address_amenity' in df.columns and pd.notna(row['address_amenity'])
-                else {}
-            ),
-        }
-        if query_type == 'structured'
-        else row['address_location'],
+        query=(
+            {
+                **(
+                    {
+                        'countrycodes': foreign_territories_mapping.get(
+                            row['address_country_codes_filter'].lower(),
+                            row['address_country_codes_filter'],
+                        ),
+                    }
+                    if 'address_country_codes_filter' in df.columns
+                    and pd.notna(row['address_country_codes_filter'])
+                    else {}
+                ),
+                **(
+                    {'country': row['address_country']}
+                    if 'address_country' in df.columns
+                    and pd.notna(row['address_country'])
+                    else {}
+                ),
+                **(
+                    {'state': row['address_state']}
+                    if 'address_state' in df.columns and pd.notna(row['address_state'])
+                    else {}
+                ),
+                **(
+                    {'county': row['address_county']}
+                    if 'address_county' in df.columns
+                    and pd.notna(row['address_county'])
+                    else {}
+                ),
+                **(
+                    {'city': row['address_city']}
+                    if 'address_city' in df.columns and pd.notna(row['address_city'])
+                    else {}
+                ),
+                **(
+                    {'postalcode': row['address_postal_code']}
+                    if 'address_postal_code' in df.columns
+                    and pd.notna(row['address_postal_code'])
+                    else {}
+                ),
+                **(
+                    {'street': row['address_street']}
+                    if 'address_street' in df.columns
+                    and pd.notna(row['address_street'])
+                    else {}
+                ),
+                **(
+                    {'amenity': row['address_amenity']}
+                    if 'address_amenity' in df.columns
+                    and pd.notna(row['address_amenity'])
+                    else {}
+                ),
+            }
+            if query_type == 'structured'
+            else row['address_location']
+        ),
         exactly_one=True,
         addressdetails=True,
         extratags=False,
@@ -311,185 +317,231 @@ def geocoder_location_columns(*, df_geo):
     """Given the 'location_geolocation' column, split the location information into multiple location columns."""
     # location_country
     df_geo['location_country'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('country')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('country')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_country_code
     df_geo['location_country_code'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('country_code')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('country_code')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_state
     df_geo['location_state'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('state')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('state')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_county
     df_geo['location_county'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('county')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('county')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_city
     df_geo['location_city'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('city')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('city')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_suburb
     df_geo['location_suburb'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('suburb')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('suburb')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_borough
     df_geo['location_borough'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('borough')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('borough')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_province
     df_geo['location_province'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('province')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('province')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_district
     df_geo['location_district'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('district')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('district')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_subdistrict
     df_geo['location_subdistrict'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('subdistrict')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('subdistrict')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_industrial
     df_geo['location_industrial'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('industrial')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('industrial')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_postal_code
     df_geo['location_postal_code'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('postcode')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('postcode')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_road
     df_geo['location_road'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('road')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('road')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_hamlet
     df_geo['location_hamlet'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('hamlet')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('hamlet')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_house_number
     df_geo['location_house_number'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('house_number')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('house_number')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_amenity
     df_geo['location_amenity'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('amenity')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('amenity')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_building
     df_geo['location_building'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('address').get('building')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('building')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_addresstype
     df_geo['location_addresstype'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('addresstype')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('addresstype')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_type
     df_geo['location_type'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('type')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('type')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_class
     df_geo['location_class'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('class')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('class')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_name
     df_geo['location_name'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('name')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('name')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_latitude
     df_geo['location_latitude'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('lat')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('lat')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 
     # location_longitude
     df_geo['location_longitude'] = df_geo.apply(
-        lambda row: row['location_geolocation'].raw.get('lon')
-        if pd.notna(row['location_geolocation'])
-        else None,
+        lambda row: (
+            row['location_geolocation'].raw.get('lon')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
         axis=1,
     )
 

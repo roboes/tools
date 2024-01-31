@@ -471,7 +471,7 @@ os.makedirs(name='Activities Output', exist_ok=True)
 # Create .tcx files from activities
 activities_apple_health_import = activities_apple_health_to_strava(
     activities_apple_health=activities_apple_health.query(
-        'source_name.isin(["Daily Yoga", "Nike Run Club"])',
+        expr='source_name.isin(["Daily Yoga", "Nike Run Club"])',
     ),
     output_directory='Activities Output',
 )
