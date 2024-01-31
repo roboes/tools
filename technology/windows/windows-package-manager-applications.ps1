@@ -12,6 +12,7 @@
 
 # Find applications
 # winget list --query="PDFsam"
+# winget search "Apple" --source=msstore
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
@@ -35,6 +36,7 @@ winget install --exact --id=Telegram.TelegramDesktop
 winget install --exact --id=Google.NearbyShare
 winget install --exact --id=Sigil-Ebook.Sigil
 winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
+winget install --exact --id=9NP83LWLPZ9K # Apple Devices
 
 # Applications not available on winget
 # https://freefilesync.org/download.php

@@ -2,7 +2,7 @@
 # Last update: 2023-09-03
 
 
-"""Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
+"""About: Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
 
 
 ###############

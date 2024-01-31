@@ -2,7 +2,7 @@
 # Last update: 2023-11-25
 
 
-"""Script to rename files and folders."""
+"""About: Script to rename files and folders."""
 
 
 ###############

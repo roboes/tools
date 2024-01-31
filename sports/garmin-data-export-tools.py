@@ -2,7 +2,7 @@
 # Last update: 2023-11-26
 
 
-"""Script that performs a series of transformations to the Garmin Data Export Request."""
+"""About: Script that performs a series of transformations to the Garmin Data Export Request."""
 
 
 ###############
@@ -34,6 +34,7 @@ with ZipFile(
         initial_bytes=requests.get(
             url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip',
             timeout=5,
+            verify=True,
         ).content,
     ),
     mode='r',
@@ -42,6 +43,9 @@ with ZipFile(
     zip_file.extractall(
         path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'),
     )
+
+# Delete objects
+del zip_file
 
 os.chdir(
     path=os.path.join(
@@ -367,7 +371,7 @@ def activities_garmin_compare(
     )
 
     activities_garmin_compare_1 = activities_garmin.query(
-        'activity_type != "Other"',
+        expr='activity_type != "Other"',
     ).merge(
         right=activities_strava.drop(
             columns=['activity_date'],
@@ -380,7 +384,7 @@ def activities_garmin_compare(
     )
 
     activities_garmin_compare_2 = activities_garmin.query(
-        'activity_type == "Other"',
+        expr='activity_type == "Other"',
     ).merge(
         right=activities_strava.drop(
             columns=['activity_date', 'activity_type'],
@@ -462,7 +466,7 @@ def activities_garmin_compare_not_matched(*, activities_garmin_compare):
     activities_garmin_strava_excel_import = (
         activities_garmin_compare
         # Filter rows
-        .query('_merge == "left_only"')
+        .query(expr='_merge == "left_only"')
         # Create empty 'activity_description' column
         .assign(activity_description='')
         # Create empty 'commute' column

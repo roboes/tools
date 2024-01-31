@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2023-08-01
+# Last update: 2024-01-28
 
 
 # Rename: ExifTool
@@ -219,3 +219,10 @@ magick mogrify -monitor -resize 50% "./*.HEIC"
 
 # Replace all colors except background in .png image with white
 magick convert "./input.png" -fill white -colorize 100 "./output.png"
+
+
+
+## Other tools
+
+# Download image using curl
+curl "https://www.python.org/static/apple-touch-icon-144x144-precomposed.png" > "./precomposed.png"
