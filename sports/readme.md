@@ -9,7 +9,6 @@ Strava add-ons:\
 [Project Kodos](https://labs.strava.com/kodos/): Kudos statistics.\
 [The Roster](https://labs.strava.com/roster/): Visually analyze your athletic social habits, total group activities and preferred training partners.
 
-
 # Utilities
 
 ## Cycling
@@ -115,5 +114,6 @@ None.
 
 # See also
 
+[Workout Transferer](https://github.com/andre0707/WorkoutTransferer): Read and export Apple Health activities.\
 [Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): Download Nike Run Club activities and convert them to .gpx.\
 [Torben's Strava Äpp](https://entorb.net/strava/): Set of Strava tools, including the feature to import activities from an Excel/.csv to Strava.

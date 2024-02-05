@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-01-19
+# Last update: 2024-02-05
 
 
 """About: Geocoder tools."""
@@ -118,46 +118,56 @@ def geocoder_query(*, df, row, query_type, foreign_territories_mapping=False):
                     }
                     if 'address_country_codes_filter' in df.columns
                     and pd.notna(row['address_country_codes_filter'])
+                    and row['address_country_codes_filter'] != ''
                     else {}
                 ),
                 **(
                     {'country': row['address_country']}
                     if 'address_country' in df.columns
                     and pd.notna(row['address_country'])
+                    and row['address_country'] != ''
                     else {}
                 ),
                 **(
                     {'state': row['address_state']}
-                    if 'address_state' in df.columns and pd.notna(row['address_state'])
+                    if 'address_state' in df.columns
+                    and pd.notna(row['address_state'])
+                    and row['address_state'] != ''
                     else {}
                 ),
                 **(
                     {'county': row['address_county']}
                     if 'address_county' in df.columns
                     and pd.notna(row['address_county'])
+                    and row['address_county'] != ''
                     else {}
                 ),
                 **(
                     {'city': row['address_city']}
-                    if 'address_city' in df.columns and pd.notna(row['address_city'])
+                    if 'address_city' in df.columns
+                    and pd.notna(row['address_city'])
+                    and row['address_city'] != ''
                     else {}
                 ),
                 **(
                     {'postalcode': row['address_postal_code']}
                     if 'address_postal_code' in df.columns
                     and pd.notna(row['address_postal_code'])
+                    and row['address_postal_code'] != ''
                     else {}
                 ),
                 **(
                     {'street': row['address_street']}
                     if 'address_street' in df.columns
                     and pd.notna(row['address_street'])
+                    and row['address_street'] != ''
                     else {}
                 ),
                 **(
                     {'amenity': row['address_amenity']}
                     if 'address_amenity' in df.columns
                     and pd.notna(row['address_amenity'])
+                    and row['address_amenity'] != ''
                     else {}
                 ),
             }
