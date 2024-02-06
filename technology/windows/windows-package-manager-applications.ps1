@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-12-26
+# Last update: 2024-02-06
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -39,6 +39,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 winget install --exact --id=9NP83LWLPZ9K # Apple Devices
 
 # Applications not available on winget
+# https://apps.microsoft.com/detail/9PM860492SZD
 # https://freefilesync.org/download.php
 # https://github.com/marktext/marktext/releases
 

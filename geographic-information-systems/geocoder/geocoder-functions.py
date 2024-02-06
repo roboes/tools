@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-02-05
+# Last update: 2024-02-06
 
 
 """About: Geocoder tools."""
@@ -18,15 +18,20 @@ from geopy.geocoders import Nominatim
 import pandas as pd
 
 
-# Geocoder setup
+# Settings
+
+## Geocoder
 geolocator = Nominatim(
     domain='nominatim.openstreetmap.org',
     scheme='https',
     user_agent='python-geocoder',
 )
-
 geocode = RateLimiter(func=geolocator.geocode, min_delay_seconds=1)
 reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
+
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ###########

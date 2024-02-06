@@ -1,5 +1,5 @@
 ## Geocoder Country Code
-# Last update: 2024-01-31
+# Last update: 2024-02-06
 
 
 """About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
@@ -22,6 +22,13 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import geopandas as gpd
 import pandas as pd
 import requests
+
+
+# Settings
+
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ###########
