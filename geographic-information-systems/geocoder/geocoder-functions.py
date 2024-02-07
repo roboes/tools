@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-02-06
+# Last update: 2024-02-07
 
 
 """About: Geocoder tools."""
@@ -208,9 +208,6 @@ def geocoder(
     # Create variables
     execution_start = datetime.now()
 
-    # Make a copy of this object's indices and data
-    df = df.copy(deep=True)
-
     for column in df.columns[df.columns.str.startswith('address_')].tolist():
         # Remove leading/trailing whitespaces
         df[column] = df[column].replace(to_replace=r'^ +| +$', value=r'', regex=True)
@@ -257,7 +254,7 @@ def geocoder(
 
     # Slice DataFrame into multiple chunks and run the geocoder for empty 'location_geolocation'
     for batch in batched(iterable=range(len(df)), n=chunk_size):
-        df_chunk = df.iloc[min(batch) : max(batch) + 1].copy()
+        df_chunk = df.iloc[min(batch) : max(batch) + 1]
 
         for index, row in df_chunk.iterrows():
             if query_type == 'structured':
