@@ -1,8 +1,8 @@
 ## Geocoder Country Code
-# Last update: 2023-12-21
+# Last update: 2024-02-06
 
 
-"""Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
+"""About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
 
 
 ###############
@@ -24,6 +24,13 @@ import pandas as pd
 import requests
 
 
+# Settings
+
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
+
+
 ###########
 # Functions
 ###########
@@ -37,6 +44,7 @@ def download_world_boundaries_shapefile(*, shapefile_path):
             initial_bytes=requests.get(
                 url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip',
                 timeout=5,
+                verify=True,
             ).content,
         ),
         mode='r',
@@ -61,12 +69,12 @@ def geocoder_country_code(*, df, shapefile_path):
         gpd.read_file(
             filename=shapefile_path,
             layer=None,
+            include_fields=['ISO3_CODE', 'geometry'],
+            driver=None,
             encoding='utf-8',
         )
         # Rename columns
         .rename(columns={'ISO3_CODE': 'country_code'})
-        # Select columns
-        .filter(items=['country_code', 'geometry'])
         # Rearrange rows
         .sort_values(by=['country_code'], ignore_index=True)
     )

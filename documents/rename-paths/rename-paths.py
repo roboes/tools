@@ -2,7 +2,7 @@
 # Last update: 2023-11-25
 
 
-"""Script to rename files and folders."""
+"""About: Script to rename files and folders."""
 
 
 ###############
@@ -20,7 +20,9 @@ from pathlib import Path
 import re
 
 
-# Set working directory
+# Settings
+
+## Set working directory
 os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 
 

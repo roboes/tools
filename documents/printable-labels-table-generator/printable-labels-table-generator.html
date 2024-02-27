@@ -1,0 +1,589 @@
+<!-- Printable Labels Table Generator -->
+<!-- Last update: 2024-01-30 -->
+
+<!-- About: 24 (8 rows x 3 columns) A4 size printable self-adhesive labels table generator. -->
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Printable Labels Table Generator</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+      }
+
+      h2 {
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+      }
+
+      div {
+        display: none;
+      }
+
+      table.table-filter {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        border-collapse: collapse;
+        border-style: hidden;
+        width: 70%;
+        margin: 0;
+        padding: 0;
+      }
+
+      table.table-filter th {
+        text-align: left;
+        word-wrap: break-word;
+        overflow: hidden;
+        vertical-align: middle;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 8px;
+        background-color: #cccccc;
+      }
+
+      table.table-filter td {
+        text-align: left;
+        word-wrap: break-word;
+        overflow: hidden;
+        vertical-align: middle;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 8px;
+        border: 0.5px #cccccc;
+      }
+
+      table.table-filter tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      table.table-generated {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        border-collapse: collapse;
+        border-style: hidden;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      table.table-generated td {
+        text-align: left;
+        word-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+        width: auto;
+        height: auto;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 8px;
+        border: 0.5px dashed #cccccc;
+      }
+
+      table.table-generated tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        table.table-generated {
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          border-collapse: collapse;
+          border-style: hidden;
+          width: 100vw;
+          height: 100vh;
+          table-layout: fixed;
+          margin: 0;
+          padding: 0;
+          break-inside: avoid;
+        }
+
+        /* Non-printable margin */
+        table.table-generated .printer-padding-top {
+          padding-top: calc(1mm) !important;
+        }
+        table.table-generated .printer-padding-right {
+          padding-right: calc(5mm + 2.5mm) !important;
+        }
+        table.table-generated .printer-padding-bottom {
+          padding-bottom: calc(1mm) !important;
+        }
+        table.table-generated .printer-padding-left {
+          padding-left: calc(5mm + 2.5mm) !important;
+        }
+
+        table.table-generated td {
+          text-align: left;
+          word-wrap: break-word;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          vertical-align: middle;
+          /* A4 size */
+          width: calc(100% / 3);
+          min-width: calc(100vw / 3);
+          max-width: calc(100vw / 3);
+          height: calc(100% / 8);
+          min-height: calc(100vh / 8);
+          max-height: calc(100vh / 8);
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0 0 0 5mm;
+          border: 0.5px dashed #cccccc;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Printable Labels Table Generator</h2>
+
+    <br />
+
+    <div class="en">
+      Instructions: Define the cells to which the generator should be applied
+      (row wise) and select the "Product" and "Date". Press "Generate".<br />
+    </div>
+    <div class="de">
+      Anleitung: Zellen definieren, auf die der Generator angewendet werden soll
+      (zeilenweise) und „Produkt“ und „Datum“ auswählen. Auf „Generieren“
+      drücken.
+    </div>
+
+    <br />
+
+    <div class="en">
+      Printer settings: Layout: Portrait; Paper size: A4; Margins: None; Scale:
+      Default; Options: Disable "Background graphics".<br />
+    </div>
+    <div class="de">
+      Druckereinstellungen: Layout: Portrait; Papierformat: A4; Ränder: Keine;
+      Maßstab: Standard; Optionen: „Hintergrundgrafiken“ deaktivieren.<br />
+    </div>
+
+    <br />
+    <br />
+
+    <table id="table-input" class="table-filter">
+      <tr>
+        <th>
+          <div class="en">From cell</div>
+          <div class="de">Von Zelle</div>
+        </th>
+        <th>
+          <div class="en">To cell</div>
+          <div class="de">Zur Zelle</div>
+        </th>
+        <th>
+          <div class="en">Product</div>
+          <div class="de">Produkt</div>
+        </th>
+        <th>
+          <div class="en">Date</div>
+          <div class="de">Datum</div>
+        </th>
+        <th>
+          <div class="en">Add/Remove option</div>
+          <div class="de">Option hinzufügen/entfernen</div>
+        </th>
+      </tr>
+      <tr>
+        <td>
+          <input
+            type="number"
+            name="cell-start-input"
+            min="1"
+            max="24"
+            value="1"
+            onchange="enableButton()"
+          />
+        </td>
+        <td>
+          <input
+            type="number"
+            name="cell-end-input"
+            min="1"
+            max="24"
+            value="24"
+            onchange="enableButton()"
+          />
+        </td>
+        <td>
+          <select name="product-input" onchange="enableButton()">
+            <option value="" disabled selected></option>
+            <option value="Product A">Product A</option>
+            <option value="Product B">Product B</option>
+          </select>
+        </td>
+        <td>
+          <input type="date" name="date-input" onchange="enableButton()" />
+        </td>
+        <td></td>
+      </tr>
+    </table>
+
+    <br />
+
+    <div class="en">
+      <button type="button" onclick="addRow()">Add row</button
+      >&nbsp;&nbsp;<button
+        type="button"
+        name="generate-table"
+        onclick="generateTable()"
+        disabled
+      >
+        Generate
+      </button>
+    </div>
+    <div class="de">
+      <button type="button" onclick="addRow()">Zeile hinzufügen</button
+      >&nbsp;&nbsp;<button
+        type="button"
+        name="generate-table"
+        onclick="generateTable()"
+        disabled
+      >
+        Generieren
+      </button>
+    </div>
+
+    <br />
+    <br />
+    <br />
+
+    <div id="table-section">
+      <table id="table-generated" class="table-generated">
+        <tr>
+          <td class="printer-padding-top printer-padding-left"></td>
+          <td class="printer-padding-top"></td>
+          <td class="printer-padding-top printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-left"></td>
+          <td></td>
+          <td class="printer-padding-right"></td>
+        </tr>
+        <tr>
+          <td class="printer-padding-bottom printer-padding-left"></td>
+          <td class="printer-padding-bottom"></td>
+          <td class="printer-padding-bottom printer-padding-right"></td>
+        </tr>
+      </table>
+    </div>
+
+    <br /><br />
+
+    <div id="print-button">
+      <br /><br />
+      <div class="en">
+        <button type="button" onclick="printTable()">Print</button>
+      </div>
+      <div class="de">
+        <button type="button" onclick="printTable()">Drucken</button>
+      </div>
+      <br /><br />
+    </div>
+
+    <script>
+      <!-- Get browser language -->
+      var language = navigator.language || navigator.userLanguage;
+      if (language.indexOf("de") > -1) {
+        document.querySelectorAll(".de").forEach(function (el) {
+          el.style.display = "block";
+        });
+      } else {
+        document.querySelectorAll(".en").forEach(function (el) {
+          el.style.display = "block";
+        });
+      }
+
+      <!-- Add rows -->
+      function addRow() {
+        var cellStart = document
+          .querySelectorAll('input[name="cell-start-input"]')[0]
+          .cloneNode(true);
+        cellStart.removeAttribute("value");
+
+        var cellEnd = document
+          .querySelectorAll('input[name="cell-end-input"]')[0]
+          .cloneNode(true);
+        cellEnd.removeAttribute("value");
+
+        var productInput = document
+          .querySelectorAll('select[name="product-input"]')[0]
+          .cloneNode(true);
+        productInput.removeAttribute("value");
+
+        var tableInput = document.querySelector('table[id="table-input"]');
+        var row = tableInput.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+
+        cell1.innerHTML = cellStart.outerHTML;
+        cell2.innerHTML = cellEnd.outerHTML;
+        cell3.innerHTML = productInput.outerHTML;
+        cell4.innerHTML =
+          '<input type="date" name="date-input" value="' +
+          new Date().toISOString().substring(0, 10) +
+          '">';
+        if (language.indexOf("de") > -1) {
+          cell5.innerHTML =
+            '<button type="button" onclick="removeRow(this)">Entfernen</button>';
+        } else {
+          cell5.innerHTML =
+            '<button type="button" onclick="removeRow(this)">Remove</button>';
+        }
+
+        <!-- Clean table body -->
+        cleanTableBody();
+
+        <!-- Enable "Generate" button -->
+        enableButton();
+      }
+
+      <!-- Remove rows -->
+      function removeRow(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+
+        <!-- Clean table body -->
+        cleanTableBody();
+
+        <!-- Enable "Generate" button -->
+        enableButton();
+      }
+
+      <!-- Get today's date -->
+      var today = new Date().toISOString().substring(0, 10);
+      document.querySelectorAll('input[name="date-input"]')[0].value = today;
+
+      <!-- Enable "Generate" button -->
+      function enableButton() {
+        var cellStartInputs = document.querySelectorAll(
+          'input[name="cell-start-input"]',
+        );
+        var cellEndInputs = document.querySelectorAll(
+          'input[name="cell-end-input"]',
+        );
+        var productInputs = document.querySelectorAll(
+          'select[name="product-input"]',
+        );
+        var dateInputs = document.querySelectorAll('input[name="date-input"]');
+        var generateTableButtons = document.querySelectorAll(
+          'button[name="generate-table"]',
+        );
+
+        <!-- Check for cells outside interval range -->
+        var isOutsideIntervalRange = false;
+
+        for (var i = 0; i < cellStartInputs.length; i++) {
+          if (
+            parseInt(cellStartInputs[i].value) < 1 ||
+            parseInt(cellStartInputs[i].value) > 24 ||
+            parseInt(cellEndInputs[i].value) < 1 ||
+            parseInt(cellEndInputs[i].value) > 24
+          ) {
+            isOutsideIntervalRange = true;
+            break;
+          }
+        }
+
+        <!-- Check for overlapping cells -->
+        var isOverlapping = false;
+        var cellRanges = [];
+
+        <!-- Iterate over the existing rows -->
+        for (var i = 0; i < cellStartInputs.length; i++) {
+          var cellStart = parseInt(cellStartInputs[i].value);
+          var cellEnd = parseInt(cellEndInputs[i].value);
+
+          <!-- Check if the cell range overlaps with any existing ranges -->
+          for (var j = 0; j < cellRanges.length; j++) {
+            var existingRange = cellRanges[j];
+            if (
+              cellStart <= existingRange.end &&
+              cellEnd >= existingRange.start
+            ) {
+              isOverlapping = true;
+              break;
+            }
+          }
+
+          <!-- Add the current cell range to the array -->
+          cellRanges.push({ start: cellStart, end: cellEnd });
+
+          if (isOverlapping) {
+            break;
+          }
+        }
+
+        <!-- Check for blank inputs -->
+        var isBlankInput = false;
+
+        for (var i = 0; i < cellStartInputs.length; i++) {
+          if (productInputs[i].value === "" || dateInputs[i].value === "") {
+            isBlankInput = true;
+            break;
+          }
+        }
+
+        <!-- Enable or disable "Generate" button -->
+        if (!isOutsideIntervalRange && !isOverlapping && !isBlankInput) {
+          for (var i = 0; i < generateTableButtons.length; i++) {
+            generateTableButtons[i].disabled = false;
+          }
+        } else {
+          for (var i = 0; i < generateTableButtons.length; i++) {
+            generateTableButtons[i].disabled = true;
+          }
+        }
+      }
+
+      <!-- Generate table -->
+      function generateTable() {
+        var cellStartInputs = document.querySelectorAll(
+          'input[name="cell-start-input"]',
+        );
+        var cellEndInputs = document.querySelectorAll(
+          'input[name="cell-end-input"]',
+        );
+        var productInputs = document.querySelectorAll(
+          'select[name="product-input"]',
+        );
+        var dateInputs = document.querySelectorAll('input[name="date-input"]');
+        var tableGenerated = document.querySelector(
+          'table[id="table-generated"]',
+        );
+
+        for (var i = 0; i < cellStartInputs.length; i++) {
+          var cellStart = parseInt(cellStartInputs[i].value);
+          var cellEnd = parseInt(cellEndInputs[i].value);
+          var productInput = productInputs[i].value;
+          var dateInput = new Date(dateInputs[i].value);
+          var validity = new Date(dateInput);
+          validity.setDate(validity.getDate() + 180);
+
+          for (var j = cellStart - 1; j < cellEnd; j++) {
+            var row = Math.floor(j / 3);
+            var col = j % 3;
+            var cell = tableGenerated.rows[row].cells[col];
+            var product_text = "Product: " + productInput + "<br>";
+            var origin_text = "Origin:" + "<br>";
+            var date_text =
+              "Manufacturing date: " +
+              dateInput.toLocaleDateString("de-DE", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }) +
+              "<br>" +
+              "Expiration date: " +
+              validity.toLocaleDateString("de-DE", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              });
+            if (productInput === "Product A") {
+              cell.innerHTML =
+                product_text +
+                origin_text +
+                "Description Product A" +
+                "<br>" +
+                date_text;
+            } else if (productInput === "Product B") {
+              cell.innerHTML =
+                product_text +
+                origin_text +
+                "Description Product A" +
+                "<br>" +
+                date_text;
+            } else {
+              cell.innerHTML = "";
+            }
+          }
+        }
+
+        <!-- Enable "table-section" section -->
+        document.querySelector('div[id="table-section"]').style.display =
+          "block";
+
+        <!-- Enable "print-button" section -->
+        document.querySelector('div[id="print-button"]').style.display =
+          "block";
+      }
+
+      <!-- Clean table body -->
+      function cleanTableBody() {
+        <!-- Clean table body -->
+        var tableGenerated = document.querySelector(
+          'table[id="table-generated"]',
+        );
+        var tableGeneratedCells = tableGenerated.querySelectorAll("td");
+
+        for (let i = 0; i < tableGeneratedCells.length; i++) {
+          tableGeneratedCells[i].innerHTML = "";
+        }
+
+        <!-- Disable "table-section" section -->
+        document.querySelector('div[id="table-section"]').style.display =
+          "none";
+
+        <!-- Disable "print-button" section -->
+        document.querySelector('div[id="print-button"]').style.display = "none";
+      }
+
+      <!-- Print table -->
+      function printTable() {
+        var printContents = document.querySelector(
+          'table[id="table-generated"]',
+        ).outerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+      }
+    </script>
+  </body>
+</html>

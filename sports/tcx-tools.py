@@ -2,7 +2,7 @@
 # Last update: 2023-09-03
 
 
-"""Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
+"""About: Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
 
 
 ###############
@@ -19,7 +19,9 @@ import os
 import re
 
 
-# Set working directory
+# Settings
+
+## Set working directory
 # os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'Nike Run Club Export'))
 
 

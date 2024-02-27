@@ -2,7 +2,7 @@
 # Last update: 2023-08-03
 
 
-"""Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
+"""About: Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
 
 
 ###############
@@ -23,8 +23,14 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 
 
-# Set working directory
+# Settings
+
+## Set working directory
 os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
+
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ###########
@@ -76,7 +82,7 @@ def gpsmycity_tour_import(*, urls):
         # Split df_tour_map into df_segments and df_waypoints DataFrames
         df_segments = df_tour_map.filter(items=['path'])
 
-        df_waypoints = df_tour_map.query('pins.notna()').filter(items=['pins'])
+        df_waypoints = df_tour_map.query(expr='pins.notna()').filter(items=['pins'])
 
         # Delete objects
         del page_source, tour_map, df_tour_map

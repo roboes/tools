@@ -2,7 +2,7 @@
 # Last update: 2023-11-26
 
 
-"""Script that performs a series of transformations to the Apple Health .xml Export."""
+"""About: Script that performs a series of transformations to the Apple Health .xml Export."""
 
 
 ###############
@@ -22,8 +22,14 @@ import numpy as np
 import pandas as pd
 
 
-# Set working directory
+# Settings
+
+## Set working directory
 os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
+
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ###########
@@ -123,7 +129,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     # Create 'max_speed_unit' column
     activities_apple_health['max_speed_unit'] = activities_apple_health[
         'max_speed'
-    ].str.extract(pat=r'(m/s)$', expand=True)
+    ].str.extract(pat=r'(m/s)$', flags=0, expand=True)
     activities_apple_health['max_speed'] = activities_apple_health[
         'max_speed'
     ].str.replace(pat='m/s$', repl='', regex=True)
@@ -131,7 +137,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     # Create 'average_speed_unit' column
     activities_apple_health['average_speed_unit'] = activities_apple_health[
         'average_speed'
-    ].str.extract(pat=r'(m/s)$', expand=True)
+    ].str.extract(pat=r'(m/s)$', flags=0, expand=True)
     activities_apple_health['average_speed'] = activities_apple_health[
         'average_speed'
     ].str.replace(pat='m/s$', repl='', regex=True)
@@ -139,7 +145,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     # Create 'elevation_gain_unit' column
     activities_apple_health['elevation_gain_unit'] = activities_apple_health[
         'elevation_gain'
-    ].str.extract(pat=r'(m)$', expand=True)
+    ].str.extract(pat=r'(m)$', flags=0, expand=True)
     activities_apple_health['elevation_gain'] = activities_apple_health[
         'elevation_gain'
     ].str.replace(pat='m$', repl='', regex=True)
@@ -147,7 +153,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     # Create 'elevation_descended_unit' column
     activities_apple_health['elevation_descended_unit'] = activities_apple_health[
         'elevation_descended'
-    ].str.extract(pat=r'(m)$', expand=True)
+    ].str.extract(pat=r'(m)$', flags=0, expand=True)
     activities_apple_health['elevation_descended'] = activities_apple_health[
         'elevation_descended'
     ].str.replace(pat='m$', repl='', regex=True)
@@ -471,7 +477,7 @@ os.makedirs(name='Activities Output', exist_ok=True)
 # Create .tcx files from activities
 activities_apple_health_import = activities_apple_health_to_strava(
     activities_apple_health=activities_apple_health.query(
-        'source_name.isin(["Daily Yoga", "Nike Run Club"])',
+        expr='source_name.isin(["Daily Yoga", "Nike Run Club"])',
     ),
     output_directory='Activities Output',
 )
