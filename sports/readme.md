@@ -114,5 +114,6 @@ None.
 
 # See also
 
+[Workout Transferer](https://github.com/andre0707/WorkoutTransferer): Read and export Apple Health activities.\
 [Nike Run Club Exporter](https://github.com/yasoob/nrc-exporter): Download Nike Run Club activities and convert them to .gpx.\
 [Torben's Strava Äpp](https://entorb.net/strava/): Set of Strava tools, including the feature to import activities from an Excel/.csv to Strava.

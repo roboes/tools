@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2023-11-10
+# Last update: 2024-02-11
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -66,3 +66,7 @@ qpdf "input.pdf" --password="1234" --decrypt "output.pdf"
 
 # Reduce PDF size and quality
 gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=/ebook -dNOPAUSE -dBATCH -dQUIET -sOutputFile="./output.pdf" "./input.pdf"
+
+
+# Extract embedded images from a PDF
+pdfimages -raw "./input.pdf" "./output"

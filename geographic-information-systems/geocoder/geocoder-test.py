@@ -1,5 +1,5 @@
 ## Geocoder Test
-# Last update: 2024-01-19
+# Last update: 2024-02-27
 
 
 """About: Geocoder tools test."""
@@ -45,15 +45,26 @@ geocoder_location_columns = geocoder_functions.geocoder_location_columns
 del geocoder_functions, spec_from_file_location
 
 
-# Geocoder setup
+# Settings
+
+## Geocoder
 geolocator = Nominatim(
-    domain='nominatim.openstreetmap.org',
+    domain='nominatim.openstreetmap.org', # Public Nominatim instance
     scheme='https',
     user_agent='python-tools',
 )
+geocode = RateLimiter(
+    func=geolocator.geocode,
+    min_delay_seconds=(1 if geolocator.domain == 'nominatim.openstreetmap.org' else 0),
+)
+reverse = RateLimiter(
+    func=geolocator.reverse,
+    min_delay_seconds=(1 if geolocator.domain == 'nominatim.openstreetmap.org' else 0),
+)
 
-geocode = RateLimiter(func=geolocator.geocode, min_delay_seconds=1)
-reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ##########

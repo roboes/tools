@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2023-12-26
+# Last update: 2024-02-12
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162

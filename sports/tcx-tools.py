@@ -19,7 +19,9 @@ import os
 import re
 
 
-# Set working directory
+# Settings
+
+## Set working directory
 # os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'Nike Run Club Export'))
 
 

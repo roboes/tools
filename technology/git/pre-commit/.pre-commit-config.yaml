@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-01-25
+# Last update: 2024-02-27
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -64,13 +64,13 @@ repos:
       - id: prettier
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.39.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.14
+    rev: v0.2.2
     hooks:
       - id: ruff
         args: [
@@ -85,7 +85,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/psf/black
-    rev: 23.12.1 # Without leading 'v'
+    rev: 24.2.0 # Without leading 'v'
     hooks:
       - id: black
         args: [--skip-string-normalization]
@@ -105,7 +105,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    rev: v3.15.1
     hooks:
       - id: pyupgrade
         args: ["--py312-plus"]

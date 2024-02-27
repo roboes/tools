@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-01-19
+# Last update: 2024-02-27
 
 
 """About: Geocoder tools."""
@@ -18,15 +18,26 @@ from geopy.geocoders import Nominatim
 import pandas as pd
 
 
-# Geocoder setup
+# Settings
+
+## Geocoder
 geolocator = Nominatim(
-    domain='nominatim.openstreetmap.org',
+    domain='nominatim.openstreetmap.org', # Public Nominatim instance
     scheme='https',
     user_agent='python-geocoder',
 )
+geocode = RateLimiter(
+    func=geolocator.geocode,
+    min_delay_seconds=(1 if geolocator.domain == 'nominatim.openstreetmap.org' else 0),
+)
+reverse = RateLimiter(
+    func=geolocator.reverse,
+    min_delay_seconds=(1 if geolocator.domain == 'nominatim.openstreetmap.org' else 0),
+)
 
-geocode = RateLimiter(func=geolocator.geocode, min_delay_seconds=1)
-reverse = RateLimiter(func=geolocator.reverse, min_delay_seconds=1)
+## Copy-on-Write (will be enabled by default in version 3.0)
+if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
+    pd.options.mode.copy_on_write = True
 
 
 ###########
@@ -118,46 +129,56 @@ def geocoder_query(*, df, row, query_type, foreign_territories_mapping=False):
                     }
                     if 'address_country_codes_filter' in df.columns
                     and pd.notna(row['address_country_codes_filter'])
+                    and row['address_country_codes_filter'] != ''
                     else {}
                 ),
                 **(
                     {'country': row['address_country']}
                     if 'address_country' in df.columns
                     and pd.notna(row['address_country'])
+                    and row['address_country'] != ''
                     else {}
                 ),
                 **(
                     {'state': row['address_state']}
-                    if 'address_state' in df.columns and pd.notna(row['address_state'])
+                    if 'address_state' in df.columns
+                    and pd.notna(row['address_state'])
+                    and row['address_state'] != ''
                     else {}
                 ),
                 **(
                     {'county': row['address_county']}
                     if 'address_county' in df.columns
                     and pd.notna(row['address_county'])
+                    and row['address_county'] != ''
                     else {}
                 ),
                 **(
                     {'city': row['address_city']}
-                    if 'address_city' in df.columns and pd.notna(row['address_city'])
+                    if 'address_city' in df.columns
+                    and pd.notna(row['address_city'])
+                    and row['address_city'] != ''
                     else {}
                 ),
                 **(
                     {'postalcode': row['address_postal_code']}
                     if 'address_postal_code' in df.columns
                     and pd.notna(row['address_postal_code'])
+                    and row['address_postal_code'] != ''
                     else {}
                 ),
                 **(
                     {'street': row['address_street']}
                     if 'address_street' in df.columns
                     and pd.notna(row['address_street'])
+                    and row['address_street'] != ''
                     else {}
                 ),
                 **(
                     {'amenity': row['address_amenity']}
                     if 'address_amenity' in df.columns
                     and pd.notna(row['address_amenity'])
+                    and row['address_amenity'] != ''
                     else {}
                 ),
             }
@@ -192,9 +213,6 @@ def geocoder(
     """Given a DataFrame input with location columns, split it into multiple chunks and run the geocoder, saving all chunks where the geocoder has already been run as a pickle file."""
     # Create variables
     execution_start = datetime.now()
-
-    # Make a copy of this object's indices and data
-    df = df.copy(deep=True)
 
     for column in df.columns[df.columns.str.startswith('address_')].tolist():
         # Remove leading/trailing whitespaces
@@ -242,7 +260,7 @@ def geocoder(
 
     # Slice DataFrame into multiple chunks and run the geocoder for empty 'location_geolocation'
     for batch in batched(iterable=range(len(df)), n=chunk_size):
-        df_chunk = df.iloc[min(batch) : max(batch) + 1].copy()
+        df_chunk = df.iloc[min(batch) : max(batch) + 1]
 
         for index, row in df_chunk.iterrows():
             if query_type == 'structured':
