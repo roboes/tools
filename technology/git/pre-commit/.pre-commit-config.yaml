@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-02-07
+# Last update: 2024-02-27
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -70,7 +70,7 @@ repos:
         args: ["--disable", "MD013"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.2.1
+    rev: v0.2.2
     hooks:
       - id: ruff
         args: [
@@ -85,7 +85,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/psf/black
-    rev: 24.1.1 # Without leading 'v'
+    rev: 24.2.0 # Without leading 'v'
     hooks:
       - id: black
         args: [--skip-string-normalization]
@@ -105,7 +105,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    rev: v3.15.1
     hooks:
       - id: pyupgrade
         args: ["--py312-plus"]
