@@ -49,7 +49,7 @@ del geocoder_functions, spec_from_file_location
 
 ## Geocoder
 geolocator = Nominatim(
-    domain='nominatim.openstreetmap.org', # Public Nominatim instance
+    domain='nominatim.openstreetmap.org',  # Public Nominatim instance
     scheme='https',
     user_agent='python-tools',
 )

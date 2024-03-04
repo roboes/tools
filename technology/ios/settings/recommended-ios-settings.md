@@ -44,6 +44,10 @@ Settings > General > Keyboard >
 
 <br>
 
+Settings > Control Center > Add "Low Power Mode", "Dark Mode" and "Screen Recording".
+
+<br>
+
 Settings > Display & Brightness >
 
 - (Optional) Appearance > Dark.
@@ -99,6 +103,10 @@ Settings > Contacts >
 <br>
 
 Settings > Calendar > Default Alert Times > Birthdays > On day of event (09:00).
+
+<br>
+
+Settings > Phone > Calls > Wi-Fi Calling > Enable "Wi-Fi Calling on this iPhone".
 
 <br>
 
