@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-02-27
+# Last update: 2024-03-11
 
 
 """About: Geocoder tools."""
@@ -303,6 +303,17 @@ def geocoder(
                     query_type=query_type,
                     foreign_territories_mapping=foreign_territories_mapping,
                 )
+
+                geolocation = geocoder_query(
+                    df=df_chunk,
+                    row=row,
+                    query_type=query_type,
+                    foreign_territories_mapping=foreign_territories_mapping,
+                )
+
+                if geolocation is not None:
+                    df_chunk.at[index, 'location_geolocation'] = geolocation
+                    df_chunk.at[index, 'geocoding_match_level'] = None
 
             if fillna is not None:
                 # Fill not found locations with value
