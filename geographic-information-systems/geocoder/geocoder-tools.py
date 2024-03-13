@@ -1,5 +1,5 @@
 ## Geocoder Tools
-# Last update: 2024-03-12
+# Last update: 2024-03-13
 
 
 """About: Geocoder Tools."""
@@ -137,6 +137,10 @@ def world_countries():
         encoding='utf-8',
         keep_default_na=True,
     ).filter(items=['alpha3', 'alpha2', 'en'])
+
+    # Test duplicates
+    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
+    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
 
     # Return objects
     return world_countries_df
