@@ -408,8 +408,7 @@ def geocoder(
                 df_geolocation = None
 
     # Execution time
-    execution_time = datetime.now() - execution_start
-    print(f'Execution time: {execution_time}')
+    print(f'Execution time: {datetime.now() - execution_start}')
 
     # Return objects
     return df_geolocation

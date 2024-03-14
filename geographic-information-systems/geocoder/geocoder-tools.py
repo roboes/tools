@@ -106,11 +106,10 @@ def geocoder_country_code(*, df, shapefile_path):
             .drop(columns=['index_right', 'geometry'], axis=1, errors='ignore')
         )
 
-        if len(df) == df_len:
-            # Execution time
-            execution_time = datetime.now() - execution_start
-            print(f'Execution time: {execution_time}')
+        # Execution time
+        print(f'Execution time: {datetime.now() - execution_start}')
 
+        if len(df) == df_len:
             # Return objects
             return df
 
