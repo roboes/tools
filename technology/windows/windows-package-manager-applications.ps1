@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2024-02-12
+# Last update: 2024-03-17
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -16,6 +16,7 @@
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
+winget install --exact --id=Microsoft.MicrosoftPCManager_8wekyb3d8bbwe
 winget install --exact --id=Python.Python.3.12
 winget install --exact --id=Spyder.Spyder
 winget install --exact --id=Notepad++.Notepad++
