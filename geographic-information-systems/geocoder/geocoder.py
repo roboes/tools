@@ -1,5 +1,5 @@
 ## Geocoder
-# Last update: 2024-03-12
+# Last update: 2024-03-18
 
 
 """About: Geocoder."""
@@ -460,6 +460,16 @@ def geocoder_location_columns(*, df_geo):
     df_geo['location_city'] = df_geo.apply(
         lambda row: (
             row['location_geolocation'].raw.get('address').get('city')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
+        axis=1,
+    )
+
+    # location_town
+    df_geo['location_town'] = df_geo.apply(
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('town')
             if pd.notna(row['location_geolocation'])
             else None
         ),
