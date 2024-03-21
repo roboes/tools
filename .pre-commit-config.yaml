@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-03-12
+# Last update: 2024-03-21
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -62,7 +62,7 @@ repos:
       - id: prettier
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 2.3.5 # Without leading 'v'
+    rev: 3.0.2 # Without leading 'v'
     hooks:
       - id: sqlfluff-fix
         args: ["--dialect=postgres"]
@@ -74,7 +74,7 @@ repos:
         args: ["--disable", "MD013,MD033,MD045"] # "--disable=" does not work for multiple rules
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.3.2
+    rev: v0.3.3
     hooks:
       - id: ruff
         args: [
@@ -89,7 +89,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/psf/black
-    rev: 24.2.0 # Without leading 'v'
+    rev: 24.3.0 # Without leading 'v'
     hooks:
       - id: black
         args: ["--skip-string-normalization"]
