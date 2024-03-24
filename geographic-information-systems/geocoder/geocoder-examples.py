@@ -1,8 +1,8 @@
-## Geocoder Test
-# Last update: 2024-02-27
+## Geocoder Examples
+# Last update: 2024-03-12
 
 
-"""About: Geocoder tools test."""
+"""About: Geocoder Examples."""
 
 
 ###############
@@ -11,6 +11,7 @@
 
 # Erase all declared global variables
 globals().clear()
+
 
 # Import packages
 from importlib.util import spec_from_file_location
@@ -33,7 +34,7 @@ geocoder_functions = spec_from_file_location(
         'Documents',
         'Tools',
         'geocoder',
-        'geocoder-functions.py',
+        'geocoder.py',
     ),
 ).loader.load_module()
 
@@ -42,14 +43,14 @@ geocoder = geocoder_functions.geocoder
 geocoder_location_columns = geocoder_functions.geocoder_location_columns
 
 # Delete objects
-del geocoder_functions, spec_from_file_location
+del spec_from_file_location, geocoder_functions
 
 
 # Settings
 
 ## Geocoder
 geolocator = Nominatim(
-    domain='nominatim.openstreetmap.org', # Public Nominatim instance
+    domain='nominatim.openstreetmap.org',  # Public Nominatim instance
     scheme='https',
     user_agent='python-tools',
 )
