@@ -1,8 +1,8 @@
 ## Geocoder
-# Last update: 2024-02-27
+# Last update: 2024-03-18
 
 
-"""About: Geocoder tools."""
+"""About: Geocoder."""
 
 
 ###############
@@ -22,7 +22,7 @@ import pandas as pd
 
 ## Geocoder
 geolocator = Nominatim(
-    domain='nominatim.openstreetmap.org', # Public Nominatim instance
+    domain='nominatim.openstreetmap.org',  # Public Nominatim instance
     scheme='https',
     user_agent='python-geocoder',
 )
@@ -205,7 +205,7 @@ def geocoder(
     *,
     df,
     query_type=None,
-    chunk_size=50,
+    chunk_size=None,
     filepath=None,
     fillna=None,
     foreign_territories_mapping=False,
@@ -233,7 +233,8 @@ def geocoder(
         df['geocoding_match_level'] = None
 
     # Create empty DataFrame
-    df_geolocation = pd.DataFrame(data=None, index=None, columns=None, dtype=None)
+    if chunk_size is not None and filepath is not None:
+        df_geolocation = pd.DataFrame(data=None, index=None, columns=None, dtype=None)
 
     if query_type == 'structured':
         # Address columns
@@ -259,19 +260,95 @@ def geocoder(
         }
 
     # Slice DataFrame into multiple chunks and run the geocoder for empty 'location_geolocation'
-    for batch in batched(iterable=range(len(df)), n=chunk_size):
-        df_chunk = df.iloc[min(batch) : max(batch) + 1]
+    if chunk_size is not None and filepath is not None:
+        for batch in batched(iterable=range(len(df)), n=chunk_size):
+            df_chunk = df.iloc[min(batch) : max(batch) + 1]
 
-        for index, row in df_chunk.iterrows():
+            for index, row in df_chunk.iterrows():
+                if query_type == 'structured':
+                    for i, address_column in enumerate(address_columns):
+                        if (
+                            pd.isna(row['location_geolocation'])
+                            and address_column in df_chunk.columns
+                        ):
+                            if pd.notna(row[address_column]):
+                                geolocation = geocoder_query(
+                                    df=df_chunk.drop(
+                                        columns=address_columns[:i],
+                                        axis=1,
+                                        errors='ignore',
+                                    ),
+                                    row=row,
+                                    query_type=query_type,
+                                    foreign_territories_mapping=foreign_territories_mapping,
+                                )
+
+                                if geolocation is not None:
+                                    df_chunk.at[index, 'location_geolocation'] = (
+                                        geolocation
+                                    )
+                                    df_chunk.at[
+                                        index,
+                                        'geocoding_match_level',
+                                    ] = geocoding_match_level_mapping.get(
+                                        address_column,
+                                        address_column,
+                                    )
+
+                                    break
+
+                            else:
+                                pass
+
+                elif query_type == 'free-form':
+                    row['location_geolocation'] = geocoder_query(
+                        df=df_chunk,
+                        row=row,
+                        query_type=query_type,
+                        foreign_territories_mapping=foreign_territories_mapping,
+                    )
+
+                    geolocation = geocoder_query(
+                        df=df_chunk,
+                        row=row,
+                        query_type=query_type,
+                        foreign_territories_mapping=foreign_territories_mapping,
+                    )
+
+                    if geolocation is not None:
+                        df_chunk.at[index, 'location_geolocation'] = geolocation
+                        df_chunk.at[index, 'geocoding_match_level'] = None
+
+                if fillna is not None:
+                    # Fill not found locations with value
+                    df_chunk['location_geolocation'] = df_chunk[
+                        'location_geolocation'
+                    ].fillna(value=fillna, method=None, axis=0)
+
+            # Concatenate DataFrames
+            if not df_chunk.empty:
+                df_geolocation = pd.concat(
+                    [df_geolocation, df_chunk],
+                    axis=0,
+                    ignore_index=False,
+                    sort=False,
+                )
+
+            # Save all chunks where the geocoder has already been run
+            if not df_geolocation.empty:
+                df_geolocation.to_pickle(path=filepath)
+
+    else:
+        for index, row in df.iterrows():
             if query_type == 'structured':
                 for i, address_column in enumerate(address_columns):
                     if (
                         pd.isna(row['location_geolocation'])
-                        and address_column in df_chunk.columns
+                        and address_column in df.columns
                     ):
                         if pd.notna(row[address_column]):
                             geolocation = geocoder_query(
-                                df=df_chunk.drop(
+                                df=df.drop(
                                     columns=address_columns[:i],
                                     axis=1,
                                     errors='ignore',
@@ -282,8 +359,8 @@ def geocoder(
                             )
 
                             if geolocation is not None:
-                                df_chunk.at[index, 'location_geolocation'] = geolocation
-                                df_chunk.at[
+                                df.at[index, 'location_geolocation'] = geolocation
+                                df.at[
                                     index,
                                     'geocoding_match_level',
                                 ] = geocoding_match_level_mapping.get(
@@ -298,34 +375,40 @@ def geocoder(
 
             elif query_type == 'free-form':
                 row['location_geolocation'] = geocoder_query(
-                    df=df_chunk,
+                    df=df,
                     row=row,
                     query_type=query_type,
                     foreign_territories_mapping=foreign_territories_mapping,
                 )
 
+                geolocation = geocoder_query(
+                    df=df,
+                    row=row,
+                    query_type=query_type,
+                    foreign_territories_mapping=foreign_territories_mapping,
+                )
+
+                if geolocation is not None:
+                    df.at[index, 'location_geolocation'] = geolocation
+                    df.at[index, 'geocoding_match_level'] = None
+
             if fillna is not None:
                 # Fill not found locations with value
-                df_chunk['location_geolocation'] = df_chunk[
-                    'location_geolocation'
-                ].fillna(value=fillna, method=None, axis=0)
+                df['location_geolocation'] = df['location_geolocation'].fillna(
+                    value=fillna,
+                    method=None,
+                    axis=0,
+                )
 
-        # Concatenate DataFrames
-        if not df_chunk.empty:
-            df_geolocation = pd.concat(
-                [df_geolocation, df_chunk],
-                axis=0,
-                ignore_index=False,
-                sort=False,
-            )
+            # Concatenate DataFrames
+            if not df.empty:
+                df_geolocation = df
 
-        # Save all chunks where the geocoder has already been run
-        if not df_geolocation.empty and filepath is not None:
-            df_geolocation.to_pickle(path=filepath)
+            else:
+                df_geolocation = None
 
     # Execution time
-    execution_time = datetime.now() - execution_start
-    print(f'Execution time: {execution_time}')
+    print(f'Execution time: {datetime.now() - execution_start}')
 
     # Return objects
     return df_geolocation
@@ -377,6 +460,16 @@ def geocoder_location_columns(*, df_geo):
     df_geo['location_city'] = df_geo.apply(
         lambda row: (
             row['location_geolocation'].raw.get('address').get('city')
+            if pd.notna(row['location_geolocation'])
+            else None
+        ),
+        axis=1,
+    )
+
+    # location_town
+    df_geo['location_town'] = df_geo.apply(
+        lambda row: (
+            row['location_geolocation'].raw.get('address').get('town')
             if pd.notna(row['location_geolocation'])
             else None
         ),

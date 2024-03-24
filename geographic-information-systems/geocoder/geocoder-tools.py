@@ -1,8 +1,8 @@
-## Geocoder Country Code
-# Last update: 2024-02-06
+## Geocoder Tools
+# Last update: 2024-03-13
 
 
-"""About: Get country code given a latitude/longitude input using Eurostat's Geographical Information and Maps (GISCO) Shapefile."""
+"""About: Geocoder Tools."""
 
 
 ###############
@@ -17,6 +17,7 @@ globals().clear()
 from datetime import datetime
 from io import BytesIO
 import os
+from urllib.request import Request, urlopen
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import geopandas as gpd
@@ -105,65 +106,40 @@ def geocoder_country_code(*, df, shapefile_path):
             .drop(columns=['index_right', 'geometry'], axis=1, errors='ignore')
         )
 
-        if len(df) == df_len:
-            # Execution time
-            execution_time = datetime.now() - execution_start
-            print(f'Execution time: {execution_time}')
+        # Execution time
+        print(f'Execution time: {datetime.now() - execution_start}')
 
+        if len(df) == df_len:
             # Return objects
             return df
 
 
-#######################
-# Geocoder Country Code
-#######################
+def world_countries():
+    """Download and import world countries in multiple languages with associated alpha-2, alpha-3, and numeric codes as defined by the ISO 3166 standard."""
+    # Download and import
+    world_countries_df = pd.read_csv(
+        filepath_or_buffer=BytesIO(
+            urlopen(
+                url=Request(
+                    url='https://github.com/stefangabos/world_countries/blob/master/data/countries/_combined/countries.csv?raw=true',
+                    headers={'User-Agent': 'Mozilla'},
+                ),
+            ).read(),
+        ),
+        sep=',',
+        header=0,
+        index_col=None,
+        skiprows=0,
+        skipfooter=0,
+        dtype=None,
+        engine='python',
+        encoding='utf-8',
+        keep_default_na=True,
+    ).filter(items=['alpha3', 'alpha2', 'en'])
 
-# Create example DataFrame with latitude and longitude
-df = pd.DataFrame(
-    data=[
-        [
-            '47.47290454150727',
-            '13.002988843557109',
-        ],
-        [
-            '48.77318931264',
-            '13.814437606275643',
-        ],
-        [
-            '48.772602496031155',
-            '13.818782738961987',
-        ],
-        [
-            '50.0889147084637',
-            '14.417553922646446',
-        ],
-    ],
-    index=None,
-    columns=[
-        'latitude',
-        'longitude',
-    ],
-    dtype=None,
-)
+    # Test duplicates
+    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
+    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
 
-
-# Download Eurostat's Geographical Information and Maps (GISCO) Shapefile, Scale 1:1 Million
-download_world_boundaries_shapefile(
-    shapefile_path=os.path.join(
-        os.path.expanduser('~'),
-        'Downloads',
-        'World Boundaries',
-    ),
-)
-
-
-# Get country codes given latitude/longitude
-df_geo = geocoder_country_code(
-    df=df,
-    shapefile_path=os.path.join(
-        os.path.expanduser('~'),
-        'Downloads',
-        'World Boundaries',
-        'CNTR_RG_01M_2020_4326.shp',
-    ),
-)
+    # Return objects
+    return world_countries_df
