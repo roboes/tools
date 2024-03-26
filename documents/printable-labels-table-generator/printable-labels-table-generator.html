@@ -154,26 +154,13 @@
 
     <br />
 
-    <div class="en">
-      Instructions: Define the cells to which the generator should be applied
-      (row wise) and select the "Product" and "Date". Press "Generate".<br />
-    </div>
-    <div class="de">
-      Anleitung: Zellen definieren, auf die der Generator angewendet werden soll
-      (zeilenweise) und „Produkt“ und „Datum“ auswählen. Auf „Generieren“
-      drücken.
-    </div>
+    <div class="en">Instructions: Define the cells to which the generator should be applied (row wise) and select the "Product" and "Date". Press "Generate".<br /></div>
+    <div class="de">Anleitung: Zellen definieren, auf die der Generator angewendet werden soll (zeilenweise) und „Produkt“ und „Datum“ auswählen. Auf „Generieren“ drücken.</div>
 
     <br />
 
-    <div class="en">
-      Printer settings: Layout: Portrait; Paper size: A4; Margins: None; Scale:
-      Default; Options: Disable "Background graphics".<br />
-    </div>
-    <div class="de">
-      Druckereinstellungen: Layout: Portrait; Papierformat: A4; Ränder: Keine;
-      Maßstab: Standard; Optionen: „Hintergrundgrafiken“ deaktivieren.<br />
-    </div>
+    <div class="en">Printer settings: Layout: Portrait; Paper size: A4; Margins: None; Scale: Default; Options: Disable "Background graphics".<br /></div>
+    <div class="de">Druckereinstellungen: Layout: Portrait; Papierformat: A4; Ränder: Keine; Maßstab: Standard; Optionen: „Hintergrundgrafiken“ deaktivieren.<br /></div>
 
     <br />
     <br />
@@ -203,24 +190,10 @@
       </tr>
       <tr>
         <td>
-          <input
-            type="number"
-            name="cell-start-input"
-            min="1"
-            max="24"
-            value="1"
-            onchange="enableButton()"
-          />
+          <input type="number" name="cell-start-input" min="1" max="24" value="1" onchange="enableButton()" />
         </td>
         <td>
-          <input
-            type="number"
-            name="cell-end-input"
-            min="1"
-            max="24"
-            value="24"
-            onchange="enableButton()"
-          />
+          <input type="number" name="cell-end-input" min="1" max="24" value="24" onchange="enableButton()" />
         </td>
         <td>
           <select name="product-input" onchange="enableButton()">
@@ -238,28 +211,8 @@
 
     <br />
 
-    <div class="en">
-      <button type="button" onclick="addRow()">Add row</button
-      >&nbsp;&nbsp;<button
-        type="button"
-        name="generate-table"
-        onclick="generateTable()"
-        disabled
-      >
-        Generate
-      </button>
-    </div>
-    <div class="de">
-      <button type="button" onclick="addRow()">Zeile hinzufügen</button
-      >&nbsp;&nbsp;<button
-        type="button"
-        name="generate-table"
-        onclick="generateTable()"
-        disabled
-      >
-        Generieren
-      </button>
-    </div>
+    <div class="en"><button type="button" onclick="addRow()">Add row</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generate</button></div>
+    <div class="de"><button type="button" onclick="addRow()">Zeile hinzufügen</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generieren</button></div>
 
     <br />
     <br />
@@ -338,19 +291,13 @@
 
       <!-- Add rows -->
       function addRow() {
-        var cellStart = document
-          .querySelectorAll('input[name="cell-start-input"]')[0]
-          .cloneNode(true);
+        var cellStart = document.querySelectorAll('input[name="cell-start-input"]')[0].cloneNode(true);
         cellStart.removeAttribute("value");
 
-        var cellEnd = document
-          .querySelectorAll('input[name="cell-end-input"]')[0]
-          .cloneNode(true);
+        var cellEnd = document.querySelectorAll('input[name="cell-end-input"]')[0].cloneNode(true);
         cellEnd.removeAttribute("value");
 
-        var productInput = document
-          .querySelectorAll('select[name="product-input"]')[0]
-          .cloneNode(true);
+        var productInput = document.querySelectorAll('select[name="product-input"]')[0].cloneNode(true);
         productInput.removeAttribute("value");
 
         var tableInput = document.querySelector('table[id="table-input"]');
@@ -364,16 +311,11 @@
         cell1.innerHTML = cellStart.outerHTML;
         cell2.innerHTML = cellEnd.outerHTML;
         cell3.innerHTML = productInput.outerHTML;
-        cell4.innerHTML =
-          '<input type="date" name="date-input" value="' +
-          new Date().toISOString().substring(0, 10) +
-          '">';
+        cell4.innerHTML = '<input type="date" name="date-input" value="' + new Date().toISOString().substring(0, 10) + '">';
         if (language.indexOf("de") > -1) {
-          cell5.innerHTML =
-            '<button type="button" onclick="removeRow(this)">Entfernen</button>';
+          cell5.innerHTML = '<button type="button" onclick="removeRow(this)">Entfernen</button>';
         } else {
-          cell5.innerHTML =
-            '<button type="button" onclick="removeRow(this)">Remove</button>';
+          cell5.innerHTML = '<button type="button" onclick="removeRow(this)">Remove</button>';
         }
 
         <!-- Clean table body -->
@@ -401,30 +343,17 @@
 
       <!-- Enable "Generate" button -->
       function enableButton() {
-        var cellStartInputs = document.querySelectorAll(
-          'input[name="cell-start-input"]',
-        );
-        var cellEndInputs = document.querySelectorAll(
-          'input[name="cell-end-input"]',
-        );
-        var productInputs = document.querySelectorAll(
-          'select[name="product-input"]',
-        );
+        var cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        var cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        var productInputs = document.querySelectorAll('select[name="product-input"]');
         var dateInputs = document.querySelectorAll('input[name="date-input"]');
-        var generateTableButtons = document.querySelectorAll(
-          'button[name="generate-table"]',
-        );
+        var generateTableButtons = document.querySelectorAll('button[name="generate-table"]');
 
         <!-- Check for cells outside interval range -->
         var isOutsideIntervalRange = false;
 
         for (var i = 0; i < cellStartInputs.length; i++) {
-          if (
-            parseInt(cellStartInputs[i].value) < 1 ||
-            parseInt(cellStartInputs[i].value) > 24 ||
-            parseInt(cellEndInputs[i].value) < 1 ||
-            parseInt(cellEndInputs[i].value) > 24
-          ) {
+          if (parseInt(cellStartInputs[i].value) < 1 || parseInt(cellStartInputs[i].value) > 24 || parseInt(cellEndInputs[i].value) < 1 || parseInt(cellEndInputs[i].value) > 24) {
             isOutsideIntervalRange = true;
             break;
           }
@@ -442,10 +371,7 @@
           <!-- Check if the cell range overlaps with any existing ranges -->
           for (var j = 0; j < cellRanges.length; j++) {
             var existingRange = cellRanges[j];
-            if (
-              cellStart <= existingRange.end &&
-              cellEnd >= existingRange.start
-            ) {
+            if (cellStart <= existingRange.end && cellEnd >= existingRange.start) {
               isOverlapping = true;
               break;
             }
@@ -483,19 +409,11 @@
 
       <!-- Generate table -->
       function generateTable() {
-        var cellStartInputs = document.querySelectorAll(
-          'input[name="cell-start-input"]',
-        );
-        var cellEndInputs = document.querySelectorAll(
-          'input[name="cell-end-input"]',
-        );
-        var productInputs = document.querySelectorAll(
-          'select[name="product-input"]',
-        );
+        var cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        var cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        var productInputs = document.querySelectorAll('select[name="product-input"]');
         var dateInputs = document.querySelectorAll('input[name="date-input"]');
-        var tableGenerated = document.querySelector(
-          'table[id="table-generated"]',
-        );
+        var tableGenerated = document.querySelector('table[id="table-generated"]');
 
         for (var i = 0; i < cellStartInputs.length; i++) {
           var cellStart = parseInt(cellStartInputs[i].value);
@@ -526,19 +444,9 @@
                 day: "2-digit",
               });
             if (productInput === "Product A") {
-              cell.innerHTML =
-                product_text +
-                origin_text +
-                "Description Product A" +
-                "<br>" +
-                date_text;
+              cell.innerHTML = product_text + origin_text + "Description Product A" + "<br>" + date_text;
             } else if (productInput === "Product B") {
-              cell.innerHTML =
-                product_text +
-                origin_text +
-                "Description Product A" +
-                "<br>" +
-                date_text;
+              cell.innerHTML = product_text + origin_text + "Description Product A" + "<br>" + date_text;
             } else {
               cell.innerHTML = "";
             }
@@ -546,20 +454,16 @@
         }
 
         <!-- Enable "table-section" section -->
-        document.querySelector('div[id="table-section"]').style.display =
-          "block";
+        document.querySelector('div[id="table-section"]').style.display = "block";
 
         <!-- Enable "print-button" section -->
-        document.querySelector('div[id="print-button"]').style.display =
-          "block";
+        document.querySelector('div[id="print-button"]').style.display = "block";
       }
 
       <!-- Clean table body -->
       function cleanTableBody() {
         <!-- Clean table body -->
-        var tableGenerated = document.querySelector(
-          'table[id="table-generated"]',
-        );
+        var tableGenerated = document.querySelector('table[id="table-generated"]');
         var tableGeneratedCells = tableGenerated.querySelectorAll("td");
 
         for (let i = 0; i < tableGeneratedCells.length; i++) {
@@ -567,8 +471,7 @@
         }
 
         <!-- Disable "table-section" section -->
-        document.querySelector('div[id="table-section"]').style.display =
-          "none";
+        document.querySelector('div[id="table-section"]').style.display = "none";
 
         <!-- Disable "print-button" section -->
         document.querySelector('div[id="print-button"]').style.display = "none";
@@ -576,9 +479,7 @@
 
       <!-- Print table -->
       function printTable() {
-        var printContents = document.querySelector(
-          'table[id="table-generated"]',
-        ).outerHTML;
+        var printContents = document.querySelector('table[id="table-generated"]').outerHTML;
         var originalContents = document.body.innerHTML;
         document.body.innerHTML = printContents;
         window.print();
