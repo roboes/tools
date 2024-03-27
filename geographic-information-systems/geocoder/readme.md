@@ -25,3 +25,4 @@ This geocoder tool requires Python 3.12 because of the [`itertools.batched` func
 ## See also
 
 [Foreign Territories Mapping](https://github.com/scaleway/postal-address/blob/master/postal_address/territory.py): List of ISO 3166-1 alpha-2 foreign territories and their respective ISO 3166-1 alpha-2 country.
+[Countries, Languages & Continents data](https://github.com/annexare/Countries): Continents & countries: ISO 3166-1 alpha-2 code (with alpha-2 to alpha-3 set), name, ISO 639-1 languages, capital and ISO 4217 currency codes, native name, calling codes.
