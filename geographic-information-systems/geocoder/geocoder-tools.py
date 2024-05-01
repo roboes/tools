@@ -1,5 +1,5 @@
 ## Geocoder Tools
-# Last update: 2024-03-13
+# Last update: 2024-03-27
 
 
 """About: Geocoder Tools."""
@@ -114,32 +114,35 @@ def geocoder_country_code(*, df, shapefile_path):
             return df
 
 
-def world_countries():
-    """Download and import world countries in multiple languages with associated alpha-2, alpha-3, and numeric codes as defined by the ISO 3166 standard."""
+def countries_alpha_3_to_2():
+    """Download and import world countries in alpha-3 and alpha-2 codes."""
     # Download and import
-    world_countries_df = pd.read_csv(
-        filepath_or_buffer=BytesIO(
-            urlopen(
-                url=Request(
-                    url='https://github.com/stefangabos/world_countries/blob/master/data/countries/_combined/countries.csv?raw=true',
-                    headers={'User-Agent': 'Mozilla'},
-                ),
-            ).read(),
-        ),
-        sep=',',
-        header=0,
-        index_col=None,
-        skiprows=0,
-        skipfooter=0,
-        dtype=None,
-        engine='python',
-        encoding='utf-8',
-        keep_default_na=True,
-    ).filter(items=['alpha3', 'alpha2', 'en'])
+    countries_alpha_3_to_2_df = (
+        pd.read_json(
+            path_or_buf=BytesIO(
+                urlopen(
+                    url=Request(
+                        url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.3to2.min.json?raw=true',
+                        headers={'User-Agent': 'Mozilla'},
+                    ),
+                ).read(),
+            ),
+            orient='index',
+            convert_dates=False,
+            dtype='unicode',
+            encoding='utf-8',
+        )
+        .rename(columns={0: 'alpha2'})
+        .reset_index(level=None, drop=False, names=['alpha3'])
+        .assign(
+            alpha3=lambda row: row['alpha3'].str.lower(),
+            alpha2=lambda row: row['alpha2'].str.lower(),
+        )
+    )
 
     # Test duplicates
-    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
-    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
+    # print(len(countries_alpha_3_to_2_df[countries_alpha_3_to_2_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
+    # print(len(countries_alpha_3_to_2_df[countries_alpha_3_to_2_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
 
     # Return objects
-    return world_countries_df
+    return countries_alpha_3_to_2_df

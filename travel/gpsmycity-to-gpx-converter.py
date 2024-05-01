@@ -1,5 +1,5 @@
 ## GPSmyCity to GPX converter
-# Last update: 2023-08-03
+# Last update: 2024-03-27
 
 
 """About: Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
@@ -14,6 +14,7 @@ globals().clear()
 
 
 # Import packages
+from io import StringIO
 import os
 import re
 from urllib.request import Request, urlopen
@@ -67,7 +68,7 @@ def gpsmycity_tour_import(*, urls):
 
         # Create DataFrame
         df_tour_map = pd.read_json(
-            path_or_buf=tour_map,
+            path_or_buf=StringIO(tour_map),
             orient='index',
             convert_dates=False,
             dtype='unicode',
