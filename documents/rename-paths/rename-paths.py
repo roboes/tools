@@ -36,12 +36,7 @@ def rename_paths(*, pattern, repl, path_rename=False):
     paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
     # Filter for folders with specific regular expression pattern
-    folders_rename = [
-        path
-        for path in paths
-        if os.path.isdir(path)
-        and re.search(pattern=pattern, string=Path(path).name, flags=0)
-    ]
+    folders_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern=pattern, string=Path(path).name, flags=0)]
 
     if len(folders_rename) > 0:
         print('Folders to be renamed:')
@@ -53,12 +48,7 @@ def rename_paths(*, pattern, repl, path_rename=False):
         print('')
 
     # Filter for files with specific regular expression pattern
-    files_rename = [
-        path
-        for path in paths
-        if os.path.isdir(path) is False
-        and re.search(pattern=pattern, string=Path(path).stem, flags=0)
-    ]
+    files_rename = [path for path in paths if os.path.isdir(path) is False and re.search(pattern=pattern, string=Path(path).stem, flags=0)]
 
     if len(files_rename) > 0:
         print('Files to be renamed:')
@@ -103,12 +93,7 @@ def rename_paths(*, pattern, repl, path_rename=False):
         paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
 
         # Filter for files with specific regular expression pattern (updated in case directories name changed)
-        files_rename = [
-            path
-            for path in paths
-            if os.path.isdir(path) is False
-            and re.search(pattern=pattern, string=Path(path).stem, flags=0)
-        ]
+        files_rename = [path for path in paths if os.path.isdir(path) is False and re.search(pattern=pattern, string=Path(path).stem, flags=0)]
 
         for path in files_rename:
             path = Path(path)

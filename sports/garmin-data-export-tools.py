@@ -411,12 +411,9 @@ def activities_garmin_compare(
         )
         # Transform columns
         .assign(
-            elapsed_time_difference=lambda row: row['elapsed_time']
-            - row['elapsed_time_strava'],
-            moving_time_difference=lambda row: row['moving_time']
-            - row['moving_time_strava'],
-            distance_difference=lambda row: round(number=row['distance'], ndigits=2)
-            - round(number=row['distance_strava'], ndigits=2),
+            elapsed_time_difference=lambda row: row['elapsed_time'] - row['elapsed_time_strava'],
+            moving_time_difference=lambda row: row['moving_time'] - row['moving_time_strava'],
+            distance_difference=lambda row: round(number=row['distance'], ndigits=2) - round(number=row['distance_strava'], ndigits=2),
         )
         # Select columns
         .filter(

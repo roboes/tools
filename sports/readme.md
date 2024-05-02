@@ -17,12 +17,14 @@ Strava add-ons:\
 
 [Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
 [Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.
+[Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.\
 
 ## Hiking
 
 ### Hiking routes
 
 [Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
+[Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.\
 [AllTrails](https://www.alltrails.com/explore): Requires login to download routes as .gpx.\
 [Outdooractive](https://www.outdooractive.com/en/routes/): Requires login to download routes as .gpx.\
 [Hiking Buddies](https://www.hiking-buddies.com/routes/routes_list/): Does not require a login to download routes as .gpx.

@@ -43,21 +43,13 @@ if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
 def gpsmycity_tour_import(*, urls):
     for url in urls:
         # Import page source
-        page_source = (
-            urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla'}))
-            .read()
-            .decode(encoding='utf-8')
-        )
+        page_source = urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla'})).read().decode(encoding='utf-8')
         page_source = page_source.split(sep='\n')
 
         # Create variables
 
         # tour_name
-        tour_name = [
-            s
-            for s in page_source
-            if s.startswith('<TITLE>') and s.endswith('</TITLE>\r')
-        ][0]
+        tour_name = [s for s in page_source if s.startswith('<TITLE>') and s.endswith('</TITLE>\r')][0]
         tour_name = re.sub(pattern=r'^<TITLE>', repl=r'', string=tour_name)
         tour_name = re.sub(pattern=r'</TITLE>\r$', repl=r'', string=tour_name)
 
@@ -108,9 +100,9 @@ def gpsmycity_tour_import(*, urls):
 
         else:
             # Split columns
-            df_segments['path'] = df_segments['path'].str.strip('[\']')
+            df_segments['path'] = df_segments['path'].str.strip("[']")
             df_segments[['latitude', 'longitude']] = df_segments['path'].str.split(
-                pat='\', \'',
+                pat="', '",
                 expand=True,
             )
             df_segments = df_segments.drop(columns=['path'], axis=1, errors='ignore')
@@ -123,15 +115,11 @@ def gpsmycity_tour_import(*, urls):
         ## df_waypoints
 
         # Split columns
-        df_waypoints['pins'] = df_waypoints['pins'].str.strip('[\']')
+        df_waypoints['pins'] = df_waypoints['pins'].str.strip("[']")
 
         # df_waypoints[['latitude', 'longitude', 'name', 'number', 'id']] = df_waypoints['pins'].str.split(pat='\', "|\', \'|", \'', expand=True)
         # df_waypoints = df_waypoints.drop(columns=['pins', 'number', 'id'], axis=1, errors='ignore')
-        df_waypoints[['latitude', 'longitude', 'name']] = (
-            df_waypoints['pins']
-            .str.split(pat='\', "|\', \'|", \'', expand=True)
-            .iloc[:, 0:3]
-        )
+        df_waypoints[['latitude', 'longitude', 'name']] = df_waypoints['pins'].str.split(pat="', \"|', '|\", '", expand=True).iloc[:, 0:3]
 
         # Change dtypes
         df_waypoints = df_waypoints.astype(

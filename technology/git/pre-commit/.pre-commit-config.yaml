@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-04-25
+# Last update: 2024-05-02
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -56,12 +56,6 @@ repos:
       - id: djcss
       - id: djjs
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
-    hooks:
-      - id: prettier
-        args: ["--print-width=220"]
-
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.0.5 # Without leading 'v'
     hooks:
@@ -69,7 +63,7 @@ repos:
         args: ["--dialect=postgres"]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.39.0
+    rev: v0.40.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013,MD033,MD045"] # "--disable=" does not work for multiple rules
@@ -79,17 +73,13 @@ repos:
     hooks:
       - id: ruff
         args: ["--fix", "--exit-non-zero-on-fix", "--ignore=B007,B023,C408,D103,E203,E266,E402,E501,F821,S105,S110,S310,SIM105"] # ruff-pre-commit does not recognize these rule selectors: B902,CM001,S410,SCS109,W503,W504
+      - id: ruff-format
+        args: ["--line-length=220", "--config", "format.quote-style='single'", "--config", "format.indent-style='space'"]
 
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.1.0
     hooks:
       - id: add-trailing-comma
-
-  - repo: https://github.com/psf/black
-    rev: 24.4.1 # Without leading 'v'
-    hooks:
-      - id: black
-        args: ["--skip-string-normalization"]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0

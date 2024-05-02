@@ -43,7 +43,6 @@ def microsoft_planner_importer(
     labels_mapping=None,
     labels_not_mapped_remove=False,
 ):
-
     # Import dataset
     microsoft_planner_checklists_df = (
         pd.read_excel(
@@ -58,9 +57,7 @@ def microsoft_planner_importer(
         )
         .assign(run_month=lambda row: row['run_date'].dt.strftime('%Y-%m'))
         .assign(
-            id=lambda row: row['task_id'].astype(str)
-            + '_'
-            + row['checklist_id'].fillna(value='', method=None, axis=0).astype(str),
+            id=lambda row: row['task_id'].astype(str) + '_' + row['checklist_id'].fillna(value='', method=None, axis=0).astype(str),
         )
         # Reorder columns
         .filter(
@@ -224,24 +221,17 @@ def microsoft_planner_transform(
 
     # Add missing 'checklist_value' for 'task_id' without checklists
     microsoft_planner_checklists_df = microsoft_planner_checklists_df.assign(
-        checklist_value=lambda row: (
-            (row['checklist_id'].isna())
-            & (row['checklist_value'].isna())
-            & (row['task_completed_date'].notna())
-        )
-        | row['checklist_value'],
+        checklist_value=lambda row: ((row['checklist_id'].isna()) & (row['checklist_value'].isna()) & (row['task_completed_date'].notna())) | row['checklist_value'],
     )
 
     # Create 'previous_value' column
-    microsoft_planner_checklists_df['previous_value'] = (
-        microsoft_planner_checklists_df.groupby(
-            by=['id'],
-            level=None,
-            as_index=False,
-            sort=True,
-            dropna=True,
-        )['checklist_value'].shift(periods=1)
-    )
+    microsoft_planner_checklists_df['previous_value'] = microsoft_planner_checklists_df.groupby(
+        by=['id'],
+        level=None,
+        as_index=False,
+        sort=True,
+        dropna=True,
+    )['checklist_value'].shift(periods=1)
 
     # Create 'completed' column
     microsoft_planner_checklists_df['completed'] = False
@@ -249,13 +239,8 @@ def microsoft_planner_transform(
     microsoft_planner_checklists_df = (
         microsoft_planner_checklists_df.assign(
             completed=lambda row: (
-                (
-                    (row['checklist_value'].eq(True)) & (row['previous_value'].isna())
-                )  # New 'id' checklists marked as completed
-                | (
-                    (row['checklist_value'].eq(True))
-                    & (row['previous_value'].eq(False))
-                )  # Existing 'id' marked as completed
+                ((row['checklist_value'].eq(True)) & (row['previous_value'].isna()))  # New 'id' checklists marked as completed
+                | ((row['checklist_value'].eq(True)) & (row['previous_value'].eq(False)))  # Existing 'id' marked as completed
             ),
         )
         # Remove columns
@@ -275,7 +260,6 @@ def microsoft_planner_transform(
     print(f'Execution time: {datetime.now() - execution_start}')
 
     if len(microsoft_planner_checklists_df) > 0:
-
         with pd.ExcelWriter(
             path=os.path.join(
                 os.path.expanduser('~'),
@@ -311,7 +295,7 @@ def microsoft_planner_transform(
 
         print('')
         print(
-            '\'Microsoft Planner Export Transformed.xlsx\' file was saved to the Downloads folder.',
+            "'Microsoft Planner Export Transformed.xlsx' file was saved to the Downloads folder.",
         )
 
 
