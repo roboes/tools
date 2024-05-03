@@ -16,8 +16,8 @@ Strava add-ons:\
 ### Cycling routes
 
 [Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
-[Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.
-[Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.\
+[Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.\
+[Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.
 
 ## Hiking
 
@@ -112,7 +112,8 @@ None.
 
 [Amenities available in OSM](https://wiki.openstreetmap.org/wiki/Key:amenity)\
 [Online-maps sources for OsmAnd](https://anygis.ru/Web/Html/Osmand_en): Contains various layers that can be added to OsmAnd, including Strava multiple heatmaps (all activity types, ride, run and water activities).\
-[dérive - Generate a heatmap from GPS tracks](https://erik.github.io/derive/): Generate heatmap by drag and dropping one or more .gpx/.tcx/.fit/.igc/.skiz file(s).
+[dérive - Generate a heatmap from GPS tracks](https://erik.github.io/derive/): Generate heatmap by drag and dropping one or more .gpx/.tcx/.fit/.igc/.skiz file(s).\
+[BBBike](https://garmin.bbbike.org): Extracts OpenStreetMap maps for Garmin devices.
 
 # See also
 
