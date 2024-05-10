@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2024-04-10
+# Last update: 2024-05-10
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -38,7 +38,7 @@ if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
 
 def microsoft_planner_importer(
     *,
-    filepath_or_buffer,
+    input_filepath,
     sheet_name,
     labels_mapping=None,
     labels_not_mapped_remove=False,
@@ -46,7 +46,7 @@ def microsoft_planner_importer(
     # Import dataset
     microsoft_planner_checklists_df = (
         pd.read_excel(
-            io=filepath_or_buffer,
+            io=input_filepath,
             sheet_name=sheet_name,
             header=0,
             index_col=None,
@@ -55,7 +55,9 @@ def microsoft_planner_importer(
             dtype=None,
             engine='openpyxl',
         )
-        .assign(run_month=lambda row: row['run_date'].dt.strftime('%Y-%m'))
+        # Rename columns
+        .rename(columns={'task_notes': 'task_description'})
+        .assign(run_month=lambda row: row['run_date'].dt.strftime(date_format='%Y-%m'))
         .assign(
             id=lambda row: row['task_id'].astype(str) + '_' + row['checklist_id'].fillna(value='', method=None, axis=0).astype(str),
         )
@@ -68,6 +70,7 @@ def microsoft_planner_importer(
                 'labels',
                 'task_id',
                 'task_name',
+                'task_description',
                 'task_created_date',
                 'task_due_date',
                 'task_completed_percent',
@@ -87,6 +90,7 @@ def microsoft_planner_importer(
                 'labels',
                 'task_id',
                 'task_name',
+                'task_description',
                 'task_created_date',
                 'task_due_date',
                 'task_completed_percent',
@@ -152,10 +156,11 @@ def microsoft_planner_importer(
 
 def microsoft_planner_transform(
     *,
-    filepath_or_buffer,
+    input_filepath,
     sheet_name,
     labels_mapping=None,
     labels_not_mapped_remove=False,
+    output_path,
 ):
     """Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
     # Create variables
@@ -163,7 +168,7 @@ def microsoft_planner_transform(
 
     # Import and transform Microsoft Planner
     microsoft_planner_tasks_summary_df = microsoft_planner_importer(
-        filepath_or_buffer=filepath_or_buffer,
+        input_filepath=input_filepath,
         sheet_name=sheet_name,
         labels_mapping=labels_mapping,
         labels_not_mapped_remove=labels_not_mapped_remove,
@@ -185,7 +190,7 @@ def microsoft_planner_transform(
                 'labels',
                 'task_id',
                 'task_name',
-                'task_notes',
+                'task_description',
                 'task_created_date',
                 'task_due_date',
                 'task_completed_percent',
@@ -259,13 +264,11 @@ def microsoft_planner_transform(
     # Execution time
     print(f'Execution time: {datetime.now() - execution_start}')
 
+    file_name = 'Microsoft Planner Export Transformed {}.xlsx'.format(microsoft_planner_checklists_df['run_date'].max().strftime(format='%Y-%m'))
+
     if len(microsoft_planner_checklists_df) > 0:
         with pd.ExcelWriter(
-            path=os.path.join(
-                os.path.expanduser('~'),
-                'Downloads',
-                'Microsoft Planner Export Transformed.xlsx',
-            ),
+            path=os.path.join(output_path, file_name),
             date_format='YYYY-MM-DD',
             datetime_format='YYYY-MM-DD',
             mode='w',
@@ -295,7 +298,7 @@ def microsoft_planner_transform(
 
         print('')
         print(
-            "'Microsoft Planner Export Transformed.xlsx' file was saved to the Downloads folder.",
+            f"'{file_name}' file was saved to the '{output_path}' folder.",
         )
 
 
@@ -310,14 +313,9 @@ labels_mapping = {
 }
 
 microsoft_planner_transform(
-    filepath_or_buffer=os.path.join(
-        os.path.expanduser('~'),
-        'Documents',
-        'Microsoft Planner Transform',
-        'tools',
-        'Microsoft Planner Export.xlsx',
-    ),
+    input_filepath=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform', 'Microsoft Planner Export.xlsx'),
     sheet_name='PlannerExport',
     labels_mapping=labels_mapping,
     labels_not_mapped_remove=True,
+    output_path=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform'),
 )
