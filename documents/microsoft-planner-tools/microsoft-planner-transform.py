@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2024-05-10
+# Last update: 2024-05-13
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -57,6 +57,8 @@ def microsoft_planner_importer(
         )
         # Rename columns
         .rename(columns={'task_notes': 'task_description'})
+        # Change dtypes
+        # .astype(dtype={'run_date': 'datetime64[ns]'})
         .assign(run_month=lambda row: row['run_date'].dt.strftime(date_format='%Y-%m'))
         .assign(
             id=lambda row: row['task_id'].astype(str) + '_' + row['checklist_id'].fillna(value='', method=None, axis=0).astype(str),
@@ -264,7 +266,7 @@ def microsoft_planner_transform(
     # Execution time
     print(f'Execution time: {datetime.now() - execution_start}')
 
-    file_name = 'Microsoft Planner Export Transformed {}.xlsx'.format(microsoft_planner_checklists_df['run_date'].max().strftime(format='%Y-%m'))
+    file_name = 'Microsoft Planner Export Transformed {}.xlsx'.format(microsoft_planner_checklists_df['run_month'].max())
 
     if len(microsoft_planner_checklists_df) > 0:
         with pd.ExcelWriter(
