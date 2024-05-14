@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-05-10
+# Last update: 2024-05-14
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -89,48 +89,6 @@ repos:
     hooks:
       - id: pyupgrade
         args: ["--py312-plus"]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0 # Without leading 'v'
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          # https://github.com/DmytroLitvinov/awesome-flake8-extensions
-
-          # Bugs
-          - flake8-bugbear
-          - flake8-encodings
-          - flake8-secure-coding-standard
-          - flake8-warnings
-
-          # Clean code
-          - flake8-comprehensions
-          - flake8-simplify
-          # - flake8-eradicate
-          - flake8-commas
-
-          # Comments
-          - flake8-comments
-
-          # Docstrings
-          - flake8-docstrings
-          - flake8-rst-docstrings
-
-          # Limitations
-          - flake8-blind-except
-          - flake8-logging-format
-          # - flake8-print
-
-          # Naming
-          - flake8-builtins
-
-          # Security
-          - flake8-bandit
-
-          # Testing
-          - flake8-assertive
-
-        args: ["--ignore=B007,B023,B902,C408,CM001,D103,E203,E266,E402,E501,F821,S105,S110,S301,S310,S410,SCS109,SIM105,SIM904,W503,W504"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6

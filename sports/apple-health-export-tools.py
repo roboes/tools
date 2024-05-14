@@ -254,11 +254,11 @@ def activities_apple_health_to_strava(
         activities_apple_health
         # Change dtypes
         .assign(
-            activity_creation_date=lambda row: row['activity_creation_date'].dt.tz_convert('UTC'),
+            activity_creation_date=lambda row: row['activity_creation_date'].dt.tz_convert(tz='UTC'),
         )
-        .assign(activity_date=lambda row: row['activity_date'].dt.tz_convert('UTC'))
+        .assign(activity_date=lambda row: row['activity_date'].dt.tz_convert(tz='UTC'))
         .assign(
-            activity_end_date=lambda row: row['activity_end_date'].dt.tz_convert('UTC'),
+            activity_end_date=lambda row: row['activity_end_date'].dt.tz_convert(tz='UTC'),
         )
         ## Transform columns
         # activity_type
@@ -314,12 +314,12 @@ def activities_apple_health_to_strava(
         text.append('    <Activity Sport="{}">\n'.format(row['activity_type']))
         text.append(
             '      <Id>{}</Id>\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append(
             '      <Lap StartTime="{}">\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append(
@@ -346,7 +346,7 @@ def activities_apple_health_to_strava(
         text.append('          <Trackpoint>\n')
         text.append(
             '            <Time>{}</Time>\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append('            <AltitudeMeters></AltitudeMeters>\n')
@@ -358,7 +358,7 @@ def activities_apple_health_to_strava(
         text.append('          <Trackpoint>\n')
         text.append(
             '            <Time>{}</Time>\n'.format(
-                row['activity_end_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_end_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append('            <AltitudeMeters></AltitudeMeters>\n')
@@ -410,7 +410,7 @@ def activities_apple_health_to_strava(
         with open(
             file=os.path.join(
                 output_directory,
-                row['activity_date'].strftime('%Y-%m-%dT%H-%M-%SZ') + '_' + row['activity_type'] + '.tcx',
+                row['activity_date'].strftime(format='%Y-%m-%dT%H-%M-%SZ') + '_' + row['activity_type'] + '.tcx',
             ),
             mode='w',
             encoding='utf-8',

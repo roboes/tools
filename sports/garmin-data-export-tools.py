@@ -314,9 +314,7 @@ def activities_garmin_compare(
         activities_garmin
         # Create 'activity_date_cleaned' column
         .assign(
-            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(
-                '%Y-%m-%d 00:%M:00',
-            ),
+            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(date_format='%Y-%m-%d 00:%M:00'),
         )
     )
 
@@ -370,9 +368,7 @@ def activities_garmin_compare(
         activities_strava
         # Create 'activity_date_cleaned' column
         .assign(
-            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(
-                '%Y-%m-%d 00:%M:00',
-            ),
+            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(date_format='%Y-%m-%d 00:%M:00'),
         )
     )
 
