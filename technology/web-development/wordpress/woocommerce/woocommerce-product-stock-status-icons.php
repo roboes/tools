@@ -1,11 +1,11 @@
 // WooCommerce display product stock status icons as Shortcode
 
-add_shortcode($tag='woocommerce_product_stock_status_icons', $callback='display_custom_availability_icons');
+add_shortcode( $tag='woocommerce_product_stock_status_icons', $callback='display_custom_availability_icons' );
 
 function display_custom_availability_icons() {
 	global $product;
 
-    if ( WC() && $product ) {
+	if ( WC() && $product ) {
 
 		// In stock
 		if ( $product->is_in_stock() ) {
