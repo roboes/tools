@@ -1,5 +1,5 @@
 ## Geocoder Tools
-# Last update: 2024-03-27
+# Last update: 2024-05-17
 
 
 """About: Geocoder Tools."""
@@ -114,35 +114,48 @@ def geocoder_country_code(*, df, shapefile_path):
             return df
 
 
-def countries_alpha_3_to_2():
-    """Download and import world countries in alpha-3 and alpha-2 codes."""
-    # Download and import
-    countries_alpha_3_to_2_df = (
+def countries():
+    """Download and import world countries in country name (english), alpha-2 and alpha-3 codes."""
+
+    # Download and import "country_name" and "country_code_alpha_2"
+    country_name_df = (
         pd.read_json(
-            path_or_buf=BytesIO(
-                urlopen(
-                    url=Request(
-                        url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.3to2.min.json?raw=true',
-                        headers={'User-Agent': 'Mozilla'},
-                    ),
-                ).read(),
-            ),
+            path_or_buf=BytesIO(urlopen(url=Request(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers={'User-Agent': 'Mozilla'})).read()),
             orient='index',
             convert_dates=False,
             dtype='unicode',
             encoding='utf-8',
         )
-        .rename(columns={0: 'alpha2'})
-        .reset_index(level=None, drop=False, names=['alpha3'])
-        .assign(
-            alpha3=lambda row: row['alpha3'].str.lower(),
-            alpha2=lambda row: row['alpha2'].str.lower(),
-        )
+        .rename(columns={0: 'country_name'})
+        .reset_index(level=None, drop=False, names=['country_code_alpha_2'])
     )
 
+    # Download and import
+    countries_df = (
+        (
+            pd.read_json(
+                path_or_buf=BytesIO(urlopen(url=Request(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers={'User-Agent': 'Mozilla'})).read()),
+                orient='index',
+                convert_dates=False,
+                dtype='unicode',
+                encoding='utf-8',
+            )
+            .rename(columns={0: 'country_code_alpha_3'})
+            .reset_index(level=None, drop=False, names=['country_code_alpha_2'])
+        )
+        .merge(right=country_name_df, how='left', on=['country_code_alpha_2'], indicator=False)
+        .assign(country_code_alpha_3=lambda row: row['country_code_alpha_3'].str.lower(), country_code_alpha_2=lambda row: row['country_code_alpha_2'].str.lower())
+    )
+
+    # Delete objects
+    del country_name_df
+
     # Test duplicates
-    # print(len(countries_alpha_3_to_2_df[countries_alpha_3_to_2_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
-    # print(len(countries_alpha_3_to_2_df[countries_alpha_3_to_2_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
+    if len(countries_df[countries_df.duplicated(subset=['country_code_alpha_2'], keep=False)]) == 0 and len(countries_df[countries_df.duplicated(subset=['country_code_alpha_3'], keep=False)]) == 0:
+        print("Columns 'country_code_alpha_2', 'country_code_alpha_3' and 'country_name' have unique values.")
+
+    else:
+        print("WARNING: Columns 'country_code_alpha_2', 'country_code_alpha_3' and 'country_name' do not have unique values.")
 
     # Return objects
-    return countries_alpha_3_to_2_df
+    return countries_df
