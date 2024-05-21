@@ -120,7 +120,7 @@ def countries():
     # Download and import "country_name" and "country_code_alpha_2"
     country_name_df = (
         pd.read_json(
-            path_or_buf=BytesIO(urlopen(url=Request(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers={'User-Agent': 'Mozilla'})).read()),
+            path_or_buf=BytesIO(urlopen(url=Request(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers={'User-Agent': 'Mozilla/5.0'})).read()),
             orient='index',
             convert_dates=False,
             dtype='unicode',
@@ -134,7 +134,7 @@ def countries():
     countries_df = (
         (
             pd.read_json(
-                path_or_buf=BytesIO(urlopen(url=Request(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers={'User-Agent': 'Mozilla'})).read()),
+                path_or_buf=BytesIO(urlopen(url=Request(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers={'User-Agent': 'Mozilla/5.0'})).read()),
                 orient='index',
                 convert_dates=False,
                 dtype='unicode',

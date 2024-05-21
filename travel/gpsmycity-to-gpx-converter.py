@@ -43,7 +43,7 @@ if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
 def gpsmycity_tour_import(*, urls):
     for url in urls:
         # Import page source
-        page_source = urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla'})).read().decode(encoding='utf-8')
+        page_source = urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla/5.0'})).read().decode(encoding='utf-8')
         page_source = page_source.split(sep='\n')
 
         # Create variables
