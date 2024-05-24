@@ -30,19 +30,11 @@ import requests
 
 # fit2gpx
 with ZipFile(
-    file=BytesIO(
-        initial_bytes=requests.get(
-            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip',
-            timeout=5,
-            verify=True,
-        ).content,
-    ),
+    file=BytesIO(initial_bytes=requests.get(url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip', headers=None, timeout=5, verify=True).content),
     mode='r',
     compression=ZIP_DEFLATED,
 ) as zip_file:
-    zip_file.extractall(
-        path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'),
-    )
+    zip_file.extractall(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'))
 
 # Delete objects
 del zip_file

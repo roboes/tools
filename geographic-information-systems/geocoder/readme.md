@@ -18,6 +18,12 @@ The [geocoder-examples.py](./geocoder-examples.py) contains some examples and us
 
 This geocoder tool requires Python 3.12 because of the [`itertools.batched` function]([https://docs.python.org/3/library/itertools.html#itertools.batched).
 
+In case of `CERTIFICATE_VERIFY_FAILED` ("certificate verify failed: unable to get local issuer certificate") error, install the following package:
+
+```.sh
+python -m pip install python-certifi-win32
+```
+
 ## Limitations
 
 [OSM's Nominatim](https://nominatim.openstreetmap.org) supports [an absolute maximum of 1 request per second](https://operations.osmfoundation.org/policies/nominatim/). For a higher use, a local instance of Nominatim could be installed (e.g. [nominatim-docker](https://github.com/mediagis/nominatim-docker)).

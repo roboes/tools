@@ -1,5 +1,5 @@
 ## Geocoder Tools
-# Last update: 2024-05-17
+# Last update: 2024-05-24
 
 
 """About: Geocoder Tools."""
@@ -17,7 +17,6 @@ globals().clear()
 from datetime import datetime
 from io import BytesIO
 import os
-from urllib.request import Request, urlopen
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import geopandas as gpd
@@ -41,13 +40,7 @@ def download_world_boundaries_shapefile(*, shapefile_path):
     """Download Eurostat's Geographical Information and Maps (GISCO) Shapefile, Scale 1:1 Million (Source: https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/countries)."""
     # Download
     with ZipFile(
-        file=BytesIO(
-            initial_bytes=requests.get(
-                url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip',
-                timeout=5,
-                verify=True,
-            ).content,
-        ),
+        file=BytesIO(initial_bytes=requests.get(url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip', headers=None, timeout=5, verify=True).content),
         mode='r',
         compression=ZIP_DEFLATED,
     ) as outer_zip_file, outer_zip_file.open(
@@ -120,7 +113,7 @@ def countries():
     # Download and import "country_name" and "country_code_alpha_2"
     country_name_df = (
         pd.read_json(
-            path_or_buf=BytesIO(urlopen(url=Request(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers={'User-Agent': 'Mozilla/5.0'})).read()),
+            path_or_buf=BytesIO(initial_bytes=requests.get(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers=None, timeout=5, verify=True).content),
             orient='index',
             convert_dates=False,
             dtype='unicode',
@@ -134,7 +127,9 @@ def countries():
     countries_df = (
         (
             pd.read_json(
-                path_or_buf=BytesIO(urlopen(url=Request(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers={'User-Agent': 'Mozilla/5.0'})).read()),
+                path_or_buf=BytesIO(
+                    initial_bytes=requests.get(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers=None, timeout=5, verify=True).content,
+                ),
                 orient='index',
                 convert_dates=False,
                 dtype='unicode',

@@ -1,5 +1,5 @@
 ## GPSmyCity to GPX converter
-# Last update: 2024-03-27
+# Last update: 2024-05-24
 
 
 """About: Script that downloads one or multiple self-guided GPSmyCity tours URLs as .gpx files."""
@@ -17,10 +17,10 @@ globals().clear()
 from io import StringIO
 import os
 import re
-from urllib.request import Request, urlopen
 
 import gpxpy
 import pandas as pd
+import requests
 from werkzeug.utils import secure_filename
 
 
@@ -43,7 +43,7 @@ if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
 def gpsmycity_tour_import(*, urls):
     for url in urls:
         # Import page source
-        page_source = urlopen(url=Request(url=url, headers={'User-Agent': 'Mozilla/5.0'})).read().decode(encoding='utf-8')
+        page_source = requests.get(url=url, headers=None, timeout=5, verify=True).content.decode('utf-8')
         page_source = page_source.split(sep='\n')
 
         # Create variables
