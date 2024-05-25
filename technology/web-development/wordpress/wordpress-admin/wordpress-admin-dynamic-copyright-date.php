@@ -1,3 +1,4 @@
+<?php
 // WordPress Admin Dynamic Copyright Date
 
 add_shortcode( $tag='current_year', $callback='get_year');

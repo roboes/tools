@@ -1,3 +1,4 @@
+<?php
 // WooCommerce add custom CSS class 'badge-new-product' for products created within the last 6 months
 
 add_filter( $hook_name='post_class', $callback='add_new_product_css_class', $priority=10, $accepted_args=3 );

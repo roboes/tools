@@ -1,3 +1,4 @@
+<?php
 // Elementor Display Conditions Custom Fields Limit
 
 add_filter( $hook_name='elementor_pro/display_conditions/dynamic_tags/custom_fields_meta_limit', $callback='custom_custom_fields_meta_limit', $priority=10, $accepted_args=1 );

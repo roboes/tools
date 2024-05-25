@@ -1,3 +1,4 @@
+<?php
 // WooCommerce display product stock status icons as Shortcode
 
 add_shortcode( $tag='woocommerce_product_stock_status_icons', $callback='display_custom_availability_icons' );

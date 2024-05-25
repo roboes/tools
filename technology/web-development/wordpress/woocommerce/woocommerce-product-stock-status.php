@@ -1,3 +1,4 @@
+<?php
 // WooCommerce product stock status using Polylang
 // Elementor's "Product Stock" widget only works with "Stock management" ( i.e. for products where "Track stock quantity for this product" is activated )
 
