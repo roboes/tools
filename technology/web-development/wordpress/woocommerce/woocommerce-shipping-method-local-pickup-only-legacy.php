@@ -1,5 +1,5 @@
 <?php
-// WooCommerce display only chosen $local_pickup_ids if one or more products added to the cart belong to the $shipping_class_name = 'local-pickup-only', dynamically unsets all shipping methods except for chosen $local_pickup_ids.
+// WooCommerce - Display only chosen $local_pickup_ids if one or more products added to the cart belong to the $shipping_class_name = 'local-pickup-only', dynamically unsets all shipping methods except for chosen $local_pickup_ids.
 
 add_filter( $hook_name='woocommerce_package_rates', $callback='woocommerce_shipping_method_local_pickup_only', $priority=10, $accepted_args=1 );
 

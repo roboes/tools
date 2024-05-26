@@ -1,5 +1,5 @@
 <?php
-// WooCommerce "Add to cart" quantity buttons
+// WooCommerce - "Add to cart" quantity buttons
 
 add_action( $hook_name='woocommerce_after_add_to_cart_quantity', $callback='ts_quantity_plus_sign', $priority=10, $accepted_args=1 );
 

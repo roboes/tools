@@ -1,5 +1,5 @@
 <?php
-// WooCommerce display product currency and price inside "Add to Cart" button
+// WooCommerce - Display product currency and price inside "Add to Cart" button
 
 add_filter( $hook_name='woocommerce_product_single_add_to_cart_text', $callback='woocommerce_add_to_cart_product_price', $priority=10, $accepted_args=2 );
 
