@@ -1,29 +1,32 @@
 <?php
 // WooCommerce - "Add to cart" quantity buttons
 
-add_action( $hook_name='woocommerce_after_add_to_cart_quantity', $callback='ts_quantity_plus_sign', $priority=10, $accepted_args=1 );
+add_action($hook_name = 'woocommerce_after_add_to_cart_quantity', $callback = 'ts_quantity_plus_sign', $priority = 10, $accepted_args = 1);
 
-function ts_quantity_plus_sign() {
-	if ( WC() && is_product() ) {
-		echo '<button type="button" class="plus" >+</button>';
-	}
+function ts_quantity_plus_sign()
+{
+    if (WC() && is_product()) {
+        echo '<button type="button" class="plus" >+</button>';
+    }
 }
 
 
-add_action( 'woocommerce_before_add_to_cart_quantity', 'ts_quantity_minus_sign' );
+add_action('woocommerce_before_add_to_cart_quantity', 'ts_quantity_minus_sign');
 
-function ts_quantity_minus_sign() {
-	if ( WC() && is_product() ) {
-		echo '<button type="button" class="minus" >-</button>';
-	}
+function ts_quantity_minus_sign()
+{
+    if (WC() && is_product()) {
+        echo '<button type="button" class="minus" >-</button>';
+    }
 }
 
 
-add_action( $hook_name='wp_footer', $callback='ts_quantity_plus_minus', $priority=10, $accepted_args=1 );
+add_action($hook_name = 'wp_footer', $callback = 'ts_quantity_plus_minus', $priority = 10, $accepted_args = 1);
 
-function ts_quantity_plus_minus() {
-	if ( WC() && is_product() ) {
-		?>
+function ts_quantity_plus_minus()
+{
+    if (WC() && is_product()) {
+        ?>
 		<script type="text/javascript">
 		 jQuery( document ).ready( function ( $ ) {
 			$( "form.cart" ).on( "click", "button.plus, button.minus", function () {
@@ -52,5 +55,5 @@ function ts_quantity_plus_minus() {
 		 } );
 		</script>
 		<?php
-	}
+    }
 }

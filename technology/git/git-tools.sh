@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-05-14
+# Last update: 2024-05-27
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -94,6 +94,10 @@ pipreqs --encoding utf-8 --force "./"
 
 # Set working directory
 # cd ..
+
+
+# Delete files
+rm "./.php-cs-fixer.cache"
 
 
 ## Git push

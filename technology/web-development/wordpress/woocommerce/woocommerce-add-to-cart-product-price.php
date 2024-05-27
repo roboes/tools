@@ -1,30 +1,31 @@
 <?php
 // WooCommerce - Display product currency and price inside "Add to Cart" button
 
-add_filter( $hook_name='woocommerce_product_single_add_to_cart_text', $callback='woocommerce_add_to_cart_product_price', $priority=10, $accepted_args=2 );
+add_filter($hook_name = 'woocommerce_product_single_add_to_cart_text', $callback = 'woocommerce_add_to_cart_product_price', $priority = 10, $accepted_args = 2);
 
-function woocommerce_add_to_cart_product_price( $button_text, $product ) {
-	if ( WC() && is_product() ) {
-		// Variable products
-		if ( $product->is_type( 'variable' ) ) {
-			// Shop and archives
-			if ( !is_product() ) {
-				$product_price = wc_price( wc_get_price_to_display( $product, array( 'price' => $product->get_variation_price() ) ) );
-				return $button_text . ' - From ' . strip_tags( $product_price );
-			}
-			// Single product pages
-			else {
-				$variations_data = []; // Initialize variations data array
+function woocommerce_add_to_cart_product_price($button_text, $product)
+{
+    if (WC() && is_product()) {
+        // Variable products
+        if ($product->is_type('variable')) {
+            // Shop and archives
+            if (!is_product()) {
+                $product_price = wc_price(wc_get_price_to_display($product, array( 'price' => $product->get_variation_price() )));
+                return $button_text . ' - From ' . strip_tags($product_price);
+            }
+            // Single product pages
+            else {
+                $variations_data = []; // Initialize variations data array
 
-				// Loop through available variations
-				foreach ( $product->get_available_variations() as $variation ) {
-					// Set the corresponding price for each variation ID ( used in jQuery )
-					$variations_data[$variation['variation_id']] = $variation['display_price'];
-				}
-				?>
+                // Loop through available variations
+                foreach ($product->get_available_variations() as $variation) {
+                    // Set the corresponding price for each variation ID ( used in jQuery )
+                    $variations_data[$variation['variation_id']] = $variation['display_price'];
+                }
+                ?>
 				<script>
 				 jQuery( function( $ ) {
-					var jsonData = <?php echo json_encode( $variations_data ); ?>,
+					var jsonData = <?php echo json_encode($variations_data); ?>,
 						inputVID = 'input.variation_id',
 						quantityInput = 'input[name="quantity"]'; // Add this line
 
@@ -38,12 +39,12 @@ function woocommerce_add_to_cart_product_price( $button_text, $product ) {
 							var formattedPrice = price.toFixed( 2 );
 
 							// Retrieve currency symbol and position from WooCommerce settings
-							var currencySymbol = '<?php echo esc_html( get_woocommerce_currency_symbol() ); ?>';
-							var currencyPosition = '<?php echo esc_html( $currency_position ); ?>';
+							var currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
+							var currencyPosition = '<?php echo esc_html($currency_position); ?>';
 
 							// Get thousand separator and decimal separator from WooCommerce settings
-							var thousandSeparator = '<?php echo esc_html( wc_get_price_thousand_separator() ); ?>';
-							var decimalSeparator = '<?php echo esc_html( wc_get_price_decimal_separator() ); ?>';
+							var thousandSeparator = '<?php echo esc_html(wc_get_price_thousand_separator()); ?>';
+							var decimalSeparator = '<?php echo esc_html(wc_get_price_decimal_separator()); ?>';
 
 							// Format the price with separators
 							formattedPrice = formattedPrice.replace( '.', decimalSeparator );
@@ -77,13 +78,13 @@ function woocommerce_add_to_cart_product_price( $button_text, $product ) {
 				</script>
 				<?php
 
-				return $button_text;
-			}
-		}
-		// All other product types
-		else {
-			$product_price = wc_price( wc_get_price_to_display( $product ) );
-			return $button_text . ' — ' . strip_tags( $product_price );
-		}
-	}
+                return $button_text;
+            }
+        }
+        // All other product types
+        else {
+            $product_price = wc_price(wc_get_price_to_display($product));
+            return $button_text . ' — ' . strip_tags($product_price);
+        }
+    }
 }
