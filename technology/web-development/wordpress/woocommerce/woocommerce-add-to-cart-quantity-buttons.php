@@ -1,5 +1,6 @@
 <?php
 // WooCommerce - "Add to cart" quantity buttons
+// Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)
 
 add_action($hook_name = 'woocommerce_after_add_to_cart_quantity', $callback = 'ts_quantity_plus_sign', $priority = 10, $accepted_args = 1);
 
@@ -11,7 +12,7 @@ function ts_quantity_plus_sign()
 }
 
 
-add_action('woocommerce_before_add_to_cart_quantity', 'ts_quantity_minus_sign');
+add_action($hook_name = 'woocommerce_before_add_to_cart_quantity', $callback = 'ts_quantity_minus_sign', $priority = 10, $accepted_args = 1);
 
 function ts_quantity_minus_sign()
 {
