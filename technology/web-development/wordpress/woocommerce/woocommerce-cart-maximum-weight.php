@@ -1,6 +1,7 @@
 <?php
 
 // WooCommerce - Set a maximum weight per cart
+// Last update: 2024-05-29
 
 // Calculate whether an item being added to the cart passes the weight criteria - triggered on add to cart action
 add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_weight_add_to_cart_validation', $priority = 10, $accepted_args = 5);
@@ -14,6 +15,9 @@ function woocommerce_cart_maximum_weight_add_to_cart_validation($passed, $produc
 
         // Check cart items
         $total_cart_weight = 0;
+
+        // Get current language
+        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
 
         // Calculate the weight of the current cart items
         foreach(WC()->cart->get_cart() as $cart_item) {
@@ -36,7 +40,6 @@ function woocommerce_cart_maximum_weight_add_to_cart_validation($passed, $produc
             $passed = false;
 
             // Custom notice
-            $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
             if ($current_language === 'de') {
                 $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $weight_limit / 1000);
             } else {
@@ -61,6 +64,9 @@ function woocommerce_cart_maximum_weight_cart_item_quantity_change_validation($c
         // Setup (weight limit dependent on products' Unit - in this case, grams)
         $weight_limit = 30000;
 
+        // Get current language
+        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+
         // Calculate the total weight of the cart before the quantity change
         $total_cart_weight = 0;
         foreach ($cart->get_cart() as $item_key => $cart_item) {
@@ -82,7 +88,6 @@ function woocommerce_cart_maximum_weight_cart_item_quantity_change_validation($c
             $cart->cart_contents[ $cart_item_key ]['quantity'] = $old_quantity;
 
             // Custom notice
-            $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
             if ($current_language === 'de') {
                 $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $weight_limit / 1000);
             } else {

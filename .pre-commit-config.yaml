@@ -57,8 +57,7 @@ repos:
       - id: sqlfluff-fix
         args: ["--dialect=postgres"]
 
-  # Requires brew install php-cs-fixer
-  # - repo: https://github.com/digitalpulp/pre-commit-php
+  # - repo: https://github.com/digitalpulp/pre-commit-php # Requires brew install php-cs-fixer
     # rev: 1.4.0 # Without leading 'v'
     # hooks:
     # - id: php-cs-fixer

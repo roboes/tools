@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Create custom fields
-
+// Last update: 2024-05-29
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook( $hook='custom_field_product_shipping_class', $args=array(), $wp_error=false );

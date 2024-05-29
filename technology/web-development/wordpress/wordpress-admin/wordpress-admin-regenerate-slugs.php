@@ -1,6 +1,7 @@
 <?php
 
 // WordPress Admin - Regenerate slugs for products
+// Last update: 2024-05-29
 
 $posts = get_posts(array( 'numberposts' => -1, 'post_type' => 'product' ));
 

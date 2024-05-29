@@ -1,6 +1,7 @@
 <?php
 
 // WordPress Admin - Add "Modified Date" column to Posts and Pages
+// Last update: 2024-05-29
 
 add_filter($hook_name = 'manage_pages_columns', $callback = 'custom_columns', $priority = 10, $accepted_args = 1);
 
