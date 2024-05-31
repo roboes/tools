@@ -30,19 +30,11 @@ import requests
 
 # fit2gpx
 with ZipFile(
-    file=BytesIO(
-        initial_bytes=requests.get(
-            url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip',
-            timeout=5,
-            verify=True,
-        ).content,
-    ),
+    file=BytesIO(initial_bytes=requests.get(url='https://github.com/dodo-saba/fit2gpx/archive/refs/heads/main.zip', headers=None, timeout=5, verify=True).content),
     mode='r',
     compression=ZIP_DEFLATED,
 ) as zip_file:
-    zip_file.extractall(
-        path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'),
-    )
+    zip_file.extractall(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx'))
 
 # Delete objects
 del zip_file
@@ -314,9 +306,7 @@ def activities_garmin_compare(
         activities_garmin
         # Create 'activity_date_cleaned' column
         .assign(
-            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(
-                '%Y-%m-%d 00:%M:00',
-            ),
+            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(date_format='%Y-%m-%d 00:%M:00'),
         )
     )
 
@@ -370,9 +360,7 @@ def activities_garmin_compare(
         activities_strava
         # Create 'activity_date_cleaned' column
         .assign(
-            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(
-                '%Y-%m-%d 00:%M:00',
-            ),
+            activity_date_cleaned=lambda row: row['activity_date'].dt.strftime(date_format='%Y-%m-%d 00:%M:00'),
         )
     )
 
@@ -411,12 +399,9 @@ def activities_garmin_compare(
         )
         # Transform columns
         .assign(
-            elapsed_time_difference=lambda row: row['elapsed_time']
-            - row['elapsed_time_strava'],
-            moving_time_difference=lambda row: row['moving_time']
-            - row['moving_time_strava'],
-            distance_difference=lambda row: round(number=row['distance'], ndigits=2)
-            - round(number=row['distance_strava'], ndigits=2),
+            elapsed_time_difference=lambda row: row['elapsed_time'] - row['elapsed_time_strava'],
+            moving_time_difference=lambda row: row['moving_time'] - row['moving_time_strava'],
+            distance_difference=lambda row: round(number=row['distance'], ndigits=2) - round(number=row['distance_strava'], ndigits=2),
         )
         # Select columns
         .filter(

@@ -110,53 +110,33 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     )
 
     # Merge distance columns into one
-    activities_apple_health['distance'] = activities_apple_health[
-        'distance_cycling'
-    ].fillna(
+    activities_apple_health['distance'] = activities_apple_health['distance_cycling'].fillna(
         value=activities_apple_health['distance_walking_running'],
         method=None,
         axis=0,
     )
 
-    activities_apple_health['distance_unit'] = activities_apple_health[
-        'distance_cycling_unit'
-    ].fillna(
+    activities_apple_health['distance_unit'] = activities_apple_health['distance_cycling_unit'].fillna(
         value=activities_apple_health['distance_walking_running_unit'],
         method=None,
         axis=0,
     )
 
     # Create 'max_speed_unit' column
-    activities_apple_health['max_speed_unit'] = activities_apple_health[
-        'max_speed'
-    ].str.extract(pat=r'(m/s)$', flags=0, expand=True)
-    activities_apple_health['max_speed'] = activities_apple_health[
-        'max_speed'
-    ].str.replace(pat='m/s$', repl='', regex=True)
+    activities_apple_health['max_speed_unit'] = activities_apple_health['max_speed'].str.extract(pat=r'(m/s)$', flags=0, expand=True)
+    activities_apple_health['max_speed'] = activities_apple_health['max_speed'].str.replace(pat='m/s$', repl='', regex=True)
 
     # Create 'average_speed_unit' column
-    activities_apple_health['average_speed_unit'] = activities_apple_health[
-        'average_speed'
-    ].str.extract(pat=r'(m/s)$', flags=0, expand=True)
-    activities_apple_health['average_speed'] = activities_apple_health[
-        'average_speed'
-    ].str.replace(pat='m/s$', repl='', regex=True)
+    activities_apple_health['average_speed_unit'] = activities_apple_health['average_speed'].str.extract(pat=r'(m/s)$', flags=0, expand=True)
+    activities_apple_health['average_speed'] = activities_apple_health['average_speed'].str.replace(pat='m/s$', repl='', regex=True)
 
     # Create 'elevation_gain_unit' column
-    activities_apple_health['elevation_gain_unit'] = activities_apple_health[
-        'elevation_gain'
-    ].str.extract(pat=r'(m)$', flags=0, expand=True)
-    activities_apple_health['elevation_gain'] = activities_apple_health[
-        'elevation_gain'
-    ].str.replace(pat='m$', repl='', regex=True)
+    activities_apple_health['elevation_gain_unit'] = activities_apple_health['elevation_gain'].str.extract(pat=r'(m)$', flags=0, expand=True)
+    activities_apple_health['elevation_gain'] = activities_apple_health['elevation_gain'].str.replace(pat='m$', repl='', regex=True)
 
     # Create 'elevation_descended_unit' column
-    activities_apple_health['elevation_descended_unit'] = activities_apple_health[
-        'elevation_descended'
-    ].str.extract(pat=r'(m)$', flags=0, expand=True)
-    activities_apple_health['elevation_descended'] = activities_apple_health[
-        'elevation_descended'
-    ].str.replace(pat='m$', repl='', regex=True)
+    activities_apple_health['elevation_descended_unit'] = activities_apple_health['elevation_descended'].str.extract(pat=r'(m)$', flags=0, expand=True)
+    activities_apple_health['elevation_descended'] = activities_apple_health['elevation_descended'].str.replace(pat='m$', repl='', regex=True)
 
     activities_apple_health = (
         activities_apple_health
@@ -237,10 +217,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     ]
 
     activities_apple_health = activities_apple_health.reindex(
-        columns=(
-            columns
-            + list(activities_apple_health.columns.difference(other=columns, sort=True))
-        ),
+        columns=(columns + list(activities_apple_health.columns.difference(other=columns, sort=True))),
     )
 
     # Remove duplicate rows
@@ -261,12 +238,7 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
         )
 
         # Remove duplicate rows for activities already in Strava
-        activities_apple_health = activities_apple_health[
-            ~(
-                activities_apple_health.duplicated(subset=['activity_date'], keep=False)
-                & activities_apple_health['source_name'].eq('Strava')
-            )
-        ]
+        activities_apple_health = activities_apple_health[~(activities_apple_health.duplicated(subset=['activity_date'], keep=False) & activities_apple_health['source_name'].eq('Strava'))]
 
     # Return objects
     return activities_apple_health
@@ -282,13 +254,11 @@ def activities_apple_health_to_strava(
         activities_apple_health
         # Change dtypes
         .assign(
-            activity_creation_date=lambda row: row[
-                'activity_creation_date'
-            ].dt.tz_convert('UTC'),
+            activity_creation_date=lambda row: row['activity_creation_date'].dt.tz_convert(tz='UTC'),
         )
-        .assign(activity_date=lambda row: row['activity_date'].dt.tz_convert('UTC'))
+        .assign(activity_date=lambda row: row['activity_date'].dt.tz_convert(tz='UTC'))
         .assign(
-            activity_end_date=lambda row: row['activity_end_date'].dt.tz_convert('UTC'),
+            activity_end_date=lambda row: row['activity_end_date'].dt.tz_convert(tz='UTC'),
         )
         ## Transform columns
         # activity_type
@@ -344,12 +314,12 @@ def activities_apple_health_to_strava(
         text.append('    <Activity Sport="{}">\n'.format(row['activity_type']))
         text.append(
             '      <Id>{}</Id>\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append(
             '      <Lap StartTime="{}">\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append(
@@ -376,7 +346,7 @@ def activities_apple_health_to_strava(
         text.append('          <Trackpoint>\n')
         text.append(
             '            <Time>{}</Time>\n'.format(
-                row['activity_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append('            <AltitudeMeters></AltitudeMeters>\n')
@@ -388,7 +358,7 @@ def activities_apple_health_to_strava(
         text.append('          <Trackpoint>\n')
         text.append(
             '            <Time>{}</Time>\n'.format(
-                row['activity_end_date'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+                row['activity_end_date'].strftime(format='%Y-%m-%dT%H:%M:%SZ'),
             ),
         )
         text.append('            <AltitudeMeters></AltitudeMeters>\n')
@@ -440,10 +410,7 @@ def activities_apple_health_to_strava(
         with open(
             file=os.path.join(
                 output_directory,
-                row['activity_date'].strftime('%Y-%m-%dT%H-%M-%SZ')
-                + '_'
-                + row['activity_type']
-                + '.tcx',
+                row['activity_date'].strftime(format='%Y-%m-%dT%H-%M-%SZ') + '_' + row['activity_type'] + '.tcx',
             ),
             mode='w',
             encoding='utf-8',
@@ -466,9 +433,7 @@ activities_apple_health = activities_apple_health_import(
 
 
 # Check for duplicated activities
-activities_apple_health[
-    activities_apple_health.duplicated(subset=['activity_date'], keep=False)
-]
+activities_apple_health[activities_apple_health.duplicated(subset=['activity_date'], keep=False)]
 
 
 # Create 'Activities Output' folder

@@ -1,5 +1,5 @@
 ## Geocoder Tools Examples
-# Last update: 2024-03-12
+# Last update: 2024-03-27
 
 
 """About: Geocoder Tools Examples."""
@@ -38,7 +38,7 @@ geocoder_tools = spec_from_file_location(
 
 download_world_boundaries_shapefile = geocoder_tools.download_world_boundaries_shapefile
 geocoder_country_code = geocoder_tools.geocoder_country_code
-world_countries = geocoder_tools.world_countries
+countries_alpha_3_to_2 = geocoder_tools.countries_alpha_3_to_2
 
 # Delete objects
 del spec_from_file_location, geocoder_tools
@@ -106,4 +106,4 @@ df_geo = geocoder_country_code(
 )
 
 # Download and import world countries in multiple languages with associated alpha-2, alpha-3, and numeric codes as defined by the ISO 3166 standard
-world_countries_df = world_countries()
+countries_alpha_3_to_2_df = countries_alpha_3_to_2()

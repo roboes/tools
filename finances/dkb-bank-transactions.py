@@ -93,14 +93,10 @@ transactions = (
             value=r'\2 \1',
             regex=True,
         ),
-    ).assign(
-        amount=lambda row: row['amount']
-        .replace(to_replace=r'\.', value=r'', regex=True)
-        .replace(to_replace=r',', value=r'.', regex=True),
-        amount_eur=lambda row: row['amount_eur']
-        .replace(to_replace=r'\.', value=r'', regex=True)
-        .replace(to_replace=r',', value=r'.', regex=True)
-        .astype(float),
+    )
+    .assign(
+        amount=lambda row: row['amount'].replace(to_replace=r'\.', value=r'', regex=True).replace(to_replace=r',', value=r'.', regex=True),
+        amount_eur=lambda row: row['amount_eur'].replace(to_replace=r'\.', value=r'', regex=True).replace(to_replace=r',', value=r'.', regex=True).astype(float),
     )
     # Select columns
     .filter(
@@ -142,7 +138,7 @@ company_mapping = {
     'IKEA': 'IKEA',
     'Lidl': 'Lidl',
     'Lufthansa': 'Lufthansa',
-    'Mc Donalds|McDonalds': 'McDonald\'s',
+    'Mc Donalds|McDonalds': "McDonald's",
     'McFit|RSG Group Osterreich Ges.mbH': 'McFit',
     'Media Markt': 'MediaMarkt',
     'Muller': 'Müller',
@@ -186,7 +182,7 @@ industry_mapping = {
     'MediaMarkt': 'Electronics',
     'Musikverein Wien': 'Leisure',
     'Goldgas GmbH|Oberösterreichischen Versicherung AG|Verbund AG|Wiener Netze GmbH': 'Residence',
-    'McDonald\'s|Subway|Türkis': 'Restaurant',
+    "McDonald's|Subway|Türkis": 'Restaurant',
     'IKEA': 'Retail',
     'Decathlon|Fitinn|McFit': 'Sports',
     'Aldi Süd|Billa|Billa Plus|Eurospar|Hofer|Lidl|Penny|REWE|Spar': 'Supermarket',
