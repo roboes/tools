@@ -1,5 +1,5 @@
 ## Geocoder Tools
-# Last update: 2024-03-13
+# Last update: 2024-05-24
 
 
 """About: Geocoder Tools."""
@@ -17,7 +17,6 @@ globals().clear()
 from datetime import datetime
 from io import BytesIO
 import os
-from urllib.request import Request, urlopen
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import geopandas as gpd
@@ -41,13 +40,7 @@ def download_world_boundaries_shapefile(*, shapefile_path):
     """Download Eurostat's Geographical Information and Maps (GISCO) Shapefile, Scale 1:1 Million (Source: https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/countries)."""
     # Download
     with ZipFile(
-        file=BytesIO(
-            initial_bytes=requests.get(
-                url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip',
-                timeout=5,
-                verify=True,
-            ).content,
-        ),
+        file=BytesIO(initial_bytes=requests.get(url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip', headers=None, timeout=5, verify=True).content),
         mode='r',
         compression=ZIP_DEFLATED,
     ) as outer_zip_file, outer_zip_file.open(
@@ -114,32 +107,50 @@ def geocoder_country_code(*, df, shapefile_path):
             return df
 
 
-def world_countries():
-    """Download and import world countries in multiple languages with associated alpha-2, alpha-3, and numeric codes as defined by the ISO 3166 standard."""
+def countries():
+    """Download and import world countries in country name (english), alpha-2 and alpha-3 codes."""
+
+    # Download and import "country_name" and "country_code_alpha_2"
+    country_name_df = (
+        pd.read_json(
+            path_or_buf=BytesIO(initial_bytes=requests.get(url='https://github.com/annexare/Countries/blob/main/dist/minimal/countries.en.min.json?raw=true', headers=None, timeout=5, verify=True).content),
+            orient='index',
+            convert_dates=False,
+            dtype='unicode',
+            encoding='utf-8',
+        )
+        .rename(columns={0: 'country_name'})
+        .reset_index(level=None, drop=False, names=['country_code_alpha_2'])
+    )
+
     # Download and import
-    world_countries_df = pd.read_csv(
-        filepath_or_buffer=BytesIO(
-            urlopen(
-                url=Request(
-                    url='https://github.com/stefangabos/world_countries/blob/master/data/countries/_combined/countries.csv?raw=true',
-                    headers={'User-Agent': 'Mozilla'},
+    countries_df = (
+        (
+            pd.read_json(
+                path_or_buf=BytesIO(
+                    initial_bytes=requests.get(url='https://raw.githubusercontent.com/annexare/Countries/main/dist/minimal/countries.2to3.min.json?raw=true', headers=None, timeout=5, verify=True).content,
                 ),
-            ).read(),
-        ),
-        sep=',',
-        header=0,
-        index_col=None,
-        skiprows=0,
-        skipfooter=0,
-        dtype=None,
-        engine='python',
-        encoding='utf-8',
-        keep_default_na=True,
-    ).filter(items=['alpha3', 'alpha2', 'en'])
+                orient='index',
+                convert_dates=False,
+                dtype='unicode',
+                encoding='utf-8',
+            )
+            .rename(columns={0: 'country_code_alpha_3'})
+            .reset_index(level=None, drop=False, names=['country_code_alpha_2'])
+        )
+        .merge(right=country_name_df, how='left', on=['country_code_alpha_2'], indicator=False)
+        .assign(country_code_alpha_3=lambda row: row['country_code_alpha_3'].str.lower(), country_code_alpha_2=lambda row: row['country_code_alpha_2'].str.lower())
+    )
+
+    # Delete objects
+    del country_name_df
 
     # Test duplicates
-    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha2'], keep=False)]) == 0)
-    # print(len(world_countries_df[world_countries_df.duplicated(subset=['alpha3'], keep=False)]) == 0)
+    if len(countries_df[countries_df.duplicated(subset=['country_code_alpha_2'], keep=False)]) == 0 and len(countries_df[countries_df.duplicated(subset=['country_code_alpha_3'], keep=False)]) == 0:
+        print("Columns 'country_code_alpha_2', 'country_code_alpha_3' and 'country_name' have unique values.")
+
+    else:
+        print("WARNING: Columns 'country_code_alpha_2', 'country_code_alpha_3' and 'country_name' do not have unique values.")
 
     # Return objects
-    return world_countries_df
+    return countries_df

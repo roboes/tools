@@ -122,7 +122,11 @@ df_geo = geocoder(
     df=df,
     query_type='structured',
     chunk_size=50,
-    filepath='df_geolocation_slice.pkl',
+    filepath=os.path.join(
+        os.path.expanduser('~'),
+        'Downloads',
+        'df_geolocation_slice.pkl',
+    ),
     fillna='#',
     foreign_territories_mapping=False,
 )

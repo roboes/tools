@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-01-24
+# Last update: 2024-05-27
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -71,11 +71,11 @@ cd $local_repository
 # pre-commit install
 
 # Download .pre-commit-config.yaml file
-curl --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml
+curl -o "./.pre-commit-config.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml"
 
 # Download pre-commit-workflow.yaml
-mkdir -p .github/workflows
-curl -o .github/workflows/pre-commit-workflow.yaml --remote-name --location https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml
+mkdir -p "./.github/workflows"
+curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
 
 # pre-commit autoupdate
 
@@ -94,6 +94,10 @@ pipreqs --encoding utf-8 --force "./"
 
 # Set working directory
 # cd ..
+
+
+# Delete files
+rm "./.php-cs-fixer.cache"
 
 
 ## Git push

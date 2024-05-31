@@ -1,12 +1,13 @@
 defusedxml==0.7.1
 fit2gpx==0.0.7
-geopandas==0.14.3
+geopandas==0.14.4
 geopy==2.4.1
 gpxpy==1.6.2
 numpy==1.26.4
 openpyxl==3.1.2
 overpy==0.7
-pandas==2.2.1
+pandas==2.2.2
 python_dateutil==2.8.2
-Requests==2.31.0
-Werkzeug==3.0.1
+Requests==2.32.3
+Werkzeug==3.0.3
+xlsxwriter==3.2.0
