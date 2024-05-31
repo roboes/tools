@@ -101,7 +101,7 @@ repos:
     rev: v2.3.0
     hooks:
       - id: codespell
-        args: ["--ignore-words-list=als,ges,ist,nax,oder,produkt,ressource,sie,termine"] # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
+        args: ["--ignore-words-list=alle,als,ges,ist,nax,oder,produkt,ressource,sie,tage,termine"] # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
 
 default_language_version:
   python: python3
