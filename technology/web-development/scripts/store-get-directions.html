@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Selector</title>
+</head>
+<body>
+  <div class="container" style="display: flex; align-items: left;">
+    <select id="mapSelect" onchange="openSelectedMap(this.value)" style="width: 170px; height: 35px; font-size: 14px; text-align: left;">
+      <option disabled selected>Choose Map</option>
+      <option value="https://maps.google.com">Google Maps</option>
+      <option value="https://www.openstreetmap.org">OpenStreetMap</option>
+      <option value="https://maps.apple.com">Apple Maps</option>
+      <option value="https://wego.here.com">HERE WeGo</option>
+    </select>
+  </div>
+
+  <script>
+    function openSelectedMap(url) {
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    }
+  </script>
+</body>
+</html>
