@@ -6,7 +6,7 @@
 $posts = get_posts(array( 'numberposts' => -1, 'post_type' => 'product' ));
 
 foreach ($posts as $post) {
-    // check the slug and run an update if necessary
+    // Check the slug and run an update if necessary
     $new_slug = sanitize_title($title = $post->post_title);
 
     // Remove specific characters the post name

@@ -3,6 +3,7 @@
 // WooCommerce - Variable products hide variations if term dates are in the past
 
 // Note: Attributes' Terms need to start with the following format in order to work: "DD.MM.YYYY" (e.g. "13.01.2024 - 14:30 Uhr")
+// Last update: 2024-05-29
 
 
 add_filter($hook_name = 'woocommerce_variation_is_visible', $callback = 'hide_past_date_attributes', $priority = 10, $accepted_args = 2);
