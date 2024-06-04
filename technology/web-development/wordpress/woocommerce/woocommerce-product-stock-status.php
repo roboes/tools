@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product stock status
-// Last update: 2024-06-03
+// Last update: 2024-06-04
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
 
@@ -12,6 +12,15 @@ function product_stock_status()
     if (WC()) {
 
         global $product;
+
+        // Ensure $product is set
+        if (! $product) {
+            $product = wc_get_product(get_the_ID());
+        }
+
+        if (! $product) {
+            return '';
+        }
 
         // Load the translation domain for your plugin
         $plugin_domain = 'woocommerce';
