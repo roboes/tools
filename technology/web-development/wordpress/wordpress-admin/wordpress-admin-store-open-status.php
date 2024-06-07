@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status
-// Last update: 2024-06-03
+// Last update: 2024-06-07
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 
@@ -76,7 +76,7 @@ function generate_message($status, $language)
             'color' => '#EAA300',
         ],
         'closed' => [
-            'de' => 'Geschäft ist jetzt zu',
+            'de' => 'Geschäft ist jetzt geschlossen',
             'en' => 'Store is now closed',
             'color' => '#B20000',
         ],
