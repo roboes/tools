@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product stock status
-// Last update: 2024-06-06
+// Last update: 2024-06-08
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
 
@@ -58,15 +58,15 @@ if (WC()) {
 					$('form.variations_form').on('found_variation', function(event, variation) {
 						var availability = $('#product-stock-status');
 						if (variation.is_in_stock) {
-							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo esc_js(__('In stock', 'woocommerce')); ?>');
+							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo __('In stock', 'woocommerce'); ?>');
 						} else {
-							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' + '<?php echo esc_js(__('Out of stock', 'woocommerce')); ?>');
+							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' + '<?php echo __('Out of stock', 'woocommerce'); ?>');
 						}
 					});
 
 					$('form.variations_form').on('reset_data', function() {
 						var availability = $('#product-stock-status');
-						availability.html('<?php echo esc_js(product_stock_status()); ?>');
+						availability.html('<?php echo product_stock_status(); ?>');
 					});
 				});
 			</script>
