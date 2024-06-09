@@ -13,5 +13,5 @@
 [StockCake](https://stockcake.com): Free image library that offers captivating images for various occasions.\
 [SVG ViewBox Generator](https://codepen.io/designcourse/full/mdydjBa)
 
-## Test
+## Text
 [Word to HTML](https://wordtohtml.net): Convert text into HTML.
