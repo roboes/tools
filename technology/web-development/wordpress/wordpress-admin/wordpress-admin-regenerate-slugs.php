@@ -1,8 +1,25 @@
 <?php
 
 // WordPress Admin - Regenerate slugs for products
-// Last update: 2024-05-29
+// Last update: 2024-06-10
 
+// Pages
+$pages = get_posts(array('numberposts' => -1, 'post_type' => 'page'));
+
+foreach ($pages as $page) {
+    // Check the slug and run an update if necessary
+    $new_slug = sanitize_title($title = $page->post_title);
+
+    // Remove specific characters from the post name if needed
+    // $new_slug = str_replace($search = ['(', ')'], $replace = '', $subject = $new_slug);
+
+    if ($page->post_name != $new_slug) {
+        wp_update_post($postarr = array('ID' => $page->ID, 'post_name' => $new_slug), $wp_error = false, $fire_after_hooks = true);
+    }
+}
+
+
+// Products
 $posts = get_posts(array( 'numberposts' => -1, 'post_type' => 'product' ));
 
 foreach ($posts as $post) {
