@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to cart" accept legal warning terms
-// Last update: 2024-06-07
+// Last update: 2024-06-14
 
 if (WC()) {
 
@@ -32,41 +32,52 @@ if (WC()) {
         // Check if the custom field is not empty and language is supported
         if (!empty($product_legal_details) && isset($messages['legal-warning-checkbox'][$current_language])) {
             $html = '<div class="product-terms-checkbox" style="margin-bottom: 20px;">
-				<label>
-					<input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
-					<span style="line-height: 20px;">' . $messages['legal-warning-checkbox'][$current_language] . '</span>
-				</label>
-			</div>';
+                <label>
+                    <input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
+                    <span style="line-height: 20px;">' . $messages['legal-warning-checkbox'][$current_language] . '</span>
+                </label>
+            </div>';
+
+            $html .= '<style>
+                .checkbox-highlight {
+                    border: 2px solid red;
+                    background-color: #ffe6e6;
+                    padding: 5px;
+                }
+            </style>';
 
             $html .= '<script>
-				jQuery(document).ready(function($) {
-					// Find the elements to be rearranged
-					const $checkbox = $(".product-terms-checkbox");
-					const $singleVariation = $(".woocommerce-variation.single_variation");
+                jQuery(document).ready(function($) {
+                    // Find the elements to be rearranged
+                    const $checkbox = $(".product-terms-checkbox");
+                    const $singleVariation = $(".woocommerce-variation.single_variation");
 
-					// Check if both elements exist
-					if ($checkbox.length && $singleVariation.length) {
-						// Move the checkbox after the single_variation element
-						$singleVariation.after($checkbox);
-					}
+                    // Check if both elements exist
+                    if ($checkbox.length && $singleVariation.length) {
+                        // Move the checkbox after the single_variation element
+                        $singleVariation.after($checkbox);
+                    }
 
-					// Handle form submit event
-					$("form.cart").on("submit", function(event) {
-						if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
-							// Prevent form submission only if the checkbox exists
-							event.preventDefault();
-							// Show notification
-							var message = "' . $messages['legal-warning-error'][$current_language] . '";
-							// Add the notice to the page
-							if (!$(".woocommerce-error").length) {
-								$(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
-							}
-							// Scroll to the top of the page
-							$("html, body").animate({ scrollTop: 0 }, "slow");
-						}
-					});
-				});
-			</script>';
+                    // Handle form submit event
+                    $("form.cart").on("submit", function(event) {
+                        if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
+                            // Prevent form submission only if the checkbox exists
+                            event.preventDefault();
+                            // Show notification
+                            var message = "' . $messages['legal-warning-error'][$current_language] . '";
+                            // Add the notice to the page
+                            if (!$(".woocommerce-error").length) {
+                                $(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
+                            }
+                            // Scroll to the top of the page
+                            $("html, body").animate({ scrollTop: 0 }, "slow");
+
+                            // Highlight the checkbox or text
+                            $("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
+                        }
+                    });
+                });
+            </script>';
 
             echo $html;
         }

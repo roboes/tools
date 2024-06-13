@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Regenerate attribute labels on custom fields for products
-// Last update: 2024-06-11
+// Last update: 2024-06-13
 
 // Settings
 $attribute_custom_field_pairs = array(
@@ -9,10 +9,9 @@ $attribute_custom_field_pairs = array(
     array('attribute_id' => 'pa_coffee-processing', 'custom_field_id' => 'product_coffee_selection'),
     array('attribute_id' => 'pa_weight', 'custom_field_id' => 'product_coffee_weight'),
 );
-$exempt_product_ids = array(19419);
+$product_ids_exempt = array(19419);
 
-$args = array('post_type' => 'product', 'posts_per_page' => -1);
-$products = get_posts($args);
+$products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1););
 
 if (empty($products)) {
     echo 'No products found.';
@@ -25,11 +24,8 @@ if (empty($products)) {
             $custom_field_id = $pair['custom_field_id'];
 
             // Check if the product ID is in the exempt list
-            if (in_array($product->ID, $exempt_product_ids)) {
-
-                echo '<br>';
-                echo 'Skipping exempted Product ID: ' . $product->ID . ' - ' . $product->post_title . '<br>';
-
+            if (in_array($product->ID, $product_ids_exempt)) {
+                echo 'Product skipped: ' . $product->ID . ' - ' . $product->post_title . '<br>';
                 continue;
             }
 
@@ -54,8 +50,7 @@ if (empty($products)) {
                     // Update the custom field
                     update_post_meta($product->ID, $custom_field_id, $labelled_values);
 
-                    echo '<br>';
-                    echo 'Processing Product ID: ' . $product->ID . ' - ' . $product->post_title . '<br>';
+                    echo 'Product processed: ' . $product->ID . ' - ' . $product->post_title . '<br>';
                     echo 'Updated "' . $custom_field_id . '" custom field with: "' . $labelled_values . '"<br>';
                 }
             }

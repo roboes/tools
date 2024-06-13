@@ -1,6 +1,6 @@
 <?php
 
-// WordPress test if a function is scheduled (run it on WP Console)
+// WordPress Test - Test if a function is scheduled (run it on WP Console)
 // Last update: 2024-05-29
 
 // Get the timestamp when the function is scheduled
