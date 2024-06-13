@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2024-06-11
+# Last update: 2024-06-13
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -337,6 +337,7 @@ def microsoft_planner_transform(
             print(f"'{file_name}' file was created and saved to the '{output_path}' folder.")
 
         if len(microsoft_planner_checklists_df) > 0:
+            # Load the workbook
             workbook = load_workbook(filename=os.path.join(output_path, file_name), read_only=False)
             active_sheet = workbook['Checklists Comparer']
 
@@ -356,6 +357,29 @@ def microsoft_planner_transform(
             workbook.save(filename=os.path.join(output_path, file_name))
 
 
+def microsoft_excel_pivot_table_refresh(*, input_filepath, sheet_name, pivot_table_name):
+    # Load the workbook
+    workbook = load_workbook(filename=input_filepath, read_only=False)
+    active_sheet = workbook[sheet_name]
+
+    # Find the pivot table
+    pivot = next((pt for pt in active_sheet._pivots if pt.name == pivot_table_name), None)
+
+    if pivot is not None:
+        # Set the pivot table to refresh on load
+        pivot.cache.refreshOnLoad = True
+
+        # Save the workbook back to the file
+        workbook.save(filename=input_filepath)
+
+        print('')
+        print(f"Pivot table '{pivot_table_name}' was refreshed.")
+
+    else:
+        print('')
+        print(f"Pivot table '{pivot_table_name}' was not found.")
+
+
 #############################
 # Microsoft Planner Transform
 #############################
@@ -373,4 +397,10 @@ microsoft_planner_transform(
     labels_not_mapped_remove=True,
     output_path=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform'),
     file_name='Microsoft Planner Export Transformed.xlsx',
+)
+
+microsoft_excel_pivot_table_refresh(
+    input_filepath=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform', 'Microsoft Planner Export Transformed.xlsx'),
+    sheet_name='Report',
+    pivot_table_name='report',
 )
