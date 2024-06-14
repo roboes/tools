@@ -56,7 +56,7 @@ if (WC()) {
 			<script type="text/javascript">
 				jQuery(document).ready(function($) {
 					$('form.variations_form').on('found_variation', function(event, variation) {
-						var availability = $('#product-stock-status');
+						const availability = $('#product-stock-status');
 						if (variation.is_in_stock) {
 							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo __('In stock', 'woocommerce'); ?>');
 						} else {
@@ -65,7 +65,7 @@ if (WC()) {
 					});
 
 					$('form.variations_form').on('reset_data', function() {
-						var availability = $('#product-stock-status');
+						const availability = $('#product-stock-status');
 						availability.html('<?php echo product_stock_status(); ?>');
 					});
 				});

@@ -64,7 +64,7 @@ if (WC()) {
                             // Prevent form submission only if the checkbox exists
                             event.preventDefault();
                             // Show notification
-                            var message = "' . $messages['legal-warning-error'][$current_language] . '";
+                            const message = "' . $messages['legal-warning-error'][$current_language] . '";
                             // Add the notice to the page
                             if (!$(".woocommerce-error").length) {
                                 $(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");

@@ -67,16 +67,16 @@ if (is_plugin_active('elementor/elementor.php')) {
 			// Function to handle filter selection based on filter value
 			function handleFilterSelection(anchorId, filterValue) {
 				// Scroll to the taxonomy filter section
-				var filterSection = document.getElementById(anchorId);
+				const filterSection = document.getElementById(anchorId);
 				if (filterSection) {
 					scrollToElement(filterSection);
 
 					// Wait for a short period to ensure the scroll animation completes
 					setTimeout(function() {
 						// Check if the filter button is already pressed
-						var filterSelector = 'button[data-filter="' + filterValue + '"]';
-						var filterElement = document.querySelector(filterSelector);
-						var ariaPressed = filterElement.getAttribute('aria-pressed');
+						const filterSelector = 'button[data-filter="' + filterValue + '"]';
+						const filterElement = document.querySelector(filterSelector);
+						const ariaPressed = filterElement.getAttribute('aria-pressed');
 
 						if (filterElement && ariaPressed !== 'true') {
 							// Trigger the filter selection
@@ -88,8 +88,8 @@ if (is_plugin_active('elementor/elementor.php')) {
 
 			// Click event handlers for different buttons
 			Object.keys(buttonConfigs).forEach(function(buttonClassId) {
-				var buttonConfig = buttonConfigs[buttonClassId];
-				var filterImageButton = document.getElementById(buttonClassId);
+				const buttonConfig = buttonConfigs[buttonClassId];
+				const filterImageButton = document.getElementById(buttonClassId);
 				if (filterImageButton) {
 					filterImageButton.addEventListener('click', function(event) {
 						event.preventDefault(); // Prevent default anchor behavior if applicable

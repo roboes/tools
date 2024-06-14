@@ -37,11 +37,11 @@ if (WC()) {
 			 jQuery(document).ready(function ($) {
 				$("form.cart").on("click", "button.plus, button.minus", function () {
 				 // Get current quantity values
-				 var qty = $(this).closest("form.cart").find(".qty");
-				 var val = parseFloat(qty.val());
-				 var max = parseFloat(qty.attr("max"));
-				 var min = parseFloat(qty.attr("min"));
-				 var step = parseFloat(qty.attr("step"));
+				 const qty = $(this).closest("form.cart").find(".qty");
+				 const val = parseFloat(qty.val());
+				 const max = parseFloat(qty.attr("max"));
+				 const min = parseFloat(qty.attr("min"));
+				 const step = parseFloat(qty.attr("step"));
 
 				 // Change the value if plus or minus
 				 if ($(this).is(".plus")) {

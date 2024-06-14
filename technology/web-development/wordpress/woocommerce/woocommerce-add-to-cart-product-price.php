@@ -18,28 +18,28 @@ if (WC()) {
 				<script>
 				jQuery(function($) {
 					// JSON data for variations
-					var jsonData = <?php echo json_encode($variations_data); ?>;
-					var inputVID = 'input.variation_id';
-					var quantityInput = 'input[name="quantity"]';
-					var currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
-					var currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
+					const jsonData = <?php echo json_encode($variations_data); ?>;
+					const inputVID = 'input.variation_id';
+					const quantityInput = 'input[name="quantity"]';
+					const currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
+					const currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
 
 					// Number formatter for price
-					var formatter = new Intl.NumberFormat('de-DE', {
+					const formatter = new Intl.NumberFormat('de-DE', {
 						minimumFractionDigits: 2,
 						maximumFractionDigits: 2
 					});
 
 					// Function to update price
 					function updatePrice() {
-						var vid = $(inputVID).val();
-						var quantity = parseInt($(quantityInput).val()) || 1;
+						const vid = $(inputVID).val();
+						const quantity = parseInt($(quantityInput).val()) || 1;
 						if (vid && jsonData[vid] !== undefined) {
-							var price = jsonData[vid] * quantity;
-							var formattedPrice = formatter.format(price);
+							const price = jsonData[vid] * quantity;
+							const formattedPrice = formatter.format(price);
 							$("button.single_add_to_cart_button span[data-price='true']").remove();
 							// Build price HTML based on currency position
-							var priceHtml = currencyPosition === 'right' ? formattedPrice + currencySymbol : currencySymbol + formattedPrice;
+							const priceHtml = currencyPosition === 'right' ? formattedPrice + currencySymbol : currencySymbol + formattedPrice;
 							$(".single_add_to_cart_button").append("<span data-price='true'> - " + priceHtml + "</span>"); // Append price to button
 						} else {
 							$("button.single_add_to_cart_button span[data-price='true']").remove(); // Remove existing price if variation is not selected

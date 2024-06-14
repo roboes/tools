@@ -17,30 +17,30 @@ if (is_plugin_active('elementor/elementor.php')) {
 
 			// Function to get URL parameters, handling both fragment and query parameters
 			function getUrlParameter(name) {
-				var url = window.location.href;
+				const url = window.location.href;
 
 				// Look for both fragment (#) and query parameters (?)
-				var queryString = url.split('#')[1] || '';
-				var queryParams = queryString.split('?')[1] || '';
-				var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-				var results = regex.exec('?' + queryParams);
+				const queryString = url.split('#')[1] || '';
+				const queryParams = queryString.split('?')[1] || '';
+				const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+				const results = regex.exec('?' + queryParams);
 
 				return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 			}
 
 			// Get the filter parameter from the URL
-			var filterValue = getUrlParameter('filter');
+			const filterValue = getUrlParameter('filter');
 
 			if (filterValue) {
 				// Scroll to the taxonomy filter section
-				var filterSection = document.getElementById(anchorId);
+				const filterSection = document.getElementById(anchorId);
 				if (filterSection) {
 					filterSection.scrollIntoView({ behavior: 'smooth' });
 				}
 
 				// Trigger the filter selection
-				var filterSelector = `button[data-filter="${filterValue}"]`;
-				var filterElement = document.querySelector(filterSelector);
+				const filterSelector = `button[data-filter="${filterValue}"]`;
+				const filterElement = document.querySelector(filterSelector);
 
 				if (filterElement) {
 					filterElement.click();
