@@ -18,7 +18,7 @@ function store_hours_shortcode()
     ];
     $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26'];
     $special_days = ['2024-06-28', '2024-06-29'];
-    $time_zone = 'Europe/Berlin';
+    $time_zone = get_option('timezone_string');
 
     // Get current date and time
     $current_datetime = new DateTime('now', new DateTimeZone($time_zone));

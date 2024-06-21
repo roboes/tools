@@ -14,7 +14,7 @@ if (WC()) {
 
         // Setup
         $attributes_to_check = array( 'Appointment', 'Termin' );
-        $time_zone = 'Europe/Berlin';
+        $time_zone = get_option('timezone_string');
 
         // Get current date and time
         $current_datetime = new DateTime('now', new DateTimeZone($time_zone));
