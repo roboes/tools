@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-05-27
+# Last update: 2024-06-23
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -55,7 +55,7 @@ repos:
     rev: 3.0.7 # Without leading 'v'
     hooks:
       - id: sqlfluff-fix
-        args: ["--dialect=postgres"]
+        args: ["--dialect=mysql", "--exclude-rules=ambiguous.column_count, layout.long_lines, references.keywords"]
 
   # - repo: https://github.com/digitalpulp/pre-commit-php # Requires brew install php-cs-fixer
     # rev: 1.4.0 # Without leading 'v'
