@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Run slugs update daily
-// Last update: 2024-06-21
+// Last update: 2024-06-24
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook( $hook='function_slugs_update_daily', $args=array(), $wp_error=false );
@@ -62,16 +62,15 @@ function functions_on_schedule_run()
 
     // Settings
     $attribute_custom_field_pairs = array(
-        array('attribute_id' => 'pa_coffee-type', 'custom_field_id' => 'product_type'),
-        array('attribute_id' => 'pa_coffee-processing', 'custom_field_id' => 'product_coffee_selection'),
-        array('attribute_id' => 'pa_weight', 'custom_field_id' => 'product_coffee_weight'),
+        array('attribute_id' => 'pa_coffee-type', 'custom_field_id' => 'product_type', 'categories' => array('Specialty Coffees', 'Spezialitätenkaffees')),
+        array('attribute_id' => 'pa_coffee-processing', 'custom_field_id' => 'product_coffee_selection', 'categories' => array()),
+        array('attribute_id' => 'pa_weight', 'custom_field_id' => 'product_coffee_weight', 'categories' => array()),
     );
     $product_ids_exempt = array(19419, 31533);
 
     $products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1));
 
     if (!empty($products)) {
-
         foreach ($products as $product) {
             // Determine the language of the product
             $product_language = pll_get_post_language($product->ID); // Polylang function to get post language
@@ -79,11 +78,20 @@ function functions_on_schedule_run()
             foreach ($attribute_custom_field_pairs as $pair) {
                 $attribute_id = $pair['attribute_id'];
                 $custom_field_id = $pair['custom_field_id'];
+                $categories = $pair['categories'];
 
                 // Check if the product ID is in the exempt list
                 if (in_array($product->ID, $product_ids_exempt)) {
                     echo 'Product skipped: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product_language . ')<br>';
                     continue;
+                }
+
+                // Check if the product is in the specified categories, if categories array is not empty
+                if (!empty($categories)) {
+                    $product_categories = wp_get_post_terms($product->ID, 'product_cat', array('fields' => 'names'));
+                    if (empty(array_intersect($categories, $product_categories))) {
+                        continue;
+                    }
                 }
 
                 // Get WooCommerce product object
@@ -116,12 +124,7 @@ function functions_on_schedule_run()
     }
 
 
-
-
-
-
     // Regenerate slugs for pages
-
 
     // Settings
     $post_id_exempt = array(20766, 30721);
@@ -260,7 +263,5 @@ function functions_on_schedule_run()
 
 
     }
-
-
 
 }
