@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2024-06-10
+# Last update: 2024-06-26
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -63,15 +63,15 @@ python -m pip_review --local --auto
 
 
 # Install Windows Subsystem for Linux (WSL)
-# wsl --install
+# wsl --install -d Debian
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
 wsl
 
 # Homebrew install
+sudo apt install curl
+sudo apt install git
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-# export BREW_HOME="/home/linuxbrew/.linuxbrew/bin"
-# export PATH="$PATH:$BREW_HOME"
 
 # ulimit current limit
 ulimit -n
