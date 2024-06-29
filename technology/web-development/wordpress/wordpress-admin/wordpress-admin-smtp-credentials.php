@@ -1,18 +1,30 @@
 <?php
 
 // WordPress Admin - SMTP Credentials
-// Last update: 2024-06-28
+// Last update: 2024-06-29
 
-add_action($hook_name = 'phpmailer_init', $callback = 'phpmailer_settings', $priority = 10, $accepted_args = 1);
 
-function phpmailer_settings($phpmailer) {
+// Add these lines to wp-config.php file
+/** SMTP Credentials **/
+// define('SMTP_HOST', 'smtp.yourservice.com');
+// define('SMTP_PORT', 587);
+// define('SMTP_USER', 'your_username');
+// define('SMTP_PASS', 'your_password');
+// define('SMTP_FROM', 'your_email@example.com');
+// // define('SMTP_NAME', 'Your Name');
+
+
+add_action($hook_name = 'phpmailer_init', $callback = 'phpmailer_credentials', $priority = 10, $accepted_args = 1);
+
+function phpmailer_credentials($phpmailer)
+{
     $phpmailer->isSMTP();
-    $phpmailer->Host = 'smtp.eu.mailgun.org';
+    $phpmailer->Host = SMTP_HOST;
     $phpmailer->SMTPAuth = true;
-    $phpmailer->Port = 587;
-    $phpmailer->Username = 'postmaster@website.com';
-    $phpmailer->Password = 'password';
+    $phpmailer->Port = SMTP_PORT;
+    $phpmailer->Username = SMTP_USER;
+    $phpmailer->Password = SMTP_PASS;
     $phpmailer->SMTPSecure = 'tls';
-    $phpmailer->From = 'info@website.com';
-    // $phpmailer->FromName = 'Your Name';
+    $phpmailer->From = SMTP_FROM;
+    // $phpmailer->FromName = SMTP_NAME;
 }
