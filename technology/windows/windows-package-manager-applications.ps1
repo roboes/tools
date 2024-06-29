@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2024-03-17
+# Last update: 2024-06-26
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -16,6 +16,7 @@
 
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
+winget install --exact --id Microsoft.WindowsTerminal
 winget install --exact --id=Microsoft.MicrosoftPCManager_8wekyb3d8bbwe
 winget install --exact --id=Python.Python.3.12
 winget install --exact --id=Spyder.Spyder
@@ -44,7 +45,6 @@ winget install --exact --id=9NP83LWLPZ9K # Apple Devices
 # https://github.com/marktext/marktext/releases
 
 # Archive
-# winget install --exact --id Microsoft.WindowsTerminal
 # winget install --exact --id=Microsoft.PowerToys
 # winget install --exact --id=7zip.7zip
 # winget install --exact --id=DuongDieuPhap.ImageGlass
@@ -63,12 +63,14 @@ python -m pip_review --local --auto
 
 
 # Install Windows Subsystem for Linux (WSL)
-# wsl --install
+# wsl --install -d Debian
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
 wsl
 
 # Homebrew install
+sudo apt install curl
+sudo apt install git
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # ulimit current limit

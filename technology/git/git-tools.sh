@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-05-27
+# Last update: 2024-06-26
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -13,11 +13,13 @@ wsl
 
 
 # Homebrew update
+# ulimit -n 8192
 # brew update && brew upgrade && brew cleanup
 
 
 # Install GitHub CLI
 # brew install git
+# brew install gh
 
 # Install GitLab Runner
 # brew install gitlab-runner
@@ -68,6 +70,7 @@ cd $local_repository
 # git init
 # git add --all
 # python -m pip install pre-commit
+# brew install pre-commit
 # pre-commit install
 
 # Download .pre-commit-config.yaml file

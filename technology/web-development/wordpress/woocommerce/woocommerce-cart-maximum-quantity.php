@@ -1,18 +1,21 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products belonging to specific category per cart
-// Last update: 2024-05-29
+// Last update: 2024-06-07
 
 // Calculate whether an item being added to the cart passes the quantity criteria - triggered on add to cart action
-add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_quantity_add_to_cart_validation', $priority = 10, $accepted_args = 5);
 
-function woocommerce_cart_maximum_quantity_add_to_cart_validation($passed, $product_id, $quantity, $variation_id = '', $variations = '')
-{
-    if (WC()) {
+if (WC()) {
+
+    add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_quantity_add_to_cart_validation', $priority = 10, $accepted_args = 5);
+
+    function woocommerce_cart_maximum_quantity_add_to_cart_validation($passed, $product_id, $quantity, $variation_id = '', $variations = '')
+    {
 
         // Setup
         $product_cats = array('Accessories', 'Zubehör');
         $max_quantity = 3;
+        $product_ids_exception = array(19412, 11213, 11211);
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
@@ -23,6 +26,11 @@ function woocommerce_cart_maximum_quantity_add_to_cart_validation($passed, $prod
 
         // Check if the product or its parent belongs to any of the specified categories
         if (has_term($product_cats, 'product_cat', $product_id) || ($parent_id && has_term($product_cats, 'product_cat', $parent_id))) {
+            // Check if the product or its parent is in the exception list
+            if (in_array($product_id, $product_ids_exception) || in_array($parent_id, $product_ids_exception)) {
+                return $passed;
+            }
+
             // Calculate the total quantity for this product and its variations in the cart
             $product_cart_quantity = $quantity;
             $product_or_parent_id = $variation_id ? $parent_id : $product_id;
@@ -52,22 +60,18 @@ function woocommerce_cart_maximum_quantity_add_to_cart_validation($passed, $prod
 
         return $passed;
     }
-}
 
 
+    // Calculate whether an item quantity change passes the quantity criteria - triggered on cart item quantity change
+    add_filter($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = 'woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation', $priority = 10, $accepted_args = 4);
 
-
-
-// Calculate whether an item quantity change passes the quantity criteria - triggered on cart item quantity change
-add_filter($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = 'woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation', $priority = 10, $accepted_args = 4);
-
-function woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation($cart_item_key, $new_quantity, $old_quantity, $cart)
-{
-    if (WC()) {
+    function woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation($cart_item_key, $new_quantity, $old_quantity, $cart)
+    {
 
         // Setup
         $product_cats = array('Accessories', 'Zubehör');
         $max_quantity = 3;
+        $product_ids_exception = array(19412, 11213, 11211);
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
@@ -77,6 +81,11 @@ function woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation(
 
         // Check if the product belongs to any of the specified categories
         if (has_term($product_cats, 'product_cat', $product->get_id()) || has_term($product_cats, 'product_cat', $product->get_parent_id())) {
+
+            // Check if the product or its parent is in the exception list
+            if (in_array($product->get_id(), $product_ids_exception) || in_array($product->get_parent_id(), $product_ids_exception)) {
+                return;
+            }
 
             // Calculate the total quantity for this product and its variations in the cart
             $product_cart_quantity = 0;
@@ -106,4 +115,5 @@ function woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation(
             }
         }
     }
+
 }

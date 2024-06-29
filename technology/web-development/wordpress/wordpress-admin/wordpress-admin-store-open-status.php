@@ -1,6 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status
+// Last update: 2024-06-07
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 
@@ -16,7 +17,8 @@ function store_hours_shortcode()
         'Saturday' => '10:00-14:00',
     ];
     $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26'];
-    $time_zone = 'Europe/Berlin';
+    $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02'];
+    $time_zone = get_option('timezone_string');
 
     // Get current date and time
     $current_datetime = new DateTime('now', new DateTimeZone($time_zone));
@@ -41,6 +43,11 @@ function store_hours_shortcode()
     // Check if today is a public holiday
     if (in_array($current_date, $public_holidays)) {
         return generate_message('holiday', $current_language);
+    }
+
+    // Check if today is a special day
+    if (in_array($current_date, $special_days)) {
+        return generate_message('special_event', $current_language);
     }
 
     // Determine store status based on current time
@@ -69,13 +76,18 @@ function generate_message($status, $language)
             'color' => '#EAA300',
         ],
         'closed' => [
-            'de' => 'Geschäft ist jetzt zu',
+            'de' => 'Geschäft ist jetzt geschlossen',
             'en' => 'Store is now closed',
             'color' => '#B20000',
         ],
         'holiday' => [
             'de' => 'Geschäft ist aufgrund eines Feiertags heute geschlossen',
             'en' => 'Store is closed today due to public holiday',
+            'color' => '#B20000',
+        ],
+        'special_event' => [
+            'de' => 'Geschäft ist aufgrund einer Veranstaltung heute geschlossen',
+            'en' => 'Store is closed today due to an event',
             'color' => '#B20000',
         ],
     ];

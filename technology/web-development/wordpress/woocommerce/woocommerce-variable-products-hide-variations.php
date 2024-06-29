@@ -3,16 +3,18 @@
 // WooCommerce - Variable products hide variations if term dates are in the past
 
 // Note: Attributes' Terms need to start with the following format in order to work: "DD.MM.YYYY" (e.g. "13.01.2024 - 14:30 Uhr")
+// Last update: 2024-05-29
 
+if (WC()) {
 
-add_filter($hook_name = 'woocommerce_variation_is_visible', $callback = 'hide_past_date_attributes', $priority = 10, $accepted_args = 2);
+    add_filter($hook_name = 'woocommerce_variation_is_visible', $callback = 'hide_past_date_attributes', $priority = 10, $accepted_args = 2);
 
-function hide_past_date_attributes($visible, $variation_id)
-{
-    if (WC()) {
+    function hide_past_date_attributes($visible, $variation_id)
+    {
+
         // Setup
         $attributes_to_check = array( 'Appointment', 'Termin' );
-        $time_zone = 'Europe/Berlin';
+        $time_zone = get_option('timezone_string');
 
         // Get current date and time
         $current_datetime = new DateTime('now', new DateTimeZone($time_zone));
@@ -48,5 +50,7 @@ function hide_past_date_attributes($visible, $variation_id)
         }
 
         return $visible;
+
     }
+
 }
