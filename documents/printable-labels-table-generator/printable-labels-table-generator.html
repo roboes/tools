@@ -1,5 +1,5 @@
 <!-- Printable Labels Table Generator -->
-<!-- Last update: 2024-01-30 -->
+<!-- Last update: 2024-06-01 -->
 
 <!-- About: 24 (8 rows x 3 columns) A4 size printable self-adhesive labels table generator. -->
 
@@ -154,13 +154,13 @@
 
     <br />
 
-    <div class="en">Instructions: Define the cells to which the generator should be applied (row wise) and select the "Product" and "Date". Press "Generate".<br /></div>
-    <div class="de">Anleitung: Zellen definieren, auf die der Generator angewendet werden soll (zeilenweise) und „Produkt“ und „Datum“ auswählen. Auf „Generieren“ drücken.</div>
+    <div class="language-en">Instructions: Define the cells to which the generator should be applied (row wise) and select the "Product" and "Date". Press "Generate".<br /></div>
+    <div class="language-de">Anleitung: Zellen definieren, auf die der Generator angewendet werden soll (zeilenweise) und „Produkt“ und „Datum“ auswählen. Auf „Generieren“ drücken.</div>
 
     <br />
 
-    <div class="en">Printer settings: Layout: Portrait; Paper size: A4; Margins: None; Scale: Default; Options: Disable "Background graphics".<br /></div>
-    <div class="de">Druckereinstellungen: Layout: Portrait; Papierformat: A4; Ränder: Keine; Maßstab: Standard; Optionen: „Hintergrundgrafiken“ deaktivieren.<br /></div>
+    <div class="language-en">Printer settings: Layout: Portrait; Paper size: A4; Margins: None; Scale: Default; Options: Disable "Background graphics".<br /></div>
+    <div class="language-de">Druckereinstellungen: Layout: Portrait; Papierformat: A4; Ränder: Keine; Maßstab: Standard; Optionen: „Hintergrundgrafiken“ deaktivieren.<br /></div>
 
     <br />
     <br />
@@ -168,24 +168,24 @@
     <table id="table-input" class="table-filter">
       <tr>
         <th>
-          <div class="en">From cell</div>
-          <div class="de">Von Zelle</div>
+          <div class="language-en">From cell</div>
+          <div class="language-de">Von Zelle</div>
         </th>
         <th>
-          <div class="en">To cell</div>
-          <div class="de">Zur Zelle</div>
+          <div class="language-en">To cell</div>
+          <div class="language-de">Zur Zelle</div>
         </th>
         <th>
-          <div class="en">Product</div>
-          <div class="de">Produkt</div>
+          <div class="language-en">Product</div>
+          <div class="language-de">Produkt</div>
         </th>
         <th>
-          <div class="en">Date</div>
-          <div class="de">Datum</div>
+          <div class="language-en">Date</div>
+          <div class="language-de">Datum</div>
         </th>
         <th>
-          <div class="en">Add/Remove option</div>
-          <div class="de">Option hinzufügen/entfernen</div>
+          <div class="language-en">Add/Remove option</div>
+          <div class="language-de">Option hinzufügen/entfernen</div>
         </th>
       </tr>
       <tr>
@@ -211,8 +211,8 @@
 
     <br />
 
-    <div class="en"><button type="button" onclick="addRow()">Add row</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generate</button></div>
-    <div class="de"><button type="button" onclick="addRow()">Zeile hinzufügen</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generieren</button></div>
+    <div class="language-en"><button type="button" onclick="addRow()">Add row</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generate</button></div>
+    <div class="language-de"><button type="button" onclick="addRow()">Zeile hinzufügen</button>&nbsp;&nbsp;<button type="button" name="generate-table" onclick="generateTable()" disabled>Generieren</button></div>
 
     <br />
     <br />
@@ -267,10 +267,10 @@
 
     <div id="print-button">
       <br /><br />
-      <div class="en">
+      <div class="language-en">
         <button type="button" onclick="printTable()">Print</button>
       </div>
-      <div class="de">
+      <div class="language-de">
         <button type="button" onclick="printTable()">Drucken</button>
       </div>
       <br /><br />
@@ -279,12 +279,12 @@
     <script>
       <!-- Get browser language -->
       var language = navigator.language || navigator.userLanguage;
-      if (language.indexOf("de") > -1) {
-        document.querySelectorAll(".de").forEach(function (el) {
+      if (language.startsWith("de"))  {
+        document.querySelectorAll(".language-de").forEach(function (el) {
           el.style.display = "block";
         });
       } else {
-        document.querySelectorAll(".en").forEach(function (el) {
+        document.querySelectorAll(".language-en").forEach(function (el) {
           el.style.display = "block";
         });
       }
@@ -343,11 +343,11 @@
 
       <!-- Enable "Generate" button -->
       function enableButton() {
-        var cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
-        var cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
-        var productInputs = document.querySelectorAll('select[name="product-input"]');
-        var dateInputs = document.querySelectorAll('input[name="date-input"]');
-        var generateTableButtons = document.querySelectorAll('button[name="generate-table"]');
+        const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        const productInputs = document.querySelectorAll('select[name="product-input"]');
+        const dateInputs = document.querySelectorAll('input[name="date-input"]');
+        const generateTableButtons = document.querySelectorAll('button[name="generate-table"]');
 
         <!-- Check for cells outside interval range -->
         var isOutsideIntervalRange = false;
@@ -409,11 +409,11 @@
 
       <!-- Generate table -->
       function generateTable() {
-        var cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
-        var cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
-        var productInputs = document.querySelectorAll('select[name="product-input"]');
-        var dateInputs = document.querySelectorAll('input[name="date-input"]');
-        var tableGenerated = document.querySelector('table[id="table-generated"]');
+        const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        const productInputs = document.querySelectorAll('select[name="product-input"]');
+        const dateInputs = document.querySelectorAll('input[name="date-input"]');
+        const tableGenerated = document.querySelector('table[id="table-generated"]');
 
         for (var i = 0; i < cellStartInputs.length; i++) {
           var cellStart = parseInt(cellStartInputs[i].value);
@@ -463,8 +463,8 @@
       <!-- Clean table body -->
       function cleanTableBody() {
         <!-- Clean table body -->
-        var tableGenerated = document.querySelector('table[id="table-generated"]');
-        var tableGeneratedCells = tableGenerated.querySelectorAll("td");
+        const tableGenerated = document.querySelector('table[id="table-generated"]');
+        const tableGeneratedCells = tableGenerated.querySelectorAll("td");
 
         for (let i = 0; i < tableGeneratedCells.length; i++) {
           tableGeneratedCells[i].innerHTML = "";

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Selector</title>
+</head>
+<body>
+  <div class="container" style="display: flex; align-items: center;">
+    <select id="mapSelect" onchange="openSelectedMap(this.value)" style="width: 170px; height: 35px; font-size: 14px; text-align: left;">
+      <option disabled selected>Choose Map</option>
+      <option value="https://maps.google.com">Google Maps</option>
+      <option value="https://wego.here.com">HERE WeGo</option>
+      <option value="https://maps.apple.com">Apple Maps</option>
+      <option value="https://omaps.app">Organic Maps</option>
+      <option value="https://www.openstreetmap.org">OpenStreetMap</option>
+    </select>
+  </div>
+
+  <script>
+    function openSelectedMap(url) {
+      if (url) {
+        // Attempt to open the URL in a new window/tab
+        const newWindow = window.open(url, '_blank');
+
+        // Check if the new window was successfully opened
+        if (newWindow) {
+          newWindow.opener = null;  // Set the opener to null to prevent blocking in some browsers
+        } else {
+          // Fallback in case the window was blocked
+          window.location.href = url;
+        }
+      }
+    }
+  </script>
+</body>
+</html>

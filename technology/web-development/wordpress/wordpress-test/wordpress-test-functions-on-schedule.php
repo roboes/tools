@@ -1,10 +1,10 @@
 <?php
 
-// WordPress test if a function is scheduled (run it on WP Console)
-// Last update: 2024-05-29
+// WordPress Test - Test if a function is scheduled (run it on WP Console)
+// Last update: 2024-06-21
 
 // Get the timestamp when the function is scheduled
-$scheduled_timestamp = wp_next_scheduled($hook = 'custom_field_product_shipping_class', $args = array());
+$scheduled_timestamp = wp_next_scheduled($hook = 'function_slugs_update_daily', $args = array());
 
 if ($scheduled_timestamp !== false) {
     // Convert the timestamp to a readable date and time format
