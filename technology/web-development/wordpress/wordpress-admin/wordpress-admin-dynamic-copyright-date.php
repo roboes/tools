@@ -1,12 +1,6 @@
 <?php
 
 // WordPress Admin - Dynamic "Copyright Date"
-// Last update: 2024-05-29
+// Last update: 2024-07-07
 
-add_shortcode($tag = 'current_year', $callback = 'get_year');
-
-function get_year()
-{
-    $year = date_i18n('Y');
-    return $year;
-}
+add_shortcode($tag = 'current_year', $callback = function () {return date_i18n('Y');});

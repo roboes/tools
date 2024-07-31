@@ -1,11 +1,10 @@
 <?php
-
 // WooCommerce - Product stock status
-// Last update: 2024-06-08
+// Last update: 2024-07-24
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     add_shortcode($tag = 'woocommerce_product_stock_status', $callback = 'product_stock_status');
 
@@ -23,25 +22,21 @@ if (WC()) {
             return '';
         }
 
-        // Load the translation domain for your plugin
-        $plugin_domain = 'woocommerce';
-
-        // Define the path to the languages directory within your plugin
-        $languages_dir = dirname(plugin_basename(__FILE__)) . '/languages';
-
         // Load the translation files
-        load_plugin_textdomain($plugin_domain, false, $languages_dir);
+        // load_plugin_textdomain($domain='woocommerce', $deprecated=false, $plugin_rel_path=(dirname(plugin_basename(__FILE__)) . '/languages'));
 
         // Initial availability
-        $availability = '<div id="product-stock-status">';
         if ($product->is_in_stock()) {
-            $availability .= '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' . __('In stock', $plugin_domain);
+            $availability = '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>';
+            $availability .= __($text = 'In stock', $domain = 'woocommerce');
+            // $availability .= 'Vorrätig';
         } else {
-            $availability .= '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' . __('Out of stock', $plugin_domain);
+            $availability = '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>';
+            $availability .= __($text = 'Out of stock', $domain = 'woocommerce');
+            // $availability .= 'Nicht vorrätig';
         }
-        $availability .= '</div>';
 
-        return $availability;
+        return '<div id="product-stock-status">' . $availability . '</div>';
 
     }
 
@@ -58,9 +53,9 @@ if (WC()) {
 					$('form.variations_form').on('found_variation', function(event, variation) {
 						const availability = $('#product-stock-status');
 						if (variation.is_in_stock) {
-							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo __('In stock', 'woocommerce'); ?>');
+							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo __($text = 'In stock', $domain = 'woocommerce'); ?>');
 						} else {
-							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' + '<?php echo __('Out of stock', 'woocommerce'); ?>');
+							availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' + '<?php echo __($text = 'Out of stock', $domain = 'woocommerce'); ?>');
 						}
 					});
 

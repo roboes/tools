@@ -37,6 +37,10 @@ Settings > Focus >
 
 <br>
 
+Settings > General > Background App Refresh > Turn off apps which do not need background refresh.
+
+<br>
+
 Settings > General > Keyboard >
 
 - Keyboards > Add New Keyboard… > "Portuguese (Brazil)", "German (Germany)", "English (US)", "Emoji".

@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-01-28
+# Last update: 2024-07-19
 
 
 # Rename: ExifTool
@@ -213,6 +213,9 @@ magick mogrify -monitor -format jpg -quality 85 -density 72 "./*.CR2"
 
 # Convert .heic to .jpg
 magick mogrify -monitor -format jpg "./*.HEIC"
+
+# Convert .pdf to .png
+magick mogrify -monitor -density 300 -format png "./*.pdf"
 
 # Reduce file size
 magick mogrify -monitor -resize 50% "./*.HEIC"

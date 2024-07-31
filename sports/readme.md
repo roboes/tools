@@ -13,15 +13,20 @@ Strava add-ons:\
 
 ## Cycling
 
-### Cycling routes
+### Routes
 
 [Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
 [Strava](https://www.strava.com/segments/explore): The best way to find cycling routes in Strava is to open a segment in the desired location and open the profiles of some athletes, viewing their activities. It is possible to download activities as .gpx files.\
 [Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.
 
+#### Munich, Germany
+
+[Great Rides München Nord](https://ridewithgps.com/clubs/4756-great-rides-munchen-nord/routes)
+
+
 ## Hiking
 
-### Hiking routes
+### Routes
 
 [Komoot](https://www.komoot.com/discover): To download routes as .gpx files, see the [Komoot](#komoot) section.\
 [Wikiloc](https://wikiloc.com): Best app for finding routes in Brazil.\

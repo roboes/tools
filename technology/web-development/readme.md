@@ -16,9 +16,3 @@
 ## Text
 
 [Word to HTML](https://wordtohtml.net): Convert text into HTML.
-
-## WordPress
-
-[How to Configure W3 Total Cache & CloudFlare](https://www.thewebmaster.com/guide-to-w3-total-cache-settings-with-cloudflare/)\
-[Move your WordPress site to another domain
-](https://help.one.com/hc/en-us/articles/115005585969-Move-your-WordPress-site-to-another-domain)

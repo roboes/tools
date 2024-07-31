@@ -1,37 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map Selector</title>
-</head>
-<body>
-  <div class="container" style="display: flex; align-items: center;">
-    <select id="mapSelect" onchange="openSelectedMap(this.value)" style="width: 170px; height: 35px; font-size: 14px; text-align: left;">
-      <option disabled selected>Choose Map</option>
-      <option value="https://maps.google.com">Google Maps</option>
-      <option value="https://wego.here.com">HERE WeGo</option>
-      <option value="https://maps.apple.com">Apple Maps</option>
-      <option value="https://omaps.app">Organic Maps</option>
-      <option value="https://www.openstreetmap.org">OpenStreetMap</option>
-    </select>
-  </div>
+<!-- Store Open Status -->
+<!-- Last update: 2024-07-13 -->
 
-  <script>
-    function openSelectedMap(url) {
-      if (url) {
-        // Attempt to open the URL in a new window/tab
-        const newWindow = window.open(url, '_blank');
 
-        // Check if the new window was successfully opened
-        if (newWindow) {
-          newWindow.opener = null;  // Set the opener to null to prevent blocking in some browsers
-        } else {
-          // Fallback in case the window was blocked
-          window.location.href = url;
-        }
-      }
-    }
-  </script>
-</body>
-</html>
+<style>
+.language-de,
+.language-en {
+	display: none;
+}
+</style>
+
+
+<div class="container" style="display: flex; align-items: center;">
+  <select id="mapSelect" onchange="openSelectedMap(this.value)" style="width: 170px; height: 35px; font-size: 14px; text-align: left;">
+    <option class="language-de" value="" disabled>Karte Auswählen</option>
+    <option class="language-en" value="" disabled>Choose Map</option>
+    <option value="https://maps.google.com">Google Maps</option>
+    <option value="https://wego.here.com">HERE WeGo</option>
+    <option value="https://maps.apple.com">Apple Maps</option>
+    <option value="https://omaps.app">Organic Maps</option>
+    <option value="https://www.openstreetmap.org">OpenStreetMap</option>
+  </select>
+</div>
+
+
+<script>
+	// Get current language from the <html> element's lang attribute
+	const langAttr = document.documentElement.lang;
+	let language;
+
+	if (langAttr.length === 2) {
+	  language = langAttr;
+	} else {
+	  language = langAttr.split('-')[0];
+	}
+
+	// Default to "en" if language is not "de" or "en"
+	if (!['de', 'en'].includes(language)) {
+	  language = 'en';
+	}
+
+	// Show the correct language option
+	const selectElement = document.getElementById('mapSelect');
+	const optionDe = document.querySelector(".language-de");
+	const optionEn = document.querySelector(".language-en");
+
+	if (language === 'de') {
+		optionDe.style.display = "block";
+		optionDe.selected = true;
+		optionEn.remove();
+	} else {
+		optionEn.style.display = "block";
+		optionEn.selected = true;
+		optionDe.remove();
+	}
+
+	function openSelectedMap(url) {
+	  if (url) {
+		// Attempt to open the URL in a new window/tab
+		const newWindow = window.open(url, '_blank');
+
+		// Check if the new window was successfully opened
+		if (newWindow) {
+		  newWindow.opener = null;  // Set the opener to null to prevent blocking in some browsers
+		} else {
+		  // Fallback in case the window was blocked
+		  window.location.href = url;
+		}
+	  }
+	}
+</script>

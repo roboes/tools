@@ -1,11 +1,11 @@
 <?php
 // WooCommerce - "Add to cart" quantity buttons
-// Last update: 2024-05-29
+// Last update: 2024-07-24
 
 // Notes: Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)
 
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     add_action($hook_name = 'woocommerce_after_add_to_cart_quantity', $callback = 'ts_quantity_plus_sign', $priority = 10, $accepted_args = 1);
 

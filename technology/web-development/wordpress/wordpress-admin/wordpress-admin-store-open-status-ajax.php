@@ -1,12 +1,58 @@
 <?php
 
-// WordPress Admin - Store open status
+// WordPress Admin - Store open status (using AJAX to load dynamic content, ensuring content not to be cached)
 // Last update: 2024-07-19
+
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 
 function store_hours_shortcode()
 {
+    static $instance = 0;
+    $instance++;
+    $nonce = wp_create_nonce('store_hours_nonce');
+    $unique_id = 'store-hours-container-' . $instance;
+
+    return '
+        <div id="' . $unique_id . '"></div>
+        <script type="text/javascript">
+            (function($) {
+                $(document).ready(function() {
+                    $.ajax({
+                        url: "' . admin_url('admin-ajax.php') . '",
+                        type: "POST",
+                        data: {
+                            action: "get_store_hours",
+                            nonce: "' . $nonce . '",
+                            unique_id: "' . $unique_id . '"
+                        },
+                        success: function(response) {
+                            $("#' . $unique_id . '").html(response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("AJAX Error: " + status + " " + error);
+                        }
+                    });
+                });
+            })(jQuery);
+        </script>';
+}
+
+// Enqueue jQuery
+function enqueue_custom_scripts()
+{
+    wp_enqueue_script('jquery');
+}
+add_action($hook_name = 'wp_enqueue_scripts', $callback = 'enqueue_custom_scripts', $priority = 10, $accepted_args = 1);
+
+// Handle the AJAX request
+add_action($hook_name = 'wp_ajax_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
+add_action($hook_name = 'wp_ajax_nopriv_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
+
+function get_store_hours()
+{
+    check_ajax_referer('store_hours_nonce', 'nonce');
+
     // Setup
     $opening_hours = [
         'Monday' => '10:00-17:00',
@@ -34,7 +80,8 @@ function store_hours_shortcode()
 
     // Determine opening hours for today
     if (!isset($opening_hours[$current_day_of_week])) {
-        return generate_message('closed', $current_language);
+        echo generate_message('closed', $current_language);
+        wp_die();
     }
 
     list($start_time, $end_time) = explode('-', $opening_hours[$current_day_of_week]);
@@ -45,24 +92,28 @@ function store_hours_shortcode()
 
     // Check if today is a public holiday
     if (in_array($current_date, $public_holidays)) {
-        return generate_message('holiday', $current_language);
+        echo generate_message('holiday', $current_language);
+        wp_die();
     }
 
     // Check if today is a special day
     if (in_array($current_date, $special_days)) {
-        return generate_message('special_event', $current_language);
+        echo generate_message('special_event', $current_language);
+        wp_die();
     }
 
     // Determine store status based on current time
     if ($current_datetime >= $start_time && $current_datetime <= $end_time) {
         if ($current_datetime >= $closing_soon_time) {
-            return generate_message('closing_soon', $current_language);
+            echo generate_message('closing_soon', $current_language);
         } else {
-            return generate_message('open', $current_language);
+            echo generate_message('open', $current_language);
         }
     } else {
-        return generate_message('closed', $current_language);
+        echo generate_message('closed', $current_language);
     }
+
+    wp_die();
 }
 
 function generate_message($status, $language)
