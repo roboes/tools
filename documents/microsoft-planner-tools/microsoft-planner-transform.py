@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2024-07-26
+# Last update: 2024-08-06
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -18,6 +18,7 @@ from datetime import datetime
 import os
 
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 import pandas as pd
 import xlwings as xw
@@ -42,9 +43,9 @@ def update_or_create_table(*, df, workbook=None, sheet_name, table_name, engine=
 
         if table_exists:
             existing_table = next(table for table in active_sheet.tables.values() if table.displayName == table_name)
-            existing_table.ref = f'A1:{chr(65 + len(df.columns) - 1)}{len(df) + 1}'
+            existing_table.ref = f'A1:{get_column_letter(len(df.columns))}{len(df) + 1}'
         else:
-            new_table = Table(displayName=table_name, ref=f'A1:{chr(65 + len(df.columns) - 1)}{len(df) + 1}')
+            new_table = Table(displayName=table_name, ref=f'A1:{get_column_letter(len(df.columns))}{len(df) + 1}')
             new_table.tableStyleInfo = TableStyleInfo(name='TableStyleMedium2', showRowStripes=True, showColumnStripes=False)
             active_sheet.add_table(table=new_table)
 
@@ -55,12 +56,12 @@ def update_or_create_table(*, df, workbook=None, sheet_name, table_name, engine=
             if table.name == table_name:
                 table_exists = True
                 # Update the table range
-                table.resize(sheet_name.range(f'A1:{chr(65 + df.shape[1] - 1)}{df.shape[0] + 1}'))
+                table.resize(sheet_name.range(f'A1:{get_column_letter(df.shape[1])}{df.shape[0] + 1}'))
                 break
 
         if not table_exists:
             # Create a new table
-            sheet_name.tables.add(source=sheet_name.range(f'A1:{chr(65 + df.shape[1] - 1)}{df.shape[0] + 1}'), name=table_name, table_style_name='TableStyleMedium2')
+            sheet_name.tables.add(source=sheet_name.range(f'A1:{get_column_letter(df.shape[1])}{df.shape[0] + 1}'), name=table_name, table_style_name='TableStyleMedium2')
 
 
 def microsoft_planner_importer(

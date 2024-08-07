@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-07-19
+# Last update: 2024-08-05
 
 
 # Rename: ExifTool
@@ -61,14 +61,15 @@ exiftool \
 
 # Photos rename - Rename all photos and videos given available metadata (where FileModifyDate metadata is the least relevant parameter for the file name and DateTimeOriginal the most relevant)
 exiftool \
-	-if 'defined $ContentIdentifier' and '$FileType eq "MOV"' \
-	'-FileName<Apple Live Photo ${FileModifyDate}%+.nc.%e' \
+	-if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
+	'-FileName<Apple Live Photo ${CreationDate}%+.nc.%e' \
+	'-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+.nc.%e' \
 	-execute \
-	-if 'not defined $ContentIdentifier' and '$FileType eq "MOV"' \
+	-if '($FileTypeExtension eq "mov" and not defined $ContentIdentifier)' \
 	'-FileName<${CreationDate}%+.nc.%e' \
 	'-FileName<${CreationDate}.${SubSecTime}%+.nc.%e' \
 	-execute \
-	-if 'not defined $ContentIdentifier' and '$FileType ne "MOV"' \
+	-if '($FileTypeExtension ne "mov")' \
 	'-FileName<${FileModifyDate}%+.nc.%e' \
 	'-FileName<${ModifyDate}%+.nc.%e' \
 	'-FileName<${ModifyDate}.${SubSecTime}%+.nc.%e' \
@@ -217,13 +218,39 @@ magick mogrify -monitor -format jpg "./*.HEIC"
 # Convert .pdf to .png
 magick mogrify -monitor -density 300 -format png "./*.pdf"
 
-# Reduce file size
-magick mogrify -monitor -resize 50% "./*.HEIC"
+# Reduce image file size (.jpg)
+magick mogrify -monitor -resize 50% "./*.jpg"
 magick mogrify -monitor -quality 80 -resize 800x "./*.jpg" # Web
 magick mogrify -monitor -quality 80 -resize 1920x "./*.jpg" # Web
 
+# Reduce image file size (.png)
+magick mogrify -monitor -resize 800x -colors 256 "./*.png" # Web
+
+## Reduce image file size (.png) - if width > height, resize by width; else resize by height
+image="image-1.png"
+
+dimensions=$(magick identify -format "%wx%h" "$image")
+width=$(echo $dimensions | cut -d'x' -f1)
+height=$(echo $dimensions | cut -d'x' -f2)
+if [ "$width" -gt "$height" ]; then
+    magick mogrify -monitor -resize 400x -colors 256 "$image"
+else
+    magick mogrify -monitor -resize x440 -colors 256 "$image"
+fi
+
+
 # Replace all colors except background in .png image with white
 magick convert "./input.png" -fill white -colorize 100 "./output.png"
+
+# Replace a specific color by transparent background
+magick mogrify -monitor -fuzz 10% -transparent "#ffffff" "./.png"
+
+# Replace a specific color by semi-transparent
+magick mogrify -monitor -fuzz 10% -fill "rgba(255,255,255,0.5)" -opaque "#ffffff" "./.png"
+
+# Crop .png keeping only the shapes
+magick mogrify -monitor -trim +repage "./*.png"
+
 
 
 
