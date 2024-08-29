@@ -1,6 +1,6 @@
 <?php
 
-// WooCommerce
+// WooCommerce - Apply sales price to multiple products
 // Last update: 2024-07-31
 
 

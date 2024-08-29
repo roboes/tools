@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-07-07
+# Last update: 2024-08-22
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -92,7 +92,9 @@ pre-commit run --all-files
 
 ## Python requirements.txt file
 # python -m pip install pipreqs
-pipreqs --encoding utf-8 --force "./"
+if find . -type f -name "*.py" | grep -q "/."; then
+	pipreqs --encoding utf-8 --force "./"
+fi
 
 
 # Set working directory

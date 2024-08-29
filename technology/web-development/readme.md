@@ -2,9 +2,30 @@
 
 # Useful links
 
-## Colors
+## Styles
 
 [Tailwind CSS Color Generator](https://uicolors.app/create): Create color scales given a color.
+
+### CSS
+
+#### Search website for a specific CSS class (using Command-Line Tools)
+
+```.sh
+## Settings
+website="website.com"
+
+## Change current directory
+cd /var/www/vhosts/"$website"/
+
+## Search through files
+grep -r "css-class"
+```
+
+#### Search website for a specific CSS class (using JavaScript)
+
+```.js
+console.log(document.querySelectorAll('.css-class'));
+```
 
 ## Media
 

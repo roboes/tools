@@ -91,3 +91,23 @@ plesk bin extension --enable firewall
 
 # Enable Nginx caching
 # https://support.plesk.com/hc/en-us/articles/12377223196439-How-to-enable-Nginx-caching-in-Plesk
+
+
+# Brotli PHP Extension
+
+## List installed PHP versions
+ls "/opt/plesk/php"
+
+## Install Brotli PHP Extension
+apt-get install plesk-php83-dev make gcc git
+git clone --recursive --depth=1 https://github.com/kjdev/php-ext-brotli.git
+cd php-ext-brotli
+/opt/plesk/php/8.3/bin/phpize
+./configure --with-php-config=/opt/plesk/php/8.3/bin/php-config
+make
+cp /root/php-ext-brotli/modules/brotli.so /opt/plesk/php/8.3/lib/php/modules/
+echo "extension=brotli.so" > /opt/plesk/php/8.3/etc/php.d/brotli.ini
+plesk bin php_handler --reread
+
+# Test: Check that brotli PHP module is loaded
+/opt/plesk/php/8.3/bin/php -m | grep brotli

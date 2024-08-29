@@ -1,5 +1,6 @@
+<?php
 // WordPress Admin - Customize Login Screen
-// Last update: 2024-07-30
+// Last update: 2024-08-18
 
 
 // Customize Login Screen
@@ -9,6 +10,17 @@ function login_screen_customize()
 {
     ?>
 	<style type="text/css">
+		:root {
+			/* Colors */
+			--color-cararra: #ECEAE3;
+			--color-dove-gray-light: #6565651A;
+			--color-mine-shaft: #262626;
+			--color-mongoose: #BCA38A;
+			--color-pampas: #F2F0EB;
+			--color-sandal: #AB8C6C;
+			--color-white: #FFFFFF;
+		}
+
 		/* Logo */
 		.login h1 a {
 			background-image: url("<?php echo get_option($option = 'siteurl', $default_value = false); ?>/wp-content/uploads/logo.png") !important;
@@ -19,49 +31,39 @@ function login_screen_customize()
 			text-indent: -9999px;
 		}
 
+		/* Background color */
+		body.login {
+			background-color: var(--color-pampas) !important;
+		}
+
 		/* Form styles */
 		.login #loginform,
 		.login #wfls-prompt-overlay {
-			background-color: #ECEAE3;
-			border: 1px solid #6565651A;
+			background-color: var(--color-cararra);
+			border: 1px solid var(--color-dove-gray-light);
 			border-radius: 10px;
 		}
 		.login .privacy-policy-link {
-			color: #AB8C6C !important;
+			color: var(--color-sandal) !important;
 		}
 		.login .privacy-policy-link:hover {
-			color: #BCA38A !important;
+			color: var(--color-mongoose) !important;
 		}
 		.login .input[type="text"],
 		.login .input[type="password"]			{
-			background-color: #6565651A !important;
-			border: 1px solid #6565651A !important;
-		}
-
-		/* Background color */
-		body.login {
-			background-color: #F2F0EB !important;
+			background-color: var(--color-dove-gray-light) !important;
+			border: 1px solid var(--color-dove-gray-light) !important;
 		}
 
 		/* Buttons */
 		.login .button,
 		.login .two-factor-email-resend .button {
-			border: 2px solid #262626 !important;
+			border: 2px solid var(--color-mine-shaft) !important;
 			padding: 10px 20px !important;
 			border-radius: 0 !important;
 			transition: all 0.3s !important;
-		}
-		.login .button {
-			color: #FFFFFF !important;
-			background-color: #262626 !important;
-		}
-		.login .two-factor-email-resend .button {
-			color: #262626 !important;
-			background-color: transparent !important;
-		}
-		.login .two-factor-email-resend .button:hover {
-			color: #FFFFFF !important;
-			background-color: #262626 !important;
+			color: var(--color-white) !important;
+			background-color: var(--color-mine-shaft) !important;
 		}
 		.login .wp-hide-pw,
 		.login .hide-if-no-js {

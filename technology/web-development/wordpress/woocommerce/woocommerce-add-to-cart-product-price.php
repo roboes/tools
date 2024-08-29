@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Display product currency and price inside "Add to Cart" button
-// Last update: 2024-07-24
+// Last update: 2024-08-17
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -33,16 +33,31 @@ if (class_exists('WooCommerce') && WC()) {
                         maximumFractionDigits: 2
                     });
 
+                    // Function to format price based on currency position
+                    function formatPrice(price) {
+                        let formattedPrice = formatter.format(price);
+                        switch(currencyPosition) {
+                            case 'left':
+                                return currencySymbol + formattedPrice;
+                            case 'right':
+                                return formattedPrice + currencySymbol;
+                            case 'left_space':
+                                return currencySymbol + ' ' + formattedPrice;
+                            case 'right_space':
+                                return formattedPrice + ' ' + currencySymbol;
+                            default:
+                                return currencySymbol + formattedPrice; // default to left if unknown position
+                        }
+                    }
+
                     // Function to update price
                     function updatePrice() {
                         const vid = $(inputVID).val();
                         const quantity = parseInt($(quantityInput).val()) || 1;
                         if (vid && jsonData[vid] !== undefined) {
                             const price = jsonData[vid] * quantity;
-                            const formattedPrice = formatter.format(price);
+                            const priceHtml = formatPrice(price);
                             $("button.single_add_to_cart_button span[data-price='true']").remove();
-                            // Build price HTML based on currency position
-                            const priceHtml = currencyPosition === 'right' ? formattedPrice + currencySymbol : currencySymbol + formattedPrice;
                             $(".single_add_to_cart_button").append("<span data-price='true'> - " + priceHtml + "</span>"); // Append price to button
                         } else {
                             $("button.single_add_to_cart_button span[data-price='true']").remove(); // Remove existing price if variation is not selected
@@ -76,14 +91,29 @@ if (class_exists('WooCommerce') && WC()) {
                         maximumFractionDigits: 2
                     });
 
+                    // Function to format price based on currency position
+                    function formatPrice(price) {
+                        let formattedPrice = formatter.format(price);
+                        switch(currencyPosition) {
+                            case 'left':
+                                return currencySymbol + formattedPrice;
+                            case 'right':
+                                return formattedPrice + currencySymbol;
+                            case 'left_space':
+                                return currencySymbol + ' ' + formattedPrice;
+                            case 'right_space':
+                                return formattedPrice + ' ' + currencySymbol;
+                            default:
+                                return currencySymbol + formattedPrice; // default to left if unknown position
+                        }
+                    }
+
                     // Function to update price
                     function updatePrice() {
                         const quantity = parseInt($(quantityInput).val()) || 1;
                         const price = basePrice * quantity;
-                        const formattedPrice = formatter.format(price);
+                        const priceHtml = formatPrice(price);
                         $("button.single_add_to_cart_button span[data-price='true']").remove();
-                        // Build price HTML based on currency position
-                        const priceHtml = currencyPosition === 'right' ? formattedPrice + currencySymbol : currencySymbol + formattedPrice;
                         $(".single_add_to_cart_button").append("<span data-price='true'> - " + priceHtml + "</span>"); // Append price to button
                     }
 
