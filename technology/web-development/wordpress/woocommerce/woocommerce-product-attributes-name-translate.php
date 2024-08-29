@@ -1,9 +1,9 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-05-30
+// Last update: 2024-07-24
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     add_action($hook_name = 'after_setup_theme', $callback = 'translate_attributes_name', $priority = 10, $accepted_args = 1);
 

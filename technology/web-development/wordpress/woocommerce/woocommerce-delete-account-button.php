@@ -1,9 +1,9 @@
 <?php
 
 // WooCommerce - Add "Delete Account" button to "Account Details" page
-// Last update: 2024-05-31
+// Last update: 2024-07-24
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     // Function to get the message
     function get_message($type, $language = 'en')
@@ -45,6 +45,7 @@ if (WC()) {
             $user_id = get_current_user_id();
             if (!current_user_can($capability = 'administrator') && account_deletion_verifier($user_id)) {
                 // Delete user and redirect
+                require_once(ABSPATH . 'wp-admin/includes/user.php');
                 wp_delete_user($user_id);
                 wp_redirect(home_url());
                 exit;
@@ -57,27 +58,36 @@ if (WC()) {
         }
     }
 
+
     // Check if the user can delete their account
     function account_deletion_verifier($user_id)
     {
-        if (user_can($user_id, 'administrator')) {
-            return false;
+        // Settings
+        $allowed_roles = array('customer');
+
+        $user = get_user_by('ID', $user_id);
+
+        // Check if the user role is allowed to delete account
+        if (in_array($user->roles[0], $allowed_roles)) {
+            // Get completed orders
+            $orders = wc_get_orders(array('customer_id' => $user_id, 'status' => 'completed', 'limit' => -1));
+
+            // Check if there are completed orders
+            if (!empty($orders)) {
+                $last_order = end($orders);
+                $last_completed_date = $last_order->get_date_completed();
+
+                // Check if the last completed order is at least 14 days old
+                if ($last_completed_date && strtotime($last_completed_date) >= strtotime('-14 days')) {
+                    return false; // Cannot delete account if last order is not old enough
+                }
+            }
+
+            // Allow account deletion if no orders or all orders are old enough
+            return true;
         }
-        $args = [
-            'customer_id' => $user_id,
-            'status'      => 'completed',
-            'limit'       => -1,
-        ];
-        $orders = wc_get_orders($args);
 
-        if (empty($orders)) {
-            return false;
-        }
-
-        $last_order = end($orders);
-        $last_completed_date = $last_order->get_date_completed();
-
-        return ($last_completed_date && strtotime($last_completed_date) < strtotime('-14 days'));
+        return false; // Default to disallow deletion for other roles
     }
 
 }

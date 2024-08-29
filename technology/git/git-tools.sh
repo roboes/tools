@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-06-26
+# Last update: 2024-08-22
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -92,7 +92,9 @@ pre-commit run --all-files
 
 ## Python requirements.txt file
 # python -m pip install pipreqs
-pipreqs --encoding utf-8 --force "./"
+if find . -type f -name "*.py" | grep -q "/."; then
+	pipreqs --encoding utf-8 --force "./"
+fi
 
 
 # Set working directory
@@ -123,17 +125,21 @@ git push --force origin ${git_branch}
 
 
 
-## Squash commit history per day - https://stackoverflow.com/a/56878987/9195104
+## Squash commit history - https://stackoverflow.com/a/56878987/9195104
 
 # Count of commits
 git rev-list --count HEAD ${git_branch}
 
 
+# Create a temporary file to store commits to keep
+export TOKEEP=$(mktemp)
+
+
 # Extracts the timestamps of the commits to keep (the last of the day)
-export TOKEEP=`mktemp`
 DATE=
-for time in `git log --date=raw --pretty=format:%cd|cut -d\  -f1` ; do
-   CDATE=`date -d @$time +%Y%m%d`
+for time in $(git log --date=raw --pretty=format:%cd|cut -d\  -f1); do
+   CDATE=$(date -d @$time +%Y%m%d) # Per day
+   # CDATE=$(date -d @$time +%Y%m) # Per month
    if [ "$DATE" != "$CDATE" ] ; then
        echo @$time >> $TOKEEP
        DATE=$CDATE
@@ -148,6 +154,9 @@ git filter-branch --force --commit-filter '
     else
         skip_commit "$@"
     fi' HEAD
+
+
+# Remove the temporary file
 rm --force $TOKEEP
 
 

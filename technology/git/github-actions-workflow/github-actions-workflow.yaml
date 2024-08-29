@@ -1,5 +1,5 @@
 ## GitHub Actions Workflow
-# Last update: 2024-01-25
+# Last update: 2024-07-16
 
 # Save this file to '.github/workflows/github-actions-workflow.yaml'
 
@@ -14,7 +14,6 @@ on:
     - cron: "00 10 * * *"
     - cron: "00 17 * * *"
     - cron: "30 21 * * *"
-    - cron: "30 20 * * MON,THU"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -33,25 +32,11 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Get pip cache dir
-        id: pip-cache
-        run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache action - pip cache - https://github.com/actions/cache
-        uses: actions/cache@v4
-        id: cache
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Setup Python - https://github.com/actions/setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x" #  Latest stable major version of Python
-          cache: "pip" # Caching pip dependencies
+          cache: "pip" # Enables pip caching
 
       - name: Install Python dependencies
         run: |
@@ -62,14 +47,4 @@ jobs:
       #   run: which python
 
       - name: Run Python script
-        if: |
-          github.event.schedule != '30 20 * * MON,THU'
-        # github.event.schedule == '00 10 * * *'
-        # || github.event.schedule == '00 17 * * *'
-        # || github.event.schedule == '30 21 * * *'
         run: python strava-club-scraper.py
-
-      # - name: Run Python script
-      #   if: |
-      #     github.event.schedule == '30 20 * * MON,THU'
-      #   run: python strava-club-scraper-activities.py

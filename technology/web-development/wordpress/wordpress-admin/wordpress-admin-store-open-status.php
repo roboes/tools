@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status
-// Last update: 2024-06-07
+// Last update: 2024-07-19
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 
@@ -16,8 +16,8 @@ function store_hours_shortcode()
         'Friday' => '10:00-17:00',
         'Saturday' => '10:00-14:00',
     ];
-    $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26'];
-    $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02'];
+    $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26', '2025-01-01', '2025-01-06'];
+    $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
     $time_zone = get_option('timezone_string');
 
     // Get current date and time
@@ -28,6 +28,9 @@ function store_hours_shortcode()
 
     // Get current language
     $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+    if (!in_array($current_language, ['de', 'en'])) {
+        $current_language = 'en';
+    }
 
     // Determine opening hours for today
     if (!isset($opening_hours[$current_day_of_week])) {

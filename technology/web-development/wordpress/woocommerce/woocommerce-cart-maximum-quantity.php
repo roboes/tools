@@ -1,11 +1,11 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products belonging to specific category per cart
-// Last update: 2024-06-07
+// Last update: 2024-07-24
 
 // Calculate whether an item being added to the cart passes the quantity criteria - triggered on add to cart action
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_quantity_add_to_cart_validation', $priority = 10, $accepted_args = 5);
 

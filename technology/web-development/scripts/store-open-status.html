@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!-- Store Open Status -->
+<!-- Last update: 2024-07-13 -->
+
+
+<div id="store-status"></div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const storeStatusElement = document.getElementById("store-status");
+        storeStatusElement.innerHTML = storeHoursStatus();
+    });
+
+    function storeHoursStatus() {
+        // Setup
+        const openingHours = {
+            'Monday': '10:00-17:00',
+            'Tuesday': '10:00-17:00',
+            'Wednesday': '10:00-17:00',
+            'Thursday': '10:00-17:00',
+            'Friday': '10:00-17:00',
+            'Saturday': '10:00-14:00',
+        };
+        const publicHolidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26'];
+        const specialDays = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
+        const timeZone = 'Europe/Berlin';
+
+        // Get current date and time
+        const currentDatetime = new Date().toLocaleString('en-US', { timeZone });
+        const currentDateObj = new Date(currentDatetime);
+        const currentDayOfWeek = currentDateObj.toLocaleString('en-US', { weekday: 'long', timeZone });
+        const currentDate = currentDateObj.toISOString().split('T')[0];
+        const currentTime = currentDateObj.toTimeString().slice(0, 5);
+
+        // Get current language from the <html> element's lang attribute
+        const langAttr = document.documentElement.lang;
+        let language;
+
+        if (langAttr.length === 2) {
+          language = langAttr;
+        } else {
+          language = langAttr.split('-')[0];
+        }
+
+        // Default to "en" if language is not "de" or "en"
+        if (!['de', 'en'].includes(language)) {
+          language = 'en';
+        }
+
+        // Determine opening hours for today
+        if (!openingHours.hasOwnProperty(currentDayOfWeek)) {
+            return generateMessage('closed', language);
+        }
+
+        let [startTime, endTime] = openingHours[currentDayOfWeek].split('-');
+        startTime = new Date(currentDatetime.split(' ')[0] + ' ' + startTime);
+        endTime = new Date(currentDatetime.split(' ')[0] + ' ' + endTime);
+        let closingSoonTime = new Date(endTime.getTime());
+        closingSoonTime.setHours(closingSoonTime.getHours() - 1);
+
+        // Check if today is a public holiday
+        if (publicHolidays.includes(currentDate)) {
+            return generateMessage('holiday', language);
+        }
+
+        // Check if today is a special day
+        if (specialDays.includes(currentDate)) {
+            return generateMessage('special_event', language);
+        }
+
+        // Determine store status based on current time
+        if (currentDateObj >= startTime && currentDateObj <= endTime) {
+            if (currentDateObj >= closingSoonTime) {
+                return generateMessage('closing_soon', language);
+            } else {
+                return generateMessage('open', language);
+            }
+        } else {
+            return generateMessage('closed', language);
+        }
+    }
+
+    function generateMessage(status, language) {
+        const statuses = {
+            'open': {
+                'de': 'Geschäft ist jetzt geöffnet',
+                'en': 'Store is now open',
+                'color': '#50C878',
+            },
+            'closing_soon': {
+                'de': 'Geschäft schließt bald',
+                'en': 'Store is closing soon',
+                'color': '#EAA300',
+            },
+            'closed': {
+                'de': 'Geschäft ist jetzt geschlossen',
+                'en': 'Store is now closed',
+                'color': '#B20000',
+            },
+            'holiday': {
+                'de': 'Geschäft ist aufgrund eines Feiertags heute geschlossen',
+                'en': 'Store is closed today due to public holiday',
+                'color': '#B20000',
+            },
+            'special_event': {
+                'de': 'Geschäft ist aufgrund einer Veranstaltung heute geschlossen',
+                'en': 'Store is closed today due to an event',
+                'color': '#B20000',
+            },
+        };
+
+        const message = `<span class="store-open-status" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: ${statuses[status].color};"></i></span>${statuses[status][language]}`;
+        return message;
+    }
+</script>

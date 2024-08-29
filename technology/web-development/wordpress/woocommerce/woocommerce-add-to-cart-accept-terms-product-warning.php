@@ -1,9 +1,9 @@
 <?php
 
 // WooCommerce - "Add to cart" accept product warning terms
-// Last update: 2024-06-14
+// Last update: 2024-07-24
 
-if (WC()) {
+if (class_exists('WooCommerce') && WC()) {
 
     add_action($hook_name = 'wp_footer', $callback = 'woocommerce_add_terms_checkbox_product_warning', $priority = 10, $accepted_args = 1);
 
@@ -99,4 +99,3 @@ if (WC()) {
     }
 
 }
-?>
