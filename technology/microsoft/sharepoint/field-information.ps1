@@ -21,7 +21,7 @@ Connect-PnPOnline -Url $sharePointUrl  -Interactive
 $library = Get-PnPList -Identity $libraryName
 
 # Get all items in the library
-$items = Get-PnPListItem -List $library -PageSize 500
+$items = Get-PnPListItem -List $library -PageSize 5000
 
 
 # Initialize an array to store the fieldName's fieldValues
@@ -29,7 +29,7 @@ $fieldValues = @()
 
 # Iterate through each item and collect the fieldName's fieldValues
 foreach ($item in $items) {
-	$fieldValues += $item.FieldValues[$fieldName]
+    $fieldValues += $item.FieldValues[$fieldName]
 }
 
 # Get the unique fieldName's fieldValues

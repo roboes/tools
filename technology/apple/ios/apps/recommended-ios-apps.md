@@ -19,4 +19,5 @@ Google Keep ([Web](https://keep.google.com) | [Android](https://play.google.com/
 
 ## Web
 
+AdGuard ([iOS](https://apps.apple.com/app/adguard-adblock-privacy/id1047223162)): Ad-blocker for Safari.\
 Firefox Focus ([Website](https://www.mozilla.org/firefox/browsers/mobile/focus/) | [Android](https://play.google.com/store/apps/details?id=org.mozilla.focus) | [iOS](https://apps.apple.com/app/firefox-focus-privacy-browser/id1055677337)): Ad-blocker for Safari.

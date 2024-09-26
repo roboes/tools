@@ -44,7 +44,7 @@ Files can be downloaded as a .gpx files and imported in apps (see [here](#apps))
 
 ### Description
 
-Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX). To run it: `python -m komootgpx --mail="mail_address" --pass="password" --filter="planned" --output="/mnt/c/Users/${USER}/Downloads"`).\
+Excellent app for finding cycling/hiking routes and creating/editing routes (requires log-in). Premium subscription/purchases allow to download .gpx files to other apps (alternatively, some GitHub repositories bypass this restriction and allow to download .gpx files, as for example [KomootGPX](https://github.com/ThePBone/KomootGPX). To run it: `python -m komootgpx --mail="mail_address" --pass="password" --filter="planned" --output="./"`).\
 Map base: OpenStreetMap (OSM).
 
 ## Mapy.cz

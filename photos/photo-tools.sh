@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-08-05
+# Last update: 2024-09-10
 
 
 # Rename: ExifTool
@@ -202,6 +202,10 @@ exiftool '-XMPToolkit' -csv . > './File.csv'
 ffmpeg -i "./Movie.avi" -dump
 
 
+## Vectors
+
+# Convert .eps to .svg
+for file in *.eps; do dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg"; done
 
 
 ## ImageMagick
@@ -251,6 +255,8 @@ magick mogrify -monitor -fuzz 10% -fill "rgba(255,255,255,0.5)" -opaque "#ffffff
 # Crop .png keeping only the shapes
 magick mogrify -monitor -trim +repage "./*.png"
 
+# Enhance image
+magick -monitor "./input.png" -auto-gamma "./output.png"
 
 
 

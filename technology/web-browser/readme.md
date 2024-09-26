@@ -3,7 +3,6 @@
 ## Extensions
 
 - [uBlock Origin](https://addons.mozilla.org/firefox/addon/ublock-origin/)
-- [Privacy Badger](https://addons.mozilla.org/firefox/addon/privacy-badger17/)
 - [Tampermonkey](https://addons.mozilla.org/firefox/addon/tampermonkey/)
 - [PocketTube](https://addons.mozilla.org/firefox/addon/youtube-subscription-groups/)
 - [Return YouTube Dislike](https://addons.mozilla.org/firefox/addon/return-youtube-dislikes/)

@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Display product currency and price inside "Add to Cart" button
-// Last update: 2024-08-17
+// Last update: 2024-09-17
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -8,7 +8,6 @@ if (class_exists('WooCommerce') && WC()) {
 
     function woocommerce_add_to_cart_product_price($button_text, $product)
     {
-        // Check if WooCommerce is active and it's a product page
         if (is_product()) {
             // Get product price
             $product_price = wc_get_price_to_display($product);
@@ -26,11 +25,13 @@ if (class_exists('WooCommerce') && WC()) {
                     const quantityInput = 'input[name="quantity"]';
                     const currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
                     const currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
+                    const currencyDecimals = '<?php echo esc_html(wc_get_price_decimals()); ?>';
+					const locale = 'de-DE';
 
                     // Number formatter for price
-                    const formatter = new Intl.NumberFormat('de-DE', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
+                    const formatter = new Intl.NumberFormat(locale, {
+                        minimumFractionDigits: parseInt(currencyDecimals),
+                        maximumFractionDigits: parseInt(currencyDecimals)
                     });
 
                     // Function to format price based on currency position
@@ -83,12 +84,14 @@ if (class_exists('WooCommerce') && WC()) {
                     const quantityInput = 'input[name="quantity"]';
                     const currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
                     const currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
+					const currencyDecimals = '<?php echo esc_html(wc_get_price_decimals()); ?>';
                     const basePrice = <?php echo $product_price; ?>;
+					const locale = 'de-DE';
 
                     // Number formatter for price
-                    const formatter = new Intl.NumberFormat('de-DE', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
+                    const formatter = new Intl.NumberFormat(locale, {
+                        minimumFractionDigits: parseInt(currencyDecimals),
+                        maximumFractionDigits: parseInt(currencyDecimals)
                     });
 
                     // Function to format price based on currency position
