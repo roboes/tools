@@ -22,7 +22,7 @@ if (class_exists('WooCommerce') && WC()) {
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
 
         // Calculate the weight of the current cart items
-        foreach(WC()->cart->get_cart() as $cart_item) {
+        foreach (WC()->cart->get_cart() as $cart_item) {
             $item_weight = $cart_item['data']->get_weight();
             $total_cart_weight += is_numeric($item_weight) ? $item_weight * $cart_item['quantity'] : 0;
         }
@@ -43,9 +43,9 @@ if (class_exists('WooCommerce') && WC()) {
 
             // Custom notice
             if ($current_language === 'de') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $weight_limit / 1000);
+                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $weight_limit / 1000);
             } else {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $weight_limit / 1000);
+                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             }
 
             wc_add_notice($message = $message, $notice_type = 'error');
@@ -90,9 +90,9 @@ if (class_exists('WooCommerce') && WC()) {
 
             // Custom notice
             if ($current_language === 'de') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $weight_limit / 1000);
+                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $weight_limit / 1000);
             } else {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $weight_limit / 1000);
+                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             }
 
             wc_add_notice($message = $message, $notice_type = 'error');

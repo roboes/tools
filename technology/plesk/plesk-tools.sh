@@ -1,5 +1,5 @@
 ## Plesk Tools
-# Last update: 2024-07-30
+# Last update: 2024-09-18
 
 
 # Switch to the root user account
@@ -111,3 +111,21 @@ plesk bin php_handler --reread
 
 # Test: Check that brotli PHP module is loaded
 /opt/plesk/php/8.3/bin/php -m | grep brotli
+
+
+# Redis
+# wget http://download.redis.io/redis-stable.tar.gz
+# tar xvzf redis-stable.tar.gz
+# cd redis-stable
+# make
+# make install
+
+# Test
+# redis-server --version
+# lsof -i tcp:6379
+# redis-cli ping
+
+
+# Redirect from Web Server's Default Page
+# https://www.plesk.com/kb/support/how-to-change-the-web-servers-default-page-for-domains-with-no-hosting-and-in-disabled-status-in-plesk/
+# https://www.plesk.com/kb/support/how-to-configure-redirect-from-web-servers-default-page-or-existing-domains-to-the-plesk-login-page-on-port-8443-on-plesk-for-linux/

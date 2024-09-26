@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - SMTP Credentials
-// Last update: 2024-06-29
+// Last update: 2024-09-11
 
 
 // Add these lines to wp-config.php file
@@ -25,6 +25,6 @@ function phpmailer_credentials($phpmailer)
     $phpmailer->Username = SMTP_USER;
     $phpmailer->Password = SMTP_PASS;
     $phpmailer->SMTPSecure = 'tls';
-    $phpmailer->From = SMTP_FROM;
+    // $phpmailer->From = SMTP_FROM;
     // $phpmailer->FromName = SMTP_NAME;
 }

@@ -49,9 +49,9 @@ if (class_exists('WooCommerce') && WC()) {
 
                 // Custom notice
                 if ($current_language === 'de') {
-                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $max_quantity);
+                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $max_quantity);
                 } else {
-                    $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $max_quantity);
+                    $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $max_quantity);
                 }
 
                 wc_add_notice($message = $message, $notice_type = 'error');
@@ -68,7 +68,7 @@ if (class_exists('WooCommerce') && WC()) {
     function woocommerce_cart_maximum_quantity_cart_item_quantity_change_validation($cart_item_key, $new_quantity, $old_quantity, $cart)
     {
 
-        // Setup
+        // Settings
         $product_cats = array('Accessories', 'Zubehör');
         $max_quantity = 3;
         $product_ids_exception = array(19412, 11213, 11211);
@@ -106,9 +106,9 @@ if (class_exists('WooCommerce') && WC()) {
 
                 // Custom notice
                 if ($current_language === 'de') {
-                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $max_quantity);
+                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $max_quantity);
                 } else {
-                    $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $max_quantity);
+                    $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $max_quantity);
                 }
 
                 wc_add_notice($message = $message, $notice_type = 'error');

@@ -1,16 +1,23 @@
 <?php
 
 // WooCommerce - Apply sales price to multiple products
-// Last update: 2024-07-31
+// Last update: 2024-09-22
 
 
 if (class_exists('WooCommerce') && WC()) {
 
     function woocommerce_sale_price_update($product_id, $start_date, $end_date, $discount_percentage, $round_precision)
     {
-        // Set sale price and dates
-        update_post_meta($product_id, '_sale_price_dates_from', strtotime($start_date));
-        update_post_meta($product_id, '_sale_price_dates_to', strtotime($end_date));
+        // Get the site's time zone
+        $timezone = new DateTimeZone(get_option('timezone_string'));
+
+        // Start and end dates
+        $start_date = (new DateTime($start_date, $timezone));
+        $end_date = (new DateTime($end_date, $timezone))->modify('+1 day');
+
+        // Set sale start and end dates with time zone consideration
+        update_post_meta($product_id, '_sale_price_dates_from', $start_date->getTimestamp());
+        update_post_meta($product_id, '_sale_price_dates_to', $end_date->getTimestamp());
 
         // Calculate sale price
         $regular_price = get_post_meta($product_id, '_regular_price', true);
@@ -26,11 +33,9 @@ if (class_exists('WooCommerce') && WC()) {
         echo 'Product price updated: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
         echo 'Regular Price: ' . $regular_price . '<br>';
         echo 'Sale Price: ' . $sale_price . '<br>';
-        echo 'Sale Start Date: ' . $start_date . '<br>';
-        echo 'Sale End Date: ' . $end_date . '<br><br>';
+        echo 'Sale Start Date: ' . $start_date->format('Y-m-d') . '<br>';
+        echo 'Sale End Date: ' . $end_date->modify('-1 day')->format('Y-m-d') . '<br><br>';
     }
-
-
 
 
     function woocommerce_sale_price_apply()
@@ -40,7 +45,7 @@ if (class_exists('WooCommerce') && WC()) {
         $category_slugs = array('specialty-coffees-de');
         $product_ids_except = array();
         $start_date = '2024-07-19';
-        $end_date = '2024-07-22'; # Exclusive
+        $end_date = '2024-07-22';
         $discount_percentage = 0.2;
         $round_precision = 1;
 
