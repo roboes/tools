@@ -28,7 +28,7 @@ function store_hours_shortcode()
 
     // Get current language
     $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-    if (!in_array($current_language, ['de', 'en'])) {
+    if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
         $current_language = 'en';
     }
 

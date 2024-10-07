@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Shipping cost custom calculation based on the best-fitting shipping package for the cart items based on their dimensions, updates the cart item dimensions and total weight to reflect the selected package
-// Last update: 2024-09-20
+// Last update: 2024-10-07
 
 
 // add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
@@ -17,7 +17,7 @@
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
-// $orders = wc_get_orders(['status' => ['processing', 'completed'], 'limit' => -1]);
+// $orders = wc_get_orders(['limit' => -1]);
 // foreach ($orders as $order) {
 // calculate_and_store_package_best_fit($order->get_id());
 // }
@@ -43,24 +43,100 @@ function get_cart_items()
         $quantity = $cart_item['quantity']; // Use the cart's quantity
 
         // Add the product dimensions and weight for each unit in the cart
-        for ($i = 0; $i < $quantity; $i++) {
-            $cart_items[] = [
-                'length' => (float) $product->get_length(),
-                'width' => (float) $product->get_width(),
-                'height' => (float) $product->get_height(),
-                'weight' => (float) $product->get_weight(),
-                'quantity' => $quantity,
-            ];
-        }
+        $cart_items[] = [
+            'length' => (float) $product->get_length(),
+            'width' => (float) $product->get_width(),
+            'height' => (float) $product->get_height(),
+            'weight' => (float) $product->get_weight(),
+            'quantity' => $quantity,
+        ];
     }
 
     return $cart_items;
 }
 
 
+function calculate_package_best_fit_helper_volume($items)
+{
+    $total_volume = 0;
+
+    foreach ($items as $item) {
+        $volume = $item['length'] * $item['width'] * $item['height'] * $item['quantity'];
+        $total_volume += $volume;
+    }
+
+    return $total_volume;
+}
+
+
+// Recursive function to try all combinations
+function calculate_package_best_fit_helper_try_fit($all_orientations, $index, $current_dimensions, $package_dimensions)
+{
+    if ($index == count($all_orientations)) {
+        return true; // All items fit
+    }
+
+    foreach ($all_orientations[$index] as $orientation) {
+        $new_length = $current_dimensions['length'] + $orientation[0];
+        $new_width = max($current_dimensions['width'], $orientation[1]);
+        $new_height = max($current_dimensions['height'], $orientation[2]);
+
+        if (
+            $new_length <= $package_dimensions['length'] &&
+            $new_width <= $package_dimensions['width'] &&
+            $new_height <= $package_dimensions['height']
+        ) {
+            $new_dimensions = [
+                'length' => $new_length,
+                'width' => $new_width,
+                'height' => $new_height,
+            ];
+            if (calculate_package_best_fit_helper_try_fit($all_orientations, $index + 1, $new_dimensions, $package_dimensions)) {
+                return true;
+            }
+        }
+    }
+
+    return false; // No fitting orientation found
+}
+
+
+function calculate_package_best_fit_helper($items, $package)
+{
+    // Package dimensions
+    $length_available = $package['length'];
+    $width_available = $package['width'];
+    $height_available = $package['height'];
+
+    // Generate all possible orientations for each item
+    $all_orientations = [];
+    foreach ($items as $item) {
+        $orientations = [
+            [$item['length'], $item['width'], $item['height']],
+            [$item['length'], $item['height'], $item['width']],
+            [$item['width'], $item['length'], $item['height']],
+            [$item['width'], $item['height'], $item['length']],
+            [$item['height'], $item['length'], $item['width']],
+            [$item['height'], $item['width'], $item['length']],
+        ];
+        // Remove duplicate orientations
+        $all_orientations[] = array_unique($orientations, SORT_REGULAR);
+    }
+
+    // Initialize current dimensions
+    $initial_dimensions = ['length' => 0, 'width' => 0, 'height' => 0];
+
+    // Start recursive fitting
+    return calculate_package_best_fit_helper_try_fit($all_orientations, 0, $initial_dimensions, [
+        'length' => $length_available,
+        'width' => $width_available,
+        'height' => $height_available,
+    ]);
+}
+
+
 function calculate_package_best_fit($items)
 {
-
     // Settings
     $packages = [
         ['name' => 'Box S1', 'length' => 14, 'width' => 14, 'height' => 15, 'weight' => 90],
@@ -70,57 +146,24 @@ function calculate_package_best_fit($items)
         ['name' => 'Box L', 'length' => 38, 'width' => 38, 'height' => 20, 'weight' => 316],
     ];
 
-    // Initialize an array to hold the results
+    $total_items_volume = calculate_package_best_fit_helper_volume($items);
+
+    // Initialize an array to hold fitting packages
     $packages_fit = [];
 
-    // Calculate the total dimensions and volume of the items
-    $total_quantity = 0;
-    foreach ($items as $item) {
-        $total_quantity += $item['quantity'];
-    }
-
-    // Get dimensions for a single item
-    $item_single_length = $items[0]['length'];
-    $item_single_width = $items[0]['width'];
-    $item_single_height = $items[0]['height'];
-
-    // Calculate the total volume of the items
-    $item_volume = $item_single_length * $item_single_width * $item_single_height;
-    $total_volume = $item_volume * $total_quantity;
-
-    // Check each package to see if items fit
+    // Check each package for fitting
     foreach ($packages as $package) {
-        // Calculate the volume of the package
         $package_volume = $package['length'] * $package['width'] * $package['height'];
+        if ($total_items_volume > $package_volume) {
+            continue; // Skip packages that are too small in volume
+        }
 
-        // If total item volume is less than package volume, check dimensions
-        if ($total_volume <= $package_volume) {
-            // Check possible orientations
-            $fits = 0;
-
-            // Orientation 1
-            $fits += floor($package['length'] / $item_single_length) *
-                     floor($package['width'] / $item_single_width) *
-                     floor($package['height'] / $item_single_height);
-
-            // Orientation 2
-            $fits += floor($package['length'] / $item_single_height) *
-                     floor($package['width'] / $item_single_width) *
-                     floor($package['height'] / $item_single_length);
-
-            // Orientation 3
-            $fits += floor($package['length'] / $item_single_width) *
-                     floor($package['width'] / $item_single_length) *
-                     floor($package['height'] / $item_single_height);
-
-            // Store results if it fits
-            if ($fits >= $total_quantity) {
-                $packages_fit[] = $package; // Store the whole package row
-            }
+        if (calculate_package_best_fit_helper($items, $package)) {
+            $packages_fit[] = $package;
         }
     }
 
-    // Return only the first fitting package or null
+    // Return the first fitting package or null
     return !empty($packages_fit) ? $packages_fit[0] : null;
 }
 
@@ -250,6 +293,9 @@ function check_cart_for_packages($cart_item_key = null, $new_quantity = null)
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         if ($cart_item_key && $new_quantity !== null) {
             if ($product_cart_quantity !== null) {
@@ -283,7 +329,6 @@ function check_cart_for_packages($cart_item_key = null, $new_quantity = null)
 // Function to validate package fit on cart item addition
 function validate_package_fit_on_add_to_cart($passed, $product_id, $quantity, $variation_id = '')
 {
-
     // Get current cart items
     $cart_items = get_cart_items();
 
@@ -314,6 +359,9 @@ function validate_package_fit_on_add_to_cart($passed, $product_id, $quantity, $v
     if (!$package_best_fit) {
         // No suitable package found, display an error message
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         if ($current_language === 'pt') {
             $message = __('O produto selecionado não pôde ser adicionado ao seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
@@ -332,7 +380,20 @@ function validate_package_fit_on_add_to_cart($passed, $product_id, $quantity, $v
 
 function calculate_and_store_package_best_fit($order_id)
 {
+
     $order = wc_get_order($order_id);
+
+    if (!$order) {
+        return;
+    }
+
+    // Check if the order is a child order
+    if ($order->get_parent_id() > 0) {
+        // Logs
+        error_log('Order ID: ' . $order_id . ' is a child order. Exiting function.');
+        return;
+    }
+
     $cart_items = [];
 
     foreach ($order->get_items() as $item_id => $item) {
@@ -343,15 +404,13 @@ function calculate_and_store_package_best_fit($order_id)
         // Retrieve product data, including variations
         $product = wc_get_product($variation_id ? $variation_id : $product_id);
 
-        for ($i = 0; $i < $quantity; $i++) {
-            $cart_items[] = [
-                'length' => (float) $product->get_length(),
-                'width' => (float) $product->get_width(),
-                'height' => (float) $product->get_height(),
-                'weight' => (float) $product->get_weight(),
-                'quantity' => $quantity,
-            ];
-        }
+        $cart_items[] = [
+            'length' => (float) $product->get_length(),
+            'width' => (float) $product->get_width(),
+            'height' => (float) $product->get_height(),
+            'weight' => (float) $product->get_weight(),
+            'quantity' => $quantity,
+        ];
     }
 
     // Logs
@@ -362,12 +421,10 @@ function calculate_and_store_package_best_fit($order_id)
     if ($package_best_fit) {
         // Store package best fit in order meta as a JSON object
         update_post_meta($order_id, 'order_package_best_fit', json_encode($package_best_fit));
-
     }
 
     // Logs
     error_log('Order ID: ' . $order_id . ' - Package Best Fit: ' . json_encode($package_best_fit));
-
 }
 
 

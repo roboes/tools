@@ -19,6 +19,9 @@ if (class_exists('WooCommerce') && WC()) {
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         // Get an instance of the WC_Product object
         $product = wc_get_product($variation_id ? $variation_id : $product_id);
@@ -75,6 +78,9 @@ if (class_exists('WooCommerce') && WC()) {
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         // Get an instance of the WC_Product object
         $product = $cart->cart_contents[$cart_item_key]['data'];

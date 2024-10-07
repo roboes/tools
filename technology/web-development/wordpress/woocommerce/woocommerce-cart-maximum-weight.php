@@ -20,6 +20,9 @@ if (class_exists('WooCommerce') && WC()) {
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         // Calculate the weight of the current cart items
         foreach (WC()->cart->get_cart() as $cart_item) {
@@ -67,6 +70,9 @@ if (class_exists('WooCommerce') && WC()) {
 
         // Get current language
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
 
         // Calculate the total weight of the cart before the quantity change
         $total_cart_weight = 0;

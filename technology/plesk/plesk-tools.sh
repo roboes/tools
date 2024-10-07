@@ -94,6 +94,7 @@ plesk bin extension --enable firewall
 
 
 # Brotli PHP Extension
+# https://support.plesk.com/hc/en-us/articles/12387812757143-Does-Plesk-support-BROTLI-compression-for-Apache-or-Nginx-web-server
 
 ## List installed PHP versions
 ls "/opt/plesk/php"
@@ -129,3 +130,7 @@ plesk bin php_handler --reread
 # Redirect from Web Server's Default Page
 # https://www.plesk.com/kb/support/how-to-change-the-web-servers-default-page-for-domains-with-no-hosting-and-in-disabled-status-in-plesk/
 # https://www.plesk.com/kb/support/how-to-configure-redirect-from-web-servers-default-page-or-existing-domains-to-the-plesk-login-page-on-port-8443-on-plesk-for-linux/
+
+
+# Enable "keep-alive" requests in Apache
+# https://support.plesk.com/hc/en-us/articles/12377795259287-TTFB-for-site-in-Plesk-is-too-high-What-can-be-done-to-improve-it

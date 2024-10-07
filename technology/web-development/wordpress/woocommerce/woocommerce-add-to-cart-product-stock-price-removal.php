@@ -16,21 +16,21 @@ if (class_exists('WooCommerce') && WC()) {
         // Only enqueue this script on WooCommerce product pages
         if (is_product()) {
             ?>
-			<script type="text/javascript">
-			jQuery(document).ready(function($) {
-				// When the variation is selected
-				$('form.variations_form').on('woocommerce_variation_has_changed', function() {
-					// Check if the variation description is empty
-					var variationDescription = $('.woocommerce-variation-description');
-					if (variationDescription.text().trim() === '') {
-						variationDescription.hide();  // Hide if empty
-					} else {
-						variationDescription.show();  // Show if it contains text
-					}
-				});
-			});
-			</script>
-			<?php
+            <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // When the variation is selected
+                $('form.variations_form').on('woocommerce_variation_has_changed', function() {
+                    // Check if the variation description is empty
+                    var variationDescription = $('.woocommerce-variation-description');
+                    if (variationDescription.text().trim() === '') {
+                        variationDescription.hide();  // Hide if empty
+                    } else {
+                        variationDescription.show();  // Show if it contains text
+                    }
+                });
+            });
+            </script>
+            <?php
         }
     }
 

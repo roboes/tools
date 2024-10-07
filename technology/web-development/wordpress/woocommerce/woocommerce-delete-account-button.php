@@ -27,13 +27,16 @@ if (class_exists('WooCommerce') && WC()) {
     function delete_account_button_adder()
     {
         $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+            $current_language = 'en';
+        }
         $button_text = esc_html(get_message('account_delete_button', $current_language));
         echo '<br>
-		<p>
-			<form method="post" action="' . esc_url(wp_nonce_url(get_permalink() . 'delete-account', 'delete_account_nonce')) . '">
-				<button type="submit" name="delete-account" class="elementor-widget-button">' . $button_text . '</button>
-			</form>
-		</p>';
+        <p>
+            <form method="post" action="' . esc_url(wp_nonce_url(get_permalink() . 'delete-account', 'delete_account_nonce')) . '">
+                <button type="submit" name="delete-account" class="elementor-widget-button">' . $button_text . '</button>
+            </form>
+        </p>';
     }
 
     // Handle account deletion
@@ -51,6 +54,9 @@ if (class_exists('WooCommerce') && WC()) {
                 exit;
             } else {
                 $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+                if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
+                    $current_language = 'en';
+                }
                 wc_add_notice(get_message('account_delete_error', $current_language), 'error');
                 wp_redirect(wc_get_account_endpoint_url('edit-account'));
                 exit;
