@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to cart" accept product warning terms
-// Last update: 2024-07-24
+// Last update: 2024-10-10
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -14,20 +14,19 @@ if (class_exists('WooCommerce') && WC()) {
             // Settings
             $messages = [
                 'product-warning-checkbox' => [
-                    'de' => 'Ich bestätige, dass ich hiermit Rohkaffee bestelle.',
-                    'en' => 'I confirm that I hereby order green coffee.',
+                    'de_DE' => 'Ich bestätige, dass ich hiermit Rohkaffee bestelle.',
+                    'de_DE_formal' => 'Ich bestätige, dass ich hiermit Rohkaffee bestelle.',
+                    'en_US' => 'I confirm that I hereby order green coffee.',
                 ],
                 'product-warning-error' => [
-                    'de' => 'Sie müssen mit den Bedingungen einverstanden sein, um fortzufahren.',
-                    'en' => 'You must agree with the terms to proceed.',
+                    'de_DE' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
+                    'de_DE_formal' => 'Sie müssen mit den Bedingungen einverstanden sein, um fortzufahren.',
+                    'en_US' => 'You must agree with the terms to proceed.',
                 ],
             ];
 
             // Get current language
-            $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-            if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
-                $current_language = 'en';
-            }
+            $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
 
             ?>
             <style>

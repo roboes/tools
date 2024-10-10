@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2024-10-02
+// Last update: 2024-10-10
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -25,18 +25,16 @@ if (class_exists('WooCommerce') && WC()) {
 
             $messages = [
                 'gift-card' => [
-                    'de' => 'Ich möchte einen Gutschein einlösen.',
-                    'en' => 'I would like to redeem a gift card.',
+                    'de_DE' => 'Ich möchte einen Gutschein einlösen.',
+                    'de_DE_formal' => 'Ich möchte einen Gutschein einlösen.',
+                    'en_US' => 'I would like to redeem a gift card.',
                 ],
             ];
 
             // Get current language
-            $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-            if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
-                $current_language = 'en';
-            }
+            $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
 
-            if ($current_language == 'de') {
+            if ($current_language == 'de_DE' || $current_language == 'de_DE_formal') {
                 $cf7_url = site_url('/de/gutschein-einlosen/');
             } else {
                 $cf7_url = site_url('/en/redeem-gift-card/');
@@ -178,11 +176,11 @@ if (class_exists('WooCommerce') && WC()) {
 
         // Get current language from form ID
         if ($form_id == 38604) {
-            $current_language = 'de';
+            $current_language = 'de_DE_formal';
         } elseif ($form_id == 38645) {
-            $current_language = 'en';
+            $current_language = 'en_US';
         } else {
-            $current_language = 'en';
+            $current_language = 'en_US';
         }
 
         if (!in_array($form_id, $form_ids)) {
@@ -265,10 +263,7 @@ if (class_exists('WooCommerce') && WC()) {
         $order = wc_get_order($order_id);
 
         // Get current language
-        $current_language = function_exists('pll_get_post_language') ? pll_get_post_language($order_id, 'slug') : 'en';
-        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
-            $current_language = 'en';
-        }
+        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
 
         // Initialize an empty array to hold product data
         $data_array = array();
@@ -386,7 +381,7 @@ if (class_exists('WooCommerce') && WC()) {
     }
 
 
-    function send_training_confirmation_email($product_id, $customer_email, $customer_name, $product_name, $product_variation_own_portafilter_machine, $product_variation_appointment_date, $product_variation_appointment_time, $product_quantity, $language = 'en')
+    function send_training_confirmation_email($product_id, $customer_email, $customer_name, $product_name, $product_variation_own_portafilter_machine, $product_variation_appointment_date, $product_variation_appointment_time, $product_quantity, $language = 'en_US')
     {
 
         // Retrieve custom meta for training location
@@ -398,16 +393,19 @@ if (class_exists('WooCommerce') && WC()) {
         // Settings
         $messages = [
             'subject' => [
-                'de' => 'Bestätigung Ihrer Buchung bei ' . get_option('blogname'),
-                'en' => 'Confirmation of your booking at ' . get_option('blogname'),
+                'de_DE' => 'Bestätigung deiner Buchung bei ' . get_option('blogname'),
+                'de_DE_formal' => 'Bestätigung Ihrer Buchung bei ' . get_option('blogname'),
+                'en_US' => 'Confirmation of your booking at ' . get_option('blogname'),
             ],
             'heading' => [
-                'de' => 'Vielen Dank für Ihre Buchung',
-                'en' => 'Thank you for your booking',
+                'de_DE' => 'Vielen Dank für deine Buchung',
+                'de_DE_formal' => 'Vielen Dank für Ihre Buchung',
+                'en_US' => 'Thank you for your booking',
             ],
             'body' => [
-                'de' => sprintf('Hallo %s,<br><br>Sie haben sich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für Ihre Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de_DE' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de_DE_formal' => sprintf('Hallo %s,<br><br>Sie haben sich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für Ihre Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'en_US' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
         $timezone = get_option('timezone_string');

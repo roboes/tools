@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products belonging to specific category per cart
-// Last update: 2024-07-24
+// Last update: 2024-10-10
 
 // Calculate whether an item being added to the cart passes the quantity criteria - triggered on add to cart action
 
@@ -18,10 +18,7 @@ if (class_exists('WooCommerce') && WC()) {
         $product_ids_exception = array(19412, 11213, 11211);
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
-            $current_language = 'en';
-        }
+        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
 
         // Get an instance of the WC_Product object
         $product = wc_get_product($variation_id ? $variation_id : $product_id);
@@ -51,7 +48,9 @@ if (class_exists('WooCommerce') && WC()) {
                 $passed = false;
 
                 // Custom notice
-                if ($current_language === 'de') {
+                if ($current_language === 'de_DE') {
+                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $max_quantity);
+                } elseif ($current_language === 'de_DE_formal') {
                     $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $max_quantity);
                 } else {
                     $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $max_quantity);
@@ -77,10 +76,7 @@ if (class_exists('WooCommerce') && WC()) {
         $product_ids_exception = array(19412, 11213, 11211);
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-        if (function_exists('pll_languages_list') && !in_array($current_language, pll_languages_list())) {
-            $current_language = 'en';
-        }
+        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
 
         // Get an instance of the WC_Product object
         $product = $cart->cart_contents[$cart_item_key]['data'];
@@ -111,7 +107,9 @@ if (class_exists('WooCommerce') && WC()) {
                 $cart->cart_contents[$cart_item_key]['quantity'] = $adjusted_quantity > 0 ? $adjusted_quantity : 1;
 
                 // Custom notice
-                if ($current_language === 'de') {
+                if ($current_language === 'de_DE') {
+                    $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $max_quantity);
+                } elseif ($current_language === 'de_DE_formal') {
                     $message = sprintf(__('Ein Warenkorb kann bis zu %d Artikel pro einzelnem Zubehörprodukt enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $max_quantity);
                 } else {
                     $message = sprintf(__('A cart can contain up to %d items per individual accessory product. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $max_quantity);

@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Run slugs update daily
-// Last update: 2024-07-31
+// Last update: 2024-10-10
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='function_slugs_update_daily', $args=array(), $wp_error=false);
@@ -74,8 +74,8 @@ function function_slugs_update_daily_run()
 
         if (!empty($products)) {
             foreach ($products as $product) {
-                // Determine the language of the product
-                $product_language = pll_get_post_language($product->ID); // Polylang function to get post language
+                // Determine the language slug of the product
+                $product_language = pll_get_post_language($product->ID, 'slug');
 
                 foreach ($attribute_custom_field_pairs as $pair) {
                     $attribute_id = $pair['attribute_id'];
