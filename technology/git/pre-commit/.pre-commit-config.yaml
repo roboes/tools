@@ -52,7 +52,7 @@ repos:
       - id: djjs
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.2.2 # Without leading 'v'
+    rev: 3.2.3 # Without leading 'v'
     hooks:
       - id: sqlfluff-fix
         args: ["--dialect=mysql", "--exclude-rules=ambiguous.column_count, layout.long_lines, references.keywords"]
@@ -92,7 +92,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+    rev: v3.18.0
     hooks:
       - id: pyupgrade
         args: ["--py312-plus"]
