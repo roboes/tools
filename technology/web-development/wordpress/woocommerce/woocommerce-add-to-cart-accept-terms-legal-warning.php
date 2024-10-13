@@ -26,7 +26,7 @@ if (class_exists('WooCommerce') && WC()) {
         ];
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
 
         // Get the custom field value
         $product_legal_details = get_post_meta($product->get_id(), 'product_legal_details', true);

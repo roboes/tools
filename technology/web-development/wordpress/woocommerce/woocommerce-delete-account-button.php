@@ -21,7 +21,7 @@ if (class_exists('WooCommerce') && WC()) {
         ];
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
 
         $button_text = esc_html($messages['account_delete_button'][$current_language]);
         echo '<br>
@@ -57,7 +57,7 @@ if (class_exists('WooCommerce') && WC()) {
                 exit;
             } else {
                 // Get current language
-                $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
+                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
 
                 wc_add_notice($messages['account_delete_error'][$current_language], 'error');
                 wp_redirect(wc_get_account_endpoint_url('edit-account'));

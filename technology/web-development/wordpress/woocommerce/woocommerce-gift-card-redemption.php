@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2024-10-10
+// Last update: 2024-10-13
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -32,7 +32,7 @@ if (class_exists('WooCommerce') && WC()) {
             ];
 
             // Get current language
-            $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
+            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
 
             if ($current_language == 'de_DE' || $current_language == 'de_DE_formal') {
                 $cf7_url = site_url('/de/gutschein-einlosen/');
@@ -263,7 +263,7 @@ if (class_exists('WooCommerce') && WC()) {
         $order = wc_get_order($order_id);
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('locale') : 'en_US';
+        $current_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($order_id, 'locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_get_post_language($order_id, 'locale') : 'en_US';
 
         // Initialize an empty array to hold product data
         $data_array = array();

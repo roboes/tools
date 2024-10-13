@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Order email notifications language set based on order using Polylang
-// Last update: 2024-10-10
+// Last update: 2024-10-13
 
 
 // To prevent issues where simultaneous purchases by different users in different languages might result in email notifications being sent in the wrong language, the code avoids using global variables. Instead, it handles locale switching in an isolated manner for each request.
@@ -89,7 +89,7 @@ if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
 
             if ($order && function_exists('pll_get_post_language')) {
                 // Get the language locale of the order
-                $order_language = pll_get_post_language($order->get_id(), 'locale');
+                $current_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($order->get_id(), 'locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_get_post_language($order->get_id(), 'locale') : 'en_US';
 
                 // Map the language slug to a locale code
                 return $order_language;

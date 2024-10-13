@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Shipping cost custom calculation based on the best-fitting shipping package for the cart items based on their dimensions, updates the cart item dimensions and total weight to reflect the selected package
-// Last update: 2024-10-10
+// Last update: 2024-10-13
 
 
 // add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
@@ -292,7 +292,7 @@ function check_cart_for_packages($cart_item_key = null, $new_quantity = null)
         $product_cart_quantity = $cart_item ? $cart_item['quantity'] : null;
 
         // Get current language
-        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
         if ($cart_item_key && $new_quantity !== null) {
             if ($product_cart_quantity !== null) {
@@ -355,7 +355,7 @@ function validate_package_fit_on_add_to_cart($passed, $product_id, $quantity, $v
 
     if (!$package_best_fit) {
         // No suitable package found, display an error message
-        $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
         if ($current_language === 'pt') {
             $message = __('O produto selecionado não pôde ser adicionado ao seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
