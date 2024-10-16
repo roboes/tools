@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2024-10-13
+// Last update: 2024-10-16
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -17,75 +17,79 @@ if (class_exists('WooCommerce') && WC()) {
 
     function woocommerce_add_gift_card_checkbox()
     {
-        global $product;
 
-        $product_ids = array(22204, 31437);
+        if (is_product()) {
 
-        if (in_array($product->get_id(), $product_ids)) {
+            global $product;
 
-            $messages = [
-                'gift-card' => [
-                    'de_DE' => 'Ich möchte einen Gutschein einlösen.',
-                    'de_DE_formal' => 'Ich möchte einen Gutschein einlösen.',
-                    'en_US' => 'I would like to redeem a gift card.',
-                ],
-            ];
+            $product_ids = array(22204, 31437);
 
-            // Get current language
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+            if (in_array($product->get_id(), $product_ids)) {
 
-            if ($current_language == 'de_DE' || $current_language == 'de_DE_formal') {
-                $cf7_url = site_url('/de/gutschein-einlosen/');
-            } else {
-                $cf7_url = site_url('/en/redeem-gift-card/');
-            }
+                $messages = [
+                    'gift-card' => [
+                        'de_DE' => 'Ich möchte einen Gutschein einlösen.',
+                        'de_DE_formal' => 'Ich möchte einen Gutschein einlösen.',
+                        'en_US' => 'I would like to redeem a gift card.',
+                    ],
+                ];
 
-            $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px;">
-                        <label>
-                            <input type="checkbox" name="checkbox_gift_card" id="checkbox_gift_card" />
-                            <span style="line-height: 20px;">' . $messages['gift-card'][$current_language] . '</span>
-                        </label>
-                    </div>';
+                // Get current language
+                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
 
-            $html .= '<script>
-                jQuery(document).ready(function($) {
-                    // Find the gift card checkbox
-                    const $giftCardCheckbox = $(".gift-card-checkbox");
-                    // Find the single variation element
-                    const $singleVariation = $(".woocommerce-variation.single_variation");
+                if ($current_language == 'de_DE' || $current_language == 'de_DE_formal') {
+                    $cf7_url = site_url('/de/gutschein-einlosen/');
+                } else {
+                    $cf7_url = site_url('/en/redeem-gift-card/');
+                }
 
-                    // Check if the single variation element exists
-                    if ($singleVariation.length) {
-                        // Place the gift card checkbox after the single variation element
-                        $singleVariation.after($giftCardCheckbox);
-                    }
+                $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px;">
+                            <label>
+                                <input type="checkbox" name="checkbox_gift_card" id="checkbox_gift_card" />
+                                <span style="line-height: 20px;">' . $messages['gift-card'][$current_language] . '</span>
+                            </label>
+                        </div>';
 
-                    // Handle form submit
-                    $("form.cart").on("submit", function(event) {
-                        // Check if checkbox_legal_warning is present and not checked
-                        if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
-                            event.preventDefault(); // Prevent default action
-                            return;
+                $html .= '<script>
+                    jQuery(document).ready(function($) {
+                        // Find the gift card checkbox
+                        const $giftCardCheckbox = $(".gift-card-checkbox");
+                        // Find the single variation element
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
+
+                        // Check if the single variation element exists
+                        if ($singleVariation.length) {
+                            // Place the gift card checkbox after the single variation element
+                            $singleVariation.after($giftCardCheckbox);
                         }
 
-                        if ($("#checkbox_gift_card").length && $("#checkbox_gift_card").prop("checked")) {
-                            event.preventDefault(); // Prevent default action
+                        // Handle form submit
+                        $("form.cart").on("submit", function(event) {
+                            // Check if checkbox_legal_warning is present and not checked
+                            if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
+                                event.preventDefault(); // Prevent default action
+                                return;
+                            }
 
-                            const productId = ' . $product->get_id() . ';
-                            const productVariationId = $("input[name=\'variation_id\']").val();
-                            const productQuantity = $("input[name=\'quantity\']").val();
+                            if ($("#checkbox_gift_card").length && $("#checkbox_gift_card").prop("checked")) {
+                                event.preventDefault(); // Prevent default action
 
-                            let cf7Url = "' . $cf7_url . '?product_id=" + productId;
-                            cf7Url += "&product_variation_id=" + encodeURIComponent(productVariationId);
-                            cf7Url += "&product_quantity=" + encodeURIComponent(productQuantity);
+                                const productId = ' . $product->get_id() . ';
+                                const productVariationId = $("input[name=\'variation_id\']").val();
+                                const productQuantity = $("input[name=\'quantity\']").val();
 
-                            window.location.href = cf7Url;
-                        }
+                                let cf7Url = "' . $cf7_url . '?product_id=" + productId;
+                                cf7Url += "&product_variation_id=" + encodeURIComponent(productVariationId);
+                                cf7Url += "&product_quantity=" + encodeURIComponent(productQuantity);
+
+                                window.location.href = cf7Url;
+                            }
+                        });
                     });
-                });
-            </script>';
+                </script>';
 
-            echo $html;
+                echo $html;
+            }
         }
     }
 

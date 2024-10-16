@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-10-13
+// Last update: 2024-10-16
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -13,7 +13,7 @@ if (class_exists('WooCommerce') && WC()) {
 
         if (function_exists('pll_current_language')) {
 
-            // Setup - Define translations for different languages (format: 'Original language attribute name' => 'Translated attribute name')
+            // Setup
             $translations = array(
                 'en' => array(
                     'Termin' => 'Appointment'
@@ -30,6 +30,6 @@ if (class_exists('WooCommerce') && WC()) {
 
             }, $priority = 10, $accepted_args = 3);
         }
-
     }
+
 }

@@ -102,4 +102,5 @@ if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
 
     // Initialize the handler class
     new WC_Email_Locale_Handler();
+
 }
