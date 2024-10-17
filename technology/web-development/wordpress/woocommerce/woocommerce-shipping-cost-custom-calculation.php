@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Shipping cost custom calculation based on the best-fitting shipping package for the cart items based on their dimensions, updates the cart item dimensions and total weight to reflect the selected package
-// Last update: 2024-10-16
+// Last update: 2024-10-17
 
 
 // add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
@@ -30,7 +30,7 @@
 if (class_exists('WooCommerce') && WC()) {
 
     // Add best package fit inside WooCommerce orders using a custom field
-    add_action($hook_name = 'woocommerce_order_status_processing', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);
+    add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);
     add_action($hook_name = 'woocommerce_admin_order_data_after_order_details', $callback = 'display_custom_order_meta', $priority = 10, $accepted_args = 1);
 
 

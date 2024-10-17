@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to cart" accept product warning terms
-// Last update: 2024-10-16
+// Last update: 2024-10-17
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -40,7 +40,8 @@ if (class_exists('WooCommerce') && WC()) {
             foreach ($product->get_attributes() as $attribute) {
                 // Check if any of the terms match the allowed values
                 foreach (wp_get_post_terms($product->get_id(), $attribute->get_name()) as $term) {
-                    if (in_array($term->slug, $attributes_allowed)) {
+                    // Ensure $term is an object before trying to access its properties
+                    if (is_object($term) && in_array($term->slug, $attributes_allowed)) {
                         $has_allowed_attribute = true;
                         break 2; // Break out of both loops
                     }
