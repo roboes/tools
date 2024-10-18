@@ -45,7 +45,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/rtts/djhtml
-    rev: 3.0.6 # Without leading 'v'
+    rev: 3.0.7 # Without leading 'v'
     hooks:
       # - id: djhtml
       - id: djcss
@@ -65,7 +65,7 @@ repos:
       # args: [--rules=@PSR12]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.7.0
     hooks:
       - id: ruff
         args: ["--fix", "--exit-non-zero-on-fix", "--ignore=B007,B023,C408,D103,E203,E266,E402,E501,F821,S105,S110,S310,SIM105"] # ruff-pre-commit does not recognize these rule selectors: B902,CM001,S410,SCS109,W503,W504
