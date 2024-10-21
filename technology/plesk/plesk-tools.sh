@@ -115,11 +115,11 @@ plesk bin php_handler --reread
 
 
 # Redis
-# wget http://download.redis.io/redis-stable.tar.gz
-# tar xvzf redis-stable.tar.gz
-# cd redis-stable
-# make
-# make install
+# https://support.plesk.com/hc/en-us/articles/12388573926423-How-to-install-Redis-on-Plesk-for-Linux
+# apt install plesk-php83-redis
+# apt install redis
+# systemctl start redis-server
+# systemctl enable redis-server
 
 # Test
 # redis-server --version
@@ -134,3 +134,14 @@ plesk bin php_handler --reread
 
 # Enable "keep-alive" requests in Apache
 # https://support.plesk.com/hc/en-us/articles/12377795259287-TTFB-for-site-in-Plesk-is-too-high-What-can-be-done-to-improve-it
+
+
+
+# Memcached PHP
+# https://support.plesk.com/hc/en-us/articles/12377651968023-How-to-install-uninstall-memcached-PHP-extension-for-Plesk-PHP-handlers
+# apt install memcached autoconf automake gcc libmemcached-dev libhashkit-dev pkg-config plesk-php*-dev zlib1g-dev make
+# /opt/plesk/php/8.3/bin/pecl install memcached
+# echo "extension=memcached.so" > /opt/plesk/php/8.3/etc/php.d/memcached.ini
+# plesk bin php_handler --reread
+# service plesk-php83-fpm restart
+# service apache2 restart

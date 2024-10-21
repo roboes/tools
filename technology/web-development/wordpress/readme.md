@@ -34,6 +34,22 @@ After removing all unused media sizes, regenerate thumbnails using [Force Regene
 - Delete tables left behind by old plugins (WP-Optimize > Database > Tables) - look for tables with the "not installed" and "inactive" tags.
 
 
+#### wp_options
+
+```sql
+SELECT *, LENGTH(option_value) AS size
+FROM wp_options
+WHERE autoload = 'yes'
+ORDER BY size DESC
+```
+
+```sql
+SELECT *, LENGTH(option_value) AS size
+FROM wp_options
+WHERE (option_name LIKE '%colibri%' OR option_value LIKE '%colibri%') ORDER BY size DESC
+```
+
+
 ### Tools
 
 [Media File Renamer](https://wordpress.org/plugins/media-file-renamer/):

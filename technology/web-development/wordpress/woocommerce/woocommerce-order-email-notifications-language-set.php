@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Order email notifications language set based on order using Polylang
-// Last update: 2024-10-16
+// Last update: 2024-10-18
 
 
 // To prevent issues where simultaneous purchases by different users in different languages might result in email notifications being sent in the wrong language, the code avoids using global variables. Instead, it handles locale switching in an isolated manner for each request.
