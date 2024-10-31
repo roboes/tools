@@ -1,7 +1,8 @@
 <?php
 
 // WordPress Admin - Store open status
-// Last update: 2024-07-19
+// Last update: 2024-10-13
+
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 
@@ -27,10 +28,7 @@ function store_hours_shortcode()
     $current_time = $current_datetime->format('H:i');
 
     // Get current language
-    $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-    if (!in_array($current_language, ['de', 'en'])) {
-        $current_language = 'en';
-    }
+    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
     // Determine opening hours for today
     if (!isset($opening_hours[$current_day_of_week])) {

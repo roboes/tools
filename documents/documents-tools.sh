@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2024-02-11
+# Last update: 2024-10-16
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -36,6 +36,9 @@ brew update && brew upgrade && brew cleanup
 # Install xpdf (pdfinfo)
 # brew install xpdf
 
+# Install diff-pdf
+# brew install diff-pdf
+
 
 # Settings
 cd "/mnt/c/Users/${USER}/Downloads"
@@ -65,8 +68,16 @@ qpdf "input.pdf" --password="1234" --decrypt "output.pdf"
 
 
 # Reduce PDF size and quality
-gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=/ebook -dNOPAUSE -dBATCH -dQUIET -sOutputFile="./output.pdf" "./input.pdf"
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -sOutputFile="./output.pdf" -dBATCH "./input.pdf"
+
+
+# Merge PDFs
+gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -sOUTPUTFILE="./output.pdf" -dBATCH "./file_A.pdf" "./file_B.pdf"
 
 
 # Extract embedded images from a PDF
 pdfimages -raw "./input.pdf" "./output"
+
+
+# Compare PDFs
+diff-pdf --output-diff=diff.pdf file_A.pdf file_B.pdf

@@ -1,5 +1,5 @@
 ## SharePoint - Get ID of a given file
-# Last update: 2024-07-30
+# Last update: 2024-09-30
 
 
 # Settings
@@ -16,7 +16,8 @@ Import-Module PnP.PowerShell
 
 try {
     # Connect to the SharePoint site
-    Connect-PnPOnline -Url $sharePointUrl -Interactive
+    Connect-PnPOnline -Url $sharePointUrl -UseWebLogin
+    # Connect-PnPOnline -Url $sharePointUrl -Interactive
 
     # Get all items in the library
     $items = Get-PnPListItem -List $libraryName -PageSize 500

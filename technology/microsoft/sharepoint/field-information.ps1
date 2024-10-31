@@ -1,11 +1,11 @@
 ## SharePoint - Output all distinct field fieldValues for a given field name
-# Last update: 2024-07-30
+# Last update: 2024-09-30
 
 
 # Settings
 $sharePointUrl = "https://ms.sharepoint.com/teams/1234/"
 $libraryName = "Documents"
-$fieldName = "_ComplianceTag"
+$fieldName = "Document_Class"
 
 
 # Install the PnP.PowerShell module
@@ -15,7 +15,8 @@ $fieldName = "_ComplianceTag"
 Import-Module PnP.PowerShell
 
 # Connect to the SharePoint site
-Connect-PnPOnline -Url $sharePointUrl  -Interactive
+Connect-PnPOnline -Url $sharePointUrl -UseWebLogin
+# Connect-PnPOnline -Url $sharePointUrl  -Interactive
 
 # Get the library
 $library = Get-PnPList -Identity $libraryName
@@ -53,6 +54,7 @@ $library = Get-PnPList -Identity $libraryName
 $fieldValue = Get-PnPField -List $library -Identity $fieldName
 
 ## Output field information
+$fieldValue.GetType()
 $fieldValue | Format-List
 
 

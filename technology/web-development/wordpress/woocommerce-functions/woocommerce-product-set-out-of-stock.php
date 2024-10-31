@@ -33,7 +33,7 @@ function function_product_set_out_of_stock_run()
 {
 
     // Settings
-    $product_cats = array( 'Specialty Coffees', 'Spezialitätenkaffees' );
+    $product_cats = array('Specialty Coffees', 'Spezialitätenkaffees');
 
 
     $products = new WP_Query($args = array('post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'name', 'terms' => $product_cats))));

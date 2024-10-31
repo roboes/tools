@@ -1,5 +1,5 @@
 ## SharePoint - Output all distinct label values for compliance tag
-# Last update: 2024-07-31
+# Last update: 2024-09-30
 
 
 # Function to get unique compliance tags
@@ -14,7 +14,8 @@ function Get-UniqueComplianceTags {
     Import-Module PnP.PowerShell
 
     # Connect to the SharePoint site
-    Connect-PnPOnline -Url $sharePointUrl -Interactive
+    Connect-PnPOnline -Url $sharePointUrl -UseWebLogin
+    # Connect-PnPOnline -Url $sharePointUrl -Interactive
 
     # Get the library
     $library = Get-PnPList -Identity $libraryName
@@ -39,7 +40,7 @@ function Get-UniqueComplianceTags {
 # Settings
 $sharePointUrl = "https://ms.sharepoint.com/teams/1234/"
 $libraryName = "Documents"
-$labelName = "_ComplianceTag"
+$labelName = "_ComplianceTag" # "ComplianceAssetId"
 
 # Get unique compliance tags
 $uniqueLabels = Get-UniqueComplianceTags -sharePointUrl $sharePointUrl -libraryName $libraryName -labelName $labelName

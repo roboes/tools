@@ -26,7 +26,7 @@ if (class_exists('WooCommerce') && WC()) {
                     const currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
                     const currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
                     const currencyDecimals = '<?php echo esc_html(wc_get_price_decimals()); ?>';
-					const locale = 'de-DE';
+                    const locale = 'de-DE';
 
                     // Number formatter for price
                     const formatter = new Intl.NumberFormat(locale, {
@@ -84,9 +84,9 @@ if (class_exists('WooCommerce') && WC()) {
                     const quantityInput = 'input[name="quantity"]';
                     const currencySymbol = '<?php echo esc_html(get_woocommerce_currency_symbol()); ?>';
                     const currencyPosition = '<?php echo esc_html(get_option("woocommerce_currency_pos")); ?>';
-					const currencyDecimals = '<?php echo esc_html(wc_get_price_decimals()); ?>';
+                    const currencyDecimals = '<?php echo esc_html(wc_get_price_decimals()); ?>';
                     const basePrice = <?php echo $product_price; ?>;
-					const locale = 'de-DE';
+                    const locale = 'de-DE';
 
                     // Number formatter for price
                     const formatter = new Intl.NumberFormat(locale, {

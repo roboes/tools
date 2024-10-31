@@ -1,5 +1,5 @@
 ## Plesk Tools
-# Last update: 2024-09-18
+# Last update: 2024-10-24
 
 
 # Switch to the root user account
@@ -94,6 +94,7 @@ plesk bin extension --enable firewall
 
 
 # Brotli PHP Extension
+# https://support.plesk.com/hc/en-us/articles/12387812757143-Does-Plesk-support-BROTLI-compression-for-Apache-or-Nginx-web-server
 
 ## List installed PHP versions
 ls "/opt/plesk/php"
@@ -114,11 +115,11 @@ plesk bin php_handler --reread
 
 
 # Redis
-# wget http://download.redis.io/redis-stable.tar.gz
-# tar xvzf redis-stable.tar.gz
-# cd redis-stable
-# make
-# make install
+# https://support.plesk.com/hc/en-us/articles/12388573926423-How-to-install-Redis-on-Plesk-for-Linux
+# apt install plesk-php83-redis
+# apt install redis
+# systemctl start redis-server
+# systemctl enable redis-server
 
 # Test
 # redis-server --version
@@ -129,3 +130,22 @@ plesk bin php_handler --reread
 # Redirect from Web Server's Default Page
 # https://www.plesk.com/kb/support/how-to-change-the-web-servers-default-page-for-domains-with-no-hosting-and-in-disabled-status-in-plesk/
 # https://www.plesk.com/kb/support/how-to-configure-redirect-from-web-servers-default-page-or-existing-domains-to-the-plesk-login-page-on-port-8443-on-plesk-for-linux/
+
+
+# Enable "keep-alive" requests in Apache
+# https://support.plesk.com/hc/en-us/articles/12377795259287-TTFB-for-site-in-Plesk-is-too-high-What-can-be-done-to-improve-it
+
+
+
+# Memcached PHP
+# https://support.plesk.com/hc/en-us/articles/12377651968023-How-to-install-uninstall-memcached-PHP-extension-for-Plesk-PHP-handlers
+# apt install memcached autoconf automake gcc libmemcached-dev libhashkit-dev pkg-config plesk-php*-dev zlib1g-dev make
+# /opt/plesk/php/8.3/bin/pecl install memcached
+# echo "extension=memcached.so" > /opt/plesk/php/8.3/etc/php.d/memcached.ini
+# plesk bin php_handler --reread
+# service plesk-php83-fpm restart
+# service apache2 restart
+
+
+# The Python support is missing from domain’s Hosting Settings page in Plesk
+# https://www.plesk.com/kb/support/the-python-support-is-missing-from-domains-hosting-settings-page-in-plesk/

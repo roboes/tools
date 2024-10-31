@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Test - Search for terms
-// Last update: 2024-07-15
+// Last update: 2024-10-13
 
 function search_pages_for_terms($search_terms, $languages = array())
 {
@@ -57,7 +57,7 @@ function search_pages_for_terms($search_terms, $languages = array())
             $page_id = $page->ID;
 
             // Get language of the page using Polylang function
-            $page_language = function_exists('pll_get_post_language') ? pll_get_post_language($page_id) : '';
+            $page_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($page_id, 'slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_get_post_language($page_id, 'slug') : '';
 
             // Check if page language is in allowed languages or if no languages are specified
             if (empty($allowed_languages) || in_array($page_language, $allowed_languages)) {
