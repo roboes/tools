@@ -1,7 +1,8 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-07-24
+// Last update: 2024-10-16
+
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -10,23 +11,25 @@ if (class_exists('WooCommerce') && WC()) {
     function translate_attributes_name()
     {
 
-        // Setup - Define translations for different languages (format: 'Original language attribute name' => 'Translated attribute name')
-        $translations = array(
-            'en' => array(
-                'Termin' => 'Appointment'
-            )
-        );
+        if (function_exists('pll_current_language')) {
 
-        // Hook into the gettext filter
-        add_filter($hook_name = 'gettext', $callback = function ($translated, $text, $domain) use ($translations) {
-            if (function_exists('pll_current_language')) {
-                $current_language = pll_current_language();
+            // Setup
+            $translations = array(
+                'en' => array(
+                    'Termin' => 'Appointment'
+                )
+            );
+
+            // Hook into the gettext filter
+            add_filter($hook_name = 'gettext', $callback = function ($translated, $text, $domain) use ($translations) {
+                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
                 if (isset($translations[$current_language][$text])) {
                     $translated = $translations[$current_language][$text];
                 }
-            }
-            return $translated;
-        }, $priority = 10, $accepted_args = 3);
+                return $translated;
+
+            }, $priority = 10, $accepted_args = 3);
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 ## SharePoint - Output all field names for a given item ID
-# Last update: 2024-09-04
+# Last update: 2024-09-30
 
 
 # Settings
@@ -15,7 +15,8 @@ $itemId = 1234
 Import-Module PnP.PowerShell
 
 # Connect to the SharePoint site
-Connect-PnPOnline -Url $sharePointUrl  -Interactive
+Connect-PnPOnline -Url $sharePointUrl -UseWebLogin
+# Connect-PnPOnline -Url $sharePointUrl  -Interactive
 
 # Get the specific item by ID
 $item = Get-PnPListItem -List $libraryName -Id $itemId

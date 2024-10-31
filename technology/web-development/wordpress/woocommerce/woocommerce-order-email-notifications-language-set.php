@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Order email notifications language set based on order using Polylang
-// Last update: 2024-09-18
+// Last update: 2024-10-18
 
 
 // To prevent issues where simultaneous purchases by different users in different languages might result in email notifications being sent in the wrong language, the code avoids using global variables. Instead, it handles locale switching in an isolated manner for each request.
@@ -76,19 +76,6 @@ if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
         }
 
 
-        private function map_language_to_locale($language_slug)
-        {
-            // Define a mapping of language slugs to locale codes
-            $mapping = array(
-                'de' => 'de_DE',
-                'en' => 'en_US',
-                'pt' => 'pt_BR',
-            );
-
-            return isset($mapping[$language_slug]) ? $mapping[$language_slug] : false;
-        }
-
-
         private function get_locale_from_object($object)
         {
             $order = null;
@@ -101,11 +88,11 @@ if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
             }
 
             if ($order && function_exists('pll_get_post_language')) {
-                // Get the language slug of the order
-                $order_language = pll_get_post_language($order->get_id(), 'slug');
+                // Get the language locale of the order
+                $order_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($order->get_id(), 'locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_get_post_language($order->get_id(), 'locale') : 'en_US';
 
                 // Map the language slug to a locale code
-                return $this->map_language_to_locale($order_language);
+                return $order_language;
             }
 
             return null;
@@ -115,4 +102,5 @@ if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
 
     // Initialize the handler class
     new WC_Email_Locale_Handler();
+
 }

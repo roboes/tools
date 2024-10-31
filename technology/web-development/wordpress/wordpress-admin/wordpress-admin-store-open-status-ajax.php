@@ -1,10 +1,16 @@
 <?php
 
 // WordPress Admin - Store open status (using AJAX to load dynamic content, ensuring content not to be cached)
-// Last update: 2024-07-19
+// Last update: 2024-10-16
 
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
+add_action($hook_name = 'wp_enqueue_scripts', $callback = 'enqueue_custom_scripts', $priority = 10, $accepted_args = 1);
+
+// Handle the AJAX request
+add_action($hook_name = 'wp_ajax_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
+add_action($hook_name = 'wp_ajax_nopriv_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
+
 
 function store_hours_shortcode()
 {
@@ -43,11 +49,6 @@ function enqueue_custom_scripts()
 {
     wp_enqueue_script('jquery');
 }
-add_action($hook_name = 'wp_enqueue_scripts', $callback = 'enqueue_custom_scripts', $priority = 10, $accepted_args = 1);
-
-// Handle the AJAX request
-add_action($hook_name = 'wp_ajax_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
-add_action($hook_name = 'wp_ajax_nopriv_get_store_hours', $callback = 'get_store_hours', $priority = 10, $accepted_args = 1);
 
 function get_store_hours()
 {
@@ -73,10 +74,7 @@ function get_store_hours()
     $current_time = $current_datetime->format('H:i');
 
     // Get current language
-    $current_language = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
-    if (!in_array($current_language, ['de', 'en'])) {
-        $current_language = 'en';
-    }
+    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
     // Determine opening hours for today
     if (!isset($opening_hours[$current_day_of_week])) {

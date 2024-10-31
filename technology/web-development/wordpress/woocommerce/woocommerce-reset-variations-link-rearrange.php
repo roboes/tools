@@ -16,27 +16,27 @@ if (class_exists('WooCommerce') && WC()) {
 
             if ($product && $product->is_type('variable')) {
                 ?>
-				<script type="text/javascript">
-					jQuery(document).ready(function($) {
-						// Cache the jQuery selectors
-						const $checkbox = $(".product-terms-checkbox");
-						const $singleVariation = $(".woocommerce-variation.single_variation");
-						const $resetLink = $(".reset_variations");
-						const $variationsTableBody = $("table.variations tbody");
+                <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+                        // Cache the jQuery selectors
+                        const $checkbox = $(".product-terms-checkbox");
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
+                        const $resetLink = $(".reset_variations");
+                        const $variationsTableBody = $("table.variations tbody");
 
-						// Move the checkbox after the single_variation element if both exist
-						if ($checkbox.length && $singleVariation.length) {
-							$singleVariation.after($checkbox);
-						}
+                        // Move the checkbox after the single_variation element if both exist
+                        if ($checkbox.length && $singleVariation.length) {
+                            $singleVariation.after($checkbox);
+                        }
 
-						// Move the "Leeren" link below the tbody if both exist
-						if ($resetLink.length && $variationsTableBody.length) {
-							$resetLink.css('display', 'block'); // Ensure the link is block-level for proper placement
-							$variationsTableBody.after($resetLink);
-						}
-					});
-				</script>
-				<?php
+                        // Move the "Leeren" link below the tbody if both exist
+                        if ($resetLink.length && $variationsTableBody.length) {
+                            $resetLink.css('display', 'block'); // Ensure the link is block-level for proper placement
+                            $variationsTableBody.after($resetLink);
+                        }
+                    });
+                </script>
+                <?php
             }
         }
     }

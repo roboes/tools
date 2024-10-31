@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-09-10
+# Last update: 2024-10-28
 
 
 # Rename: ExifTool
@@ -243,6 +243,12 @@ else
 fi
 
 
+# Reduce image file dimensions (.svg)
+for file in ./*.svg; do
+    rsvg-convert --width 22 --height 13 --format svg --output "${file%.svg}_updated.svg" "$file"
+done
+
+
 # Replace all colors except background in .png image with white
 magick convert "./input.png" -fill white -colorize 100 "./output.png"
 
@@ -254,6 +260,11 @@ magick mogrify -monitor -fuzz 10% -fill "rgba(255,255,255,0.5)" -opaque "#ffffff
 
 # Crop .png keeping only the shapes
 magick mogrify -monitor -trim +repage "./*.png"
+
+# Crop .svg keeping only the shapes
+for file in ./*.svg; do
+    inkscape "$file" --export-plain-svg="${file%.svg}_cropped.svg" --export-area-drawing
+done
 
 # Enhance image
 magick -monitor "./input.png" -auto-gamma "./output.png"

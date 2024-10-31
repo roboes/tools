@@ -1,5 +1,5 @@
 ## SharePoint - Update field values for all files in a given SharePoint library using PowerShell Module (Set-PnPListItem)
-# Last update: 2024-09-26
+# Last update: 2024-09-30
 
 function Update-SharePointLibraryFields {
     param (
@@ -89,6 +89,11 @@ function Update-SharePointLibraryFields {
             $currentValue = $item.FieldValues[$fieldName]
             $newValue = $fieldUpdates[$fieldName]
 
+            # Debugging output for types
+            # Write-Host "Field: $fieldName" -ForegroundColor Magenta
+            # Write-Host "Current Value Type: $($currentValue.GetType().FullName)" -ForegroundColor Magenta
+            # Write-Host "New Value Type: $($newValue.GetType().FullName)" -ForegroundColor Magenta
+
             if ($fieldName -eq "Document_Class") {
                 if ($currentValue.Label -ne $newValue.Label) {
                     $needsUpdate[$fieldName] = $newValue.Document_Class
@@ -108,7 +113,7 @@ function Update-SharePointLibraryFields {
                 $currentValue = if ($currentValue -eq $null) { "" } else { $currentValue }
 
                 if ($currentValue.ToString() -ne $newValue.ToString()) {
-                    if ($fieldName -eq "_ComplianceTag" -and $newValue -eq "") {
+                    if ($fieldName -eq "_ComplianceTag" -and ($newValue -eq "" -or $newValue -eq "Retain - indefinite")) {
                         $needsClearLabel = $true
                     } else {
                         $needsUpdate[$fieldName] = $newValue

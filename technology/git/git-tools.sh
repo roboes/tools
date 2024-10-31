@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-08-22
+# Last update: 2024-10-28
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -96,6 +96,10 @@ if find . -type f -name "*.py" | grep -q "/."; then
 	pipreqs --encoding utf-8 --force "./"
 fi
 
+## Update requirements.txt
+# pip-compile --no-header --output-file=requirements-updated.txt requirements.txt
+# sed -i '/^ *#/d' requirements-updated.txt
+
 
 # Set working directory
 # cd ..
@@ -103,6 +107,7 @@ fi
 
 # Delete files
 rm "./.php-cs-fixer.cache"
+find . -path './venv' -prune -o -name "__pycache__" -type d -exec rm -r {} +
 
 
 ## Git push
