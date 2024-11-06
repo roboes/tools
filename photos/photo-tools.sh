@@ -205,7 +205,14 @@ ffmpeg -i "./Movie.avi" -dump
 ## Vectors
 
 # Convert .eps to .svg
-for file in *.eps; do dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg"; done
+for file in *.eps; do
+    dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg";
+done
+
+# Convert .pdf to .svg
+for file in *.pdf; do
+	dbus-launch inkscape "$file" --export-filename="${file%.pdf}.svg";
+done
 
 
 ## ImageMagick

@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-10-16
+// Last update: 2024-11-04
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -16,7 +16,10 @@ if (class_exists('WooCommerce') && WC()) {
             // Setup
             $translations = array(
                 'en' => array(
-                    'Termin' => 'Appointment'
+                    'Termin' => 'Appointment',
+                    'Auswahl 1' => 'Selection 1',
+                    'Auswahl 2' => 'Selection 2',
+                    'Auswahl 3' => 'Selection 3',
                 )
             );
 
