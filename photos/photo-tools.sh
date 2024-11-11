@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-10-28
+# Last update: 2024-11-09
 
 
 # Rename: ExifTool
@@ -214,6 +214,11 @@ for file in *.pdf; do
 	dbus-launch inkscape "$file" --export-filename="${file%.pdf}.svg";
 done
 
+# Convert .svg to .png
+for file in *.svg; do
+	dbus-launch inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
+done
+
 
 ## ImageMagick
 
@@ -248,6 +253,21 @@ if [ "$width" -gt "$height" ]; then
 else
     magick mogrify -monitor -resize x440 -colors 256 "$image"
 fi
+
+
+## Resize the image to fit within the square dimensions and pad the remaining space
+image="image-1.png"
+
+width=$(magick identify -format "%w" "$image")
+height=$(magick identify -format "%h" "$image")
+
+if [ "$width" -gt "$height" ]; then
+    size="$width"
+else
+    size="$height"
+fi
+
+magick convert "$image" -resize ${size}x${size} -gravity center -background white -extent ${size}x${size} "$image"
 
 
 # Reduce image file dimensions (.svg)
