@@ -10,14 +10,14 @@ add_filter($hook_name = 'big_image_size_threshold', $callback = '__return_false'
 
 // if (class_exists('WooCommerce') && WC()) {
 
-    // // Use original images for WooCommerce product display
-    // add_filter($hook_name = 'woocommerce_get_image_size_single', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
-    // add_filter($hook_name = 'woocommerce_get_image_size_thumbnail', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
-    // add_filter($hook_name = 'woocommerce_get_image_size_gallery_thumbnail', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
+// // Use original images for WooCommerce product display
+// add_filter($hook_name = 'woocommerce_get_image_size_single', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
+// add_filter($hook_name = 'woocommerce_get_image_size_thumbnail', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
+// add_filter($hook_name = 'woocommerce_get_image_size_gallery_thumbnail', $callback = 'use_original_image_size', $priority = 10, $accepted_args = 1);
 
-    // function use_original_image_size($size)
-    // {
-        // return ['width'  => null, 'height' => null, 'crop'   => 0];
-    // }
+// function use_original_image_size($size)
+// {
+// return ['width'  => null, 'height' => null, 'crop'   => 0];
+// }
 
 // }

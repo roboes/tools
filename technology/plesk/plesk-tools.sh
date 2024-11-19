@@ -16,7 +16,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt a
 # https://support.plesk.com/hc/en-us/articles/12377591587863-How-to-set-up-SSH-keys-for-Plesk-server
 
 ## Create the RSA Key Pair
-# ssh-keygen -t rsa -b 2048
+# ssh-keygen -t rsa -b 2048 -f /root/.ssh/id_rsa
 
 ## Create authorized_keys file if it does not exist
 # touch /root/.ssh/authorized_keys
@@ -161,3 +161,7 @@ pm.max_requests = 100
 # How to troubleshoot slow performance of MySQL/MariaDB on a Plesk server?
 # https://www.plesk.com/kb/support/how-to-troubleshoot-slow-performance-of-mysql-mariadb-on-a-plesk-server/
 # https://gist.github.com/fevangelou/fb72f36bbe333e059b66
+
+
+# How to enable the MySQL/MariaDB slow query log and analyze it on a Plesk for Linux server
+# https://www.plesk.com/kb/support/how-to-enable-the-mysql-mariadb-slow-query-log-and-analyze-it-on-a-plesk-for-linux-server/
