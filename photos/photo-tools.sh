@@ -238,6 +238,8 @@ magick mogrify -monitor -density 300 -format png "./*.pdf"
 magick mogrify -monitor -resize 50% "./*.jpg"
 magick mogrify -monitor -quality 80 -resize 800x "./*.jpg" # Web
 magick mogrify -monitor -quality 80 -resize 1920x "./*.jpg" # Web
+magick mogrify -monitor -format jpg -quality 80 -resize 800x "./*.HEIC" # Web
+magick mogrify -monitor -format jpg -quality 80 -resize 1920x "./*.HEIC" # Web
 
 # Reduce image file size (.png)
 magick mogrify -monitor -resize 800x -colors 256 "./*.png" # Web

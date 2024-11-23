@@ -39,14 +39,17 @@ if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
 def download_world_boundaries_shapefile(*, shapefile_path):
     """Download Eurostat's Geographical Information and Maps (GISCO) Shapefile, Scale 1:1 Million (Source: https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/countries)."""
     # Download
-    with ZipFile(
-        file=BytesIO(initial_bytes=requests.get(url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip', headers=None, timeout=5, verify=True).content),
-        mode='r',
-        compression=ZIP_DEFLATED,
-    ) as outer_zip_file, outer_zip_file.open(
-        name='CNTR_RG_01M_2020_4326.shp.zip',
-        mode='r',
-    ) as inner_zip_file:
+    with (
+        ZipFile(
+            file=BytesIO(initial_bytes=requests.get(url='https://gisco-services.ec.europa.eu/distribution/v2/countries/download/ref-countries-2020-01m.shp.zip', headers=None, timeout=5, verify=True).content),
+            mode='r',
+            compression=ZIP_DEFLATED,
+        ) as outer_zip_file,
+        outer_zip_file.open(
+            name='CNTR_RG_01M_2020_4326.shp.zip',
+            mode='r',
+        ) as inner_zip_file,
+    ):
         inner_zip_data = inner_zip_file.read()
         zip_file = ZipFile(
             BytesIO(initial_bytes=inner_zip_data),
