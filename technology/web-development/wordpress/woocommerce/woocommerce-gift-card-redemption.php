@@ -40,7 +40,7 @@ if (class_exists('WooCommerce') && WC()) {
                 if ($current_language == 'de_DE' || $current_language == 'de_DE_formal') {
                     $cf7_url = site_url('/de/gutschein-einlosen/');
                 } else {
-                    $cf7_url = site_url('/en/redeem-gift-card/');
+                    $cf7_url = site_url('/en/gift-card-redemption/');
                 }
 
                 $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px;">

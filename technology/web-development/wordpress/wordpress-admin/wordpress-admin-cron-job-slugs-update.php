@@ -1,14 +1,14 @@
 <?php
 
-// WordPress Admin - Run slugs update daily
-// Last update: 2024-10-13
+// WordPress Admin - Run slugs update daily (cron job)
+// Last update: 2024-11-03
 
 // Unschedule all events attached to a given hook
-// wp_clear_scheduled_hook($hook='function_slugs_update_daily', $args=array(), $wp_error=false);
+// wp_clear_scheduled_hook($hook='cron_job_schedule_slugs_update', $args=array(), $wp_error=false);
 
 
 // Run action once (run on WP Console)
-// do_action($hook_name='function_slugs_update_daily');
+// do_action($hook_name='cron_job_schedule_slugs_update');
 
 
 // Add custom cron schedules
@@ -25,26 +25,25 @@ function custom_cron_schedules($schedules)
 
 
 // Schedule cron job if not already scheduled
-add_action($hook_name = 'wp_loaded', $callback = 'schedule_custom_cron_job_function_slugs_update_daily', $priority = 10, $accepted_args = 1);
+add_action($hook_name = 'wp_loaded', $callback = function () {
 
-function schedule_custom_cron_job_function_slugs_update_daily()
-{
-    if (! wp_next_scheduled($hook = 'function_slugs_update_daily', $args = array())) {
+    if (!wp_next_scheduled($hook = 'cron_job_schedule_slugs_update', $args = array())) {
 
         // Settings
-        $start_datetime = '2024-06-22 00:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
+        $start_datetime = '2024-11-04 01:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
 
         $start_datetime = new DateTime($start_datetime);
         $start_timestamp = $start_datetime->getTimestamp();
 
-        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'daily', $hook = 'function_slugs_update_daily', $args = array(), $wp_error = false);
+        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'daily', $hook = 'cron_job_schedule_slugs_update', $args = array(), $wp_error = false);
     }
-}
+
+}, $priority = 10, $accepted_args = 1);
 
 
-add_action($hook_name = 'function_slugs_update_daily', $callback = 'function_slugs_update_daily_run', $priority = 10, $accepted_args = 1);
+add_action($hook_name = 'cron_job_schedule_slugs_update', $callback = 'cron_job_run_slugs_update', $priority = 10, $accepted_args = 1);
 
-function function_slugs_update_daily_run()
+function cron_job_run_slugs_update()
 {
 
     // Custom Field 'product_shipping_class'

@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-10-16
+// Last update: 2024-11-22
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -16,7 +16,16 @@ if (class_exists('WooCommerce') && WC()) {
             // Setup
             $translations = array(
                 'en' => array(
-                    'Termin' => 'Appointment'
+                    'Termin' => 'Appointment',
+                    'Auswahl 1' => 'Selection 1',
+                    'Auswahl 2' => 'Selection 2',
+                    'Auswahl 3' => 'Selection 3',
+                    'Auswahl 1 (250 g)' => 'Selection 1 (250 g)',
+                    'Auswahl 2 (250 g)' => 'Selection 2 (250 g)',
+                    'Auswahl 3 (500 g)' => 'Selection 3 (500 g)',
+                    'Zubehör' => 'Accesories',
+                    '2x Cappuccino Tasse' => '2x Cappuccino Cup',
+                    '2x Espresso Tasse' => '2x Espresso Cup',
                 )
             );
 

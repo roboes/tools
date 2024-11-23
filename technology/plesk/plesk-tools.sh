@@ -1,10 +1,12 @@
 ## Plesk Tools
-# Last update: 2024-10-24
+# Last update: 2024-11-09
 
 
 # Switch to the root user account
 # su root
 
+# Update packages
+sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt autoremove -y && sudo apt clean
 
 # Settings
 # export PATH=$PATH:/usr/sbin # PATH environment variable (plesk executable /usr/sbin/plesk)
@@ -14,7 +16,7 @@
 # https://support.plesk.com/hc/en-us/articles/12377591587863-How-to-set-up-SSH-keys-for-Plesk-server
 
 ## Create the RSA Key Pair
-# ssh-keygen -t rsa -b 2048
+# ssh-keygen -t rsa -b 2048 -f /root/.ssh/id_rsa
 
 ## Create authorized_keys file if it does not exist
 # touch /root/.ssh/authorized_keys
@@ -149,3 +151,17 @@ plesk bin php_handler --reread
 
 # The Python support is missing from domain’s Hosting Settings page in Plesk
 # https://www.plesk.com/kb/support/the-python-support-is-missing-from-domains-hosting-settings-page-in-plesk/
+
+
+# How to apply PHP-FPM pool settings for all domains in Plesk?
+# https://www.plesk.com/kb/support/how-to-apply-php-fpm-pool-settings-for-all-domains-in-plesk/
+pm.max_children = 50
+pm.max_requests = 100
+
+# How to troubleshoot slow performance of MySQL/MariaDB on a Plesk server?
+# https://www.plesk.com/kb/support/how-to-troubleshoot-slow-performance-of-mysql-mariadb-on-a-plesk-server/
+# https://gist.github.com/fevangelou/fb72f36bbe333e059b66
+
+
+# How to enable the MySQL/MariaDB slow query log and analyze it on a Plesk for Linux server
+# https://www.plesk.com/kb/support/how-to-enable-the-mysql-mariadb-slow-query-log-and-analyze-it-on-a-plesk-for-linux-server/

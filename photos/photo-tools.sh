@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-10-28
+# Last update: 2024-11-09
 
 
 # Rename: ExifTool
@@ -205,7 +205,19 @@ ffmpeg -i "./Movie.avi" -dump
 ## Vectors
 
 # Convert .eps to .svg
-for file in *.eps; do dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg"; done
+for file in *.eps; do
+    dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg";
+done
+
+# Convert .pdf to .svg
+for file in *.pdf; do
+	dbus-launch inkscape "$file" --export-filename="${file%.pdf}.svg";
+done
+
+# Convert .svg to .png
+for file in *.svg; do
+	dbus-launch inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
+done
 
 
 ## ImageMagick
@@ -226,6 +238,8 @@ magick mogrify -monitor -density 300 -format png "./*.pdf"
 magick mogrify -monitor -resize 50% "./*.jpg"
 magick mogrify -monitor -quality 80 -resize 800x "./*.jpg" # Web
 magick mogrify -monitor -quality 80 -resize 1920x "./*.jpg" # Web
+magick mogrify -monitor -format jpg -quality 80 -resize 800x "./*.HEIC" # Web
+magick mogrify -monitor -format jpg -quality 80 -resize 1920x "./*.HEIC" # Web
 
 # Reduce image file size (.png)
 magick mogrify -monitor -resize 800x -colors 256 "./*.png" # Web
@@ -241,6 +255,21 @@ if [ "$width" -gt "$height" ]; then
 else
     magick mogrify -monitor -resize x440 -colors 256 "$image"
 fi
+
+
+## Resize the image to fit within the square dimensions and pad the remaining space
+image="image-1.png"
+
+width=$(magick identify -format "%w" "$image")
+height=$(magick identify -format "%h" "$image")
+
+if [ "$width" -gt "$height" ]; then
+    size="$width"
+else
+    size="$height"
+fi
+
+magick convert "$image" -resize ${size}x${size} -gravity center -background white -extent ${size}x${size} "$image"
 
 
 # Reduce image file dimensions (.svg)
