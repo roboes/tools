@@ -4,6 +4,10 @@
 // Last update: 2024-11-23
 
 
+// Unschedule all events attached to a given hook
+// wp_clear_scheduled_hook($hook='wp_fastest_cache_preload_cron_job', $args=array(), $wp_error=false);
+
+
 // Run action once (run on WP Console)
 // do_action($hook_name='wp_fastest_cache_preload_cron_job');
 

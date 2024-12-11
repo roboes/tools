@@ -32,6 +32,13 @@ sudo apt-get install python3 python3-pip
 sudo apt-get install php php-mysql php-mbstring php-intl
 sudo apt-get install fail2ban
 sudo apt-get install libauthen-oath-perl
+sudo apt-get install geoip-bin libapache2-mod-geoip
+sudo apt-get install geoip-database
+sudo apt-get install geoip-database-extra
+sudo apt-get install python-is-python3
+sudo apt-get install sqlite3
+
+
 
 
 # Virtualmin - Installation
@@ -44,7 +51,7 @@ sudo apt install webmin --install-recommends -y
 
 
 # Virtualmin > Manage Web Apps
-# Install phpMyAdmin, RoundCube,
+# Install phpMyAdmin, RoundCube
 
 # Enable Two-Factor Authentication (2FA)
 # Webmin > Webmin > Webmin Configuration > Two-Factor Authentication > Authentication provider: "Google Authenticator"
@@ -52,5 +59,22 @@ sudo apt install webmin --install-recommends -y
 
 # Disable POP3
 # Webmin > Servers > Dovecot IMAP/POP3 Server > Networking and Protocols > Uncheck "POP3"
+
+# Fail2Ban
+# Fail2Ban Intrusion Detector > Filter Action Jails > Jail name > sshd
+# Matches before applying action: 3
+# Max delay between matches: 60
+# Time to ban IP for: 86400
+
+
+# GeoIP
+# Webmin > Servers > Apache Webserver > Global configuration > Configure Apache Modules > Enable "geoip"
+
+
+
+
+
+
+
 
 ## Backup

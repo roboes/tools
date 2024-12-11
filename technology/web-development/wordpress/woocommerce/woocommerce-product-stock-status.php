@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Product stock status
-// Last update: 2024-10-18
+// Last update: 2024-11-26
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
 
@@ -29,7 +29,7 @@ if (class_exists('WooCommerce') && WC()) {
             $available_variations = $product->get_children();
             foreach ($available_variations as $variation_id) {
                 $variation_obj = wc_get_product($variation_id);
-                if ($variation_obj->is_in_stock()) {
+                if ($variation_obj && $variation_obj->is_in_stock()) {
                     $all_out_of_stock = false;
                     break; // No need to check further if any variation is in stock
                 }
