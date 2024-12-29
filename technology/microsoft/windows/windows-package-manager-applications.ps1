@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2024-12-22
+# Last update: 2024-12-29
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -24,7 +24,7 @@ winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
 winget install --exact --id=IDRIX.VeraCrypt
 winget install --exact --id=XPDP273C0XHQH2 # Adobe Acrobat
-winget install --exact --id=SumatraPDF.SumatraPDF
+winget install --exact --id=KDE.Okular
 winget install --exact --id=PDFsam.PDFsam
 winget install --exact --id=DupeGuru.DupeGuru
 winget install --exact --id=XPDM27W10192Q0 # GIMP

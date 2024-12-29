@@ -1,4 +1,4 @@
-# Recommended iOS Settings
+# iOS Recommended Settings
 
 <details>
   <summary>:warning: (Optional) Reset all settings (holding iCloud and e-mail accounts)</summary>
@@ -118,10 +118,11 @@ Settings > Safari > Advanced > Advanced Tracking and Fingerprinting Protection >
 
 <br>
 
-Settings > Photos >
+Settings > Apps > Photos >
 
 - Disable "iCloud Photos" and "Shared Albums".
 - Transfer to Mac or PC > Keep Originals.
+- Disable "Enhanced Visual Search".
 
 <br>
 

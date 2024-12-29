@@ -1,5 +1,5 @@
 ## Rename paths
-# Last update: 2023-11-25
+# Last update: 2024-12-29
 
 
 """About: Script to rename files and folders."""
@@ -114,33 +114,22 @@ def rename_paths(*, pattern, repl, path_rename=False):
 # Rename paths
 ##############
 
-# Remove leading, trailing and double spaces from files and folders
+# Remove leading, trailing, non-breaking and double spaces from files and folders
 rename_paths(pattern=r'^\s+|\s+$', repl=r'', path_rename=False)
 rename_paths(pattern=r'  ', repl=r' ', path_rename=False)
 
 
-# Rename files and folders from 'YYYY.MM.DD' to 'YYYY-MM-DD'
-rename_paths(
-    pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})',
-    repl=r'\1-\2-\3',
-    path_rename=False,
-)
+# Rename files and folders from "YYYY.MM.DD" to "YYYY-MM-DD"
+rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})', repl=r'\1-\2-\3', path_rename=False)
 
 
-# Rename files and folders from 'YYYY.MM' to 'YYYY-MM'
+# Rename files and folders from "YYYY.MM" to "YYYY-MM"
 rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', path_rename=False)
 
 
-# Rename files and folders from 'DD.MM.YYYY' to 'YYYY-MM-DD'
-rename_paths(
-    pattern=r'([^\.])([0-9]{2})\.([0-9]{2})\.([0-9]{4})',
-    repl=r'\1\4-\3-\2',
-    path_rename=False,
-)
+# Rename files and folders from "DD.MM.YYYY" to "YYYY-MM-DD"
+rename_paths(pattern=r'([^\.])([0-9]{2})\.([0-9]{2})\.([0-9]{4})', repl=r'\1\4-\3-\2', path_rename=False)
 
-# Rename files and folders from 'text YYYYMMDD' to 'YYYY-MM-DD'
-rename_paths(
-    pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})',
-    repl=r'\1-\2-\3',
-    path_rename=True,
-)
+
+# Rename files and folders from "text YYYYMMDD" to "YYYY-MM-DD"
+rename_paths(pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', path_rename=True)
