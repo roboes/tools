@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products belonging to specific category per cart
-// Last update: 2024-10-10
+// Last update: 2024-12-18
 
 // Calculate whether an item being added to the cart passes the quantity criteria - triggered on add to cart action
 
@@ -15,7 +15,7 @@ if (class_exists('WooCommerce') && WC()) {
         // Setup
         $product_cats = array('Accessories', 'Zubehör');
         $max_quantity = 3;
-        $product_ids_exception = array(19412, 11213, 11211);
+        $product_ids_exception = array(19412, 31399, 11213, 31435, 11211, 31436, 39398, 39400);
 
         // Get current language
         $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
