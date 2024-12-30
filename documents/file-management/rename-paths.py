@@ -1,5 +1,5 @@
 ## Rename paths
-# Last update: 2024-12-29
+# Last update: 2024-12-30
 
 
 """About: Script to rename files and folders."""
@@ -31,21 +31,9 @@ os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
 ###########
 
 
-def rename_paths(*, pattern, repl, path_rename=False):
+def rename_paths(*, pattern, repl, preview=True):
     # Get all files and folders from current directory
     paths = glob.glob(pathname=os.path.join('**', '*'), recursive=True)
-
-    # Filter for folders with specific regular expression pattern
-    folders_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern=pattern, string=Path(path).name, flags=0)]
-
-    if len(folders_rename) > 0:
-        print('Folders to be renamed:')
-        print('\n'.join(folders_rename))
-        print('')
-
-    else:
-        print('No folders to be renamed.')
-        print('')
 
     # Filter for files with specific regular expression pattern
     files_rename = [path for path in paths if os.path.isdir(path) is False and re.search(pattern=pattern, string=Path(path).stem, flags=0)]
@@ -59,34 +47,24 @@ def rename_paths(*, pattern, repl, path_rename=False):
         print('No files to be renamed.')
         print('')
 
-    # Rename folders
+    # Filter for folders with specific regular expression pattern
+    folders_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern=pattern, string=Path(path).name, flags=0)]
+
     if len(folders_rename) > 0:
-        if path_rename is False:
-            print('New folders name (preview):')
+        print('Folders to be renamed:')
+        print('\n'.join(folders_rename))
+        print('')
 
-        if path_rename is True:
-            print('New folders name:')
-
-        for path in folders_rename:
-            path = Path(path)
-
-            path_name = path.name
-            path_name = re.sub(pattern=pattern, repl=repl, string=path_name, flags=0)
-            path_name_new = Path(path.parent, f'{path_name}')
-
-            print(path_name_new)
-
-            if path_rename is True:
-                path.rename(target=path_name_new)
-
+    else:
+        print('No folders to be renamed.')
         print('')
 
     # Rename files
     if len(files_rename) > 0:
-        if path_rename is False:
+        if preview is True:
             print('New files name (preview):')
 
-        if path_rename is True:
+        if preview is False:
             print('New files name:')
 
         # Get all files and folders from current directory (updated in case directories name changed)
@@ -104,7 +82,29 @@ def rename_paths(*, pattern, repl, path_rename=False):
 
             print(path_name_new)
 
-            if path_rename is True:
+            if preview is False:
+                path.rename(target=path_name_new)
+
+        print('')
+
+    # Rename folders
+    if len(folders_rename) > 0:
+        if preview is True:
+            print('New folders name (preview):')
+
+        if preview is False:
+            print('New folders name:')
+
+        for path in folders_rename:
+            path = Path(path)
+
+            path_name = path.name
+            path_name = re.sub(pattern=pattern, repl=repl, string=path_name, flags=0)
+            path_name_new = Path(path.parent, f'{path_name}')
+
+            print(path_name_new)
+
+            if preview is False:
                 path.rename(target=path_name_new)
 
         print('')
@@ -115,21 +115,18 @@ def rename_paths(*, pattern, repl, path_rename=False):
 ##############
 
 # Remove leading, trailing, non-breaking and double spaces from files and folders
-rename_paths(pattern=r'^\s+|\s+$', repl=r'', path_rename=False)
-rename_paths(pattern=r'  ', repl=r' ', path_rename=False)
+rename_paths(pattern=r'^\s+|\s+$', repl=r'', preview=True)
+rename_paths(pattern=r'  ', repl=r' ', preview=True)
 
 
 # Rename files and folders from "YYYY.MM.DD" to "YYYY-MM-DD"
-rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})', repl=r'\1-\2-\3', path_rename=False)
-
-
-# Rename files and folders from "YYYY.MM" to "YYYY-MM"
-rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', path_rename=False)
-
+rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})\.([0-9]{2})', repl=r'\1-\2-\3', preview=True)
 
 # Rename files and folders from "DD.MM.YYYY" to "YYYY-MM-DD"
-rename_paths(pattern=r'([^\.])([0-9]{2})\.([0-9]{2})\.([0-9]{4})', repl=r'\1\4-\3-\2', path_rename=False)
+rename_paths(pattern=r'([^\.])([0-9]{2})\.([0-9]{2})\.([0-9]{4})', repl=r'\1\4-\3-\2', preview=True)
 
+# Rename files and folders from "YYYY.MM" to "YYYY-MM"
+rename_paths(pattern=r'([0-9]{4})\.([0-9]{2})', repl=r'\1-\2', preview=True)
 
 # Rename files and folders from "text YYYYMMDD" to "YYYY-MM-DD"
-rename_paths(pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', path_rename=True)
+rename_paths(pattern=r'^.* ([0-9]{4})([0-9]{2})([0-9]{2})', repl=r'\1-\2-\3', preview=True)
