@@ -18,9 +18,11 @@ wp_woocommerce_gzd_shipments */
 
 
 /* Step 2 - Test if "meta_id" column is unique (NON_UNIQUE = 0 and INDEX_NAME = Primary) */
-SELECT * FROM information_schema.statistics WHERE table_schema = 'wordpress' AND table_name = 'wp_woocommerce_gzd_shipment_itemmeta' AND column_name = 'meta_id' AND non_unique = 0;
+SELECT * FROM information_schema.statistics
+WHERE table_schema = 'wordpress' AND table_name = 'wp_woocommerce_gzd_shipment_itemmeta' AND column_name = 'meta_id' AND non_unique = 0;
 
-SELECT * FROM information_schema.statistics WHERE table_schema = 'wordpress' AND table_name = 'wp_woocommerce_gzd_shipment_itemmeta_old' AND column_name = 'meta_id' AND non_unique = 0;
+SELECT * FROM information_schema.statistics
+WHERE table_schema = 'wordpress' AND table_name = 'wp_woocommerce_gzd_shipment_itemmeta_old' AND column_name = 'meta_id' AND non_unique = 0;
 
 
 /* Step 3: Create a temporary table for testing purposes */

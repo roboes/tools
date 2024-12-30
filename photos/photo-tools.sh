@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-11-09
+# Last update: 2024-12-22
 
 
 # Rename: ExifTool
@@ -192,6 +192,28 @@ exiftool -if '($XMPToolkit eq "XMP Core 5.5.0") and ($ImageUniqueID)' '-director
 
 exiftool '-XMPToolkit' -csv . > './File.csv'
 
+
+
+### Czkawka
+
+## Installation
+
+# Fetch the latest version tag
+VERSION=$(curl -fsSL https://api.github.com/repos/qarmin/czkawka/releases/latest | jq -r '.tag_name'); echo "${VERSION}"
+
+# Download the package
+curl -fsSL "https://github.com/qarmin/czkawka/releases/download/${VERSION}/linux_czkawka_gui_heif_libraw" -o "/tmp/czkawka-gui"
+
+# Install the package
+sudo install "/tmp/czkawka-gui" "/usr/local/bin/czkawka-gui"
+
+
+## Use
+
+Similar Images
+- Resize algorithm > Lanczos3
+- Hash size: 16
+- Hash type: Mean
 
 
 

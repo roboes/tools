@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status (using AJAX to load dynamic content, ensuring content not to be cached)
-// Last update: 2024-11-05
+// Last update: 2024-12-15
 
 
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
@@ -63,7 +63,10 @@ function get_store_hours()
         'Friday' => '10:00-17:00',
         'Saturday' => '10:00-14:00',
     ];
-    $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-24', '2024-12-25', '2024-12-26', '2025-01-01', '2025-01-06'];
+    $special_opening_hours = [
+        '2024-12-24' => '10:00-14:00',
+    ];
+    $public_holidays = ['2024-01-01', '2024-01-06', '2024-03-29', '2024-04-01', '2024-05-01', '2024-05-09', '2024-05-20', '2024-05-30', '2024-08-08', '2024-08-15', '2024-10-03', '2024-11-01', '2024-12-25', '2024-12-26', '2024-12-31', '2025-01-01', '2025-01-06'];
     $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
     $timezone = get_option('timezone_string');
 
@@ -76,23 +79,28 @@ function get_store_hours()
     // Get current language
     $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
-    // Determine opening hours for today
-    if (!isset($opening_hours[$current_day_of_week])) {
-        echo generate_message('closed', $current_language);
-        wp_die();
-    }
-
-    list($start_time, $end_time) = explode('-', $opening_hours[$current_day_of_week]);
-    $start_time = DateTime::createFromFormat('H:i', $start_time, new DateTimeZone($timezone));
-    $end_time = DateTime::createFromFormat('H:i', $end_time, new DateTimeZone($timezone));
-    $closing_soon_time = clone $end_time;
-    $closing_soon_time->modify('-1 hour');
-
     // Check if today is a public holiday
     if (in_array($current_date, $public_holidays)) {
         echo generate_message('holiday', $current_language);
         wp_die();
     }
+
+    // Check if today has special opening hours
+    if (array_key_exists($current_date, $special_opening_hours)) {
+        list($start_time, $end_time) = explode('-', $special_opening_hours[$current_date]);
+    } elseif (isset($opening_hours[$current_day_of_week])) {
+        // Use regular opening hours
+        list($start_time, $end_time) = explode('-', $opening_hours[$current_day_of_week]);
+    } else {
+        // Closed if no opening hours are defined
+        echo generate_message('closed', $current_language);
+        wp_die();
+    }
+
+    $start_time = DateTime::createFromFormat('H:i', $start_time, new DateTimeZone($timezone));
+    $end_time = DateTime::createFromFormat('H:i', $end_time, new DateTimeZone($timezone));
+    $closing_soon_time = clone $end_time;
+    $closing_soon_time->modify('-1 hour');
 
     // Check if today is a special day
     if (in_array($current_date, $special_days)) {
