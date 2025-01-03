@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2024-12-11
+# Last update: 2025-01-03
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -110,6 +110,7 @@ repos:
     rev: v2.3.0
     hooks:
       - id: codespell
+        exclude: '^data/'
         args: ["--ignore-words-list=alle,als,deine,dokument,ges,ist,itens,nax,oder,produkt,ressource,ser,sie,tage,termine"] # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
 
 default_language_version:
