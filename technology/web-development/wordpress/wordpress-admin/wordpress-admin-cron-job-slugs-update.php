@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Run slugs update daily (cron job)
-// Last update: 2024-11-03
+// Last update: 2025-01-24
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='cron_job_schedule_slugs_update', $args=array(), $wp_error=false);
@@ -30,12 +30,12 @@ add_action($hook_name = 'wp_loaded', $callback = function () {
     if (!wp_next_scheduled($hook = 'cron_job_schedule_slugs_update', $args = array())) {
 
         // Settings
-        $start_datetime = '2024-11-04 01:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
+        $start_datetime = '2025-01-05 02:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
 
         $start_datetime = new DateTime($start_datetime);
         $start_timestamp = $start_datetime->getTimestamp();
 
-        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'daily', $hook = 'cron_job_schedule_slugs_update', $args = array(), $wp_error = false);
+        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'weekly', $hook = 'cron_job_schedule_slugs_update', $args = array(), $wp_error = false);
     }
 
 }, $priority = 10, $accepted_args = 1);
@@ -269,8 +269,30 @@ function cron_job_run_slugs_update()
                 echo 'Attachment renamed: ' . $attachment->ID . ' - ' . $attachment->post_title . ' (' . $old_slug . ' -> ' . $new_slug . ')<br>';
             }
         }
+    }
 
+    // Turn product brand name into a custom field
+    if (class_exists('WooCommerce') && WC()) {
+        // Get all products (you can limit the query if needed)
+        $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => 'publish');
 
+        $query = new WP_Query($args);
+
+        // Loop through each product
+        while ($query->have_posts()) {
+            $query->the_post();
+            $post_id = get_the_ID();
+
+            // Get the product's brand(s)
+            $product = wc_get_product($post_id);
+            $brands = implode(', ', wp_get_post_terms($product->get_id(), 'product_brand', [ 'fields' => 'names' ]));
+
+            // Save the brand name(s) as a custom field
+            update_post_meta($post_id, 'product_brand_name', $brands);
+        }
+
+        // Reset post data
+        wp_reset_postdata();
     }
 
 }

@@ -1,7 +1,7 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2024-11-03
+// Last update: 2025-01-22
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='cron_job_schedule_variable_product_delete_variations', $args=array(), $wp_error=false);
@@ -17,7 +17,7 @@ add_action($hook_name = 'wp_loaded', $callback = function () {
     if (!wp_next_scheduled($hook = 'cron_job_schedule_variable_product_delete_variations', $args = array())) {
 
         // Settings
-        $start_datetime = '2024-11-04 02:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
+        $start_datetime = '2025-01-05 03:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
         $start_datetime = new DateTime($start_datetime);
         $start_timestamp = $start_datetime->getTimestamp();
 

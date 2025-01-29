@@ -7,7 +7,6 @@
 - [PocketTube](https://addons.mozilla.org/firefox/addon/youtube-subscription-groups/)
 - [Return YouTube Dislike](https://addons.mozilla.org/firefox/addon/return-youtube-dislikes/)
 
-
 ## uBlock Origin Filters
 
 - AdGuard Tracking Protection
@@ -15,7 +14,6 @@
 - AdGuard/uBO – Cookie Notices
 - AdGuard – Annoyances
 - uBlock filters – Annoyances
-
 
 ## Tampermonkey Scripts
 

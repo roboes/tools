@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2024-10-16
+// Last update: 2025-01-22
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -233,6 +233,7 @@ if (class_exists('WooCommerce') && WC()) {
                 $product_name,
                 $product_quantity,
                 $product_variation_own_portafilter_machine,
+                '', // Order ID (not applicable in this context)
                 $gift_card_id,
                 $customer_name,
                 $customer_email,
@@ -339,6 +340,7 @@ if (class_exists('WooCommerce') && WC()) {
                 $product_name,
                 $product_quantity,
                 $product_variation_own_portafilter_machine,
+                $order_id,
                 '', // Gift Card ID (not applicable in this context)
                 $customer_name,
                 $customer_email,
@@ -350,6 +352,8 @@ if (class_exists('WooCommerce') && WC()) {
         // Send training confirmation per email and each product's data to Google Sheets
         foreach ($data_array as $data) {
             send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
+
+            // Send data to Google Sheets
             send_to_google_sheets($data);
         }
     }
@@ -360,19 +364,20 @@ if (class_exists('WooCommerce') && WC()) {
         $web_app_url = GOOGLE_APPS_SCRIPT_GIFT_CARD;
 
         $response = wp_remote_post($web_app_url, array(
-                'method' => 'POST',
-                'body' => json_encode(array(
+            'method' => 'POST',
+            'body' => json_encode(array(
                 'inserted_date' => $data_array[0],
                 'product_variation_appointment_date' => $data_array[1],
                 'product_variation_appointment_time' => $data_array[2],
                 'product_name' => $data_array[3],
                 'product_quantity' => $data_array[4],
                 'product_variation_own_portafilter_machine' => $data_array[5],
-                'gift_card_id' => $data_array[6],
-                'customer_name' => $data_array[7],
-                'customer_email' => $data_array[8],
-                'customer_phone' => $data_array[9],
-                'customer_order_notes' => $data_array[10]
+                'order_number' => $data_array[6],
+                'gift_card_id' => $data_array[7],
+                'customer_name' => $data_array[8],
+                'customer_email' => $data_array[9],
+                'customer_phone' => $data_array[10],
+                'customer_order_notes' => $data_array[11]
             )),
             'headers' => array(
                 'Content-Type' => 'application/json'
