@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2024-12-29
+# Last update: 2025-01-26
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -18,7 +18,7 @@
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id Microsoft.WindowsTerminal
 winget install --exact --id=Microsoft.PCManager
-winget install --exact --id=Python.Python.3.12
+winget install --exact --id=Python.Python.3.13
 winget install --exact --id=Spyder.Spyder
 winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
@@ -39,6 +39,7 @@ winget install --exact --id=SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 winget install --exact --id=9NP83LWLPZ9K # Apple Devices
 winget install --exact --id=TheDocumentFoundation.LibreOffice
 winget install --exact --id=LocalSend.LocalSend
+winget install --exact --id=9N93MRMSXBF0 # KDE Connect
 
 # Applications not available on winget
 # https://freefilesync.org/download.php

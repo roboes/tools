@@ -1,7 +1,6 @@
 # Pasta
 
 - [Massa Pizza](#massa-pizza)
-- [Pão de Queijo](#pão-de-queijo)
 
 ## Massa Pizza
 

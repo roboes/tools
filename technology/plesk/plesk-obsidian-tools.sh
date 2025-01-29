@@ -1,4 +1,4 @@
-## Plesk Tools
+## Plesk Obsidian Tools
 # Last update: 2024-11-09
 
 

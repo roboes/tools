@@ -36,6 +36,7 @@ brew update && brew upgrade && brew cleanup
 
 
 # Settings
+# cd "$HOME"
 cd "/mnt/c/Users/${USER}/Pictures/Import"
 
 

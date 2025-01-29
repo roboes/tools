@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2024-10-28
+# Last update: 2025-01-29
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -82,6 +82,8 @@ curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location 
 
 # pre-commit autoupdate
 
+markdownlint-cli2 "**/*.md" --fix --disable MD013 MD024 MD033 MD045
+
 pre-commit run --all-files
 
 
@@ -94,6 +96,13 @@ pre-commit run --all-files
 # python -m pip install pipreqs
 if find . -type f -name "*.py" | grep -q "/."; then
 	pipreqs --encoding utf-8 --force "./"
+
+    # Check if "janitor" is in requirements.txt and replace it with pyjanitor==0.30.0
+    if grep -q "janitor" "requirements.txt"; then
+        sed -i '/janitor/c\pyjanitor==0.30.0' requirements.txt
+		pre-commit run --files "./requirements.txt"
+    fi
+
 fi
 
 ## Update requirements.txt

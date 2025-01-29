@@ -1,5 +1,5 @@
 ## File Management
-# Last update: 2024-12-30
+# Last update: 2025-01-22
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -60,8 +60,12 @@ patterns=(
     # '([0-9]{4})([0-9]{2})([0-9]{2})' '${1}-${2}-${3}'  # Rename from YYYYMMDD to YYYY-MM-DD
 # )
 
+# patterns=(
+    # '^[0-9]{4}-[0-9]{2}-[0-9]{2}_Kontoauszug_([0-9])_([0-9]{4})_vom_.*(\.pdf)' '${2}-0${1}${3}'  # Extract M_YYYY and rearrange to YYYY-0M
+    # '^[0-9]{4}-[0-9]{2}-[0-9]{2}_Kontoauszug_([0-9]{2})_([0-9]{4})_vom_.*(\.pdf)' '${2}-${1}${3}'  # Extract MM_YYYY and rearrange to YYYY-MM
+# )
+
 ## Loop through patterns and replacements
 for ((i=0; i<${#patterns[@]}; i+=2)); do
-    rnr --dry-run --include-dirs --recursive "${patterns[$i]}" "${patterns[$i+1]}" './'
-	# rnr --force --include-dirs --recursive "${patterns[$i]}" "${patterns[$i+1]}" './'
+    rnr regex --include-dirs --recursive "${patterns[$i]}" "${patterns[$i+1]}" './' # --force
 done

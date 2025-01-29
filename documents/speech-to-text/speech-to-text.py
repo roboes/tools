@@ -46,7 +46,7 @@ def speech_to_text(*, mp3_path, output_directory, language):
     # Recognize the speech
     try:
         text = recognizer.recognize_google(audio_data=audio_data, language=language)
-        output_file_path = os.path.join(output_directory, f"recognized_text_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+        output_file_path = os.path.join(output_directory, f'recognized_text_{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt')
         with open(file=output_file_path, mode='w', encoding='utf-8') as file_out:
             file_out.write(text)
         print(f'Text saved to {output_file_path}')

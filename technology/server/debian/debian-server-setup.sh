@@ -1,5 +1,5 @@
 ## Debian Server Setup
-# Last update: 2024-12-23
+# Last update: 2025-01-13
 
 
 # Settings
@@ -133,3 +133,17 @@ chown -R "$system_user" /home/"$website"/public_html
 ## Change permissions
 find /home/"$website"/public_html -type d -exec chmod 755 {} \;
 find /home/"$website"/public_html -type f -exec chmod 644 {} \;
+
+
+# Migrate emails from one server to another by backing up emails locally, updating DNS records, and restoring them to the new server
+
+## Create backup directory
+mkdir -p "$HOME/Downloads/EmailsBackup"
+
+## Backup emails from "Server 1" by downloading all emails to the backup directory
+imap-backup --host imap.server1.com --user "info@website.com" --password "password-server1" --backup-dir "$HOME/Downloads/EmailsBackup"
+
+## Update the MX records in the DNS settings to point to the "Server 2". Wait for DNS propagation to complete before proceeding.
+
+## Restore emails from "Server 1" to "Server 2" by uploading the backed-up emails from the backup directory
+imap-backup --host imap.server2.com --user "info@website.com" --password "password-server2" --restore-dir "$HOME/Downloads/EmailsBackup"

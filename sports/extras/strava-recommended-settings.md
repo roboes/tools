@@ -2,7 +2,7 @@
 
 Just click in the URL to open the settings directly in the Strava app for Android/iOS/Web.
 
-### [Profile](https://www.strava.com/settings/profile)
+## [Profile](https://www.strava.com/settings/profile)
 
 - Add Location
 
@@ -10,7 +10,7 @@ Just click in the URL to open the settings directly in the Strava app for Androi
 <img src="./media/strava-recommended-settings-location.png">
 </p>
 
-### [Preferences > Privacy Controls](https://www.strava.com/settings/privacy)
+## [Preferences > Privacy Controls](https://www.strava.com/settings/privacy)
 
 - Where You Appear\
   `Profile Page`: Followers\
@@ -40,7 +40,7 @@ Just click in the URL to open the settings directly in the Strava app for Androi
 - Additional Controls > Personal Information Sharing\
   Check `Do Not Share My Personal Information`
 
-### [Preferences > Display Preferences](https://www.strava.com/settings/display)
+## [Preferences > Display Preferences](https://www.strava.com/settings/display)
 
 - Feed Ordering\
   `Feed Ordering` > `Latest Activities`
@@ -49,11 +49,11 @@ Just click in the URL to open the settings directly in the Strava app for Androi
 <img src="./media/strava-recommended-settings-feed-ordering.png" width=300>
 </p>
 
-### [Preferences > Email Notifications](https://www.strava.com/settings/email)
+## [Preferences > Email Notifications](https://www.strava.com/settings/email)
 
 - Disable all email notification checkboxes.
 
-### (App only) Home > Messages > Settings
+## (App only) Home > Messages > Settings
 
 - Online Status\
   Uncheck `Show When Online`

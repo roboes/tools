@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2024-10-16
+# Last update: 2025-01-17
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -38,6 +38,9 @@ brew update && brew upgrade && brew cleanup
 
 # Install diff-pdf
 # brew install diff-pdf
+
+# Install libreoffice
+# sudo apt install libreoffice
 
 
 # Settings
@@ -81,3 +84,21 @@ pdfimages -raw "./input.pdf" "./output"
 
 # Compare PDFs
 diff-pdf --output-diff=diff.pdf file_A.pdf file_B.pdf
+
+
+# Convert .pdf to .pptx
+soffice --infilter=impress_pdf_import --convert-to ppt "./input.pdf"
+
+
+# Count the number of files categorized by their root-level directory and file type
+find . -type f | while IFS= read -r file; do
+    # Extract the first directory and the file extension
+    dir=$(echo "$file" | cut -d'/' -f2- | awk -F/ '{print $1}')
+    ext="${file##*.}"
+
+    # Ensure the extension is valid (not the whole filename) and is not a path
+    if [ "$ext" != "$file" ] && [[ "$ext" != */* ]]; then
+        ext=$(echo "$ext" | tr '[:upper:]' '[:lower:]')  # Convert extension to lowercase
+        echo "$dir,.$ext"
+    fi
+done | sort | uniq -c | awk '{count=$1; $1=""; sub(/^ /, ""); gsub(/ ,/, ","); print $0 "," count}'

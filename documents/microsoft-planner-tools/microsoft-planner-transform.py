@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2024-08-06
+# Last update: 2025-01-23
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -459,6 +459,11 @@ labels_mapping = {
 # file_name='Microsoft Planner Export Transformed (Old).xlsx',
 # engine='openpyxl',
 # )
+# microsoft_excel_pivot_table_refresh(
+# input_filepath=input_filepath=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform', 'Microsoft Planner Export Transformed.xlsx'),
+# sheet_name='Report',
+# pivot_table_name='report'
+# )
 
 
 microsoft_planner_transform(
@@ -470,5 +475,3 @@ microsoft_planner_transform(
     file_name='Microsoft Planner Export Transformed.xlsx',
     engine='xlwings',
 )
-
-# microsoft_excel_pivot_table_refresh(input_filepath=input_filepath=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform', 'Microsoft Planner Export Transformed.xlsx'), sheet_name='Report', pivot_table_name='report')
