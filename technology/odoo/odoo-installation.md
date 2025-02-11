@@ -37,9 +37,6 @@ apt install -y python3 python3-pip python3-venv \
 sudo -i -u postgres psql -c "CREATE USER $database_username WITH PASSWORD '$database_password';"
 sudo -i -u postgres psql -c "ALTER USER $database_username WITH CREATEDB;"
 sudo -i -u postgres psql -c "CREATE DATABASE $database_name OWNER $database_username;"
-
-#
-exit
 ```
 
 ## Download and Install Odoo
@@ -124,6 +121,8 @@ EOF
 chown -R $system_user:$system_group "$website_root_directory/odoo"
 chown $system_user:$system_group "/etc/odoo.conf"
 chown $system_user:$system_group "/var/log/odoo.log"
+
+sudo chown root:$system_group /etc/systemd/system/odoo.service
 ```
 
 #### Change files and folders permissions
@@ -134,7 +133,6 @@ find "$website_root_directory/odoo" -type f -exec chmod 644 {} \;
 chmod 644 "/etc/odoo.conf"
 chmod 644 "/var/log/odoo.log"
 
-sudo chown root:psacln /etc/systemd/system/odoo.service
 sudo chmod 644 /etc/systemd/system/odoo.service
 ```
 
