@@ -71,7 +71,7 @@ deactivate
 
 ## Configuration File
 
-```
+```.sh
 #
 touch "/var/log/odoo.log"
 ```
@@ -154,7 +154,7 @@ systemctl status odoo.service
 # rm "/etc/systemd/system/odoo.service"
 ```
 
-#### Additional Apache directives for HTTP/HTTPS
+### Additional Apache directives for HTTP/HTTPS
 
 ```.txt
 <Location />

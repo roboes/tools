@@ -46,7 +46,7 @@ function update_product_prices()
                 'operator' => 'IN'
             )
         ),
-		'post_status' => array('publish', 'private')
+        'post_status' => array('publish', 'private')
     ));
 
     foreach ($products as $product) {

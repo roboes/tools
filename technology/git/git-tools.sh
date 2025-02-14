@@ -88,6 +88,10 @@ find . -name "*.xml" -exec xmllint --format {} --output {} \;
 
 # pre-commit autoupdate
 
+if [ "$git_repository" == "tools" ]; then
+    cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
+fi
+
 pre-commit run --all-files
 
 
