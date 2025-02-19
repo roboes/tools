@@ -89,6 +89,11 @@ db_user = $database_username
 db_password = $database_password
 addons_path = $website_root_directory/odoo/addons
 logfile = /var/log/odoo.log
+workers = 2
+server_wide_modules = web,queue_job
+
+[queue_job]
+channels = root:2
 EOF
 ```
 

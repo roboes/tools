@@ -165,3 +165,7 @@ pm.max_requests = 100
 
 # How to enable the MySQL/MariaDB slow query log and analyze it on a Plesk for Linux server
 # https://www.plesk.com/kb/support/how-to-enable-the-mysql-mariadb-slow-query-log-and-analyze-it-on-a-plesk-for-linux-server/
+
+
+# How to increase FTP server timeouts on Plesk for Linux?
+# https://www.plesk.com/kb/support/how-to-increase-ftp-server-timeouts-on-plesk-for-linux/
