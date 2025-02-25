@@ -1,4 +1,4 @@
-# ERP Next Installation (Development Mode)
+# ERPNext Installation (Development Mode)
 
 > [!NOTE]
 > Last update: 2025-01-28
