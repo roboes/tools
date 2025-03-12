@@ -147,3 +147,8 @@ imap-backup --host imap.server1.com --user "info@website.com" --password "passwo
 
 ## Restore emails from "Server 1" to "Server 2" by uploading the backed-up emails from the backup directory
 imap-backup --host imap.server2.com --user "info@website.com" --password "password-server2" --restore-dir "$HOME/Downloads/EmailsBackup"
+
+
+
+# Configuring Multiple PHP Versions
+# https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/#on-rhel-alma-rocky-oracle-centos-stream-and-fedora-linux

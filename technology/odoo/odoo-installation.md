@@ -1,7 +1,7 @@
 # Odoo Installation
 
 > [!NOTE]
-> Last update: 2025-02-05
+> Last update: 2025-03-12
 > Installation realized on Debian and Plesk.
 
 ## Settings
@@ -139,6 +139,17 @@ chmod 644 "/etc/odoo.conf"
 chmod 644 "/var/log/odoo.log"
 
 sudo chmod 644 /etc/systemd/system/odoo.service
+```
+
+```.sh
+# Change current directory
+cd "$website_root_directory/odoo"
+
+#
+source "./venv/bin/activate"
+
+# Run Odoo manually
+./odoo-bin --config=$odoo_conf --database $database_name --load=base,web --without-demo=all --update=all
 ```
 
 ## Start and Enable Odoo Service
