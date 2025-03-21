@@ -169,3 +169,6 @@ pm.max_requests = 100
 
 # How to increase FTP server timeouts on Plesk for Linux?
 # https://www.plesk.com/kb/support/how-to-increase-ftp-server-timeouts-on-plesk-for-linux/
+
+
+# https://www.plesk.com/kb/support/how-to-remove-the-header-x-powered-by-for-all-websites-hosted-in-plesk/
