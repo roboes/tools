@@ -6,7 +6,8 @@
 
 if (class_exists('WooCommerce') && WC()) {
 
-    function batch_update_variation_dimensions($category_slug) {
+    function batch_update_variation_dimensions($category_slug)
+    {
         // Settings
         $products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private', 'draft', 'pending', 'future'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $category_slug))));
 
