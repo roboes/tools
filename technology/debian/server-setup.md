@@ -1,13 +1,13 @@
 # Debian Server Setup
 
 > [!NOTE]
-> Last update: 2025-03-25
+> Last update: 2025-03-26
 
 ```.sh
 # Settings
 server_ip="100.00.000.01"
 website="website.com"
-website_root_directory="/home/$website/public_html"
+website_root_path="/home/$website/public_html"
 system_user="system_user"
 # system_user="www-data:www-data"
 database_name="database_name"
@@ -44,6 +44,7 @@ nano ~/.bashrc
 ```.sh
 # Install packages
 sudo apt-get install curl \
+  dnsutils \
   wget
 ```
 
@@ -138,30 +139,6 @@ PermitRootLogin prohibit-password
 
 Restart server.
 
-### Let's Encrypt
-
-```.sh
-mkdir -p /home/$website/public_html/.well-known/acme-challenge
-chmod -R 755 /home/$website/public_html/.well-known
-touch /home/$website/public_html/.htaccess
-```
-
-```.txt
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteRule ^\.well-known/acme-challenge/ - [L]
-</IfModule>
-```
-
-```.sh
-sudo certbot certonly --manual --preferred-challenges dns -d autodiscover.$website
-```
-
-```.sh
-# Verify the TXT Record
-dig TXT _acme-challenge.autodiscover.$website
-```
-
 ### Nginx directives
 
 #### Webmin > Servers > Nginx Webserver > Edit Configuration Files
@@ -169,8 +146,6 @@ dig TXT _acme-challenge.autodiscover.$website
 ##### /etc/nginx/nginx.conf
 
 ```.txt
-# /etc/nginx/nginx.conf
-
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -313,13 +288,26 @@ server {
   try_files $uri $uri/ /index.php?$args;
  }
 
+ # Well-known URI
+ location ^~ /.well-known/acme-challenge/ {
+  allow all;
+  default_type "text/plain";
+  add_header Content-Type text/plain;
+  try_files $uri =404;
+ }
+
  # Security headers
- add_header Content-Security-Policy "default-src 'self' https: data: 'unsafe-inline';" always;
+ add_header Content-Security-Policy "default-src 'self' https: data: 'unsafe-inline'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://www.mercadopago.com; worker-src 'self' blob:;" always;
  add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
  add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
  add_header X-Content-Type-Options "nosniff" always;
  add_header X-Frame-Options "SAMEORIGIN" always;
+
+ # Wordfence
+ location ~ ^/\.user\.ini {
+  deny all;
+ }
 
  location ~ "\.php(/|$)" {
   try_files $uri $fastcgi_script_name =404;
@@ -366,37 +354,75 @@ server {
 }
 ```
 
+```.sh
+# Restart Nginx
+sudo systemctl reload nginx
+```
+
+### SSL Certificate
+
+```.sh
+mkdir -p $website_root_path/.well-known/acme-challenge
+chmod -R 755 $website_root_path/.well-known
+```
+
+```.sh
+sudo certbot certonly --manual --preferred-challenges dns -d autodiscover.$website
+```
+
+Copy the generated TXT for `_acme-challenge.autodiscover.$website` value and add it as a DNS `TXT` record with the name `_acme-challenge` in Cloudflare.
+
+```.sh
+# Verify the TXT Record
+dig TXT _acme-challenge.autodiscover.$website
+```
+
+`Virtualmin` > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
+
+- Enable `Automatically renew certificate`.
+- `Send email on renewal` > `Only on failure`.
+- `Request Certificate`.
+
+```.sh
+# Remove .htaccess
+rm $website_root_path/.well-known/acme-challenge/.htaccess
+```
+
+### PHP settings
+
+`Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
+
 ## WordPress migration
 
 ### Database migration
 
 ```.sh
 # Import .sql
-mysql -u "$system_user" -p "$database_name" < $website_root_directory/"$database_name".sql
+mysql -u "$system_user" -p "$database_name" < $website_root_path/"$database_name".sql
 
 # Delete dataset
-rm $website_root_directory/"$database_name".sql
+rm $website_root_path/"$database_name".sql
 ```
 
 ### Files migration
 
 ```.sh
-# Extract the contents of the "website_wordpress" contained inside the "website_wordpress_export.zip" file to the $website_root_directory folder
-unzip "./website_wordpress_export.zip" "website_wordpress/*" -d $website_root_directory
+# Extract the contents of the "website_wordpress" contained inside the "website_wordpress_export.zip" file to the $website_root_path folder
+unzip "$website_root_path/website_wordpress_export.zip" "*" -d $website_root_path
 
-# Move files (incl. hidden files) and folders
-mv $website_root_directory/website_wordpress/{*,.*} $website_root_directory
+# Delete .zip file
+rm "$website_root_path/website_wordpress_export.zip"
 ```
 
 ### Ownership and permission
 
 ```.sh
 # Change ownership
-chown -R "$system_user" $website_root_directory
+chown -R "$system_user" $website_root_path
 
 # Change permissions
-find $website_root_directory -type d -exec chmod 755 {} \;
-find $website_root_directory -type f -exec chmod 644 {} \;
+find $website_root_path -type d -exec chmod 755 {} \;
+find $website_root_path -type f -exec chmod 644 {} \;
 ```
 
 ### Tools

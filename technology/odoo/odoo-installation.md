@@ -8,7 +8,7 @@
 
 ```.sh
 website="website.com"
-website_root_directory="/var/www/vhosts/$website/httpdocs"
+website_root_path="/var/www/vhosts/$website/httpdocs"
 system_user=""
 system_group=""
 odoo_version="16.0"
@@ -43,17 +43,17 @@ sudo -i -u postgres psql -c "CREATE DATABASE $database_name OWNER $database_user
 
 ```.sh
 # Change current directory
-cd "$website_root_directory"
+cd "$website_root_path"
 
 #
-git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git "$website_root_directory/odoo"
+git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git "$website_root_path/odoo"
 ```
 
 ## Install Python Requirements
 
 ```.sh
 # Change current directory
-cd "$website_root_directory/odoo"
+cd "$website_root_path/odoo"
 
 #
 python -m venv "./venv"
@@ -87,7 +87,7 @@ db_host = $database_host
 db_port = $database_port
 db_user = $database_username
 db_password = $database_password
-addons_path = $website_root_directory/odoo/addons
+addons_path = $website_root_path/odoo/addons
 logfile = /var/log/odoo.log
 workers = 2
 server_wide_modules = web,queue_job
@@ -109,8 +109,8 @@ After=network.target postgresql.service
 Type=simple
 User=$system_user
 Group=$system_group
-ExecStartPre=$website_root_directory/odoo/venv/bin/python3 $website_root_directory/odoo/odoo-bin --config=/etc/odoo.conf --database $database_name --init base --without-demo=all
-ExecStart=$website_root_directory/odoo/venv/bin/python3 $website_root_directory/odoo/odoo-bin --config=/etc/odoo.conf --without-demo=all
+ExecStartPre=$website_root_path/odoo/venv/bin/python3 $website_root_path/odoo/odoo-bin --config=/etc/odoo.conf --database $database_name --init base --without-demo=all
+ExecStart=$website_root_path/odoo/venv/bin/python3 $website_root_path/odoo/odoo-bin --config=/etc/odoo.conf --without-demo=all
 Restart=always
 
 [Install]
@@ -123,7 +123,7 @@ EOF
 #### Change ownership
 
 ```.sh
-chown -R $system_user:$system_group "$website_root_directory/odoo"
+chown -R $system_user:$system_group "$website_root_path/odoo"
 chown $system_user:$system_group "/etc/odoo.conf"
 chown $system_user:$system_group "/var/log/odoo.log"
 
@@ -133,8 +133,8 @@ sudo chown root:$system_group /etc/systemd/system/odoo.service
 #### Change files and folders permissions
 
 ```.sh
-find "$website_root_directory/odoo" -type d -exec chmod 755 {} \;
-find "$website_root_directory/odoo" -type f -exec chmod 644 {} \;
+find "$website_root_path/odoo" -type d -exec chmod 755 {} \;
+find "$website_root_path/odoo" -type f -exec chmod 644 {} \;
 chmod 644 "/etc/odoo.conf"
 chmod 644 "/var/log/odoo.log"
 
@@ -143,7 +143,7 @@ sudo chmod 644 /etc/systemd/system/odoo.service
 
 ```.sh
 # Change current directory
-cd "$website_root_directory/odoo"
+cd "$website_root_path/odoo"
 
 #
 source "./venv/bin/activate"
