@@ -1,7 +1,7 @@
 # Debian Server Setup
 
 > [!NOTE]
-> Last update: 2025-03-26
+> Last update: 2025-03-28
 
 ```.sh
 # Settings
@@ -64,8 +64,8 @@ After installation, login to Virtualmin.
 ### Nginx webserver
 
 - [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/).
-- Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
-- `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
+- Check if it worked: `Virtualmin` > Choose Virtual Server > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
+- `Virtualmin` > Choose Virtual Server > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
 
 ### Virtualmin settings
 
@@ -79,7 +79,7 @@ After installation, login to Virtualmin.
   - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
   - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
   - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication`.
-- Apps: `Virtualmin` > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
+- Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
 
 ### PHP
 
@@ -375,7 +375,7 @@ Copy the generated TXT for `_acme-challenge.autodiscover.$website` value and add
 dig TXT _acme-challenge.autodiscover.$website
 ```
 
-`Virtualmin` > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
+`Virtualmin` > Choose Virtual Server > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
 
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` > `Only on failure`.
@@ -386,10 +386,14 @@ dig TXT _acme-challenge.autodiscover.$website
 rm $website_root_path/.well-known/acme-challenge/.htaccess
 ```
 
+### Change default website for server IP address
+
+- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `Website Options` > `Default website for IP address` > `Yes`.
+
 ### PHP settings
 
-- `Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
-- `Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Error Logging` > `Error types to display` > `All errors and warnings`.
+- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
+- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `PHP-FPM Configuration` > `Error Logging` > `Error types to display` > `All errors and warnings`.
 
 ## WordPress migration
 
