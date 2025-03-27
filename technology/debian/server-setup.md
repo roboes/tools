@@ -160,8 +160,8 @@ events {
 
 http {
 
- ##
- # Basic Settings
+    ##
+    # Basic Settings
     ##
 
     sendfile on;
@@ -191,7 +191,7 @@ http {
     # Security
     ##
 
- server_tokens off;
+    server_tokens off;
 
     ##
     # Compression
@@ -229,23 +229,22 @@ http {
     large_client_header_buffers 8 32k;
 
     keepalive_timeout 30;
- reset_timedout_connection on;
+    reset_timedout_connection on;
     keepalive_requests 500;
 
     add_header Vary "Accept-Encoding";
- add_header X-Cache-Status $upstream_cache_status;
-
+    add_header X-Cache-Status $upstream_cache_status;
 
     ##
     # Cache
     ##
 
- fastcgi_cache_lock on;
- fastcgi_cache_lock_timeout 5s;
- fastcgi_cache_background_update on;
+    fastcgi_cache_lock on;
+    fastcgi_cache_lock_timeout 5s;
+    fastcgi_cache_background_update on;
 
- fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
- fastcgi_cache_key "$scheme$request_method$host$request_uri";
+    fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
+    fastcgi_cache_key "$scheme$request_method$host$request_uri";
 
     ##
     # Virtual Host Configs
@@ -283,54 +282,53 @@ http {
 
 ```.txt
 server {
- # Custom nginx config
- location / {
-  try_files $uri $uri/ /index.php?$args;
- }
+    # Custom nginx config
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
 
- # Well-known URI
- location ^~ /.well-known/acme-challenge/ {
-  allow all;
-  default_type "text/plain";
-  add_header Content-Type text/plain;
-  try_files $uri =404;
- }
+    # Well-known URI
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+        default_type "text/plain";
+        add_header Content-Type text/plain;
+        try_files $uri =404;
+    }
 
- # Security headers
- add_header Content-Security-Policy "default-src 'self' https: data: 'unsafe-inline'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://www.mercadopago.com; worker-src 'self' blob:;" always;
- add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
- add_header Referrer-Policy "strict-origin-when-cross-origin" always;
- add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
- add_header X-Content-Type-Options "nosniff" always;
- add_header X-Frame-Options "SAMEORIGIN" always;
+    # Security headers
+    add_header Content-Security-Policy "connect-src 'self' https://api.wordpress.org https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.google-analytics.com https://www.analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com; default-src 'self';  font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://sdk.mercadopago.com https://www.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com;" always;
+    add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
 
- # Wordfence
- location ~ ^/\.user\.ini {
-  deny all;
- }
+    # Wordfence
+    location ~ ^/\.user\.ini {
+        deny all;
+    }
 
- location ~ "\.php(/|$)" {
-  try_files $uri $fastcgi_script_name =404;
-  fastcgi_pass unix:/run/php/174285551812977.sock;
-  include fastcgi_params;
-  fastcgi_index index.php;
-  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    location ~ "\.php(/|$)" {
+        try_files $uri $fastcgi_script_name =404;
+        fastcgi_pass unix:/run/php/174285551812977.sock;
+        include fastcgi_params;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
 
-  # Caching
-  fastcgi_cache MYCACHE;
-  fastcgi_cache_valid 200 301 302 10m;
-  fastcgi_cache_valid 404 1m;
-  fastcgi_cache_use_stale error timeout updating;
+        # Caching
+        fastcgi_cache MYCACHE;
+        fastcgi_cache_valid 200 301 302 10m;
+        fastcgi_cache_valid 404 1m;
+        fastcgi_cache_use_stale error timeout updating;
 
-  # Header cleanup
-  more_clear_headers "Cache-Control" "Expires" "Set-Cookie" "Link" "cf-edge-cache";
-  add_header Cache-Control "public, s-maxage=3600" always;
-  add_header X-FastCGI-Cache $upstream_cache_status;
-  add_header CF-Cache-Status $upstream_cache_status always;
+        # Header cleanup
+        more_clear_headers "Cache-Control" "Expires" "Set-Cookie" "Link" "cf-edge-cache";
+        add_header Cache-Control "public, s-maxage=3600" always;
+        add_header X-FastCGI-Cache $upstream_cache_status;
+        add_header CF-Cache-Status $upstream_cache_status always;
+    }
 
- }
-
- # Cache
+    # Cache
     location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|txt|wav|woff|woff2|xls|xlsx|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
@@ -343,14 +341,14 @@ server {
         add_header Cache-Control "public";
     }
 
- # Prevent caching of error responses
- error_page 500 502 503 504 @no_cache;
+    # Prevent caching of error responses
+    error_page 500 502 503 504 @no_cache;
 
- location @no_cache {
-  internal;
-  add_header Cache-Control "no-store, no-cache, must-revalidate" always;
-  return 500 "Internal Server Error";
- }
+    location @no_cache {
+        internal;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        return 500 "Internal Server Error";
+    }
 }
 ```
 
@@ -390,7 +388,8 @@ rm $website_root_path/.well-known/acme-challenge/.htaccess
 
 ### PHP settings
 
-`Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
+- `Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
+- `Virtualmin` > `Web Configuration` > `PHP-FPM Configuration` > `Error Logging` > `Error types to display` > `All errors and warnings`.
 
 ## WordPress migration
 
@@ -407,11 +406,11 @@ rm $website_root_path/"$database_name".sql
 ### Files migration
 
 ```.sh
-# Extract the contents of the "website_wordpress" contained inside the "website_wordpress_export.zip" file to the $website_root_path folder
-unzip "$website_root_path/website_wordpress_export.zip" "*" -d $website_root_path
+# Extract the contents of the "wordpress_export.zip" file to the $website_root_path folder
+unzip "$website_root_path/wordpress_export.zip" "*" -d $website_root_path
 
 # Delete .zip file
-rm "$website_root_path/website_wordpress_export.zip"
+rm "$website_root_path/wordpress_export.zip"
 ```
 
 ### Ownership and permission
