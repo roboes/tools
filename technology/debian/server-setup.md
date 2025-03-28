@@ -216,14 +216,13 @@ http {
     proxy_buffer_size 64k;
     proxy_buffers 4 128k;
     proxy_busy_buffers_size 256k;
-
-    fastcgi_buffer_size 128k;
-    fastcgi_buffers 4 256k;
-    fastcgi_busy_buffers_size 512k;
-
-    fastcgi_read_timeout 30;
     proxy_read_timeout 30;
     proxy_send_timeout 30;
+
+    fastcgi_buffer_size 256k;
+    fastcgi_buffers 8 512k;
+    fastcgi_busy_buffers_size 1024k;
+    fastcgi_read_timeout 30;
 
     proxy_buffering on;
     large_client_header_buffers 8 32k;
@@ -426,6 +425,7 @@ chown -R "$system_user" $website_root_path
 # Change permissions
 find $website_root_path -type d -exec chmod 755 {} \;
 find $website_root_path -type f -exec chmod 644 {} \;
+chmod 600 $website_root_path/wp-config.php
 ```
 
 ### Tools
