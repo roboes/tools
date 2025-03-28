@@ -70,10 +70,22 @@ After installation, login to Virtualmin.
 ### Virtualmin settings
 
 - Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
-- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Filter Action Jails` > `Jail name` > `sshd`
-  - `Matches before applying action`: `3`.
-  - `Max delay between matches`: `60m`.
-  - `Time to ban IP for`: `1440m`.
+
+- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.conf`
+
+```.txt
+[DEFAULT]
+bantime = 1440m
+findtime = 60m
+maxretry = 3
+```
+
+```.sh
+sudo systemctl restart fail2ban
+```
+
+- Fail2Ban: > `Webmin` > `Networking` > `Fail2Ban Intrusion Detector`> `Filter Action Jails` > Enable `nginx-http-auth`.
+
 - IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control` > `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
 - Two-Factor Authentication (2FA):
   - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
@@ -135,6 +147,10 @@ nano /etc/ssh/sshd_config
 PasswordAuthentication no
 PubkeyAuthentication yes
 PermitRootLogin prohibit-password
+AllowUsers root
+LoginGraceTime 60
+MaxAuthTries 3
+ClientAliveInterval 300
 ```
 
 Restart server.
