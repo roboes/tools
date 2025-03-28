@@ -1,4 +1,4 @@
-# Debian Server Setup
+# Debian and Virtualmin Server Setup
 
 > [!NOTE]
 > Last update: 2025-03-28
@@ -117,7 +117,7 @@ sudo apt-get install libnginx-mod-http-brotli-filter \
   redis
 ```
 
-### SSH Key
+### SSH key
 
 ```.sh
 # Generate the SSH Key Pair
