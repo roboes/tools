@@ -1,7 +1,7 @@
 <?php
 
-// WooCommerce - Display total available stock for a variable product before the variations form
-// Last update: 2024-11-04
+// WooCommerce - Display the total available stock quantity for a variable product before the variations form
+// Last update: 2025-03-02
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -28,29 +28,20 @@ if (class_exists('WooCommerce') && WC()) {
 
             // Check if current product is in the target product IDs array
             if ($product && $product->is_type('variable') && in_array($product->get_id(), $product_ids)) {
-                $variations = $product->get_available_variations();
-                $total_stock = 0;
 
-                // Loop through all variations
-                foreach ($variations as $variation_data) {
-                    $variation = wc_get_product($variation_data['variation_id']);
-
-                    // Check if stock management is enabled for the variation
-                    if ($variation->managing_stock()) {
-                        // Get the stock quantity for this variation
-                        $stock_qty = $variation->get_stock_quantity();
-
-                        // Sum up the total stock
-                        $total_stock += $stock_qty;
-                    }
+                // Use the shortcode to get the stock quantity
+                if (shortcode_exists('product_variable_stock_quantity')) {
+                    $stock_quantity = do_shortcode('[product_variable_stock_quantity id="' . $product->get_id() . '"]');
+                } else {
+                    $stock_quantity = 0;
                 }
 
                 // Display the total stock
-                if ($total_stock > 0) {
+                if ($stock_quantity > 0) {
                     echo '<div class="total-stock-totals">';
                     echo '<br>';
                     echo '<strong>' . $messages['available-appointments'][$current_language] . '</strong><br>';
-                    echo esc_html($total_stock);
+                    echo esc_html($stock_quantity);
                     echo '</div><br>';
                 }
             }

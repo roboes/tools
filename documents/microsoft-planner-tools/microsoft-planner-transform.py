@@ -1,5 +1,5 @@
 ## Microsoft Planner Transform
-# Last update: 2025-01-23
+# Last update: 2025-02-26
 
 
 """About: Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
@@ -16,6 +16,7 @@ globals().clear()
 # Import packages
 from datetime import datetime
 import os
+import shutil
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -197,6 +198,10 @@ def microsoft_planner_transform(
     """Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
     # Create variables
     execution_start = datetime.now()
+
+    # Check if the output file needs to be copied to the output directory
+    if os.path.dirname(input_filepath) != output_path:
+        shutil.copy(src=os.path.join(os.path.dirname(input_filepath), file_name), dst=os.path.join(output_path, file_name))
 
     # Import and transform Microsoft Planner
     microsoft_planner_tasks_summary_df = microsoft_planner_importer(
@@ -471,7 +476,7 @@ microsoft_planner_transform(
     sheet_name='PlannerExport',
     labels_mapping=labels_mapping,
     labels_not_mapped_remove=True,
-    output_path=os.path.join(os.path.expanduser('~'), 'Documents', 'Microsoft Planner Transform'),
+    output_path=os.path.join(os.path.expanduser('~'), 'Downloads'),
     file_name='Microsoft Planner Export Transformed.xlsx',
     engine='xlwings',
 )

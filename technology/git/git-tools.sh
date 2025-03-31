@@ -107,7 +107,7 @@ if find . -type f -name "*.py" | grep -q "/."; then
 
     # Check if "janitor" is in requirements.txt and replace it with pyjanitor==0.30.0
     if grep -q "janitor" "requirements.txt"; then
-        sed -i '/janitor/c\pyjanitor==0.30.0' requirements.txt
+        sed -i '/janitor/c\pyjanitor==0.31.0' requirements.txt
 		pre-commit run --files "./requirements.txt"
     fi
 
