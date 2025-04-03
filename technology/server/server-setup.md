@@ -69,6 +69,8 @@ After installation, login to Virtualmin.
 
 ### Virtualmin settings
 
+- Timezone: `Webmin` > `Hardware` > `System Time` > `Change Timezone`.
+
 - Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
 
 - Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.conf`
@@ -166,6 +168,7 @@ user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
 error_log /var/log/nginx/error.log;
+# error_log /var/log/nginx/error.log debug;
 include /etc/nginx/modules-enabled/*.conf;
 
 events {
@@ -311,7 +314,7 @@ server {
     }
 
     # Security headers
-    add_header Content-Security-Policy "connect-src 'self' https://api.wordpress.org https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.google-analytics.com https://www.analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com; default-src 'self';  font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://sdk.mercadopago.com https://www.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com;" always;
+    add_header Content-Security-Policy "connect-src 'self' https://api.wordpress.org https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.google-analytics.com https://www.analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com; default-src 'self';  font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://sdk.mercadopago.com https://www.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com;" always;
     add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
@@ -329,6 +332,11 @@ server {
         include fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_intercept_errors on;
+        fastcgi_read_timeout 300;
+
+        # Mitigate https://httpoxy.org/ vulnerabilities
+        fastcgi_param HTTP_PROXY "";
 
         # Caching
         fastcgi_cache MYCACHE;
@@ -370,6 +378,24 @@ server {
 ```.sh
 # Restart Nginx
 sudo systemctl reload nginx
+```
+
+### PHP-FPM Configuration
+
+```.txt
+pm = dynamic
+pm.max_children = 16
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 8
+php_value[upload_tmp_dir] = /home/$website/tmp
+php_value[session.save_path] = /home/$website/tmp
+php_value[error_log] = /home/$website/logs/php_log
+php_value[log_errors] = On
+php_admin_value[memory_limit] = 256M
+php_admin_value[error_reporting] = E_ALL
+pm.max_requests = 500
+request_terminate_timeout = 300
 ```
 
 ### SSL Certificate
