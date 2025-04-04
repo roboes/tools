@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-03-28
+> Last update: 2025-04-03
 
 ```.sh
 # Settings
@@ -489,4 +489,14 @@ imapsync --host1 "imap.server1.com" --user1 "email@website.com" --password1 "pas
 
 ```.sh
 ab -n 10 $website
+```
+
+## Export MariaDB database
+
+```.sh
+# Create dump
+mysqldump -u root -p $database_name > $(dirname "$website_root_path")/backup.sql
+
+# Delete file after downloading it
+rm $(dirname "$website_root_path")/backup.sql
 ```
