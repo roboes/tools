@@ -413,10 +413,14 @@ Copy the generated TXT for `_acme-challenge.autodiscover.$website` value and add
 
 ```.sh
 # Verify the TXT Record
-dig TXT _acme-challenge.autodiscover.$website
+dig TXT _acme-challenge.autodiscover.$website +short
 ```
 
 `Virtualmin` > Choose Virtual Server > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
+
+```.sh
+# virtualmin generate-letsencrypt-cert --domain $website --renew --email-error
+```
 
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` > `Only on failure`.

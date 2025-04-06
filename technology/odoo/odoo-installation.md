@@ -147,7 +147,7 @@ chmod 644 "/var/log/odoo/$website.log"
 chmod 644 /etc/systemd/system/odoo@$website.service
 ```
 
-Install `(queue_job)[https://github.com/OCA/queue]`.
+Install [`queue_job`](https://github.com/OCA/queue).
 
 ```.sh
 # Change current directory
