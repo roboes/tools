@@ -233,19 +233,25 @@ http {
     proxy_http_version 1.1;
     proxy_set_header Connection "keep-alive";
     proxy_cache_revalidate on;
-    proxy_buffer_size 64k;
-    proxy_buffers 4 128k;
-    proxy_busy_buffers_size 256k;
+    proxy_buffer_size 512k;
+    proxy_buffers 16 512k;
+    proxy_busy_buffers_size 512k;
     proxy_read_timeout 30;
     proxy_send_timeout 30;
 
-    fastcgi_buffer_size 256k;
-    fastcgi_buffers 8 1024k;
-    fastcgi_busy_buffers_size 2048k;
-    fastcgi_read_timeout 300s;
+    # FastCGI core configuration
+    fastcgi_read_timeout 60s;
+    fastcgi_send_timeout 60s;
+
+    # FastCGI buffers
+    fastcgi_buffer_size 512k;
+    fastcgi_buffers 16 512k;
+    fastcgi_busy_buffers_size 512k;
+    fastcgi_temp_file_write_size 2M;
+
+    client_max_body_size 50M;
 
     proxy_buffering on;
-    large_client_header_buffers 8 32k;
 
     keepalive_timeout 30;
     reset_timedout_connection on;
@@ -301,6 +307,9 @@ http {
 
 ```.txt
 server {
+    error_log /var/log/virtualmin/${website}_error_log warn;
+
+
     # Custom nginx config
     location / {
         try_files $uri $uri/ /index.php?$args;
@@ -331,34 +340,34 @@ server {
         try_files $uri $fastcgi_script_name =404;
         default_type application/x-httpd-php;
 
-        # FastCGI Configuration
+        # FastCGI core configuration
         fastcgi_pass unix:/run/php/174285551812977.sock;
         include fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_intercept_errors on;
-        fastcgi_read_timeout 300s;
-        fastcgi_send_timeout 300s;
+        fastcgi_read_timeout 120s;
+        fastcgi_connect_timeout 120s;
+        fastcgi_send_timeout 120s;
 
-        # Buffers
-        fastcgi_buffer_size 256k;
-        fastcgi_buffers 16 256k;
-        fastcgi_busy_buffers_size 2M;
-
-        fastcgi_hide_header 'X-Powered-By';
-        fastcgi_ignore_headers "Cache-Control" "Expires";
+        # FastCGI buffers
+        fastcgi_buffer_size 512k;
+        fastcgi_buffers 16 512k;
+        fastcgi_busy_buffers_size 512k;
         fastcgi_temp_file_write_size 1M;
 
-        # Mitigate https://httpoxy.org/ vulnerabilities
+        # FastCGI security and header handling
+        fastcgi_hide_header 'X-Powered-By';
+        fastcgi_ignore_headers "Cache-Control" "Expires";
         fastcgi_param HTTP_PROXY "";
 
-        # Caching
+        # FastCGI caching
         fastcgi_cache MYCACHE;
-        fastcgi_cache_valid 200 301 302 10m;
+        fastcgi_cache_valid 200 301 302 1h;
         fastcgi_cache_valid 404 1m;
         fastcgi_cache_use_stale error timeout updating;
 
-        # Cache exclusion for admin
+        # FastCGI cache exclusion rules
         set $skip_cache 0;
         if ($request_uri ~* "/wp-admin/|/wp-json/|/wc-api/|/admin-ajax.php") {
             set $skip_cache 1;
@@ -366,14 +375,14 @@ server {
         fastcgi_cache_bypass $skip_cache;
         fastcgi_no_cache $skip_cache;
 
-        # Header cleanup
+        # FastCGI cache headers and cleanup
         more_clear_headers "Cache-Control" "Expires" "Set-Cookie" "Link" "cf-edge-cache";
         add_header Cache-Control "public, s-maxage=3600" always;
         add_header X-FastCGI-Cache $upstream_cache_status;
         add_header CF-Cache-Status $upstream_cache_status always;
     }
 
-    # Cache
+    # Caching: static assets
     location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|txt|wav|woff|woff2|xls|xlsx|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
@@ -381,6 +390,7 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    # # Caching: feeds and text files
     location ~* \.(xml|json|txt|rss)$ {
         expires 5m;
         add_header Cache-Control "public";
@@ -415,6 +425,8 @@ sudo nano /etc/php/8.4/fpm/php-fpm.conf
 emergency_restart_threshold = 10
 emergency_restart_interval = 60s
 process_control_timeout = 10s
+; log_level = notice
+log_level = warning
 ```
 
 #### Local
@@ -426,7 +438,7 @@ pm.start_servers = 2
 pm.min_spare_servers = 1
 pm.max_spare_servers = 8
 pm.max_requests = 500
-pm.process_idle_timeout = 20s
+pm.process_idle_timeout = 60s
 php_value[upload_tmp_dir] = /home/$website/tmp
 php_value[session.save_path] = /home/$website/tmp
 php_value[error_log] = /home/$website/logs/php_log
@@ -434,6 +446,17 @@ php_value[log_errors] = On
 php_admin_value[memory_limit] = 256M
 php_admin_value[error_reporting] = E_ALL
 request_terminate_timeout = 120s
+catch_workers_output = yes
+
+; request_slowlog_timeout = 10s
+; slowlog = /home/$website/logs/php_slow.log
+```
+
+```.sh
+# touch /home/$website/logs/php_slow.log
+# chown $system_user:$system_user /home/$website/logs/php_slow.log
+# chmod 664 /home/$website/logs/php_slow.log
+# sudo systemctl restart php8.4-fpm
 ```
 
 ### SSL Certificate
@@ -557,4 +580,5 @@ tail -n 50 /var/log/virtualmin/${website}_error_log
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
 tail -n 50 $(dirname "$website_root_path")/logs/php_log
+tail -n 50 $(dirname "$website_root_path")/logs/php_slow.log
 ```
