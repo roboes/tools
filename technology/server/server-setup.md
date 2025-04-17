@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-04-14
+> Last update: 2025-04-17
 
 ```.sh
 # Settings
@@ -244,10 +244,10 @@ http {
     fastcgi_send_timeout 60s;
 
     # FastCGI buffers
-    fastcgi_buffer_size 512k;
-    fastcgi_buffers 16 512k;
-    fastcgi_busy_buffers_size 512k;
-    fastcgi_temp_file_write_size 2M;
+    fastcgi_buffer_size 64k;
+    fastcgi_buffers 8 64k;
+    fastcgi_busy_buffers_size 128k;
+    fastcgi_temp_file_write_size 512k;
 
     client_max_body_size 50M;
 
@@ -309,6 +309,9 @@ http {
 server {
     error_log /var/log/virtualmin/${website}_error_log warn;
 
+    # Settings
+    set $php_socket unix:/run/php/174285551812977.sock;
+
 
     # Custom nginx config
     location / {
@@ -338,60 +341,72 @@ server {
 
     location ~ "\.php(/|$)" {
         try_files $uri $fastcgi_script_name =404;
-        default_type application/x-httpd-php;
 
         # FastCGI core configuration
-        fastcgi_pass unix:/run/php/174285551812977.sock;
+        fastcgi_pass $php_socket;
         include fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_intercept_errors on;
-        fastcgi_read_timeout 120s;
-        fastcgi_connect_timeout 120s;
-        fastcgi_send_timeout 120s;
+        fastcgi_connect_timeout 30s;
+        fastcgi_read_timeout 30s;
+        fastcgi_send_timeout 30s;
 
         # FastCGI buffers
-        fastcgi_buffer_size 512k;
-        fastcgi_buffers 16 512k;
-        fastcgi_busy_buffers_size 512k;
-        fastcgi_temp_file_write_size 1M;
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+        fastcgi_busy_buffers_size 48k;
+        fastcgi_temp_file_write_size 64k;
 
         # FastCGI security and header handling
         fastcgi_hide_header 'X-Powered-By';
-        fastcgi_ignore_headers "Cache-Control" "Expires";
         fastcgi_param HTTP_PROXY "";
 
         # FastCGI caching
+        set $skip_cache 0;
+
+        if ($request_method ~* "DELETE|POST|PUT") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "PHPSESSID") {
+            set $skip_cache 1;
+        }
+
+        if ($request_uri ~* "/wp-admin/|/wp-login\.php|/wp-cron\.php|/wp-json/|/wc-api/|/admin-ajax\.php") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") {
+             set $skip_cache 1;
+        }
+
         fastcgi_cache MYCACHE;
         fastcgi_cache_valid 200 301 302 1h;
         fastcgi_cache_valid 404 1m;
         fastcgi_cache_use_stale error timeout updating;
 
-        # FastCGI cache exclusion rules
-        set $skip_cache 0;
-        if ($request_uri ~* "/wp-admin/|/wp-json/|/wc-api/|/admin-ajax.php") {
-            set $skip_cache 1;
-        }
         fastcgi_cache_bypass $skip_cache;
         fastcgi_no_cache $skip_cache;
 
         # FastCGI cache headers and cleanup
-        more_clear_headers "Cache-Control" "Expires" "Set-Cookie" "Link" "cf-edge-cache";
-        add_header Cache-Control "public, s-maxage=3600" always;
-        add_header X-FastCGI-Cache $upstream_cache_status;
-        add_header CF-Cache-Status $upstream_cache_status always;
+        add_header X-Nginx-Cache-Status $upstream_cache_status always;
     }
 
     # Caching: static assets
-    location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|txt|wav|woff|woff2|xls|xlsx|zip|webm|webp)$ {
+    location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
 
-    # # Caching: feeds and text files
-    location ~* \.(xml|json|txt|rss)$ {
+    # Caching: feeds and text files
+    location ~* \.(csv|json|rss|txt|xls|xlsx|xml)$ {
         expires 5m;
         add_header Cache-Control "public";
     }
@@ -411,6 +426,31 @@ server {
 # Restart Nginx
 sudo systemctl reload nginx
 ```
+
+### Cloudflare Caching
+
+- Rule name: `Cache Bypass`.
+
+- Custom filter expression:
+
+```.txt
+(http.request.method in {"POST" "PUT" "DELETE"}) or
+(http.cookie contains "PHPSESSID") or
+(http.request.uri.path contains "/wp-admin") or
+(http.request.uri.path contains "/wp-login.php") or
+(http.request.uri.path contains "/wp-cron.php") or
+(http.request.uri.path contains "/wp-json/") or
+(http.request.uri.path contains "/wc-api/") or
+(http.request.uri.path contains "/admin-ajax.php") or
+(http.cookie contains "wordpress_logged_in_") or
+(http.cookie contains "wordpress_sec_") or
+(http.cookie contains "wp-settings-") or
+(http.cookie contains "wp-settings-time-") or
+(http.cookie contains "woocommerce_") or
+(http.cookie contains "wp_woocommerce_session_")
+```
+
+- Then... `Bypass cache`.
 
 ### PHP-FPM Configuration
 
@@ -445,7 +485,7 @@ php_value[error_log] = /home/$website/logs/php_log
 php_value[log_errors] = On
 php_admin_value[memory_limit] = 256M
 php_admin_value[error_reporting] = E_ALL
-request_terminate_timeout = 120s
+request_terminate_timeout = 30s
 catch_workers_output = yes
 
 ; request_slowlog_timeout = 10s
@@ -566,6 +606,14 @@ mysqldump -u root -p $database_name > $(dirname "$website_root_path")/backup.sql
 rm $(dirname "$website_root_path")/backup.sql
 ```
 
+## Cache
+
+```.sh
+# Clear nginx cache
+sudo rm -rf /var/cache/nginx/*
+sudo systemctl reload nginx
+```
+
 ## Logs
 
 ```.sh
@@ -580,5 +628,5 @@ tail -n 50 /var/log/virtualmin/${website}_error_log
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
 tail -n 50 $(dirname "$website_root_path")/logs/php_log
-tail -n 50 $(dirname "$website_root_path")/logs/php_slow.log
+# tail -n 50 $(dirname "$website_root_path")/logs/php_slow.log
 ```
