@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-03-30
+// Last update: 2025-04-09
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -45,6 +45,7 @@ use DVDoug\BoxPacker\Item;
 use DVDoug\BoxPacker\ItemSorter;
 use DVDoug\BoxPacker\Packer;
 use DVDoug\BoxPacker\Rotation;
+
 // use DVDoug\BoxPacker\Test\TestBox;
 // use DVDoug\BoxPacker\Test\TestItem;
 
@@ -171,18 +172,12 @@ function calculate_and_store_package_best_fit($order_id)
     $packer = new Packer(new DefaultItemSorter());
 
     // Define available boxes
-    $boxes = [
-        new CustomBox('Box S1', 140, 140, 150, 90, 140, 140, 150, 20000),
-        new CustomBox('Box S2', 140, 140, 250, 101, 140, 140, 250, 20000),
-        new CustomBox('Box S3', 140, 140, 350, 118, 140, 140, 350, 20000),
-        new CustomBox('Box M', 250, 350, 150, 172, 250, 350, 150, 20000),
-        new CustomBox('Box L', 380, 380, 200, 316, 380, 380, 200, 20000)
-    ];
-
-
-    foreach ($boxes as $box) {
-        $packer->addBox($box);
-    }
+    $packer->addBox(new CustomBox(reference: 'CX ENVIO P', outerWidth: 100, outerLength: 160, outerDepth: 200, emptyWeight: 48, innerWidth: (100 - 3), innerLength: (160 - 3), innerDepth: (200 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box S1', outerWidth: 140, outerLength: 140, outerDepth: 150, emptyWeight: 90, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (150 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box S2', outerWidth: 140, outerLength: 140, outerDepth: 250, emptyWeight: 101, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (250 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box S3', outerWidth: 140, outerLength: 140, outerDepth: 350, emptyWeight: 118, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (350 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box M', outerWidth: 250, outerLength: 350, outerDepth: 150, emptyWeight: 172, innerWidth: (250 - 3), innerLength: (350 - 3), innerDepth: (150 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box L', outerWidth: 380, outerLength: 380, outerDepth: 200, emptyWeight: 316, innerWidth: (380 - 3), innerLength: (380 - 3), innerDepth: (200 - 3), maxWeight: 20000));
 
     // Add order items to the packer
     foreach ($order->get_items() as $item) {
@@ -198,11 +193,11 @@ function calculate_and_store_package_best_fit($order_id)
 
         if ($length && $width && $height && $weight) {
             $packer->addItem(new CustomItem(
-                $product->get_name(),
-                (int) ($width * 10),    // Convert cm to mm
-                (int) ($length * 10),   // Convert cm to mm
-                (int) ($height * 10),   // Convert cm to mm
-                (int) ($weight)
+                description: $product->get_name(),
+                width: (int) ($width * 10),   // Convert cm to mm
+                length: (int) ($length * 10), // Convert cm to mm
+                depth: (int) ($height * 10),  // Convert cm to mm
+                weight: (int) ($weight)       // Weight in grams
             ));
         }
     }
