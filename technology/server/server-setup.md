@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-03-28
+> Last update: 2025-04-17
 
 ```.sh
 # Settings
@@ -69,6 +69,8 @@ After installation, login to Virtualmin.
 
 ### Virtualmin settings
 
+- Timezone: `Webmin` > `Hardware` > `System Time` > `Change Timezone`.
+
 - Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
 
 - Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.conf`
@@ -113,7 +115,8 @@ sudo apt-get install php${php_version_current}-sqlite3
 ### Packages
 
 ```.sh
-sudo apt-get install libnginx-mod-http-brotli-filter \
+sudo apt-get install htop \
+  libnginx-mod-http-brotli-filter \
   redis
 ```
 
@@ -166,6 +169,7 @@ user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
 error_log /var/log/nginx/error.log;
+# error_log /var/log/nginx/error.log debug;
 include /etc/nginx/modules-enabled/*.conf;
 
 events {
@@ -229,19 +233,25 @@ http {
     proxy_http_version 1.1;
     proxy_set_header Connection "keep-alive";
     proxy_cache_revalidate on;
-    proxy_buffer_size 64k;
-    proxy_buffers 4 128k;
-    proxy_busy_buffers_size 256k;
+    proxy_buffer_size 512k;
+    proxy_buffers 16 512k;
+    proxy_busy_buffers_size 512k;
     proxy_read_timeout 30;
     proxy_send_timeout 30;
 
-    fastcgi_buffer_size 256k;
-    fastcgi_buffers 8 512k;
-    fastcgi_busy_buffers_size 1024k;
-    fastcgi_read_timeout 30;
+    # FastCGI core configuration
+    fastcgi_read_timeout 60s;
+    fastcgi_send_timeout 60s;
+
+    # FastCGI buffers
+    fastcgi_buffer_size 64k;
+    fastcgi_buffers 8 64k;
+    fastcgi_busy_buffers_size 128k;
+    fastcgi_temp_file_write_size 512k;
+
+    client_max_body_size 50M;
 
     proxy_buffering on;
-    large_client_header_buffers 8 32k;
 
     keepalive_timeout 30;
     reset_timedout_connection on;
@@ -297,6 +307,12 @@ http {
 
 ```.txt
 server {
+    error_log /var/log/virtualmin/${website}_error_log warn;
+
+    # Settings
+    set $php_socket unix:/run/php/174285551812977.sock;
+
+
     # Custom nginx config
     location / {
         try_files $uri $uri/ /index.php?$args;
@@ -311,7 +327,7 @@ server {
     }
 
     # Security headers
-    add_header Content-Security-Policy "connect-src 'self' https://api.wordpress.org https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.google-analytics.com https://www.analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com; default-src 'self';  font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://sdk.mercadopago.com https://www.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com;" always;
+    add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;" always;
     add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
@@ -325,33 +341,72 @@ server {
 
     location ~ "\.php(/|$)" {
         try_files $uri $fastcgi_script_name =404;
-        fastcgi_pass unix:/run/php/174285551812977.sock;
+
+        # FastCGI core configuration
+        fastcgi_pass $php_socket;
         include fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_intercept_errors on;
+        fastcgi_connect_timeout 30s;
+        fastcgi_read_timeout 30s;
+        fastcgi_send_timeout 30s;
 
-        # Caching
+        # FastCGI buffers
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+        fastcgi_busy_buffers_size 48k;
+        fastcgi_temp_file_write_size 64k;
+
+        # FastCGI security and header handling
+        fastcgi_hide_header 'X-Powered-By';
+        fastcgi_param HTTP_PROXY "";
+
+        # FastCGI caching
+        set $skip_cache 0;
+
+        if ($request_method ~* "DELETE|POST|PUT") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "PHPSESSID") {
+            set $skip_cache 1;
+        }
+
+        if ($request_uri ~* "/wp-admin/|/wp-login\.php|/wp-cron\.php|/wp-json/|/wc-api/|/admin-ajax\.php") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
+            set $skip_cache 1;
+        }
+
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") {
+             set $skip_cache 1;
+        }
+
         fastcgi_cache MYCACHE;
-        fastcgi_cache_valid 200 301 302 10m;
+        fastcgi_cache_valid 200 301 302 1h;
         fastcgi_cache_valid 404 1m;
         fastcgi_cache_use_stale error timeout updating;
 
-        # Header cleanup
-        more_clear_headers "Cache-Control" "Expires" "Set-Cookie" "Link" "cf-edge-cache";
-        add_header Cache-Control "public, s-maxage=3600" always;
-        add_header X-FastCGI-Cache $upstream_cache_status;
-        add_header CF-Cache-Status $upstream_cache_status always;
+        fastcgi_cache_bypass $skip_cache;
+        fastcgi_no_cache $skip_cache;
+
+        # FastCGI cache headers and cleanup
+        add_header X-Nginx-Cache-Status $upstream_cache_status always;
     }
 
-    # Cache
-    location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|txt|wav|woff|woff2|xls|xlsx|zip|webm|webp)$ {
+    # Caching: static assets
+    location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
 
-    location ~* \.(xml|json|txt|rss)$ {
+    # Caching: feeds and text files
+    location ~* \.(csv|json|rss|txt|xls|xlsx|xml)$ {
         expires 5m;
         add_header Cache-Control "public";
     }
@@ -372,6 +427,78 @@ server {
 sudo systemctl reload nginx
 ```
 
+### Cloudflare Caching
+
+- Rule name: `Cache Bypass`.
+
+- Custom filter expression:
+
+```.txt
+(http.request.method in {"POST" "PUT" "DELETE"}) or
+(http.cookie contains "PHPSESSID") or
+(http.request.uri.path contains "/wp-admin") or
+(http.request.uri.path contains "/wp-login.php") or
+(http.request.uri.path contains "/wp-cron.php") or
+(http.request.uri.path contains "/wp-json/") or
+(http.request.uri.path contains "/wc-api/") or
+(http.request.uri.path contains "/admin-ajax.php") or
+(http.cookie contains "wordpress_logged_in_") or
+(http.cookie contains "wordpress_sec_") or
+(http.cookie contains "wp-settings-") or
+(http.cookie contains "wp-settings-time-") or
+(http.cookie contains "woocommerce_") or
+(http.cookie contains "wp_woocommerce_session_")
+```
+
+- Then... `Bypass cache`.
+
+### PHP-FPM Configuration
+
+#### Global
+
+```.sh
+sudo nano /etc/php/8.4/fpm/php-fpm.conf
+```
+
+```.txt
+[global]
+emergency_restart_threshold = 10
+emergency_restart_interval = 60s
+process_control_timeout = 10s
+; log_level = notice
+log_level = warning
+```
+
+#### Local
+
+```.txt
+pm = dynamic
+pm.max_children = 16
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 8
+pm.max_requests = 500
+pm.process_idle_timeout = 60s
+php_value[upload_tmp_dir] = /home/$website/tmp
+php_value[session.save_path] = /home/$website/tmp
+php_value[error_log] = /home/$website/logs/php_log
+php_value[log_errors] = On
+php_admin_value[memory_limit] = 256M
+php_admin_value[error_reporting] = E_ALL
+request_terminate_timeout = 30s
+catch_workers_output = yes
+
+; request_slowlog_timeout = 10s
+; slowlog = /home/$website/logs/php_slow.log
+```
+
+```.sh
+# touch /home/$website/logs/php_slow.log
+# chown $system_user:$system_user /home/$website/logs/php_slow.log
+# chmod 664 /home/$website/logs/php_slow.log
+# sudo systemctl restart php8.4-fpm
+```
+
 ### SSL Certificate
 
 ```.sh
@@ -387,10 +514,14 @@ Copy the generated TXT for `_acme-challenge.autodiscover.$website` value and add
 
 ```.sh
 # Verify the TXT Record
-dig TXT _acme-challenge.autodiscover.$website
+dig TXT _acme-challenge.autodiscover.$website +short
 ```
 
 `Virtualmin` > Choose Virtual Server > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
+
+```.sh
+# virtualmin generate-letsencrypt-cert --domain $website --renew --email-error
+```
 
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` > `Only on failure`.
@@ -463,4 +594,39 @@ imapsync --host1 "imap.server1.com" --user1 "email@website.com" --password1 "pas
 
 ```.sh
 ab -n 10 $website
+```
+
+## Export MariaDB database
+
+```.sh
+# Create dump
+mysqldump -u root -p $database_name > $(dirname "$website_root_path")/backup.sql
+
+# Delete file after downloading it
+rm $(dirname "$website_root_path")/backup.sql
+```
+
+## Cache
+
+```.sh
+# Clear nginx cache
+sudo rm -rf /var/cache/nginx/*
+sudo systemctl reload nginx
+```
+
+## Logs
+
+```.sh
+# Nginx
+tail -n 50 /var/log/nginx/error.log
+tail -n 50 /var/log/virtualmin/${website}_error_log
+
+# Clear log file
+# > /var/log/virtualmin/${website}_error_log
+
+
+# PHP
+tail -n 50 /var/log/php8.4-fpm.log
+tail -n 50 $(dirname "$website_root_path")/logs/php_log
+# tail -n 50 $(dirname "$website_root_path")/logs/php_slow.log
 ```

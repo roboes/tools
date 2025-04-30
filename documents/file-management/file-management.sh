@@ -16,7 +16,7 @@ wsl
 # ulimit -n 8192
 
 # Homebrew update
-brew update && brew upgrade && brew cleanup
+# brew update && brew upgrade && brew cleanup
 
 # Install rnr
 # brew install rnr

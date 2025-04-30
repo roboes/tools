@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2025-01-17
+# Last update: 2025-04-10
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -16,7 +16,7 @@ wsl
 # ulimit -n 8192
 
 # Homebrew update
-brew update && brew upgrade && brew cleanup
+# brew update && brew upgrade && brew cleanup
 
 # Install ghostscript
 # brew install ghostscript
@@ -68,6 +68,10 @@ ocrmypdf -l por "file_A.pdf" "file_B.pdf"
 
 # Decrypt PDF password
 qpdf "input.pdf" --password="1234" --decrypt "output.pdf"
+
+
+# Extract PDF pages
+qpdf "input.pdf" --pages . 2-5 -- "output.pdf"
 
 
 # Reduce PDF size and quality

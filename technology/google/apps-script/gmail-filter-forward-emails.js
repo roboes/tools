@@ -1,5 +1,5 @@
-// Google Apps Script - Automatically forwards Gmail emails from specified senders with .pdf and .tiff attachments only, applies a label, and ensures they are not marked as spam
-// Last update: 2025-03-30
+// Google Apps Script - Automatically forwards Gmail emails from specified senders, applies a label, and ensures they are not marked as spam
+// Last update: 2025-04-04
 
 // https://script.google.com > New project >
 // - Editor > Services > Add a service > Gmail API
@@ -43,32 +43,10 @@ function forwardNewEmails() {
     for (var j = 0; j < messages.length; j++) {
       var message = messages[j];
       Logger.log("Message " + (j+1) + " subject: " + message.getSubject());
-      var attachments = message.getAttachments();
-      var allowedAttachments = [];
 
-      // Loop through all attachments in the message and filter for PDFs and TIFFs
-      for (var k = 0; k < attachments.length; k++) {
-        var attachment = attachments[k];
-        Logger.log("Attachment " + (k+1) + " MIME type: " + attachment.getContentType());
-
-        // Check if the attachment is a PDF or TIFF file
-        if (attachment.getContentType().includes('pdf') || attachment.getContentType().includes('tiff')) {
-          Logger.log("Allowed attachment found: " + attachment.getContentType());
-          allowedAttachments.push(attachment);
-        }
-      }
-
-      // If there are allowed attachments, forward the email with only PDFs and TIFFs
-      if (allowedAttachments.length > 0 && !forwarded) {
-        var subject = message.getSubject();
-        var body = message.getBody();
-        Logger.log("Forwarding message: " + subject + " with " + allowedAttachments.length + " allowed attachments.");
-
-        // Create a new email with only the allowed attachments (PDFs and TIFFs)
-        GmailApp.sendEmail(forwardingEmailTo, subject, "", {
-          htmlBody: body,
-          attachments: allowedAttachments
-        });
+      // Forward email
+      if (!forwarded) {
+        message.forward(forwardingEmailTo);
 
         forwarded = true; // Set the flag to true to prevent forwarding again
 

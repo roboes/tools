@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-02-11
+# Last update: 2025-04-14
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -80,17 +80,16 @@ curl -o "./.pre-commit-config.yaml" --remote-name --location "https://raw.github
 mkdir -p "./.github/workflows"
 curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
 
+if [ "$git_repository" == "tools" ]; then
+    pre-commit autoupdate
+	cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
+fi
+
 ## Markdown
 markdownlint-cli2 "**/*.md" --fix --disable MD013 MD024 MD033 MD045
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;
-
-# pre-commit autoupdate
-
-if [ "$git_repository" == "tools" ]; then
-    cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
-fi
 
 pre-commit run --all-files
 
