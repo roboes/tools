@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-04-17
+> Last update: 2025-05-13
 
 ```.sh
 # Settings
@@ -530,6 +530,11 @@ dig TXT _acme-challenge.autodiscover.$website +short
 ```.sh
 # Remove .htaccess
 rm $website_root_path/.well-known/acme-challenge/.htaccess
+```
+
+```.sh
+# Delete certificate
+# sudo certbot delete --cert-name autodiscover.$website
 ```
 
 ### Change default website for server IP address
