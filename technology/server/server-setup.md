@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-05-13
+> Last update: 2025-05-24
 
 ```.sh
 # Settings
@@ -426,6 +426,36 @@ server {
 # Restart Nginx
 sudo systemctl reload nginx
 ```
+
+## Cloudflare
+
+### Cloudflare Security
+
+Cloudflare > Website > `Security` > `Security rules`.
+
+1) Block AI Scrapers and Crawlers
+
+- `Rule name`: `Block AI Scrapers and Crawlers`.
+- `Expression`: `(cf.verified_bot_category eq "AI Crawler")`.
+- `Choose action`: `Block`.
+
+2) Managed Access
+
+- `Rule name`: `Managed Access`.
+- `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
+- `Choose action`: `Managed Challenge`.
+
+3) WordPress Login (Countries Allowed)
+
+- `Rule name`: `WordPress Login (Countries Allowed)`.
+- `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
+- `Choose action`: `Block`.
+
+4) WordPress Login (Captcha)
+
+- `Rule name`: `WordPress Login (Captcha)`.
+- `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
+- `Choose action`: `Managed Challenge`.
 
 ### Cloudflare Caching
 
