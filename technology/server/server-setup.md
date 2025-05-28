@@ -1,13 +1,13 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-04-17
+> Last update: 2025-05-24
 
 ```.sh
 # Settings
 server_ip="100.00.000.01"
-website="website.com"
-website_root_path="/home/$website/public_html"
+domain="website.com"
+domain_root_path="/home/$domain/public_html"
 system_user="system_user"
 # system_user="www-data:www-data"
 database_name="database_name"
@@ -233,9 +233,10 @@ http {
     proxy_http_version 1.1;
     proxy_set_header Connection "keep-alive";
     proxy_cache_revalidate on;
-    proxy_buffer_size 512k;
-    proxy_buffers 16 512k;
-    proxy_busy_buffers_size 512k;
+    proxy_buffering on;
+    proxy_buffer_size 16k;
+    proxy_buffers 8 16k;
+    proxy_busy_buffers_size 32k;
     proxy_read_timeout 30;
     proxy_send_timeout 30;
 
@@ -244,14 +245,12 @@ http {
     fastcgi_send_timeout 60s;
 
     # FastCGI buffers
-    fastcgi_buffer_size 64k;
-    fastcgi_buffers 8 64k;
-    fastcgi_busy_buffers_size 128k;
-    fastcgi_temp_file_write_size 512k;
+    fastcgi_buffer_size 16k;
+    fastcgi_buffers 4 16k;
+    fastcgi_busy_buffers_size 48k;
+    fastcgi_temp_file_write_size 64k;
 
     client_max_body_size 50M;
-
-    proxy_buffering on;
 
     keepalive_timeout 30;
     reset_timedout_connection on;
@@ -303,14 +302,57 @@ http {
 #}
 ```
 
-##### /etc/nginx/sites-available/website.com.conf
+##### /etc/nginx/sites-available/domain.com.conf
 
 ```.txt
 server {
-    error_log /var/log/virtualmin/${website}_error_log warn;
-
     # Settings
-    set $php_socket unix:/run/php/174285551812977.sock;
+    set $domain website.com;
+    set $domain_root_path /home/${domain}/public_html;
+    set $php_socket_id 100000000000000;
+    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
+    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    listen 100.00.000.01;
+    listen 100.00.000.01:443 ssl;
+    listen [1000:0000:0000:0000:0000:0000:0000:0000];
+    listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
+    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
+    ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
+
+    root ${domain_root_path};
+    index index.php index.htm index.html;
+    access_log /var/log/virtualmin/${domain}_access_log;
+    error_log /var/log/virtualmin/${domain}_error_log warn;
+    fastcgi_param GATEWAY_INTERFACE CGI/1.1;
+    fastcgi_param SERVER_SOFTWARE nginx;
+    fastcgi_param QUERY_STRING $query_string;
+    fastcgi_param REQUEST_METHOD $request_method;
+    fastcgi_param CONTENT_TYPE $content_type;
+    fastcgi_param CONTENT_LENGTH $content_length;
+    fastcgi_param SCRIPT_FILENAME "${domain_root_path}$fastcgi_script_name";
+    fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+    fastcgi_param REQUEST_URI $request_uri;
+    fastcgi_param DOCUMENT_URI $document_uri;
+    fastcgi_param DOCUMENT_ROOT ${domain_root_path};
+    fastcgi_param SERVER_PROTOCOL $server_protocol;
+    fastcgi_param REMOTE_ADDR $remote_addr;
+    fastcgi_param REMOTE_PORT $remote_port;
+    fastcgi_param SERVER_ADDR $server_addr;
+    fastcgi_param SERVER_PORT $server_port;
+    fastcgi_param SERVER_NAME $server_name;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+    fastcgi_param HTTPS $https;
+    location ^~ /.well-known/ {
+        try_files $uri /;
+    }
+    fastcgi_split_path_info "^(.+\.php)(/.+)$";
+    if ($host = webmail.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
+    }
+    if ($host = admin.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
+    }
+    rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
 
 
     # Custom nginx config
@@ -343,7 +385,7 @@ server {
         try_files $uri $fastcgi_script_name =404;
 
         # FastCGI core configuration
-        fastcgi_pass $php_socket;
+        fastcgi_pass ${php_socket_path};
         include fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
@@ -427,6 +469,36 @@ server {
 sudo systemctl reload nginx
 ```
 
+## Cloudflare
+
+### Cloudflare Security
+
+Cloudflare > Website > `Security` > `Security rules`.
+
+1) Block AI Scrapers and Crawlers
+
+- `Rule name`: `Block AI Scrapers and Crawlers`.
+- `Expression`: `(cf.verified_bot_category eq "AI Crawler")`.
+- `Choose action`: `Block`.
+
+2) Managed Access
+
+- `Rule name`: `Managed Access`.
+- `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
+- `Choose action`: `Managed Challenge`.
+
+3) WordPress Login (Countries Allowed)
+
+- `Rule name`: `WordPress Login (Countries Allowed)`.
+- `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
+- `Choose action`: `Block`.
+
+4) WordPress Login (Captcha)
+
+- `Rule name`: `WordPress Login (Captcha)`.
+- `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
+- `Choose action`: `Managed Challenge`.
+
 ### Cloudflare Caching
 
 - Rule name: `Cache Bypass`.
@@ -479,9 +551,9 @@ pm.min_spare_servers = 1
 pm.max_spare_servers = 8
 pm.max_requests = 500
 pm.process_idle_timeout = 60s
-php_value[upload_tmp_dir] = /home/$website/tmp
-php_value[session.save_path] = /home/$website/tmp
-php_value[error_log] = /home/$website/logs/php_log
+php_value[upload_tmp_dir] = /home/$domain/tmp
+php_value[session.save_path] = /home/$domain/tmp
+php_value[error_log] = /home/$domain/logs/php_log
 php_value[log_errors] = On
 php_admin_value[memory_limit] = 256M
 php_admin_value[error_reporting] = E_ALL
@@ -489,38 +561,38 @@ request_terminate_timeout = 30s
 catch_workers_output = yes
 
 ; request_slowlog_timeout = 10s
-; slowlog = /home/$website/logs/php_slow.log
+; slowlog = /home/$domain/logs/php_slow.log
 ```
 
 ```.sh
-# touch /home/$website/logs/php_slow.log
-# chown $system_user:$system_user /home/$website/logs/php_slow.log
-# chmod 664 /home/$website/logs/php_slow.log
+# touch /home/$domain/logs/php_slow.log
+# chown $system_user:$system_user /home/$domain/logs/php_slow.log
+# chmod 664 /home/$domain/logs/php_slow.log
 # sudo systemctl restart php8.4-fpm
 ```
 
 ### SSL Certificate
 
 ```.sh
-mkdir -p $website_root_path/.well-known/acme-challenge
-chmod -R 755 $website_root_path/.well-known
+mkdir -p $domain_root_path/.well-known/acme-challenge
+chmod -R 755 $domain_root_path/.well-known
 ```
 
 ```.sh
-sudo certbot certonly --manual --preferred-challenges dns -d autodiscover.$website
+sudo certbot certonly --manual --preferred-challenges dns -d autodiscover.$domain
 ```
 
-Copy the generated TXT for `_acme-challenge.autodiscover.$website` value and add it as a DNS `TXT` record with the name `_acme-challenge` in Cloudflare.
+Copy the generated TXT for `_acme-challenge.autodiscover.$domain` value and add it as a DNS `TXT` record with the name `_acme-challenge` in Cloudflare.
 
 ```.sh
 # Verify the TXT Record
-dig TXT _acme-challenge.autodiscover.$website +short
+dig TXT _acme-challenge.autodiscover.$domain +short
 ```
 
 `Virtualmin` > Choose Virtual Server > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
 
 ```.sh
-# virtualmin generate-letsencrypt-cert --domain $website --renew --email-error
+# virtualmin generate-letsencrypt-cert --domain $domain --renew --email-error
 ```
 
 - Enable `Automatically renew certificate`.
@@ -529,10 +601,15 @@ dig TXT _acme-challenge.autodiscover.$website +short
 
 ```.sh
 # Remove .htaccess
-rm $website_root_path/.well-known/acme-challenge/.htaccess
+rm $domain_root_path/.well-known/acme-challenge/.htaccess
 ```
 
-### Change default website for server IP address
+```.sh
+# Delete certificate
+# sudo certbot delete --cert-name autodiscover.$domain
+```
+
+### Change default domain for server IP address
 
 - `Virtualmin` > Choose Virtual Server > `Web Configuration` > `Website Options` > `Default website for IP address` > `Yes`.
 
@@ -547,63 +624,63 @@ rm $website_root_path/.well-known/acme-challenge/.htaccess
 
 ```.sh
 # Import .sql
-mysql -u "$system_user" -p "$database_name" < $website_root_path/"$database_name".sql
+mysql -u "$system_user" -p "$database_name" < $domain_root_path/"$database_name".sql
 
 # Delete dataset
-rm $website_root_path/"$database_name".sql
+rm $domain_root_path/"$database_name".sql
 ```
 
 ### Files migration
 
 ```.sh
-# Extract the contents of the "wordpress_export.zip" file to the $website_root_path folder
-unzip "$website_root_path/wordpress_export.zip" "*" -d $website_root_path
+# Extract the contents of the "wordpress_export.zip" file to the $domain_root_path folder
+unzip "$domain_root_path/wordpress_export.zip" "*" -d $domain_root_path
 
 # Delete .zip file
-rm "$website_root_path/wordpress_export.zip"
+rm "$domain_root_path/wordpress_export.zip"
 ```
 
 ### Ownership and permission
 
 ```.sh
 # Change ownership
-chown -R "$system_user" $website_root_path
+chown -R "$system_user" $domain_root_path
 
 # Change permissions
-find $website_root_path -type d -exec chmod 755 {} \;
-find $website_root_path -type f -exec chmod 644 {} \;
-chmod 600 $website_root_path/wp-config.php
+find $domain_root_path -type d -exec chmod 755 {} \;
+find $domain_root_path -type f -exec chmod 644 {} \;
+chmod 600 $domain_root_path/wp-config.php
 ```
 
 ### Tools
 
 ```.sh
 # Delete empty folders recursively
-# find /var/www/vhosts/"$website"/httpdocs/wp-content/uploads -type d -empty -delete
+# find /var/www/vhosts/"$domain"/httpdocs/wp-content/uploads -type d -empty -delete
 ```
 
 ## Emails migration
 
 ```.sh
-imapsync --host1 "imap.server1.com" --user1 "email@website.com" --password1 "password-server1" \
-  --host2 $server_ip --user2 "email@website.com" --password2 "password-server2" \
+imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "password-server1" \
+  --host2 $server_ip --user2 "email@domain.com" --password2 "password-server2" \
   --exclude "Spam"
 ```
 
 ## Server stress test
 
 ```.sh
-ab -n 10 $website
+ab -n 10 $domain
 ```
 
 ## Export MariaDB database
 
 ```.sh
 # Create dump
-mysqldump -u root -p $database_name > $(dirname "$website_root_path")/backup.sql
+mysqldump -u root -p $database_name > $(dirname "$domain_root_path")/backup.sql
 
 # Delete file after downloading it
-rm $(dirname "$website_root_path")/backup.sql
+rm $(dirname "$domain_root_path")/backup.sql
 ```
 
 ## Cache
@@ -619,14 +696,14 @@ sudo systemctl reload nginx
 ```.sh
 # Nginx
 tail -n 50 /var/log/nginx/error.log
-tail -n 50 /var/log/virtualmin/${website}_error_log
+tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 # Clear log file
-# > /var/log/virtualmin/${website}_error_log
+# > /var/log/virtualmin/${domain}_error_log
 
 
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
-tail -n 50 $(dirname "$website_root_path")/logs/php_log
-# tail -n 50 $(dirname "$website_root_path")/logs/php_slow.log
+tail -n 50 $(dirname "$domain_root_path")/logs/php_log
+# tail -n 50 $(dirname "$domain_root_path")/logs/php_slow.log
 ```
