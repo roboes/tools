@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2025-01-26
+# Last update: 2025-05-14
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -17,7 +17,7 @@
 # Install applications
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id Microsoft.WindowsTerminal
-winget install --exact --id=Microsoft.PCManager
+winget install --exact --id=Microsoft.PowerToys
 winget install --exact --id=Python.Python.3.13
 winget install --exact --id=Spyder.Spyder
 winget install --exact --id=Notepad++.Notepad++
@@ -46,9 +46,9 @@ winget install --exact --id=9N93MRMSXBF0 # KDE Connect
 # https://github.com/marktext/marktext/releases
 
 # Archive
+# winget install --exact --id=Microsoft.PCManager
 # winget install --exact --id=Google.Chrome
 # winget install --exact --id=Google.ChromeRemoteDesktop
-# winget install --exact --id=Microsoft.PowerToys
 # winget install --exact --id=7zip.7zip
 # winget install --exact --id=DuongDieuPhap.ImageGlass
 # winget install --exact --id=RProject.R

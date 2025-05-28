@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products and/or individual products in specific categories per cart
-// Last update: 2025-01-09
+// Last update: 2025-04-26
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -15,7 +15,7 @@ if (class_exists('WooCommerce') && WC()) {
         ),
         array(
             'type' => 'products',
-            'product_ids' => array(39398, 39400),
+            'product_ids' => array(41078, 41085, 39398, 39400),
             'max_quantity' => 12,
         ),
     );
@@ -35,6 +35,7 @@ if (class_exists('WooCommerce') && WC()) {
             return sprintf(__('A cart can contain up to %d items of "%s". If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $max_quantity, $product_name);
         }
     }
+
 
     // Add to cart validation
     add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = function ($passed, $product_id, $quantity, $variation_id = '', $variations = '') use ($product_quantity_rules, $current_language) {
@@ -89,56 +90,36 @@ if (class_exists('WooCommerce') && WC()) {
         return $passed;
     }, $priority = 10, $accepted_args = 5);
 
-    // Cart item quantity update validation
-    add_filter($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = function ($cart_item_key, $new_quantity, $old_quantity, $cart) use ($product_quantity_rules, $current_language) {
 
-        $product = $cart->cart_contents[$cart_item_key]['data'];
+    add_filter($hook_name = 'woocommerce_quantity_input_args', $callback = function ($args, $product) use ($product_quantity_rules) {
+        $product_id  = $product->get_id();
+        $parent_id = $product->get_parent_id();
+        $effective_id = $parent_id ? $parent_id : $product_id;
 
-        // Loop through the product quantity rules
+        // ensure you always have at least a min of 1
+        $args['min_value'] = 1;
+
         foreach ($product_quantity_rules as $rule) {
-            if ($rule['type'] === 'categories' && has_term($rule['slugs'], 'product_cat', $product->get_id())) {
-                if (in_array($product->get_id(), $rule['product_ids_exception']) || in_array($product->get_parent_id(), $rule['product_ids_exception'])) {
-                    continue;
-                }
-
-                $product_cart_quantity = 0;
-                $product_id = $product->get_parent_id() ? $product->get_parent_id() : $product->get_id();
-                foreach ($cart->get_cart() as $item) {
-                    $_product = $item['data'];
-                    $check_id = $_product->get_parent_id() ? $_product->get_parent_id() : $_product->get_id();
-                    if ($check_id === $product_id) {
-                        $product_cart_quantity += $item['quantity'];
+            if ($rule['type'] === 'categories') {
+                // product in one of the rule slugs?
+                if (has_term($rule['slugs'], 'product_cat', $product_id)) {
+                    // but not in the exceptions?
+                    if (in_array($product_id, $rule['product_ids_exception'], true)
+                      || in_array($parent_id, $rule['product_ids_exception'], true)) {
+                        continue;
                     }
+                    $args['max_value'] = $rule['max_quantity'];
+                    break; // stop once we’ve found a match
                 }
-
-                if ($product_cart_quantity > $rule['max_quantity']) {
-                    $adjusted_quantity = max(1, $rule['max_quantity'] - ($product_cart_quantity - $new_quantity));
-                    $cart->cart_contents[$cart_item_key]['quantity'] = $adjusted_quantity;
-                    $product_name = $product->get_name();
-                    $message = get_error_message($rule['max_quantity'], $current_language, $product_name);
-                    wc_add_notice($message, 'error');
-                }
-            } elseif ($rule['type'] === 'products' && in_array($product->get_id(), $rule['product_ids'])) {
-                $product_cart_quantity = 0;
-                $product_id = $product->get_parent_id() ? $product->get_parent_id() : $product->get_id();
-                foreach ($cart->get_cart() as $item) {
-                    $_product = $item['data'];
-                    $check_id = $_product->get_parent_id() ? $_product->get_parent_id() : $_product->get_id();
-                    if ($check_id === $product_id) {
-                        $product_cart_quantity += $item['quantity'];
-                    }
-                }
-
-                if ($product_cart_quantity > $rule['max_quantity']) {
-                    $adjusted_quantity = max(1, $rule['max_quantity'] - ($product_cart_quantity - $new_quantity));
-                    $cart->cart_contents[$cart_item_key]['quantity'] = $adjusted_quantity;
-                    $product_name = $product->get_name();
-                    $message = get_error_message($rule['max_quantity'], $current_language, $product_name);
-                    wc_add_notice($message, 'error');
+            } elseif ($rule['type'] === 'products') {
+                if (in_array($effective_id, $rule['product_ids'], true)) {
+                    $args['max_value'] = $rule['max_quantity'];
+                    break;
                 }
             }
         }
 
-    }, $priority = 10, $accepted_args = 4);
+        return $args;
+    }, $priority = 10, $accepted_args = 2);
 
 }

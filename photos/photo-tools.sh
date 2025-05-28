@@ -307,7 +307,7 @@ done
 
 
 # Replace all colors except background in .png image with white
-magick convert "./input.png" -fill white -colorize 100 "./output.png"
+magick "./input.png" -fill white -colorize 100 "./output.png"
 
 # Replace a specific color by transparent background
 magick mogrify -monitor -fuzz 10% -transparent "#ffffff" "./.png"

@@ -1,7 +1,7 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2025-01-22
+// Last update: 2025-05-28
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='cron_job_schedule_variable_product_delete_variations', $args=array(), $wp_error=false);
@@ -45,6 +45,12 @@ function variable_product_delete_variations($product_ids, $delete = false)
 
     foreach ($product_ids as $product_id) {
         $product = wc_get_product($product_id);
+
+        if (!$product) {
+            echo "Product ID {$product_id} not found.";
+            continue;
+        }
+
         $product_name = $product->get_name();  // Get product name
 
         if ($product->is_type('variable')) {
@@ -62,6 +68,12 @@ function variable_product_delete_variations($product_ids, $delete = false)
                     $term_date = substr($attribute_value, 0, 10); // Extract date (DD.MM.YYYY)
                     if (preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $term_date)) {
                         $term_date = DateTime::createFromFormat('d.m.Y', $term_date, new DateTimeZone($timezone));
+
+                        # Check if $term_date is false
+                        if (!$term_date) {
+                            echo "Warning: Could not parse date string '$term_date' for variation ID {$variation_id} on product ID {$product_id}.\n";
+                            continue; // Skip to the next variation
+                        }
 
                         // Check if the date is in the past
                         if ($term_date < $current_datetime) {
@@ -84,6 +96,22 @@ function variable_product_delete_variations($product_ids, $delete = false)
                         wp_delete_post($variation['variation_id'], true); // Delete variation
                         echo "Deleted variation - Product ID: {$variation['product_id']}, Product Name: {$variation['product_name']}, Variation ID: {$variation['variation_id']}, Variation Name: {$variation['variation_name']}, Attributes: " . json_encode($variation['attributes']) . "\n";
                     }
+
+                    // Clear WooCommerce transients for the product
+                    wc_delete_product_transients($product_id);
+                    delete_transient('wc_var_prices_' . $product_id);
+
+                    // Sync the product data (updates stock, prices, etc.)
+                    $product->sync();
+                    $product->save();
+
+                    // Clear WooCommerce product variation cache and product cache group
+                    WC_Product_Variable::clear_cache($product_id);
+                    WC_Cache_Helper::invalidate_cache_group('product_' . $product_id);
+
+                    // Flush the entire WordPress object cache (last, most broad)
+                    // wp_cache_flush();
+
                 } else {
                     foreach ($variations_to_delete as $variation) {
                         echo "Variation to be deleted - Product ID: {$variation['product_id']}, Product Name: {$variation['product_name']}, Variation ID: {$variation['variation_id']}, Variation Name: {$variation['variation_name']}, Attributes: " . json_encode($variation['attributes']) . "\n";
