@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-04-09
+// Last update: 2025-05-05
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -45,6 +45,7 @@ use DVDoug\BoxPacker\Item;
 use DVDoug\BoxPacker\ItemSorter;
 use DVDoug\BoxPacker\Packer;
 use DVDoug\BoxPacker\Rotation;
+use DVDoug\BoxPacker\Exception\NoBoxesAvailableException;
 
 // use DVDoug\BoxPacker\Test\TestBox;
 // use DVDoug\BoxPacker\Test\TestItem;
@@ -202,32 +203,41 @@ function calculate_and_store_package_best_fit($order_id)
         }
     }
 
-    // Determine the best fit (only the first packed box)
-    $packedBoxes = $packer->pack();
+    try {
 
-    // Convert to an array if necessary
-    if ($packedBoxes instanceof Traversable) {
-        $packedBoxes = iterator_to_array($packedBoxes);
+        // Determine the best fit (only the first packed box)
+        $packedBoxes = $packer->pack();
+
+        // Convert to an array if necessary
+        if ($packedBoxes instanceof Traversable) {
+            $packedBoxes = iterator_to_array($packedBoxes);
+        }
+
+        if (!empty($packedBoxes)) {
+            $packedBox = reset($packedBoxes); // Get the first/smallest box
+            $boxType = $packedBox->box;
+
+            // Flatten the array so that keys match the display function
+            $package_best_fit = [
+                'name'   => $boxType->getReference(),
+                'width'  => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
+                'length' => $boxType->getOuterLength() / 10, // Convert mm back to cm
+                'height' => $boxType->getOuterDepth() / 10, // Convert mm back to cm
+                'weight' => $packedBox->getWeight(),
+                'items_count' => count($packedBox->items)
+            ];
+
+        } else {
+            $package_best_fit = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
+        }
+
+    } catch (NoBoxesAvailableException $e) {
+        $package_best_fit = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
     }
 
-    if (!empty($packedBoxes)) {
-        $packedBox = reset($packedBoxes); // Get the first/smallest box
-        $boxType = $packedBox->box;
+    // Update the order meta with the best fit package
+    update_post_meta($order_id, 'order_package_best_fit', json_encode($package_best_fit));
 
-        // Flatten the array so that keys match the display function
-        $package_best_fit = [
-            'name'   => $boxType->getReference(),
-            'width'  => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
-            'length' => $boxType->getOuterLength() / 10, // Convert mm back to cm
-            'height' => $boxType->getOuterDepth() / 10, // Convert mm back to cm
-            'weight' => $packedBox->getWeight(),
-            'items_count' => count($packedBox->items)
-        ];
-
-        // Update the order meta with the best fit package
-        update_post_meta($order_id, 'order_package_best_fit', json_encode($package_best_fit));
-
-    }
 }
 
 

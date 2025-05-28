@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2025-01-22
+// Last update: 2025-05-28
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -213,17 +213,19 @@ if (class_exists('WooCommerce') && WC()) {
             $product_variation_appointment_date = isset($product_variation_appointment_datetime[0]) ? date('Y-m-d', strtotime($product_variation_appointment_datetime[0])) : '';
             $product_variation_appointment_time = isset($product_variation_appointment_datetime[1]) ? $product_variation_appointment_datetime[1] : '';
 
-            // Perform regex replacements
+            // Get the current date and time (date of submission)
+            $inserted_date = (new DateTime('now', wp_timezone()))->format('Y-m-d H:i:s');
+
+            // Send training confirmation per email
+            send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
+
+            // Perform English version for Google Sheets
             $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
             $product_name = preg_replace('/Coffee Training /', '', $product_name);
             $product_name = preg_replace('/Homebarista/', 'Home Barista', $product_name);
 
-
             $product_variation_own_portafilter_machine = preg_replace('/Mit/', 'With', $product_variation_own_portafilter_machine);
             $product_variation_own_portafilter_machine = preg_replace('/Ohne/', 'Without', $product_variation_own_portafilter_machine);
-
-            // Get the current date and time (date of submission)
-            $inserted_date = (new DateTime('now', wp_timezone()))->format('Y-m-d H:i:s');
 
             // Prepare data for Google Sheets
             $data_array = array(
@@ -240,9 +242,6 @@ if (class_exists('WooCommerce') && WC()) {
                 $customer_phone,
                 $customer_order_notes,
             );
-
-            // Send training confirmation per email
-            send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
 
             // Send data to Google Sheets
             send_to_google_sheets($data_array);
@@ -315,14 +314,6 @@ if (class_exists('WooCommerce') && WC()) {
             $product_variation_appointment_date = isset($product_variation_appointment_datetime[0]) ? date('Y-m-d', strtotime($product_variation_appointment_datetime[0])) : '';
             $product_variation_appointment_time = isset($product_variation_appointment_datetime[1]) ? $product_variation_appointment_datetime[1] : '';
 
-            // Perform regex replacements
-            $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
-            $product_name = preg_replace('/Coffee Training /', '', $product_name);
-            $product_name = preg_replace('/Homebarista/', 'Home Barista', $product_name);
-
-            $product_variation_own_portafilter_machine = preg_replace('/Mit/', 'With', $product_variation_own_portafilter_machine);
-            $product_variation_own_portafilter_machine = preg_replace('/Ohne/', 'Without', $product_variation_own_portafilter_machine);
-
             // Get customer details
             $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
             $customer_email = $order->get_billing_email();
@@ -332,8 +323,19 @@ if (class_exists('WooCommerce') && WC()) {
             // Get the current date and time (date of order completion)
             $inserted_date = (new DateTime('now', wp_timezone()))->format('Y-m-d H:i:s');
 
+            // Send training confirmation per email
+            send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
+
+            // Perform English version for Google Sheets
+            $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
+            $product_name = preg_replace('/Coffee Training /', '', $product_name);
+            $product_name = preg_replace('/Homebarista/', 'Home Barista', $product_name);
+
+            $product_variation_own_portafilter_machine = preg_replace('/Mit/', 'With', $product_variation_own_portafilter_machine);
+            $product_variation_own_portafilter_machine = preg_replace('/Ohne/', 'Without', $product_variation_own_portafilter_machine);
+
             // Prepare data for Google Sheets
-            $data_array[] = array(
+            $data_array = array(
                 $inserted_date,
                 $product_variation_appointment_date,
                 $product_variation_appointment_time,
@@ -347,14 +349,10 @@ if (class_exists('WooCommerce') && WC()) {
                 $customer_phone,
                 $customer_order_notes,
             );
-        }
-
-        // Send training confirmation per email and each product's data to Google Sheets
-        foreach ($data_array as $data) {
-            send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
 
             // Send data to Google Sheets
-            send_to_google_sheets($data);
+            send_to_google_sheets($data_array);
+
         }
     }
 
