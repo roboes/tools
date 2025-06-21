@@ -3,7 +3,7 @@ fit2gpx==1.0.2
 geopandas==1.1.0
 geopy==2.4.1
 gpxpy==1.6.2
-numpy==2.3.0
+numpy==2.3.1
 openpyxl==3.1.2
 overpy==0.7
 pandas==2.3.0
