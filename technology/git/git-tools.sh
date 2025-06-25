@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-04-14
+# Last update: 2025-06-25
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -130,6 +130,9 @@ find . -path './venv' -prune -o -name "__pycache__" -type d -exec rm -r {} +
 
 # Start git repository
 git init
+
+# Switch to the target branch (create it if it doesn't exist)
+git checkout -B "${git_branch}"
 
 # Add all files from the working directory to the staging area
 git add --all

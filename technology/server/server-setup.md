@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-06-09
+> Last update: 2025-06-25
 
 ```.sh
 # Settings
@@ -45,7 +45,8 @@ nano ~/.bashrc
 # Install packages
 sudo apt-get install curl \
   dnsutils \
-  wget
+  wget \
+  python-is-python3
 ```
 
 ## Virtualmin
@@ -59,15 +60,16 @@ chmod a+x install.sh
 sudo apt install webmin --install-recommends -y
 ```
 
-After installation, login to Virtualmin.
+After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 ### Nginx webserver
 
-- [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/).
-- Check if it worked: `Virtualmin` > Choose Virtual Server > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
-- `Virtualmin` > Choose Virtual Server > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
+- [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
+- Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
 
 ### Virtualmin settings
+
+- Home subdirectory: `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
 
 - Timezone: `Webmin` > `Hardware` > `System Time` > `Change Timezone`.
 
@@ -92,7 +94,12 @@ sudo systemctl restart fail2ban
 - Two-Factor Authentication (2FA):
   - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
   - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
-  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication`.
+  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+
+Now "Create Virtual Server".
+
+### Virtualmin settings (optional)
+
 - Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
 
 ### PHP
@@ -101,14 +108,14 @@ sudo systemctl restart fail2ban
 
 ```.sh
 # Remove older PHP Versions
-php_version_old="8.3"
+php_version_old="8.2"
 sudo apt-get purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
 sudo apt-get autoremove
 sudo apt-get clean
 ```
 
 ```.sh
-php_version_current="8.4"
+php_version_current="8.3"
 sudo apt-get install php${php_version_current}-sqlite3
 ```
 
@@ -132,10 +139,11 @@ chmod 700 /root/.ssh
 chmod 600 /root/.ssh/authorized_keys
 ```
 
-Save the private key (id_rsa) on your local machine
+Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
+PuTTYgen can convert the RSA private key to `.ppk`.
 
 ```.sh
-# Copy SSH key
+# Copy SSH key in Windows Subsystem for Linux (WSL)
 # cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
 # chmod 600 ~/.ssh/id_rsa
 ```
@@ -293,6 +301,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
+ set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -310,7 +319,7 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
-    add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;" always;
+    add_header Content-Security-Policy $content_security_policy always;
 
 
     # Rewrites and Redirects
@@ -434,25 +443,31 @@ sudo systemctl reload nginx
 
 Cloudflare > Website > `Security` > `Security rules`.
 
-1) Block AI Scrapers and Crawlers
+1) ACME Challenge Passthrough
+
+- `Rule name`: `ACME Challenge Passthrough`.
+- `Expression`: `http.request.uri.path contains "/.well-known/acme-challenge/"`.
+- `Choose action`: `Skip` (select all `WAF components to skip`).
+
+2) Block AI Scrapers and Crawlers
 
 - `Rule name`: `Block AI Scrapers and Crawlers`.
 - `Expression`: `(cf.verified_bot_category eq "AI Crawler")`.
 - `Choose action`: `Block`.
 
-2) Managed Access
+3) Managed Access
 
 - `Rule name`: `Managed Access`.
 - `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
 - `Choose action`: `Managed Challenge`.
 
-3) WordPress Login (Countries Allowed)
+4) WordPress Login (Countries Allowed)
 
 - `Rule name`: `WordPress Login (Countries Allowed)`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
 - `Choose action`: `Block`.
 
-4) WordPress Login (Captcha)
+5) WordPress Login (Captcha)
 
 - `Rule name`: `WordPress Login (Captcha)`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
