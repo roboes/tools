@@ -52,7 +52,7 @@ function slug_rename($string, $date_rearrange = false)
 
 function woocommerce_product_sku_update_given_attribute_names()
 {
-    // Query to get all products in "Specialty Coffee" category
+    // Query to get all products in "Trainings" category
     $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => 'trainings-en')));
     $products = get_posts($args);
 

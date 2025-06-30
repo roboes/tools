@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-05-05
+// Last update: 2025-06-30
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -28,13 +28,15 @@ require_once WP_CONTENT_DIR . '/boxpacker/src/OrientatedItemSorter.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBox.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBoxList.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBoxSorter.php';
+require_once WP_CONTENT_DIR . '/boxpacker/src/DefaultPackedBoxSorter.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedItem.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedItemList.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/PackedLayer.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/DefaultPackedBoxSorter.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/Packer.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/Rotation.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/VolumePacker.php';
+require_once WP_CONTENT_DIR . '/boxpacker/src/WeightRedistributor.php';
+require_once WP_CONTENT_DIR . '/boxpacker/src/WorkingVolume.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/Exception/NoBoxesAvailableException.php';
 // require_once WP_CONTENT_DIR . '/boxpacker/tests/Test/TestBox.php';
 // require_once WP_CONTENT_DIR . '/boxpacker/tests/Test/TestItem.php';
@@ -182,26 +184,32 @@ function calculate_and_store_package_best_fit($order_id)
 
     // Add order items to the packer
     foreach ($order->get_items() as $item) {
+
         $product = $item->get_product();
         if (!$product) {
             continue;
         }
 
+        $quantity = $item->get_quantity();
         $length = $product->get_length();
         $width = $product->get_width();
         $height = $product->get_height();
         $weight = $product->get_weight();
 
-        if ($length && $width && $height && $weight) {
-            $packer->addItem(new CustomItem(
-                description: $product->get_name(),
-                width: (int) ($width * 10),   // Convert cm to mm
-                length: (int) ($length * 10), // Convert cm to mm
-                depth: (int) ($height * 10),  // Convert cm to mm
-                weight: (int) ($weight)       // Weight in grams
-            ));
+        if ($quantity > 0 && $length && $width && $height && $weight) {
+            for ($i = 0; $i < $quantity; $i++) {
+                $packer->addItem(new CustomItem(
+                    description: $product->get_name(),
+                    width: (int) ($width * 10),   // Convert cm to mm
+                    length: (int) ($length * 10), // Convert cm to mm
+                    depth: (int) ($height * 10),  // Convert cm to mm
+                    weight: (int) ($weight)       // Weight in grams
+                ));
+            }
         }
     }
+
+    $package_details = [];
 
     try {
 
@@ -214,53 +222,61 @@ function calculate_and_store_package_best_fit($order_id)
         }
 
         if (!empty($packedBoxes)) {
-            $packedBox = reset($packedBoxes); // Get the first/smallest box
-            $boxType = $packedBox->box;
+            foreach ($packedBoxes as $packedBox) {
 
-            // Flatten the array so that keys match the display function
-            $package_best_fit = [
-                'name'   => $boxType->getReference(),
-                'width'  => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
-                'length' => $boxType->getOuterLength() / 10, // Convert mm back to cm
-                'height' => $boxType->getOuterDepth() / 10, // Convert mm back to cm
-                'weight' => $packedBox->getWeight(),
-                'items_count' => count($packedBox->items)
-            ];
+                $boxType = $packedBox->box;
 
+                // Flatten the array so that keys match the display function
+                $package_details[] = [
+                    'name'   => $boxType->getReference(),
+                    'width'  => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
+                    'length' => $boxType->getOuterLength() / 10, // Convert mm back to cm
+                    'height' => $boxType->getOuterDepth() / 10, // Convert mm back to cm
+                    'weight' => $packedBox->getWeight(),
+                    'items_count' => count($packedBox->items)
+                ];
+            }
         } else {
-            $package_best_fit = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
+            $package_details[] = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
         }
 
-    } catch (NoBoxesAvailableException $e) {
-        $package_best_fit = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
+    } catch (NoBoxesAvailableException $error) {
+        $package_details[] = ['name' => 'Error: ' . $error->getMessage(), 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
+
+    } catch (Throwable $error) {
+        error_log("BoxPacker: Throwable caught in pack block: " . $error->getMessage());
+        error_log("BoxPacker: Stack trace:\n" . $error->getTraceAsString());
+        return;
     }
 
     // Update the order meta with the best fit package
-    update_post_meta($order_id, 'order_package_best_fit', json_encode($package_best_fit));
+    update_post_meta($order_id, 'order_package_best_fit', wp_json_encode($package_details));
 
 }
 
 
-// Custom display function to output package best fit meta
 function display_custom_order_meta($order)
 {
-    $package_best_fit = get_post_meta($order->get_id(), 'order_package_best_fit', true);
-    if ($package_best_fit) {
-        $package_best_fit = json_decode($package_best_fit, true);
+    $package_details = get_post_meta($order->get_id(), 'order_package_best_fit', true);
+    $package_details = $package_details ? json_decode($package_details, true) : [];
 
-        $package_best_fit_name = isset($package_best_fit['name']) ? esc_html($package_best_fit['name']) : '';
-        $package_best_fit_length = isset($package_best_fit['length']) ? esc_html($package_best_fit['length']) : '';
-        $package_best_fit_width  = isset($package_best_fit['width']) ? esc_html($package_best_fit['width']) : '';
-        $package_best_fit_height = isset($package_best_fit['height']) ? esc_html($package_best_fit['height']) : '';
-        $package_best_fit_weight = isset($package_best_fit['weight']) ? esc_html($package_best_fit['weight']) : '';
+    echo '<div><p>&nbsp;</p><h3>Package Best Fit</h3>';
 
-        echo '<div>';
-        echo '<p>&nbsp;</p>';
-        echo '<h3>Package Best Fit</h3>';
-        echo '<p>Package Dimensions (L×W×H) (cm):<br>';
-        echo $package_best_fit_name . ' (' . $package_best_fit_length . ' x ' . $package_best_fit_width . ' x ' . $package_best_fit_height . ')</p>';
-        echo '<p>Package Weight (g):<br>';
-        echo $package_best_fit_weight . '</p>';
-        echo '</div>';
+    if (empty($package_details) || (isset($package_details[0]['name']) && str_contains($package_details[0]['name'], 'No box fits'))) {
+        echo '<p>No package fit information available or no box fits the items.</p>';
+    } else {
+        foreach ($package_details as $index => $box) {
+            $i = $index + 1;
+            $package_best_fit_name = esc_html($box['name']);
+            $package_best_fit_length = esc_html($box['length']);
+            $package_best_fit_width = esc_html($box['width']);
+            $package_best_fit_height = esc_html($box['height']);
+            $package_best_fit_weight = esc_html($box['weight']);
+            $package_best_fit_items_count = esc_html($box['items_count']);
+            echo "<p><strong>Box {$i}:</strong> {$package_best_fit_name} - {$package_best_fit_length}×{$package_best_fit_width}×{$package_best_fit_height} cm, {$package_best_fit_weight} g ({$package_best_fit_items_count} items)</p>";
+        }
     }
+
+    echo '</div>';
+
 }

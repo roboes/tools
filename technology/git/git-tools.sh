@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-04-14
+# Last update: 2025-06-27
 
 
 # Start Windows Subsystem for Linux (WSL) (required only on Windows)
@@ -10,40 +10,6 @@ wsl
 # echo insecure >> ~/.curlrc
 # HOMEBREW_CURLRC=1
 # export HOMEBREW_CURLRC
-
-
-# Homebrew update
-# ulimit -n 8192
-# brew update && brew upgrade && brew cleanup
-
-
-# Install GitHub CLI
-# brew install git
-# brew install gh
-
-# Install GitLab Runner
-# brew install gitlab-runner
-
-
-# GitHub login
-# gh auth setup-git
-# gh auth login
-
-# Display git custom settings
-# git config --list
-
-# Remove git custom settings
-# rm ~/.gitconfig
-
-
-# Git settings
-# git config --global user.email "email@example.com"
-# git config --global user.name "username"
-# git config --global --list
-
-
-# Git ignore
-# https://github.com/github/gitignore/blob/main/Python.gitignore
 
 
 # Settings
@@ -59,7 +25,7 @@ cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
 
 # Clone repository if directory does not exist
 if [ ! -d "${local_repository}" ]; then
-	git clone "https://${git_hostname}/${git_account}/${git_repository}" ${local_repository}
+    git clone --branch "${git_branch}" "https://${git_hostname}/${git_account}/${git_repository}.git" ${local_repository}
 fi
 
 # Set working directory
@@ -130,6 +96,9 @@ find . -path './venv' -prune -o -name "__pycache__" -type d -exec rm -r {} +
 
 # Start git repository
 git init
+
+# Switch to the target branch
+git switch "${git_branch}"
 
 # Add all files from the working directory to the staging area
 git add --all

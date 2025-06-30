@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Calculate the total available stock quantity for a variable product shortcode
-// Last update: 2025-03-02
+// Last update: 2025-06-20
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -20,10 +20,9 @@ if (class_exists('WooCommerce') && WC()) {
             foreach ($product->get_children() as $variation_id) {
                 $variation = wc_get_product($variation_id);
                 if ($variation && $variation->managing_stock()) {
-                    $stock_quantity += $variation->get_stock_quantity();
+                    $stock_quantity += max(0, (int) $variation->get_stock_quantity()); // Treat < 0 as 0
                 }
             }
-
 
         }
 
