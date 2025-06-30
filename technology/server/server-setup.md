@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-05-24
+> Last update: 2025-06-25
 
 ```.sh
 # Settings
@@ -45,7 +45,8 @@ nano ~/.bashrc
 # Install packages
 sudo apt-get install curl \
   dnsutils \
-  wget
+  wget \
+  python-is-python3
 ```
 
 ## Virtualmin
@@ -59,15 +60,16 @@ chmod a+x install.sh
 sudo apt install webmin --install-recommends -y
 ```
 
-After installation, login to Virtualmin.
+After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 ### Nginx webserver
 
-- [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/).
-- Check if it worked: `Virtualmin` > Choose Virtual Server > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
-- `Virtualmin` > Choose Virtual Server > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
+- [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
+- Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
 
 ### Virtualmin settings
+
+- Home subdirectory: `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
 
 - Timezone: `Webmin` > `Hardware` > `System Time` > `Change Timezone`.
 
@@ -92,7 +94,12 @@ sudo systemctl restart fail2ban
 - Two-Factor Authentication (2FA):
   - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
   - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
-  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication`.
+  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+
+Now "Create Virtual Server".
+
+### Virtualmin settings (optional)
+
 - Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
 
 ### PHP
@@ -101,14 +108,14 @@ sudo systemctl restart fail2ban
 
 ```.sh
 # Remove older PHP Versions
-php_version_old="8.3"
+php_version_old="8.2"
 sudo apt-get purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
 sudo apt-get autoremove
 sudo apt-get clean
 ```
 
 ```.sh
-php_version_current="8.4"
+php_version_current="8.3"
 sudo apt-get install php${php_version_current}-sqlite3
 ```
 
@@ -132,10 +139,11 @@ chmod 700 /root/.ssh
 chmod 600 /root/.ssh/authorized_keys
 ```
 
-Save the private key (id_rsa) on your local machine
+Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
+PuTTYgen can convert the RSA private key to `.ppk`.
 
 ```.sh
-# Copy SSH key
+# Copy SSH key in Windows Subsystem for Linux (WSL)
 # cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
 # chmod 600 ~/.ssh/id_rsa
 ```
@@ -164,147 +172,122 @@ Restart server.
 
 ##### /etc/nginx/nginx.conf
 
-```.txt
+```.nginx
+# Global Settings
+
+## User and worker processes
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
+
+## Error logging
 error_log /var/log/nginx/error.log;
 # error_log /var/log/nginx/error.log debug;
+
+## Load dynamic modules
 include /etc/nginx/modules-enabled/*.conf;
 
+
+# Event Loop Configuration
 events {
     worker_connections 4096;
     multi_accept on;
     use epoll;
 }
 
+
+# HTTP Server Configuration
 http {
-
-    ##
-    # Basic Settings
-    ##
-
+    # Performance and Optimization
     sendfile on;
     tcp_nopush on;
+    tcp_nodelay on;
     types_hash_max_size 2048;
-
-    # server_names_hash_bucket_size 64;
+    server_names_hash_bucket_size 128;
     # server_name_in_redirect off;
 
+    # Keep-Alive Settings
+    keepalive_timeout 30s;
+    keepalive_requests 500;
+    reset_timedout_connection on;
+
+    # Client Request Limits
+    client_max_body_size 50M;
+
+    # MIME Types
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
-    ##
-    # Logging Settings
-    ##
-
+    # Logging
     access_log /var/log/nginx/access.log;
 
-    ##
-    # SSL Settings
-    ##
 
+    # SSL/TLS Settings
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
-    ##
-    # Security
-    ##
 
+    # Security Headers & Settings
     server_tokens off;
+    add_header Vary "Accept-Encoding";
+    add_header X-Cache-Status $upstream_cache_status;
 
-    ##
+
     # Compression
-    ##
 
+    ## Brotli
     brotli on;
     brotli_comp_level 4;
     brotli_types text/plain text/css text/javascript application/javascript application/json application/xml application/rss+xml;
 
+    ## Gzip
     gzip on;
     gzip_min_length 1024;
     gzip_comp_level 2;
     gzip_types text/plain text/css text/javascript application/javascript application/json application/xml application/rss+xml;
 
-    ##
-    # Proxy Settings (For Backend, Cloudflare, etc.)
-    ##
-
+    # Proxy Settings
     proxy_http_version 1.1;
     proxy_set_header Connection "keep-alive";
-    proxy_cache_revalidate on;
     proxy_buffering on;
-    proxy_buffer_size 16k;
-    proxy_buffers 8 16k;
-    proxy_busy_buffers_size 32k;
-    proxy_read_timeout 30;
-    proxy_send_timeout 30;
+    proxy_cache_revalidate on;
+    proxy_buffer_size 512k;
+    proxy_buffers 16 512k;
+    proxy_busy_buffers_size 512k;
+    proxy_read_timeout 30s;
+    proxy_send_timeout 30s;
 
-    # FastCGI core configuration
-    fastcgi_read_timeout 60s;
-    fastcgi_send_timeout 60s;
+    # FastCGI Global Settings
 
-    # FastCGI buffers
+    ## FastCGI cache path definition
+    fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
+    fastcgi_cache_key "$scheme$request_method$host$request_uri";
+
+    ## FastCGI timeouts
+    fastcgi_connect_timeout 30s;
+    fastcgi_read_timeout 30s;
+    fastcgi_send_timeout 30s;
+
+    ## FastCGI buffers
     fastcgi_buffer_size 16k;
     fastcgi_buffers 4 16k;
     fastcgi_busy_buffers_size 48k;
     fastcgi_temp_file_write_size 64k;
 
-    client_max_body_size 50M;
-
-    keepalive_timeout 30;
-    reset_timedout_connection on;
-    keepalive_requests 500;
-
-    add_header Vary "Accept-Encoding";
-    add_header X-Cache-Status $upstream_cache_status;
-
-    ##
-    # Cache
-    ##
-
+    ## FastCGI cache lock settings
     fastcgi_cache_lock on;
     fastcgi_cache_lock_timeout 5s;
     fastcgi_cache_background_update on;
 
-    fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
-    fastcgi_cache_key "$scheme$request_method$host$request_uri";
-
-    ##
-    # Virtual Host Configs
-    ##
-
+    # Include Virtual Host Configurations
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
-    server_names_hash_bucket_size 128;
 }
-
-
-#mail {
-# # See sample authentication script at:
-# # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
-#
-# # auth_http localhost/auth.php;
-# # pop3_capabilities "TOP" "USER";
-# # imap_capabilities "IMAP4rev1" "UIDPLUS";
-#
-# server {
-#  listen     localhost:110;
-#  protocol   pop3;
-#  proxy      on;
-# }
-#
-# server {
-#  listen     localhost:143;
-#  protocol   imap;
-#  proxy      on;
-# }
-#}
 ```
 
 ##### /etc/nginx/sites-available/domain.com.conf
 
-```.txt
+```.nginx
 server {
     # Settings
     set $domain website.com;
@@ -318,49 +301,58 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
+ set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
+
+    # Main Web Root Setup
     root ${domain_root_path};
     index index.php index.htm index.html;
+
+    # Logging
     access_log /var/log/virtualmin/${domain}_access_log;
     error_log /var/log/virtualmin/${domain}_error_log warn;
-    fastcgi_param GATEWAY_INTERFACE CGI/1.1;
-    fastcgi_param SERVER_SOFTWARE nginx;
-    fastcgi_param QUERY_STRING $query_string;
-    fastcgi_param REQUEST_METHOD $request_method;
-    fastcgi_param CONTENT_TYPE $content_type;
-    fastcgi_param CONTENT_LENGTH $content_length;
-    fastcgi_param SCRIPT_FILENAME "${domain_root_path}$fastcgi_script_name";
-    fastcgi_param SCRIPT_NAME $fastcgi_script_name;
-    fastcgi_param REQUEST_URI $request_uri;
-    fastcgi_param DOCUMENT_URI $document_uri;
-    fastcgi_param DOCUMENT_ROOT ${domain_root_path};
-    fastcgi_param SERVER_PROTOCOL $server_protocol;
-    fastcgi_param REMOTE_ADDR $remote_addr;
-    fastcgi_param REMOTE_PORT $remote_port;
-    fastcgi_param SERVER_ADDR $server_addr;
-    fastcgi_param SERVER_PORT $server_port;
-    fastcgi_param SERVER_NAME $server_name;
-    fastcgi_param PATH_INFO $fastcgi_path_info;
-    fastcgi_param HTTPS $https;
-    location ^~ /.well-known/ {
-        try_files $uri /;
-    }
-    fastcgi_split_path_info "^(.+\.php)(/.+)$";
+
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
+    add_header Content-Security-Policy $content_security_policy always;
+
+
+    # Rewrites and Redirects
+
+    ## Admin & Webmail redirects
     if ($host = webmail.${domain}) {
         rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
     }
     if ($host = admin.${domain}) {
         rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
     }
+
+    ## AWStats CGI rewrite
     rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
 
 
-    # Custom nginx config
+    # Location Blocks - General & Security
+
+    ## Main application entry point
     location / {
         try_files $uri $uri/ /index.php?$args;
     }
 
-    # Well-known URI
+    ## Block access to sensitive files
+    location ~ ^/\.user\.ini {
+        deny all;
+    }
+
+    ## Well-known and ACME challenges for SSL certificate renewal
+    location ^~ /.well-known/ {
+        try_files $uri /;
+    }
+
     location ^~ /.well-known/acme-challenge/ {
         allow all;
         default_type "text/plain";
@@ -368,28 +360,22 @@ server {
         try_files $uri =404;
     }
 
-    # Security headers
-    add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;" always;
-    add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
 
-    # Wordfence
-    location ~ ^/\.user\.ini {
-        deny all;
-    }
+    # PHP Processing
+    fastcgi_split_path_info "^(.+\\.php)(/.+)$";
 
     location ~ "\.php(/|$)" {
         try_files $uri $fastcgi_script_name =404;
 
-        # FastCGI core configuration
-        fastcgi_pass ${php_socket_path};
+        # FastCGI core settings
         include fastcgi_params;
+        fastcgi_pass ${php_socket_path};
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_intercept_errors on;
+
+        # FastCGI timeouts
         fastcgi_connect_timeout 30s;
         fastcgi_read_timeout 30s;
         fastcgi_send_timeout 30s;
@@ -400,62 +386,44 @@ server {
         fastcgi_busy_buffers_size 48k;
         fastcgi_temp_file_write_size 64k;
 
-        # FastCGI security and header handling
+        # Security and header handling
         fastcgi_hide_header 'X-Powered-By';
         fastcgi_param HTTP_PROXY "";
 
-        # FastCGI caching
+        # Caching controls
         set $skip_cache 0;
-
-        if ($request_method ~* "DELETE|POST|PUT") {
-            set $skip_cache 1;
-        }
-
-        if ($http_cookie ~* "PHPSESSID") {
-            set $skip_cache 1;
-        }
-
-        if ($request_uri ~* "/wp-admin/|/wp-login\.php|/wp-cron\.php|/wp-json/|/wc-api/|/admin-ajax\.php") {
-            set $skip_cache 1;
-        }
-
-        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
-            set $skip_cache 1;
-        }
-
-        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") {
-             set $skip_cache 1;
-        }
+        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
+        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
 
         fastcgi_cache MYCACHE;
         fastcgi_cache_valid 200 301 302 1h;
         fastcgi_cache_valid 404 1m;
         fastcgi_cache_use_stale error timeout updating;
-
         fastcgi_cache_bypass $skip_cache;
         fastcgi_no_cache $skip_cache;
-
-        # FastCGI cache headers and cleanup
         add_header X-Nginx-Cache-Status $upstream_cache_status always;
     }
 
-    # Caching: static assets
-    location ~* ^(?!.*phast\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rm|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
+
+    # Static Asset Caching
+    location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
 
-    # Caching: feeds and text files
     location ~* \.(csv|json|rss|txt|xls|xlsx|xml)$ {
         expires 5m;
         add_header Cache-Control "public";
     }
 
-    # Prevent caching of error responses
-    error_page 500 502 503 504 @no_cache;
 
+    # Error Handling
+    error_page 500 502 503 504 @no_cache;
     location @no_cache {
         internal;
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
@@ -475,25 +443,31 @@ sudo systemctl reload nginx
 
 Cloudflare > Website > `Security` > `Security rules`.
 
-1) Block AI Scrapers and Crawlers
+1) ACME Challenge Passthrough
+
+- `Rule name`: `ACME Challenge Passthrough`.
+- `Expression`: `http.request.uri.path contains "/.well-known/acme-challenge/"`.
+- `Choose action`: `Skip` (select all `WAF components to skip`).
+
+2) Block AI Scrapers and Crawlers
 
 - `Rule name`: `Block AI Scrapers and Crawlers`.
 - `Expression`: `(cf.verified_bot_category eq "AI Crawler")`.
 - `Choose action`: `Block`.
 
-2) Managed Access
+3) Managed Access
 
 - `Rule name`: `Managed Access`.
 - `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
 - `Choose action`: `Managed Challenge`.
 
-3) WordPress Login (Countries Allowed)
+4) WordPress Login (Countries Allowed)
 
 - `Rule name`: `WordPress Login (Countries Allowed)`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
 - `Choose action`: `Block`.
 
-4) WordPress Login (Captcha)
+5) WordPress Login (Captcha)
 
 - `Rule name`: `WordPress Login (Captcha)`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.

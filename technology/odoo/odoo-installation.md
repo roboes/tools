@@ -1,7 +1,7 @@
 # Odoo Installation on Debian
 
 > [!NOTE]
-> Last update: 2025-03-31
+> Last update: 2025-06-17
 
 ## Settings
 
@@ -18,6 +18,7 @@ database_username=""
 database_password=""
 odoo_database_manager_password=""
 odoo_conf="/etc/odoo/$website.conf"
+addons_path="$website_root_path/odoo/addons"
 ```
 
 ## Install Dependencies
@@ -30,14 +31,17 @@ apt install -y python3 python3-pip python3-venv python-is-python3 \
   build-essential libxml2-dev libxslt1-dev \
   libffi-dev libtiff5-dev \
   zlib1g-dev libopenjp2-7-dev \
-  postgresql postgresql-contrib
+  postgresql postgresql-contrib \
+  wkhtmltopdf
 ```
 
 ```.sh
 #
-sudo -i -u postgres psql -c "CREATE USER $database_username WITH PASSWORD '$database_password';"
-sudo -i -u postgres psql -c "ALTER USER $database_username WITH CREATEDB;"
-sudo -i -u postgres psql -c "CREATE DATABASE $database_name OWNER $database_username;"
+sudo -i -u postgres psql <<EOF
+CREATE USER $database_username WITH PASSWORD '$database_password';
+ALTER USER $database_username WITH CREATEDB;
+CREATE DATABASE $database_name OWNER $database_username;
+EOF
 ```
 
 ## Download and Install Odoo
@@ -56,17 +60,17 @@ git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git 
 # Change current directory
 cd "$website_root_path/odoo"
 
-#
+# Create a virtual environment
 python -m venv "./venv"
 
-#
+# Activate the virtual environment
 source "./venv/bin/activate"
 
-#
+# Install Python dependencies
 python -m pip install -r "./requirements.txt"
 python -m pip install woocommerce
 
-#
+# Exit the virtual environment
 deactivate
 ```
 
@@ -146,8 +150,6 @@ chmod 644 "/var/log/odoo/$website.log"
 
 chmod 644 /etc/systemd/system/odoo@$website.service
 ```
-
-Install [`queue_job`](https://github.com/OCA/queue).
 
 ```.sh
 # Change current directory
