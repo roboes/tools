@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-06-25
+> Last update: 2025-07-01
 
 ```.sh
 # Settings
@@ -301,7 +301,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
- set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -348,16 +348,23 @@ server {
         deny all;
     }
 
-    ## Well-known and ACME challenges for SSL certificate renewal
-    location ^~ /.well-known/ {
-        try_files $uri /;
+    ## Block access to .yml files
+    location ~* \.(yml)$ {
+        deny all;
+        access_log off;
+        log_not_found off;
     }
 
+    ## Well-known and ACME challenges for SSL certificate renewal
     location ^~ /.well-known/acme-challenge/ {
         allow all;
         default_type "text/plain";
         add_header Content-Type text/plain;
         try_files $uri =404;
+    }
+
+    location ^~ /.well-known/ {
+        try_files $uri /;
     }
 
 
@@ -429,6 +436,73 @@ server {
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
         return 500 "Internal Server Error";
     }
+}
+```
+
+##### /etc/nginx/sites-available/subdomain.domain.com.conf
+
+This Nginx configuration serves as a template for a subdomain (`subdomain.domain.com`) that redirects all traffic to a specific path on the main domain (e.g. <https://domain.com/path>). Its primary roles are to facilitate SSL certificate issuance via ACME challenges and to provide these redirects.
+
+```.nginx
+server {
+    # Settings
+    set $domain website.com;
+    set $domain_root_path /home/${domain}/domains/subdomain.${domain}/public_html;
+    set $php_socket_id 100000000000000;
+    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
+    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    listen 100.00.000.01;
+    listen 100.00.000.01:443 ssl;
+    listen [1000:0000:0000:0000:0000:0000:0000:0000];
+    listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
+    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
+    ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
+
+
+    # Main Web Root Setup
+    root ${domain_root_path};
+    index index.php index.htm index.html;
+
+    # Logging
+    access_log /var/log/virtualmin/${domain}_access_log;
+    error_log /var/log/virtualmin/${domain}_error_log warn;
+
+
+    # Rewrites and Redirects
+
+    ## Admin & Webmail redirects
+    if ($host = webmail.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
+    }
+    if ($host = admin.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
+    }
+
+    ## AWStats CGI rewrite
+    rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
+
+    ## Well-known and ACME challenges for SSL certificate renewal
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+        default_type "text/plain";
+        add_header Content-Type text/plain;
+        try_files $uri =404;
+    }
+
+    location ^~ /.well-known/ {
+        try_files $uri /;
+    }
+
+    # Location Blocks - General & Security
+    location / {
+        return 301 https://spatialglobe.com/maps$request_uri;
+    }
+
+    ## Block access to sensitive files
+    location ~ ^/\.user\.ini {
+        deny all;
+    }
+
 }
 ```
 
