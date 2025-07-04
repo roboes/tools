@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2025-05-28
+// Last update: 2025-07-04
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -251,7 +251,12 @@ if (class_exists('WooCommerce') && WC()) {
                 $variation = wc_get_product($product_variation_id);
 
                 if ($variation && $variation->exists()) {
-                    wc_update_product_stock($variation, $product_quantity, 'decrease');
+                    if ($variation->get_manage_stock()) {
+                        $current_stock = $variation->get_stock_quantity();
+                        $new_stock = max(0, $current_stock - $product_quantity);
+                        $variation->set_stock_quantity($new_stock);
+                        $variation->save();
+                    }
                 }
             }
         }
