@@ -1,9 +1,9 @@
 ## Git Tools
-# Last update: 2025-06-27
+# Last update: 2025-07-08
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Bash (Unix Shell)
+bash
 
 
 # Ignore certificate validation
@@ -21,7 +21,12 @@ local_repository=$git_repository
 
 
 # Set working directory
-cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
+else
+	cd "${HOME}/Documents/Documents/Projects"
+fi
+
 
 # Clone repository if directory does not exist
 if [ ! -d "${local_repository}" ]; then

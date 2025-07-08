@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2024-12-22
+# Last update: 2025-07-08
 
 
 # Rename: ExifTool
@@ -9,21 +9,9 @@
 # .heic to .jpg: ImageMagick or XnConvert (Settings: Keep original date/time attributes; JPG - JPEG/JFIF with quality 80)
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Bash (Unix Shell)
+bash
 
-
-# Homebrew install
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# ulimit current limit
-# ulimit -n
-
-# ulimit increase limit
-# ulimit -n 8192
-
-# Homebrew update
-brew update && brew upgrade && brew cleanup
 
 # Install exiftool
 # brew install exiftool
@@ -36,8 +24,11 @@ brew update && brew upgrade && brew cleanup
 
 
 # Settings
-# cd "$HOME"
-cd "/mnt/c/Users/${USER}/Pictures/Import"
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Pictures/Import"
+else
+	cd "${HOME}/Pictures/Import"
+fi
 
 
 ## ExifTool

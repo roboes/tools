@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2025-05-14
+# Last update: 2025-07-08
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -68,8 +68,8 @@ python -m pip_review --local --auto
 # Install Windows Subsystem for Linux (WSL)
 # wsl --install -d Debian
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Windows Subsystem for Linux (WSL)
+bash
 
 # Homebrew install
 sudo apt install curl
