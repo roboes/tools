@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-07-08
+# Last update: 2025-07-14
 
 
 # Start Bash (Unix Shell)
@@ -51,8 +51,9 @@ curl -o "./.pre-commit-config.yaml" --remote-name --location "https://raw.github
 mkdir -p "./.github/workflows"
 curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
 
+pre-commit autoupdate
+
 if [ "$git_repository" == "tools" ]; then
-    pre-commit autoupdate
 	cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
 fi
 
@@ -102,6 +103,9 @@ find . -path './venv' -prune -o -name "__pycache__" -type d -exec rm -r {} +
 # Start git repository
 git init
 
+# Create the target branch locally if it doesn't exist
+git checkout -b "${git_branch}"
+
 # Switch to the target branch
 git switch "${git_branch}"
 
@@ -117,6 +121,7 @@ git remote set-url origin "https://${git_hostname}/${git_account}/${git_reposito
 
 # Write commits to remote repository
 git push --force origin ${git_branch}
+
 
 
 

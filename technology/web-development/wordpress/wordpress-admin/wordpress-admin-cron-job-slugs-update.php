@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Run slugs update daily (cron job)
-// Last update: 2025-01-24
+// Last update: 2025-17-14
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='cron_job_schedule_slugs_update', $args=array(), $wp_error=false);
@@ -114,7 +114,7 @@ function cron_job_run_slugs_update()
                             }
 
                             // Get the current value of the custom field
-                            $current_value = get_post_meta($product->ID, $custom_field_id, true);
+                            $current_value = $wc_product->get_meta($custom_field_id, true);
 
                             // Update the custom field only if the new value is different
                             if ($current_value !== $labelled_values) {

@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-06-30
+// Last update: 2025-07-14
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -249,15 +249,16 @@ function calculate_and_store_package_best_fit($order_id)
         return;
     }
 
-    // Update the order meta with the best fit package
-    update_post_meta($order_id, 'order_package_best_fit', wp_json_encode($package_details));
+    // Update the order meta with the best fit package;
+    $order->update_meta_data('order_package_best_fit', wp_json_encode($package_details));
+    $order->save();
 
 }
 
 
 function display_custom_order_meta($order)
 {
-    $package_details = get_post_meta($order->get_id(), 'order_package_best_fit', true);
+    $package_details = $order->get_meta('order_package_best_fit', true);
     $package_details = $package_details ? json_decode($package_details, true) : [];
 
     echo '<div><p>&nbsp;</p><h3>Package Best Fit</h3>';

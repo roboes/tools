@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2025-07-07
+// Last update: 2025-07-14
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -396,7 +396,7 @@ if (class_exists('WooCommerce') && WC()) {
     {
 
         // Retrieve custom meta for training location
-        $product_training_location = get_post_meta($product_id, 'product_training_location', true);
+        $product_training_location = wc_get_product($product_id)->get_meta('product_training_location', true);
         if (!$product_training_location) {
             $product_training_location = 'Address Location';
         }
@@ -422,7 +422,7 @@ if (class_exists('WooCommerce') && WC()) {
         $timezone = get_option('timezone_string');
 
         // Retrieve custom meta for training duration
-        $product_training_duration_minutes = get_post_meta($product_id, 'product_training_duration_minutes', true);
+        $product_training_duration_minutes = wc_get_product($product_id)->get_meta('product_training_duration_minutes', true);
         if ($product_training_duration_minutes && is_numeric($product_training_duration_minutes)) {
             $product_training_duration_minutes = (int) $product_training_duration_minutes;
         } else {
