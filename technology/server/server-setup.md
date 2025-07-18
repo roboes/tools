@@ -574,24 +574,16 @@ Cloudflare > Website > `Security` > `Security rules`.
 
 ### PHP-FPM Configuration
 
-#### Global
-
-```.sh
-sudo nano /etc/php/8.4/fpm/php-fpm.conf
-```
-
-```.txt
-[global]
-emergency_restart_threshold = 10
-emergency_restart_interval = 60s
-process_control_timeout = 10s
-; log_level = notice
-log_level = warning
-```
-
 #### Local
 
 ```.txt
+[100000000000000]
+user = $system_user
+group = $system_user
+listen.owner = $system_user
+listen.group = $system_user
+listen.mode = 0660
+listen = /run/php/100000000000000.sock
 pm = dynamic
 pm.max_children = 16
 pm.start_servers = 2
@@ -603,8 +595,10 @@ php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
 php_value[log_errors] = On
+php_admin_value[display_errors] = Off
+php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT
 php_admin_value[memory_limit] = 256M
-php_admin_value[error_reporting] = E_ALL
+php_admin_value[upload_max_filesize] = 10M
 request_terminate_timeout = 30s
 catch_workers_output = yes
 
@@ -646,6 +640,8 @@ dig TXT _acme-challenge.autodiscover.$domain +short
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` > `Only on failure`.
 - `Request Certificate`.
+
+If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (orange cloud) to "DNS only" (gray cloud) for the domain.
 
 ```.sh
 # Remove .htaccess
