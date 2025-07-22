@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Apply sales price to multiple products
-// Last update: 2024-09-22
+// Last update: 2025-07-14
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -20,7 +20,7 @@ if (class_exists('WooCommerce') && WC()) {
         update_post_meta($product_id, '_sale_price_dates_to', $end_date->getTimestamp());
 
         // Calculate sale price
-        $regular_price = get_post_meta($product_id, '_regular_price', true);
+        $regular_price = wc_get_product($product_id)->get_regular_price();
         $sale_price = $regular_price * (1 - $discount_percentage);
 
         // Round sale price to the specified number of decimal places
