@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-07-21
+> Last update: 2025-07-23
 
 ```.sh
 # Settings
@@ -571,9 +571,13 @@ server {
 sudo systemctl reload nginx
 ```
 
-## Cloudflare
+### Cloudflare
 
-### Cloudflare Security
+#### DNS
+
+Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` > Choose Virtual Server > `DNS Settings` > `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+
+#### Security
 
 Cloudflare > Website > `Security` > `Security rules`.
 
@@ -607,7 +611,7 @@ Cloudflare > Website > `Security` > `Security rules`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
 - `Choose action`: `Managed Challenge`.
 
-### Cloudflare Caching
+#### Caching
 
 - Rule name: `Cache Bypass`.
 
