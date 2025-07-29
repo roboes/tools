@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce Function - Update SKUs for all products and variations based on GTIN
-// Last update: 2024-11-19
+// Last update: 2025-07-14
 
 function woocommerce_product_sku_update_to_gtin()
 {
@@ -17,7 +17,7 @@ function woocommerce_product_sku_update_to_gtin()
             $variations = $product->get_children();
             foreach ($variations as $variation_id) {
                 $variation = wc_get_product($variation_id);
-                $gtin = get_post_meta($variation_id, '_global_unique_id', true);
+                $gtin = $variation->get_meta('_global_unique_id', true);
                 $current_sku = $variation->get_sku();
 
                 // Check if GTIN exists and is different from current SKU
@@ -29,7 +29,7 @@ function woocommerce_product_sku_update_to_gtin()
             }
         } else {
             // For simple products, update the product itself
-            $gtin = get_post_meta($product->get_id(), '_global_unique_id', true);
+            $gtin = $product->get_meta('_global_unique_id', true);
             $current_sku = $product->get_sku();
 
             // Check if GTIN exists and is different from current SKU

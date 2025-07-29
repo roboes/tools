@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Apply sales price to multiple products
-// Last update: 2025-02-02
+// Last update: 2025-07-14
 
 
 function update_product_prices()
@@ -66,7 +66,9 @@ function update_product_prices()
 
 function update_product_price($product_id, $price_updates)
 {
-    $regular_price = get_post_meta($product_id, '_regular_price', true);
+    $product = wc_get_product($product_id);
+
+    $regular_price = $product->get_regular_price();
     $regular_price = floatval($regular_price); // Convert regular price to float
 
     // Convert the regular price to cents (multiply by 100 and round)
@@ -81,8 +83,9 @@ function update_product_price($product_id, $price_updates)
         // Compare the prices in cents
         if ($regular_price_cents === $old_price_cents) {
             // Update the product with the new price in cents
-            update_post_meta($product_id, '_regular_price', $new_price_cents / 100);
-            update_post_meta($product_id, '_price', $new_price_cents / 100); // Ensure price update
+            $product->set_regular_price($new_price_cents / 100);
+            $product->set_price($new_price_cents / 100);
+            $product->save();
 
             $product = get_post($product_id);
             echo 'Product price updated: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';

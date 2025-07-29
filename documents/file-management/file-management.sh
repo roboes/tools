@@ -1,29 +1,21 @@
 ## File Management
-# Last update: 2025-01-22
+# Last update: 2025-07-08
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Bash (Unix Shell)
+bash
 
-
-# Homebrew install
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# ulimit current limit
-# ulimit -n
-
-# ulimit increase limit
-# ulimit -n 8192
-
-# Homebrew update
-# brew update && brew upgrade && brew cleanup
 
 # Install rnr
 # brew install rnr
 
 
 # Settings
-cd "/mnt/c/Users/${USER}/Downloads"
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Downloads"
+else
+	cd "${HOME}/Downloads"
+fi
 
 
 ## find
@@ -47,10 +39,13 @@ find . -type d -empty -print # -delete
 
 ## Define an array of patterns and replacements
 patterns=(
-    '\xA0' ' '  # Remove non-breaking space
-    '^ ' ''      # Remove leading spaces
-    ' (\..*$)' '${1}'  # Remove spaces before file extension
-    '\s{2,}' ' '  # Replace multiple spaces with a single space
+    '\xA0' ' ' # Remove non-breaking space
+    '^ ' '' # Remove leading spaces
+	' $' '' # Remove trailing space
+	'\.$' '' # Remove trailing dots
+    ' (\..*$)' '${1}' # Remove spaces before file extension
+    '\s{2,}' ' ' # Replace multiple spaces with a single space
+	'[\\/*?"<>|]' ' ' # Remove Windows-forbidden characters
 )
 
 # patterns=(

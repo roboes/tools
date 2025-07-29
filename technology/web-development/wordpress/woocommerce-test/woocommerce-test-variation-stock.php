@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Variations Stock
-// Last update: 2024-09-02
+// Last update: 2025-07-04
 
 function get_all_variation_stock($product_ids)
 {
@@ -13,15 +13,22 @@ function get_all_variation_stock($product_ids)
 
         // Check if the product has variations
         if ($product->is_type('variable')) {
-            // Get the product's variations
-            $available_variations = $product->get_available_variations();
+            // Get all variation IDs
+            $variation_ids = $product->get_children();
 
-            foreach ($available_variations as $variation) {
-                $variation_id = $variation['variation_id'];
+            foreach ($variation_ids as $variation_id) {
+                // Get the variation product object
+                $variation_product = wc_get_product($variation_id);
+
+                if (!$variation_product) {
+                    continue;
+                }
 
                 // Prepare the variation name
                 $attribute_names = array();
-                foreach ($variation['attributes'] as $attribute => $value) {
+                $attributes = $variation_product->get_attributes();
+
+                foreach ($attributes as $attribute => $value) {
                     $taxonomy = str_replace('attribute_', '', $attribute);
                     $term = get_term_by('slug', $value, $taxonomy);
 
@@ -32,9 +39,6 @@ function get_all_variation_stock($product_ids)
                     }
                 }
                 $variation_name = implode(' - ', $attribute_names);
-
-                // Get the variation product object
-                $variation_product = wc_get_product($variation_id);
 
                 // Get the stock quantity for the variation
                 $stock_quantity = $variation_product->get_stock_quantity();
@@ -52,7 +56,7 @@ function get_all_variation_stock($product_ids)
 }
 
 
-$variation_stock = get_all_variation_stock($product_ids = array(22204));
+$variation_stock = get_all_variation_stock($product_ids = array(22204, 31437));
 
 // Output the variation stock data
 echo '<pre>';

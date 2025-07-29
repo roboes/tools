@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Shipping cost custom calculation based on the best-fitting shipping package for the cart items based on their dimensions, updates the cart item dimensions and total weight to reflect the selected package
-// Last update: 2024-10-23
+// Last update: 2025-07-14
 
 
 // add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
@@ -439,7 +439,7 @@ if (class_exists('WooCommerce') && WC()) {
 
     function display_custom_order_meta($order)
     {
-        $package_best_fit = get_post_meta($order->get_id(), 'order_package_best_fit', true);
+        $package_best_fit = $order->get_meta('order_package_best_fit', true);
         if ($package_best_fit) {
             $package_best_fit = json_decode($package_best_fit, true);
 
