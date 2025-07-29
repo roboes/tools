@@ -1,5 +1,5 @@
 ## Windows Package Manager Applications
-# Last update: 2025-05-14
+# Last update: 2025-07-20
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
@@ -19,7 +19,7 @@ winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id Microsoft.WindowsTerminal
 winget install --exact --id=Microsoft.PowerToys
 winget install --exact --id=Python.Python.3.13
-winget install --exact --id=Spyder.Spyder
+winget install --exact --id=Posit.Positron
 winget install --exact --id=Notepad++.Notepad++
 winget install --exact --id=WinSCP.WinSCP
 winget install --exact --id=IDRIX.VeraCrypt
@@ -68,8 +68,8 @@ python -m pip_review --local --auto
 # Install Windows Subsystem for Linux (WSL)
 # wsl --install -d Debian
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Windows Subsystem for Linux (WSL)
+bash
 
 # Homebrew install
 sudo apt install curl

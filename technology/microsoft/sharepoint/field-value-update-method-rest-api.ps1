@@ -1,5 +1,5 @@
 ## SharePoint - Update field values for all files in a given SharePoint library using REST API (Invoke-PnPSPRestMethod)
-# Last update: 2024-09-11
+# Last update: 2025-07-07
 
 function Update-SharePointLibraryFields {
     param (
@@ -117,22 +117,21 @@ function Update-SharePointLibraryFields {
         }
     }
 
-    if ($filePathRecursive) {
+    if ($clearRetentionLabel) {
         # Initialize progress bar variables for the second section
         $totalClears = $items.Count
         $currentClear = 0
 
         foreach ($item in $items) {
             # Skip items where retention labels are already cleared
-            if ($item.FieldValues["_ComplianceTag"] -eq "") {
-                continue
+            if (-not [string]::IsNullOrEmpty($item.FieldValues["_ComplianceTag"])) {
+                $apiCall = $sharePointUrl + "/_api/web/lists/getbytitle('$libraryName')/items($($item.Id))/SetComplianceTag()"
+
+                Invoke-PnPSPRestMethod -Url $apiCall -Method Post -Content '{"complianceTag": null}' -ContentType "application/json;odata=verbose" | Out-Null
+
+                # Log cleared retention label
+                Write-Host "$($item.Id) - '$($item.FieldValues["FileLeafRef"])': '_ComplianceTag' cleared" -ForegroundColor Green
             }
-
-            $apiCall = $sharePointUrl + "/_api/web/lists/getbytitle('$libraryName')/items($($item.Id))/SetComplianceTag()"
-            Invoke-PnPSPRestMethod -Url $apiCall -Method Post -Content '{"complianceTag":""}' -ContentType "application/json;odata=verbose" | Out-Null
-
-            # Log cleared retention label
-            Write-Host "$($item.Id) - '$($item.FieldValues["FileLeafRef"])': '_ComplianceTag' cleared" -ForegroundColor Green
 
             # Update second progress bar
             $currentClear++

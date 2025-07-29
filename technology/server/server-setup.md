@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-06-25
+> Last update: 2025-07-28
 
 ```.sh
 # Settings
@@ -166,6 +166,66 @@ ClientAliveInterval 300
 
 Restart server.
 
+## Email Server
+
+### DNS Configuration
+
+Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` > Choose Virtual Server > `DNS Settings` > `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+
+When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.com`) to Cloudflare, ensure its Proxy Status is set to `DNS only`. This is crucial for proper mail flow, as mail servers require direct IP connections.
+
+Additionally, add the following record:
+
+1) DMARC record
+
+- Type: `TXT`
+- Name: `_dmarc`
+- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s; rua=mailto:email@website.com; ruf=mailto:email@website.com`
+
+### Troubleshooting
+
+To diagnose general email sending/receiving issues: Open server's mail log in real-time to monitor activity:
+
+```.sh
+sudo tail -f /var/log/mail.log
+```
+
+While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.
+
+#### Architecture Mismatch
+
+To fix "Command died with status 126: Exec format error" that prevents local mail delivery, check for an architecture mismatch:
+
+```.sh
+# Check the procmail-wrapper binary's type:
+file /usr/bin/procmail-wrapper
+
+# Check server's actual architecture
+dpkg --print-architecture
+```
+
+If an architecture mismatch is detected (e.g. `file` shows a 32-bit x86 executable, but `dpkg` shows `arm64`), recompile procmail-wrapper for your server's correct architecture:
+
+```.sh
+# Navigate to a temporary directory
+cd /tmp/
+
+# Download the source file
+wget http://software.virtualmin.com/lib/procmail-wrapper.c
+
+# Compile the source code
+gcc -o procmail-wrapper procmail-wrapper.c
+
+# Verify the newly compiled binary
+file procmail-wrapper
+
+# Replace the old binary
+sudo mv /usr/bin/procmail-wrapper /usr/bin/procmail-wrapper.old  # Backup the old one
+sudo mv /tmp/procmail-wrapper /usr/bin/                         # Move the new one from /tmp
+sudo chmod 4755 /usr/bin/procmail-wrapper                     # Set permissions
+sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
+```
+
 ### Nginx directives
 
 #### Webmin > Servers > Nginx Webserver > Edit Configuration Files
@@ -301,7 +361,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
- set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -348,16 +408,23 @@ server {
         deny all;
     }
 
-    ## Well-known and ACME challenges for SSL certificate renewal
-    location ^~ /.well-known/ {
-        try_files $uri /;
+    ## Block access to .yml files
+    location ~* \.(yml)$ {
+        deny all;
+        access_log off;
+        log_not_found off;
     }
 
+    ## Well-known and ACME challenges for SSL certificate renewal
     location ^~ /.well-known/acme-challenge/ {
         allow all;
         default_type "text/plain";
         add_header Content-Type text/plain;
         try_files $uri =404;
+    }
+
+    location ^~ /.well-known/ {
+        try_files $uri /;
     }
 
 
@@ -432,14 +499,85 @@ server {
 }
 ```
 
+##### /etc/nginx/sites-available/subdomain.domain.com.conf
+
+This Nginx configuration serves as a template for a subdomain (`subdomain.domain.com`) that redirects all traffic to a specific path on the main domain (e.g. <https://domain.com/path>). Its primary roles are to facilitate SSL certificate issuance via ACME challenges and to provide these redirects.
+
+```.nginx
+server {
+    # Settings
+    set $domain website.com;
+    set $domain_root_path /home/${domain}/domains/subdomain.${domain}/public_html;
+    set $php_socket_id 100000000000000;
+    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
+    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    listen 100.00.000.01;
+    listen 100.00.000.01:443 ssl;
+    listen [1000:0000:0000:0000:0000:0000:0000:0000];
+    listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
+    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
+    ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
+
+
+    # Main Web Root Setup
+    root ${domain_root_path};
+    index index.php index.htm index.html;
+
+    # Logging
+    access_log /var/log/virtualmin/${domain}_access_log;
+    error_log /var/log/virtualmin/${domain}_error_log warn;
+
+
+    # Rewrites and Redirects
+
+    ## Admin & Webmail redirects
+    if ($host = webmail.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
+    }
+    if ($host = admin.${domain}) {
+        rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
+    }
+
+    ## AWStats CGI rewrite
+    rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
+
+    ## Well-known and ACME challenges for SSL certificate renewal
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+        default_type "text/plain";
+        add_header Content-Type text/plain;
+        try_files $uri =404;
+    }
+
+    location ^~ /.well-known/ {
+        try_files $uri /;
+    }
+
+    # Location Blocks - General & Security
+    #location / {
+    #    return 301 https://website.com/$request_uri;
+    #}
+
+    ## Block access to sensitive files
+    location ~ ^/\.user\.ini {
+        deny all;
+    }
+
+}
+```
+
 ```.sh
 # Restart Nginx
 sudo systemctl reload nginx
 ```
 
-## Cloudflare
+### Cloudflare
 
-### Cloudflare Security
+#### DNS
+
+Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` > Choose Virtual Server > `DNS Settings` > `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+
+#### Security
 
 Cloudflare > Website > `Security` > `Security rules`.
 
@@ -473,7 +611,7 @@ Cloudflare > Website > `Security` > `Security rules`.
 - `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
 - `Choose action`: `Managed Challenge`.
 
-### Cloudflare Caching
+#### Caching
 
 - Rule name: `Cache Bypass`.
 
@@ -500,24 +638,16 @@ Cloudflare > Website > `Security` > `Security rules`.
 
 ### PHP-FPM Configuration
 
-#### Global
-
-```.sh
-sudo nano /etc/php/8.4/fpm/php-fpm.conf
-```
-
-```.txt
-[global]
-emergency_restart_threshold = 10
-emergency_restart_interval = 60s
-process_control_timeout = 10s
-; log_level = notice
-log_level = warning
-```
-
 #### Local
 
 ```.txt
+[100000000000000]
+user = $system_user
+group = $system_user
+listen.owner = $system_user
+listen.group = $system_user
+listen.mode = 0660
+listen = /run/php/100000000000000.sock
 pm = dynamic
 pm.max_children = 16
 pm.start_servers = 2
@@ -529,8 +659,10 @@ php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
 php_value[log_errors] = On
+php_admin_value[display_errors] = Off
+php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT
 php_admin_value[memory_limit] = 256M
-php_admin_value[error_reporting] = E_ALL
+php_admin_value[upload_max_filesize] = 10M
 request_terminate_timeout = 30s
 catch_workers_output = yes
 
@@ -572,6 +704,8 @@ dig TXT _acme-challenge.autodiscover.$domain +short
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` > `Only on failure`.
 - `Request Certificate`.
+
+If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (orange cloud) to "DNS only" (gray cloud) for the domain.
 
 ```.sh
 # Remove .htaccess

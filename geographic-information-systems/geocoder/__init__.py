@@ -1,1 +1,0 @@
-"""Initialize class variables."""
