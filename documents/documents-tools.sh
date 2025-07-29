@@ -1,22 +1,10 @@
 ## Documents Tools
-# Last update: 2025-04-10
+# Last update: 2025-07-08
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Bash (Unix Shell)
+bash
 
-
-# Homebrew install
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# ulimit current limit
-# ulimit -n
-
-# ulimit increase limit
-# ulimit -n 8192
-
-# Homebrew update
-# brew update && brew upgrade && brew cleanup
 
 # Install ghostscript
 # brew install ghostscript
@@ -44,7 +32,11 @@ wsl
 
 
 # Settings
-cd "/mnt/c/Users/${USER}/Downloads"
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Downloads"
+else
+	cd "${HOME}/Downloads"
+fi
 
 
 # Convert multiple images to a single .pdf

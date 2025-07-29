@@ -1,16 +1,21 @@
 ## Video Tools
-# Last update: 2025-05-07
+# Last update: 2025-07-08
 
 
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
+# Start Bash (Unix Shell)
+bash
 
-
-# Homebrew update
-brew update && brew upgrade && brew cleanup
 
 # Install ffmpeg
 # brew install ffmpeg
+
+
+# Settings
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Videos"
+else
+	cd "${HOME}/Videos"
+fi
 
 
 # Trim video without re-encoding

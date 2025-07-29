@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Gift Card Redemption
-// Last update: 2025-05-28
+// Last update: 2025-07-14
 
 // Add these lines to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
@@ -178,6 +178,11 @@ if (class_exists('WooCommerce') && WC()) {
         // Get the current form ID
         $form_id = $contact_form->id();
 
+        // Validate form ID
+        if (!in_array($form_id, $form_ids)) {
+            return;
+        }
+
         // Get current language from form ID
         if ($form_id == 38604) {
             $current_language = 'de_DE_formal';
@@ -185,10 +190,6 @@ if (class_exists('WooCommerce') && WC()) {
             $current_language = 'en_US';
         } else {
             $current_language = 'en_US';
-        }
-
-        if (!in_array($form_id, $form_ids)) {
-            return;
         }
 
         // Extract form data
@@ -250,8 +251,11 @@ if (class_exists('WooCommerce') && WC()) {
             if ($product_id > 0 && $product_quantity > 0) {
                 $variation = wc_get_product($product_variation_id);
 
-                if ($variation && $variation->exists()) {
-                    wc_update_product_stock($variation, $product_quantity, 'decrease');
+                if ($variation && $variation->exists() && $variation->get_manage_stock()) {
+                    $current_stock = $variation->get_stock_quantity();
+                    $new_stock = max(0, $current_stock - $product_quantity);
+
+                    wc_update_product_stock($variation->get_id(), $new_stock, 'set');
                 }
             }
         }
@@ -392,7 +396,7 @@ if (class_exists('WooCommerce') && WC()) {
     {
 
         // Retrieve custom meta for training location
-        $product_training_location = get_post_meta($product_id, 'product_training_location', true);
+        $product_training_location = wc_get_product($product_id)->get_meta('product_training_location', true);
         if (!$product_training_location) {
             $product_training_location = 'Address Location';
         }
@@ -418,7 +422,7 @@ if (class_exists('WooCommerce') && WC()) {
         $timezone = get_option('timezone_string');
 
         // Retrieve custom meta for training duration
-        $product_training_duration_minutes = get_post_meta($product_id, 'product_training_duration_minutes', true);
+        $product_training_duration_minutes = wc_get_product($product_id)->get_meta('product_training_duration_minutes', true);
         if ($product_training_duration_minutes && is_numeric($product_training_duration_minutes)) {
             $product_training_duration_minutes = (int) $product_training_duration_minutes;
         } else {

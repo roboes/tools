@@ -1,34 +1,21 @@
 ## GPS Tools
-# Last update: 2023-11-24
+# Last update: 2025-07-08
 
 
-# Rename: ExifTool
-
-
-# Start Windows Subsystem for Linux (WSL) (required only on Windows)
-wsl
-
-
-# Homebrew install
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# ulimit current limit
-# ulimit -n
-
-# ulimit increase limit
-# ulimit -n 8192
-
-
-# Homebrew update
-brew update && brew upgrade && brew cleanup
-
-
-# Settings
-cd "/mnt/c/Users/${USER}/Downloads"
+# Start Bash (Unix Shell)
+bash
 
 
 # Install gpsbabel
 # brew install gpsbabel
+
+
+# Settings
+if grep -qi microsoft /proc/version; then
+	cd "/mnt/c/Users/${USER}/Downloads"
+else
+	cd "${HOME}/Downloads"
+fi
 
 
 # For all .gpx files, add faketime with 2 seconds increment between each trackpoint and export it to .tcx

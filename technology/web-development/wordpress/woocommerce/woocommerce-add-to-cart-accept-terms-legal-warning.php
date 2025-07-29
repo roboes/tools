@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to cart" accept legal warning terms
-// Last update: 2024-10-16
+// Last update: 2025-07-14
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -16,7 +16,7 @@ if (class_exists('WooCommerce') && WC()) {
             global $product;
 
             // Get the custom field value
-            $product_legal_details = get_post_meta($product->get_id(), 'product_legal_details', true);
+            $product_legal_details = $product->get_meta('product_legal_details', true);
 
             // Check if the custom field is not empty and language is supported
             if (!empty($product_legal_details)) {

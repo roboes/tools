@@ -1,7 +1,7 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2025-05-28
+// Last update: 2025-07-15
 
 // Unschedule all events attached to a given hook
 // wp_clear_scheduled_hook($hook='cron_job_schedule_variable_product_delete_variations', $args=array(), $wp_error=false);
@@ -97,15 +97,12 @@ function variable_product_delete_variations($product_ids, $delete = false)
                         echo "Deleted variation - Product ID: {$variation['product_id']}, Product Name: {$variation['product_name']}, Variation ID: {$variation['variation_id']}, Variation Name: {$variation['variation_name']}, Attributes: " . json_encode($variation['attributes']) . "\n";
                     }
 
-                    // Clear WooCommerce transients for the product
-                    wc_delete_product_transients($product_id);
-                    delete_transient('wc_var_prices_' . $product_id);
-
-                    // Sync the product data (updates stock, prices, etc.)
-                    $product->sync();
+                    // Save
                     $product->save();
 
-                    // Clear WooCommerce product variation cache and product cache group
+                    // Clear WooCommerce transients and cache for the parent product
+                    wc_delete_product_transients($product_id);
+                    delete_transient('wc_var_prices_' . $product_id);
                     WC_Product_Variable::clear_cache($product_id);
                     WC_Cache_Helper::invalidate_cache_group('product_' . $product_id);
 

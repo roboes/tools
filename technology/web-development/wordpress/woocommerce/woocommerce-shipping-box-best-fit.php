@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-06-30
+// Last update: 2025-07-22
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -10,8 +10,17 @@
 // calculate_and_store_package_best_fit($order->get_id());
 // }
 
+// Delete best package fit meta data
+// $orders = wc_get_orders(['limit' => -1]);
+// foreach ($orders as $order) {
+// if (!empty($order->get_meta('order_package_best_fit', true))) {
+// $order->delete_meta_data('order_package_best_fit');
+// $order->save();
+// }
+// }
 
-// Requires BoxPacker 4.1.0 (https://github.com/dvdoug/BoxPacker) to be installed in the "wp-content" folder (no Composer needed)
+
+// Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) to be installed in the "wp-content" folder (no Composer needed)
 require_once WP_CONTENT_DIR . '/boxpacker/src/Box.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/BoxList.php';
 require_once WP_CONTENT_DIR . '/boxpacker/src/BoxSorter.php';
@@ -172,7 +181,7 @@ function calculate_and_store_package_best_fit($order_id)
         return;
     }
 
-    $packer = new Packer(new DefaultItemSorter());
+    $packer = new Packer();
 
     // Define available boxes
     $packer->addBox(new CustomBox(reference: 'CX ENVIO P', outerWidth: 100, outerLength: 160, outerDepth: 200, emptyWeight: 48, innerWidth: (100 - 3), innerLength: (160 - 3), innerDepth: (200 - 3), maxWeight: 20000));
@@ -249,15 +258,16 @@ function calculate_and_store_package_best_fit($order_id)
         return;
     }
 
-    // Update the order meta with the best fit package
-    update_post_meta($order_id, 'order_package_best_fit', wp_json_encode($package_details));
+    // Update the order meta with the best fit package;
+    $order->update_meta_data('order_package_best_fit', wp_json_encode($package_details));
+    $order->save();
 
 }
 
 
 function display_custom_order_meta($order)
 {
-    $package_details = get_post_meta($order->get_id(), 'order_package_best_fit', true);
+    $package_details = $order->get_meta('order_package_best_fit', true);
     $package_details = $package_details ? json_decode($package_details, true) : [];
 
     echo '<div><p>&nbsp;</p><h3>Package Best Fit</h3>';
