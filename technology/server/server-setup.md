@@ -418,6 +418,7 @@ server {
     ## Well-known and ACME challenges for SSL certificate renewal
     location ^~ /.well-known/acme-challenge/ {
         allow all;
+        auth_basic off;
         default_type "text/plain";
         add_header Content-Type text/plain;
         try_files $uri =404;
