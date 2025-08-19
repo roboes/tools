@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-07-28
+> Last update: 2025-08-19
 
 ```.sh
 # Settings
@@ -67,7 +67,9 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 - [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
 - Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
 
-### Virtualmin settings
+### Virtualmin
+
+#### General settings
 
 - Home subdirectory: `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
 
@@ -75,26 +77,161 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
 
-- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.conf`
+#### Security
 
-```.txt
+#### Webmin Configuration
+
+- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control` > `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
+
+- Two-Factor Authentication (2FA):
+  - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
+  - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
+  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+
+##### Fail2Ban
+
+- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.local`
+
+```.toml
 [DEFAULT]
 bantime = 1440m
 findtime = 60m
 maxretry = 3
+
+[dovecot]
+enabled = true
+
+[postfix]
+enabled = true
+
+[postfix-sasl]
+enabled = true
+backend = systemd
+journalmatch = _SYSTEMD_UNIT=postfix@-.service
+
+[proftpd]
+enabled = false
+backend = auto
+logpath = /var/log/proftpd/proftpd.log
+
+[nginx-bad-request]
+enabled = true
+
+[nginx-http-auth]
+enabled = true
+
+[recidive]
+enabled = true
+bantime = 4w
+findtime = 7d
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+
+[webmin-auth]
+enabled = true
+port = 10000
+journalmatch = _SYSTEMD_UNIT=webmin.service
 ```
 
 ```.sh
 sudo systemctl restart fail2ban
 ```
 
-- Fail2Ban: > `Webmin` > `Networking` > `Fail2Ban Intrusion Detector`> `Filter Action Jails` > Enable `nginx-http-auth`.
+#### FirewallD
 
-- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control` > `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
-- Two-Factor Authentication (2FA):
-  - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
-  - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
-  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+```.sh
+# sudo apt update
+# sudo apt install firewalld -y
+
+# List all active firewall rules in the public zone
+sudo firewall-cmd --zone=public --list-all
+```
+
+#### SASL Authentication Daemon
+
+```.sh
+# sudo systemctl status saslauthd
+# sudo systemctl enable saslauthd
+```
+
+#### SSH
+
+```.sh
+# Generate the SSH Key Pair
+ssh-keygen -t rsa -b 4096 -C "root@$server_ip"
+
+# Add the Public Key to the Authorized Keys
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+chmod 700 /root/.ssh
+chmod 600 /root/.ssh/authorized_keys
+```
+
+Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
+PuTTYgen can convert the RSA private key to `.ppk`.
+
+```.sh
+# Copy SSH key in Windows Subsystem for Linux (WSL)
+# cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
+# chmod 600 ~/.ssh/id_rsa
+```
+
+Configure SSH to Use Key-Based Authentication
+
+```.sh
+nano /etc/ssh/sshd_config
+```
+
+```.txt
+# This is the sshd server system-wide configuration file. See
+# sshd_config(5) for more information.
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+
+# Connection settings
+
+## Port
+Port 22
+
+## Timeout and connection limits
+LoginGraceTime 60
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 3
+MaxStartups 10:30:100
+AllowTcpForwarding no
+UseDNS no
+
+
+# Authentication settings
+
+## Disable password authentication and enable key-based login
+PasswordAuthentication no
+PubkeyAuthentication yes
+
+## Disable password-based root login
+PermitRootLogin prohibit-password
+
+## Allow a specific user to log in via SSH
+AllowUsers root
+
+
+# Other settings
+
+## Enable Pluggable Authentication Modules (PAM) authentication
+UsePAM yes
+
+## Disables printing the message of the day upon login
+PrintMotd no
+
+## Override default of no subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server
+```
+
+Restart server.
 
 Now "Create Virtual Server".
 
@@ -126,45 +263,6 @@ sudo apt-get install htop \
   libnginx-mod-http-brotli-filter \
   redis
 ```
-
-### SSH key
-
-```.sh
-# Generate the SSH Key Pair
-ssh-keygen -t rsa -b 4096 -C "root@$server_ip"
-
-# Add the Public Key to the Authorized Keys
-cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-chmod 700 /root/.ssh
-chmod 600 /root/.ssh/authorized_keys
-```
-
-Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
-PuTTYgen can convert the RSA private key to `.ppk`.
-
-```.sh
-# Copy SSH key in Windows Subsystem for Linux (WSL)
-# cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
-# chmod 600 ~/.ssh/id_rsa
-```
-
-#### Configure SSH to Use Key-Based Authentication
-
-```.sh
-nano /etc/ssh/sshd_config
-```
-
-```.txt
-PasswordAuthentication no
-PubkeyAuthentication yes
-PermitRootLogin prohibit-password
-AllowUsers root
-LoginGraceTime 60
-MaxAuthTries 3
-ClientAliveInterval 300
-```
-
-Restart server.
 
 ## Email Server
 
@@ -428,6 +526,12 @@ server {
         try_files $uri /;
     }
 
+    # Block access to xmlrpc.php
+    location = /xmlrpc.php {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
 
     # PHP Processing
     fastcgi_split_path_info "^(.+\\.php)(/.+)$";
@@ -442,17 +546,6 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_intercept_errors on;
-
-        # FastCGI timeouts
-        fastcgi_connect_timeout 30s;
-        fastcgi_read_timeout 30s;
-        fastcgi_send_timeout 30s;
-
-        # FastCGI buffers
-        fastcgi_buffer_size 16k;
-        fastcgi_buffers 4 16k;
-        fastcgi_busy_buffers_size 48k;
-        fastcgi_temp_file_write_size 64k;
 
         # Security and header handling
         fastcgi_hide_header 'X-Powered-By';
@@ -600,16 +693,10 @@ Cloudflare > Website > `Security` > `Security rules`.
 - `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
 - `Choose action`: `Managed Challenge`.
 
-4) WordPress Login (Countries Allowed)
+4) WordPress
 
-- `Rule name`: `WordPress Login (Countries Allowed)`.
-- `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
-- `Choose action`: `Block`.
-
-5) WordPress Login (Captcha)
-
-- `Rule name`: `WordPress Login (Captcha)`.
-- `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
+- `Rule name`: `WordPress`.
+- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/")`
 - `Choose action`: `Managed Challenge`.
 
 #### Caching

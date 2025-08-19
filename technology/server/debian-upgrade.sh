@@ -1,5 +1,5 @@
 ## Debian upgrade
-# Last update: 2025-08-12
+# Last update: 2025-08-18
 
 
 # Pre-upgrade system preparation
@@ -69,3 +69,19 @@ systemctl reboot
 # rm -rf /backup
 # rm /etc/apt/sources.list.bookworm-backup
 # rm -rf /etc/apt/sources.list.d.bookworm-backup
+
+
+
+# Reset Dovecot to default settings
+
+## Remove packages and all config files
+sudo apt purge --autoremove dovecot-core dovecot-imapd dovecot-pop3d
+
+## Install packages with fresh config files
+sudo apt install dovecot-core dovecot-imapd dovecot-pop3d
+
+## Restart the service
+systemctl restart dovecot
+
+## Check service status
+systemctl status dovecot
