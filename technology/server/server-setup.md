@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-08-19
+> Last update: 2025-08-21
 
 ```.sh
 # Settings
@@ -81,7 +81,9 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 #### Webmin Configuration
 
-- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control` > `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
+- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control`
+  - `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
+  - Enable `Include local network in list`.
 
 - Two-Factor Authentication (2FA):
   - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
@@ -138,16 +140,6 @@ journalmatch = _SYSTEMD_UNIT=webmin.service
 
 ```.sh
 sudo systemctl restart fail2ban
-```
-
-#### FirewallD
-
-```.sh
-# sudo apt update
-# sudo apt install firewalld -y
-
-# List all active firewall rules in the public zone
-sudo firewall-cmd --zone=public --list-all
 ```
 
 #### SASL Authentication Daemon
@@ -233,6 +225,105 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 
 Restart server.
 
+#### Cloudflare Zero Trust
+
+Cloudflare > `Zero Trust`
+
+##### Tunnels
+
+`Networks` > `Tunnels` > `Create a tunnel` > `Cloudflared`.
+
+Public hostnames:
+
+1) `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
+2) `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` > `TLS` > Enable `No TLS Verify`.
+
+```.sh
+sudo systemctl status cloudflared
+```
+
+##### Applications
+
+`Access` > `Applications` > `Add an application` > `Self-hosted`
+
+1) SSH Access
+`Application name`: `SSH Access`.
+`Session Duration`: `24 hours`.
+`Public hostname`: `ssh.website.com`.
+`Access policies`: `Select existing policies` or `Create new policy`.
+
+2) Virtualmin Access
+`Application name`: `Virtualmin Access`.
+`Session Duration`: `2 weeks`.
+`Public hostname`: `virtualmin.website.com`.
+`Access policies`: `Select existing policies` or `Create new policy`.
+
+##### Webmin
+
+###### /etc/webmin/config
+
+```.sh
+sudo nano /etc/webmin/config
+```
+
+Add to the end of the file:
+
+```.txt
+referers=virtualmin.website.com
+```
+
+###### /etc/webmin/miniserv.conf
+
+```.sh
+sudo nano /etc/webmin/miniserv.conf
+```
+
+```.txt
+redirect_host=virtualmin.website.com
+```
+
+```.sh
+sudo systemctl restart webmin
+```
+
+#### FirewallD
+
+```.sh
+# sudo apt update
+# sudo apt install firewalld -y
+
+# Remove SSH service
+sudo firewall-cmd --remove-service=ssh --permanent
+
+# Remove Webmin port
+sudo firewall-cmd --remove-port=10000/tcp --permanent
+
+# Remove unnecessary services
+sudo firewall-cmd --remove-service=ftp --permanent
+sudo firewall-cmd --remove-service=mdns --permanent
+sudo firewall-cmd --remove-service=dns-over-tls --permanent
+sudo firewall-cmd --remove-service=imap --permanent
+# sudo firewall-cmd --remove-service=imaps --permanent
+sudo firewall-cmd --remove-service=pop3 --permanent
+sudo firewall-cmd --remove-service=pop3s --permanent
+sudo firewall-cmd --remove-service=smtp --permanent
+# sudo firewall-cmd --remove-service=smtps --permanent
+# sudo firewall-cmd --remove-service=smtp-submission --permanent
+
+# Remove unnecessary ports
+sudo firewall-cmd --remove-port=20/tcp --permanent
+sudo firewall-cmd --remove-port=2222/tcp --permanent
+sudo firewall-cmd --remove-port=20000/tcp --permanent
+sudo firewall-cmd --remove-port=49152-65535/tcp --permanent
+sudo firewall-cmd --remove-port=10001-10100/tcp --permanent
+
+# Reload firewall to apply changes
+sudo firewall-cmd --reload
+
+# Show active rules
+sudo firewall-cmd --list-all
+```
+
 Now "Create Virtual Server".
 
 ### Virtualmin settings (optional)
@@ -278,7 +369,7 @@ Additionally, add the following record:
 
 - Type: `TXT`
 - Name: `_dmarc`
-- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s; rua=mailto:email@website.com; ruf=mailto:email@website.com`
+- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s`
 
 ### Troubleshooting
 
