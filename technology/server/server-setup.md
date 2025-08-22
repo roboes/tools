@@ -90,6 +90,11 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
   - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
   - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
 
+- Scheduled Upgrades:
+  - Virtualmin > Dashboard > Package updates > Scheduled Upgrades:
+    - `Check for updates on schedule`: `Yes, every week`.
+    - `Action when update needed`: `Install security updates`.
+
 ##### Fail2Ban
 
 - Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.local`
@@ -388,6 +393,8 @@ To fix "Command died with status 126: Exec format error" that prevents local mai
 ```.sh
 # Check the procmail-wrapper binary's type:
 file /usr/bin/procmail-wrapper
+# file /usr/share/webmin/virtual-server/procmail-wrapper
+
 
 # Check server's actual architecture
 dpkg --print-architecture
