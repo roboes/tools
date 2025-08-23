@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-08-21
+> Last update: 2025-08-23
 
 ```.sh
 # Settings
@@ -386,7 +386,7 @@ sudo tail -f /var/log/mail.log
 
 While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.
 
-#### Architecture Mismatch
+#### Architecture mismatch
 
 To fix "Command died with status 126: Exec format error" that prevents local mail delivery, check for an architecture mismatch:
 
@@ -420,6 +420,43 @@ sudo mv /usr/bin/procmail-wrapper /usr/bin/procmail-wrapper.old  # Backup the ol
 sudo mv /tmp/procmail-wrapper /usr/bin/                         # Move the new one from /tmp
 sudo chmod 4755 /usr/bin/procmail-wrapper                     # Set permissions
 sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
+```
+
+### Backup
+
+`Virtualmin` > `Backup and Restore` > `Scheduled Backups` > `Add a new backup schedule`.
+
+- `Backup description`: `Backup Weekly`.
+- `Servers to save`: `All virtual servers`.
+- `Features to backup`: `Backup all features`.
+- `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
+- `Delete old backups`: `Yes, after 30 days`.
+- `Additional destination options`:
+  - Enable `Do strftime-style time substitutions on file or directory name`.
+  - Enable `Transfer each virtual server after it is backed up`.
+- `Backup format`: Select `One file per server`.
+- `Action on error`: Select `Halt the backup immediately`.
+- `Backup compression format`: Select `Default`.
+- `Backup level`: `Full (all files)`.
+- `Scheduled backup time` > `Simple schedule`: `Weekly (on Sundays)`.
+
+### Bootup and Shutdown
+
+`Webmin` > `System` > `Bootup and Shutdown`.
+
+```.sh
+# Disable services
+services=(
+  dovecot.service
+  postfix.service
+)
+
+for srv in "${services[@]}"; do
+  echo "Stopping and disabling $srv..."
+  systemctl stop "$srv" 2>/dev/null
+  systemctl disable "$srv" 2>/dev/null
+  systemctl mask "$srv" 2>/dev/null
+done
 ```
 
 ### Nginx directives
@@ -860,7 +897,7 @@ catch_workers_output = yes
 # touch /home/$domain/logs/php_slow.log
 # chown $system_user:$system_user /home/$domain/logs/php_slow.log
 # chmod 664 /home/$domain/logs/php_slow.log
-# sudo systemctl restart php8.4-fpm
+# sudo systemctl restart php8.3-fpm
 ```
 
 ### SSL Certificate
