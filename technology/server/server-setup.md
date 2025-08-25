@@ -43,7 +43,7 @@ nano ~/.bashrc
 
 ```.sh
 # Install packages
-sudo apt-get install curl \
+sudo apt install curl \
   dnsutils \
   wget \
   python-is-python3
@@ -342,20 +342,20 @@ Now "Create Virtual Server".
 ```.sh
 # Remove older PHP Versions
 php_version_old="8.2"
-sudo apt-get purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
-sudo apt-get autoremove
-sudo apt-get clean
+sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
+sudo apt autoremove
+sudo apt clean
 ```
 
 ```.sh
 php_version_current="8.3"
-sudo apt-get install php${php_version_current}-sqlite3
+sudo apt install php${php_version_current}-sqlite3
 ```
 
 ### Packages
 
 ```.sh
-sudo apt-get install htop \
+sudo apt install htop \
   libnginx-mod-http-brotli-filter \
   redis
 ```
@@ -428,7 +428,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 
 - `Backup description`: `Backup Weekly`.
 - `Servers to save`: `All virtual servers`.
-- `Features to backup`: `Backup all features`.
+- `Features to backup`: `Backup all features` (if the backup fails with an error about missing logrotate config, uncheck `Logrotate configuration for log file`).
 - `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
 - `Delete old backups`: `Yes, after 30 days`.
 - `Additional destination options`:
