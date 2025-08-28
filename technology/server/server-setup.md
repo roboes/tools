@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-08-23
+> Last update: 2025-08-26
 
 ```.sh
 # Settings
@@ -325,6 +325,9 @@ sudo firewall-cmd --remove-port=10001-10100/tcp --permanent
 # Reload firewall to apply changes
 sudo firewall-cmd --reload
 
+# Show interfaces
+firewall-cmd --list-interfaces
+
 # Show active rules
 sudo firewall-cmd --list-all
 ```
@@ -385,6 +388,16 @@ sudo tail -f /var/log/mail.log
 ```
 
 While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.
+
+When configuring the email client (e.g. Thunderbird), ensure the server hostname entered matches the Common Name (CN) or a Subject Alternative Name (SAN) on the server's SSL certificate to prevent certificate mismatch errors. Sometimes, this requires using `website.com` as the SMTP hostname (instead of the typical `mail.website.com`) if the certificate only covers the root domain.
+
+Additional troubleshooting:
+
+```.sh
+dovecot -n
+sudo journalctl -u dovecot.service -f
+sudo journalctl -u postfix.service -f
+```
 
 #### Architecture mismatch
 
