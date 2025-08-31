@@ -1,16 +1,18 @@
 // Google Apps Script - Automatically forwards Gmail emails from specified senders, applies a label, and ensures they are not marked as spam
 // Last update: 2025-04-04
 
+
 // https://script.google.com > New project >
 // - Editor > Services > Add a service > Gmail API
 // - Triggers > Add Trigger >
-// -- Choose which function to run: forwardNewEmails
+// -- Choose which function to run: ForwardNewEmails
 // -- Choose which deployment should run: Head
 // -- Select event source: Time-driven
 // -- Select type of time based trigger: Minutes timer
 // -- Select minute interval: Every 30 minutes
 
-function forwardNewEmails() {
+
+function ForwardNewEmails() {
 
   // Settings
   var forwardingEmailTo = "email_to@email.com";

@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-07-28
+> Last update: 2025-08-26
 
 ```.sh
 # Settings
@@ -43,7 +43,7 @@ nano ~/.bashrc
 
 ```.sh
 # Install packages
-sudo apt-get install curl \
+sudo apt install curl \
   dnsutils \
   wget \
   python-is-python3
@@ -67,7 +67,9 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 - [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
 - Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
 
-### Virtualmin settings
+### Virtualmin
+
+#### General settings
 
 - Home subdirectory: `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
 
@@ -75,59 +77,84 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
 
-- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.conf`
+#### Security
 
-```.txt
+#### Webmin Configuration
+
+- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control`
+  - `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
+  - Enable `Include local network in list`.
+
+- Two-Factor Authentication (2FA):
+  - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
+  - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
+  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+
+- Scheduled Upgrades:
+  - Virtualmin > Dashboard > Package updates > Scheduled Upgrades:
+    - `Check for updates on schedule`: `Yes, every week`.
+    - `Action when update needed`: `Install security updates`.
+
+##### Fail2Ban
+
+- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.local`
+
+```.toml
 [DEFAULT]
 bantime = 1440m
 findtime = 60m
 maxretry = 3
+
+[dovecot]
+enabled = true
+
+[postfix]
+enabled = true
+
+[postfix-sasl]
+enabled = true
+backend = systemd
+journalmatch = _SYSTEMD_UNIT=postfix@-.service
+
+[proftpd]
+enabled = false
+backend = auto
+logpath = /var/log/proftpd/proftpd.log
+
+[nginx-bad-request]
+enabled = true
+
+[nginx-http-auth]
+enabled = true
+
+[recidive]
+enabled = true
+bantime = 4w
+findtime = 7d
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+
+[webmin-auth]
+enabled = true
+port = 10000
+journalmatch = _SYSTEMD_UNIT=webmin.service
 ```
 
 ```.sh
 sudo systemctl restart fail2ban
 ```
 
-- Fail2Ban: > `Webmin` > `Networking` > `Fail2Ban Intrusion Detector`> `Filter Action Jails` > Enable `nginx-http-auth`.
-
-- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control` > `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
-- Two-Factor Authentication (2FA):
-  - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
-  - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
-  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
-
-Now "Create Virtual Server".
-
-### Virtualmin settings (optional)
-
-- Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
-
-### PHP
-
-[Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
+#### SASL Authentication Daemon
 
 ```.sh
-# Remove older PHP Versions
-php_version_old="8.2"
-sudo apt-get purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
-sudo apt-get autoremove
-sudo apt-get clean
+# sudo systemctl status saslauthd
+# sudo systemctl enable saslauthd
 ```
 
-```.sh
-php_version_current="8.3"
-sudo apt-get install php${php_version_current}-sqlite3
-```
-
-### Packages
-
-```.sh
-sudo apt-get install htop \
-  libnginx-mod-http-brotli-filter \
-  redis
-```
-
-### SSH key
+#### SSH
 
 ```.sh
 # Generate the SSH Key Pair
@@ -148,23 +175,195 @@ PuTTYgen can convert the RSA private key to `.ppk`.
 # chmod 600 ~/.ssh/id_rsa
 ```
 
-#### Configure SSH to Use Key-Based Authentication
+Configure SSH to Use Key-Based Authentication
 
 ```.sh
 nano /etc/ssh/sshd_config
 ```
 
 ```.txt
-PasswordAuthentication no
-PubkeyAuthentication yes
-PermitRootLogin prohibit-password
-AllowUsers root
+# This is the sshd server system-wide configuration file. See
+# sshd_config(5) for more information.
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+
+# Connection settings
+
+## Port
+Port 22
+
+## Timeout and connection limits
 LoginGraceTime 60
 MaxAuthTries 3
 ClientAliveInterval 300
+ClientAliveCountMax 3
+MaxStartups 10:30:100
+AllowTcpForwarding no
+UseDNS no
+
+
+# Authentication settings
+
+## Disable password authentication and enable key-based login
+PasswordAuthentication no
+PubkeyAuthentication yes
+
+## Disable password-based root login
+PermitRootLogin prohibit-password
+
+## Allow a specific user to log in via SSH
+AllowUsers root
+
+
+# Other settings
+
+## Enable Pluggable Authentication Modules (PAM) authentication
+UsePAM yes
+
+## Disables printing the message of the day upon login
+PrintMotd no
+
+## Override default of no subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server
 ```
 
 Restart server.
+
+#### Cloudflare Zero Trust
+
+Cloudflare > `Zero Trust`
+
+##### Tunnels
+
+`Networks` > `Tunnels` > `Create a tunnel` > `Cloudflared`.
+
+Public hostnames:
+
+1) `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
+2) `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` > `TLS` > Enable `No TLS Verify`.
+
+```.sh
+sudo systemctl status cloudflared
+```
+
+##### Applications
+
+`Access` > `Applications` > `Add an application` > `Self-hosted`
+
+1) SSH Access
+`Application name`: `SSH Access`.
+`Session Duration`: `24 hours`.
+`Public hostname`: `ssh.website.com`.
+`Access policies`: `Select existing policies` or `Create new policy`.
+
+2) Virtualmin Access
+`Application name`: `Virtualmin Access`.
+`Session Duration`: `2 weeks`.
+`Public hostname`: `virtualmin.website.com`.
+`Access policies`: `Select existing policies` or `Create new policy`.
+
+##### Webmin
+
+###### /etc/webmin/config
+
+```.sh
+sudo nano /etc/webmin/config
+```
+
+Add to the end of the file:
+
+```.txt
+referers=virtualmin.website.com
+```
+
+###### /etc/webmin/miniserv.conf
+
+```.sh
+sudo nano /etc/webmin/miniserv.conf
+```
+
+```.txt
+redirect_host=virtualmin.website.com
+```
+
+```.sh
+sudo systemctl restart webmin
+```
+
+#### FirewallD
+
+```.sh
+# sudo apt update
+# sudo apt install firewalld -y
+
+# Remove SSH service
+sudo firewall-cmd --zone=public --remove-service=ssh --permanent
+
+# Remove Webmin port
+sudo firewall-cmd --zone=public --remove-port=10000/tcp --permanent
+
+# Remove unnecessary services
+sudo firewall-cmd --zone=public --remove-service=ftp --permanent
+sudo firewall-cmd --zone=public --remove-service=mdns --permanent
+sudo firewall-cmd --zone=public --remove-service=dns --permanent
+sudo firewall-cmd --zone=public --remove-service=dns-over-tls --permanent
+sudo firewall-cmd --zone=public --remove-service=dhcpv6-client --permanent
+sudo firewall-cmd --zone=public --remove-service=imap --permanent
+# sudo firewall-cmd --zone=public --remove-service=imaps --permanent
+sudo firewall-cmd --zone=public --remove-service=pop3 --permanent
+sudo firewall-cmd --zone=public --remove-service=pop3s --permanent
+sudo firewall-cmd --zone=public --remove-service=smtp --permanent
+# sudo firewall-cmd --zone=public --remove-service=smtps --permanent
+# sudo firewall-cmd --zone=public --remove-service=smtp-submission --permanent
+
+# Remove unnecessary ports
+sudo firewall-cmd --zone=public --remove-port=20/tcp --permanent
+sudo firewall-cmd --zone=public --remove-port=2222/tcp --permanent
+sudo firewall-cmd --zone=public --remove-port=20000/tcp --permanent
+sudo firewall-cmd --zone=public --remove-port=49152-65535/tcp --permanent
+sudo firewall-cmd --zone=public --remove-port=10001-10100/tcp --permanent
+
+# Reload firewall to apply changes
+sudo firewall-cmd --reload
+
+# Show interfaces
+firewall-cmd --list-interfaces
+
+# Show active rules
+sudo firewall-cmd --list-all
+```
+
+Now "Create Virtual Server".
+
+### Virtualmin settings (optional)
+
+- Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
+
+### PHP
+
+[Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
+
+```.sh
+# Remove older PHP Versions
+php_version_old="8.2"
+sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
+sudo apt autoremove
+sudo apt clean
+```
+
+```.sh
+php_version_current="8.3"
+sudo apt install php${php_version_current}-sqlite3
+```
+
+### Packages
+
+```.sh
+sudo apt install htop \
+  libnginx-mod-http-brotli-filter \
+  redis
+```
 
 ## Email Server
 
@@ -180,7 +379,7 @@ Additionally, add the following record:
 
 - Type: `TXT`
 - Name: `_dmarc`
-- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s; rua=mailto:email@website.com; ruf=mailto:email@website.com`
+- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s`
 
 ### Troubleshooting
 
@@ -192,13 +391,25 @@ sudo tail -f /var/log/mail.log
 
 While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.
 
-#### Architecture Mismatch
+When configuring the email client (e.g. Thunderbird), ensure the server hostname entered matches the Common Name (CN) or a Subject Alternative Name (SAN) on the server's SSL certificate to prevent certificate mismatch errors. Sometimes, this requires using `website.com` as the SMTP hostname (instead of the typical `mail.website.com`) if the certificate only covers the root domain.
+
+Additional troubleshooting:
+
+```.sh
+dovecot -n
+sudo journalctl -u dovecot.service -f
+sudo journalctl -u postfix.service -f
+```
+
+#### Architecture mismatch
 
 To fix "Command died with status 126: Exec format error" that prevents local mail delivery, check for an architecture mismatch:
 
 ```.sh
 # Check the procmail-wrapper binary's type:
 file /usr/bin/procmail-wrapper
+# file /usr/share/webmin/virtual-server/procmail-wrapper
+
 
 # Check server's actual architecture
 dpkg --print-architecture
@@ -224,6 +435,43 @@ sudo mv /usr/bin/procmail-wrapper /usr/bin/procmail-wrapper.old  # Backup the ol
 sudo mv /tmp/procmail-wrapper /usr/bin/                         # Move the new one from /tmp
 sudo chmod 4755 /usr/bin/procmail-wrapper                     # Set permissions
 sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
+```
+
+### Backup
+
+`Virtualmin` > `Backup and Restore` > `Scheduled Backups` > `Add a new backup schedule`.
+
+- `Backup description`: `Backup Weekly`.
+- `Servers to save`: `All virtual servers`.
+- `Features to backup`: `Backup all features` (if the backup fails with an error about missing logrotate config, uncheck `Logrotate configuration for log file`).
+- `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
+- `Delete old backups`: `Yes, after 30 days`.
+- `Additional destination options`:
+  - Enable `Do strftime-style time substitutions on file or directory name`.
+  - Enable `Transfer each virtual server after it is backed up`.
+- `Backup format`: Select `One file per server`.
+- `Action on error`: Select `Halt the backup immediately`.
+- `Backup compression format`: Select `Default`.
+- `Backup level`: `Full (all files)`.
+- `Scheduled backup time` > `Simple schedule`: `Weekly (on Sundays)`.
+
+### Bootup and Shutdown
+
+`Webmin` > `System` > `Bootup and Shutdown`.
+
+```.sh
+# Disable services
+services=(
+  dovecot.service
+  postfix.service
+)
+
+for srv in "${services[@]}"; do
+  echo "Stopping and disabling $srv..."
+  systemctl stop "$srv" 2>/dev/null
+  systemctl disable "$srv" 2>/dev/null
+  systemctl mask "$srv" 2>/dev/null
+done
 ```
 
 ### Nginx directives
@@ -418,6 +666,7 @@ server {
     ## Well-known and ACME challenges for SSL certificate renewal
     location ^~ /.well-known/acme-challenge/ {
         allow all;
+        auth_basic off;
         default_type "text/plain";
         add_header Content-Type text/plain;
         try_files $uri =404;
@@ -427,6 +676,12 @@ server {
         try_files $uri /;
     }
 
+    # Block access to xmlrpc.php
+    location = /xmlrpc.php {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
 
     # PHP Processing
     fastcgi_split_path_info "^(.+\\.php)(/.+)$";
@@ -441,17 +696,6 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_intercept_errors on;
-
-        # FastCGI timeouts
-        fastcgi_connect_timeout 30s;
-        fastcgi_read_timeout 30s;
-        fastcgi_send_timeout 30s;
-
-        # FastCGI buffers
-        fastcgi_buffer_size 16k;
-        fastcgi_buffers 4 16k;
-        fastcgi_busy_buffers_size 48k;
-        fastcgi_temp_file_write_size 64k;
 
         # Security and header handling
         fastcgi_hide_header 'X-Powered-By';
@@ -599,16 +843,10 @@ Cloudflare > Website > `Security` > `Security rules`.
 - `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
 - `Choose action`: `Managed Challenge`.
 
-4) WordPress Login (Countries Allowed)
+4) WordPress
 
-- `Rule name`: `WordPress Login (Countries Allowed)`.
-- `Expression`: `(http.request.uri.path in {"/wp-login.php"} and not ip.geoip.country in {"BR" "DE"})`.
-- `Choose action`: `Block`.
-
-5) WordPress Login (Captcha)
-
-- `Rule name`: `WordPress Login (Captcha)`.
-- `Expression`: `(http.request.uri.path in {"/wp-login.php" "/xmlrpc.php"}) or (http.request.uri.path contains "/mein-account/") or (http.request.uri.path contains "/my-account/")`.
+- `Rule name`: `WordPress`.
+- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/")`
 - `Choose action`: `Managed Challenge`.
 
 #### Caching
@@ -674,7 +912,7 @@ catch_workers_output = yes
 # touch /home/$domain/logs/php_slow.log
 # chown $system_user:$system_user /home/$domain/logs/php_slow.log
 # chmod 664 /home/$domain/logs/php_slow.log
-# sudo systemctl restart php8.4-fpm
+# sudo systemctl restart php8.3-fpm
 ```
 
 ### SSL Certificate
