@@ -1,7 +1,7 @@
 # Odoo Installation on Debian
 
 > [!NOTE]
-> Last update: 2025-06-17
+> Last update: 2025-08-07
 
 ## Settings
 
@@ -10,7 +10,7 @@ website="website.com"
 website_root_path="/home/$website/public_html"
 system_user=""
 system_group=""
-odoo_version="16.0"
+odoo_version="18.0"
 database_name=""
 database_host="localhost"
 database_port=5432
@@ -68,7 +68,7 @@ source "./venv/bin/activate"
 
 # Install Python dependencies
 python -m pip install -r "./requirements.txt"
-python -m pip install woocommerce
+python -m pip install filetype numpy opencv-python phonenumbers woocommerce
 
 # Exit the virtual environment
 deactivate
@@ -155,7 +155,7 @@ chmod 644 /etc/systemd/system/odoo@$website.service
 # Change current directory
 cd "$website_root_path/odoo"
 
-#
+# Activate the virtual environment
 source "./venv/bin/activate"
 
 # Run Odoo manually
