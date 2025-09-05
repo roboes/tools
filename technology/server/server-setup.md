@@ -46,7 +46,11 @@ nano ~/.bashrc
 sudo apt install curl \
   dnsutils \
   wget \
-  python-is-python3
+  python-is-python3 \
+  python3-pip \
+  python3-venv
+
+# python -m pip install pipenv --break-system-packages
 ```
 
 ## Virtualmin
