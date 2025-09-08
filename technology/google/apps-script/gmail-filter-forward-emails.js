@@ -2,9 +2,9 @@
 // Last update: 2025-04-04
 
 
-// https://script.google.com > New project >
-// - Editor > Services > Add a service > Gmail API
-// - Triggers > Add Trigger >
+// https://script.google.com → New project →
+// - Editor → Services → Add a service → Gmail API
+// - Triggers → Add Trigger →
 // -- Choose which function to run: ForwardNewEmails
 // -- Choose which deployment should run: Head
 // -- Select event source: Time-driven

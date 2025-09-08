@@ -40,7 +40,6 @@ cd $local_repository
 ## Pre-commit
 # git init
 # git add --all
-# python -m pip install pre-commit
 # brew install pre-commit
 # pre-commit install
 

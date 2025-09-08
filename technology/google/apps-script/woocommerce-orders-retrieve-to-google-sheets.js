@@ -2,9 +2,9 @@
 // Last update: 2025-09-01
 
 
-// https://script.google.com > New project >
-// - Editor > Services > Add a service > Gmail API
-// - Triggers > Add Trigger >
+// https://script.google.com → New project →
+// - Editor → Services → Add a service → Gmail API
+// - Triggers → Add Trigger →
 // -- Choose which function to run: WooCommerceOrdersRetrieve
 // -- Choose which deployment should run: Head
 // -- Select event source: Time-driven

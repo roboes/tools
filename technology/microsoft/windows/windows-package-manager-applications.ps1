@@ -66,32 +66,4 @@ python -m pip_review --local --auto
 
 
 # Install Windows Subsystem for Linux (WSL)
-# wsl --install -d Debian
-
-# Start Windows Subsystem for Linux (WSL)
-bash
-
-# Homebrew install
-sudo apt install curl
-sudo apt install git
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# ulimit current limit
-ulimit -n
-
-# ulimit increase limit
-ulimit -n 8192
-
-# Homebrew update
-brew update && brew upgrade && brew cleanup
-
-# Install apps
-brew install exiftool
-brew install gh
-brew install git
-brew install python
-# brew unlink python@3.11 && brew link python@3.12
-# sudo update-alternatives --config python
-sudo update-alternatives --install /usr/bin/python python $(readlink -f $(which python3)) 3
-# brew install imagemagick
-# brew install qpdf
+wsl --install -d Debian

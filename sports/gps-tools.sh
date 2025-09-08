@@ -7,7 +7,7 @@ bash
 
 
 # Install gpsbabel
-# brew install gpsbabel
+# sudo apt install -y gpsbabel
 
 
 # Settings

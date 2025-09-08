@@ -18,7 +18,7 @@ function woocommerce_product_variations_creation()
         '29.11.2025 - 14:30',
     ];
 
-    // Global attribute (defined under Products > Attributes in WooCommerce) - term slugs
+    // Global attribute (defined under Products → Attributes in WooCommerce) - term slugs
     $attribute_training_own_portafilter = ['training-own-coffee-machine-with-de', 'training-own-coffee-machine-without-de'];
 
     $product = wc_get_product($product_id);

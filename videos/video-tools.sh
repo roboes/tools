@@ -6,8 +6,8 @@
 bash
 
 
-# Install ffmpeg
-# brew install ffmpeg
+# Install FFmpeg
+# sudo apt install -y ffmpeg
 
 
 # Settings

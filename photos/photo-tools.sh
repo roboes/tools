@@ -5,7 +5,7 @@
 # Rename: ExifTool
 # Compare duplicates: DupeGuru
 # Test for corrupted images: Bad Peggy
-# RAW to .jpg: ImageMagick or Canon Digital Photo Professional 4 (File > Batch process... > Output resolution: 72 dpi; Image quality: 10)
+# RAW to .jpg: ImageMagick or Canon Digital Photo Professional 4 (File → Batch process... → Output resolution: 72 dpi; Image quality: 10)
 # .heic to .jpg: ImageMagick or XnConvert (Settings: Keep original date/time attributes; JPG - JPEG/JFIF with quality 80)
 
 
@@ -13,14 +13,14 @@
 bash
 
 
-# Install exiftool
-# brew install exiftool
+# Install ExifTool
+# sudo apt install -y libimage-exiftool-perl
 
-# Install ffmpeg
-# brew install ffmpeg
+# Install FFmpeg
+# sudo apt install -y ffmpeg
 
-# Install imagemagick
-# brew install imagemagick
+# Install ImageMagick
+# sudo apt install -y imagemagick
 
 
 # Settings
@@ -203,7 +203,7 @@ sudo install "/tmp/czkawka-gui" "/usr/local/bin/czkawka-gui"
 ## Use
 
 Similar Images
-- Resize algorithm > Lanczos3
+- Resize algorithm → Lanczos3
 - Hash size: 16
 - Hash type: Mean
 
