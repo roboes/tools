@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-09-01
+// Last update: 2025-09-09
 
 
 // https://script.google.com → New project →
@@ -9,11 +9,12 @@
 // -- Choose which deployment should run: Head
 // -- Select event source: Time-driven
 // -- Select type of time based trigger: Hour timer
-// -- Select minute interval: Every 12 hours
+// -- Select minute interval: Every 4 hours
 
 
 // Google Sheets Query to aggregate orders from line/item level to order level
 // =QUERY('sales_orders_articles'!A:BD, "SELECT MAX(A), MAX(B), MAX(C), MAX(D), MAX(E), MAX(F), MAX(G), MAX(H), MAX(I), MAX(J), MAX(K), MAX(L), MAX(M), MAX(N), MAX(O), MAX(P), MAX(Q), MAX(R), MAX(S), MAX(T), MAX(U), MAX(V), MAX(W), MAX(X), MAX(Y), MAX(Z), MAX(AA), MAX(AB), MAX(AC), MAX(AD), MAX(AE), MAX(AF), MAX(AG), MAX(AH), MAX(AI), MAX(AJ), MAX(AK), MAX(AL), MAX(AM), MAX(AN), MAX(AO), MAX(AP), MAX(AQ), SUM(AR), SUM(AS), SUM(AT), SUM(AU), SUM(AV), SUM(AW), SUM(AX), SUM(AY), SUM(AZ), SUM(BA), SUM(BB), SUM(BC), SUM(BD) WHERE A IS NOT NULL GROUP BY A, B LABEL MAX(A) 'source_system', MAX(B) 'order_id', MAX(C) 'created_via', MAX(D) 'status', MAX(E) 'date_created', MAX(F) 'date_created_gmt', MAX(G) 'date_modified', MAX(H) 'date_modified_gmt', MAX(I) 'date_paid', MAX(J) 'date_paid_gmt', MAX(K) 'date_completed', MAX(L) 'date_completed_gmt', MAX(M) 'currency', MAX(N) 'prices_include_tax', MAX(O) 'order_attribution_origin', MAX(P) 'order_attribution_device_type', MAX(Q) 'customer_id', MAX(R) 'customer_user_agent', MAX(S) 'customer_note', MAX(T) 'payment_method', MAX(U) 'payment_method_title', MAX(V) 'language_code', MAX(W) 'billing_first_name', MAX(X) 'billing_last_name', MAX(Y) 'billing_company', MAX(Z) 'billing_address_1', MAX(AA) 'billing_address_2', MAX(AB) 'billing_city', MAX(AC) 'billing_state', MAX(AD) 'billing_postcode', MAX(AE) 'billing_country', MAX(AF) 'billing_email', MAX(AG) 'billing_phone', MAX(AH) 'shipping_first_name', MAX(AI) 'shipping_last_name', MAX(AJ) 'shipping_company', MAX(AK) 'shipping_address_1', MAX(AL) 'shipping_address_2', MAX(AM) 'shipping_city', MAX(AN) 'shipping_state', MAX(AO) 'shipping_postcode', MAX(AP) 'shipping_country', MAX(AQ) 'shipping_methods', SUM(AR) 'discount_amount_net', SUM(AS) 'discount_amount_tax', SUM(AT) 'discount_amount_gross', SUM(AU) 'shipping_amount_net', SUM(AV) 'shipping_amount_tax', SUM(AW) 'shipping_amount_gross', SUM(AX) 'items_amount_net', SUM(AY) 'items_amount_tax', SUM(AZ) 'items_amount_gross', SUM(BA) 'transaction_fee', SUM(BB) 'refund_amount_net', SUM(BC) 'refund_amount_tax', SUM(BD) 'refund_amount_gross'", 1)
+
 
 // Aggregate order data by customer, classifying each as "New", "Returning", or "Guest" based on their first purchase date, and presents the key metrics in a reportable format
 // =QUERY({'sales_orders_articles'!A:BD, ARRAYFORMULA(IF(ISBLANK('sales_orders_articles'!Q:Q), "Guest", IF('sales_orders_articles'!E:E = VLOOKUP('sales_orders_articles'!Q:Q, QUERY('sales_orders_articles'!E:Q, "SELECT Q, MIN(E) WHERE Q IS NOT NULL GROUP BY Q LABEL MIN(E) ''"), 2, FALSE), "New", "Returning")))}, "SELECT MAX(Col1), MAX(Col2), MAX(Col5), MAX(Col6), MAX(Col7), MAX(Col8), MAX(Col9), MAX(Col10), MAX(Col11), MAX(Col12), MAX(Col13), MAX(Col14), MAX(Col17), SUM(Col44), SUM(Col45), SUM(Col46), SUM(Col47), SUM(Col48), SUM(Col49), SUM(Col50), SUM(Col51), SUM(Col52), SUM(Col53), SUM(Col54), SUM(Col55), SUM(Col56), MAX(Col57) WHERE Col1 IS NOT NULL GROUP BY Col1, Col2, Col17 LABEL MAX(Col1) 'source_system', MAX(Col2) 'order_id', MAX(Col5) 'date_created', MAX(Col6) 'date_created_gmt', MAX(Col7) 'date_modified', MAX(Col8) 'date_modified_gmt', MAX(Col9) 'date_paid', MAX(Col10) 'date_paid_gmt', MAX(Col11) 'date_completed', MAX(Col12) 'date_completed_gmt', MAX(Col13) 'currency', MAX(Col14) 'prices_include_tax', MAX(Col17) 'customer_id', SUM(Col44) 'discount_amount_net', SUM(Col45) 'discount_amount_tax', SUM(Col46) 'discount_amount_gross', SUM(Col47) 'shipping_amount_net', SUM(Col48) 'shipping_amount_tax', SUM(Col49) 'shipping_amount_gross', SUM(Col50) 'items_amount_net', SUM(Col51) 'items_amount_tax', SUM(Col52) 'items_amount_gross', SUM(Col53) 'transaction_fee', SUM(Col54) 'refund_amount_net', SUM(Col55) 'refund_amount_tax', SUM(Col56) 'refund_amount_gross', MAX(Col57) 'customer_role'")
@@ -70,6 +71,27 @@ function WooCommerceOrdersRetrieve() {
       return null;
     }
     return JSON.parse(response.getContentText());
+  };
+
+  // WooCommerce product data
+  const productCache = {};
+
+  // Fetch product data
+  const getProductCategories = (productId) => {
+    if (productCache[productId]) {
+      return productCache[productId];
+    }
+    const productData = fetchWooCommerceAPI(`products/${productId}`);
+    if (productData && productData.categories) {
+      const categories = productData.categories.map(cat => ({
+        id: cat.id,
+        name: cat.name
+      }));
+      productCache[productId] = categories;
+      return categories;
+    }
+    productCache[productId] = []; // Cache as empty array to avoid re-fetching
+    return [];
   };
 
   // WooCommerce tax rates
@@ -192,9 +214,11 @@ function WooCommerceOrdersRetrieve() {
       "refund_amount_net",
       "refund_amount_tax",
       "refund_amount_gross",
-      "item_id",
-      "item_name",
-      // "product_id",
+      "line_item_id",
+      "product_category_id",
+      "product_category_name",
+      "product_id",
+      "product_name",
       "sku",
       "variation_id",
       "variation_name",
@@ -305,14 +329,16 @@ function WooCommerceOrdersRetrieve() {
     order => {
       const paypalFee = order.meta_data ? order.meta_data.find(m => m.key === 'PayPal Transaction Fee') : null;
       const stripeFee = order.meta_data ? order.meta_data.find(m => m.key === '_stripe_fee') : null;
-      return paypalFee ? paypalFee.value : (stripeFee ? stripeFee.value : null);
+      return parseFloat(paypalFee?.value || stripeFee?.value || 0);
     },
     order => order.refunds && order.refunds.length > 0 ? order.refunds.reduce((sum, r) => sum + Math.abs(parseFloat(r.total || 0)), 0) : 0,
     order => order.refunds && order.refunds.length > 0 ? order.refunds.reduce((sum, r) => sum + Math.abs(parseFloat(r.total_tax || 0)), 0) : 0,
     order => order.refunds && order.refunds.length > 0 ? order.refunds.reduce((sum, r) => sum + Math.abs(parseFloat(r.total || 0) + parseFloat(r.total_tax || 0)), 0) : 0,
     (order, item) => item.id,
+    (order, item) => getProductCategories(item.product_id).map(c => c.id).join(", "),
+    (order, item) => getProductCategories(item.product_id).map(c => c.name).join(", "),
+    (order, item) => item.product_id,
     (order, item) => item.name,
-    // (order, item) => item.product_id,
     (order, item) => item.sku,
     (order, item) => item.variation_id,
     (order, item) => item.meta_data && item.meta_data.length > 0
@@ -355,7 +381,7 @@ function WooCommerceOrdersRetrieve() {
     // Delete each row if it's still within the current sheet bounds
     for (let i = 0; i < uniqueRows.length; i++) {
       const r = uniqueRows[i];
-    // Safety guard to avoid out-of-bounds
+      // Safety guard to avoid out-of-bounds
       if (r >= 1 && r <= sheet.getLastRow()) {
         sheet.deleteRow(r);
       } else {

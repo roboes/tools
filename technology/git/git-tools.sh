@@ -1,9 +1,19 @@
 ## Git Tools
-# Last update: 2025-07-14
+# Last update: 2025-09-10
 
 
 # Start Bash (Unix Shell)
 bash
+
+
+# Install libxml2
+# brew install libxml2
+
+# Install markdownlint-cli2
+# brew install markdownlint-cli2
+
+# Install php-cs-fixer
+# brew install php-cs-fixer
 
 
 # Ignore certificate validation
@@ -58,6 +68,9 @@ fi
 
 ## Markdown
 markdownlint-cli2 "**/*.md" --fix --disable MD013 MD024 MD033 MD045
+
+## PHP
+find . -type f -name "*.php" -exec php-cs-fixer fix --rules=@PSR12 {} \;
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;
