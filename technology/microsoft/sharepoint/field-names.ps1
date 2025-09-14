@@ -1,11 +1,12 @@
 ## SharePoint - Output all field names for a given item ID
-# Last update: 2024-09-30
+# Last update: 2025-09-10
 
 
 # Settings
 $sharePointUrl = "https://ms.sharepoint.com/teams/1234/"
 $libraryName = "Documents"
 $itemId = 1234
+$itemUrl = "/teams/1234/Shared Documents/File.xlsx"
 
 
 # Install the PnP.PowerShell module
@@ -21,7 +22,11 @@ Connect-PnPOnline -Url $sharePointUrl -UseWebLogin
 # Get the specific item by ID
 $item = Get-PnPListItem -List $libraryName -Id $itemId
 
+# Get the specific item by URL
+# $item = Get-PnPFile -Url $itemUrl -AsListItem
+
 # Output all field names and values for the item
+# $item.FieldValues
 $item.FieldValues.GetEnumerator() | ForEach-Object {
     Write-Host "$($_.Key) : $($_.Value)"
 }
