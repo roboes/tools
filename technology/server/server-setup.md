@@ -45,6 +45,7 @@ nano ~/.bashrc
 # Install packages
 sudo apt install curl \
   dnsutils \
+  git \
   wget \
   python-is-python3 \
   python3-pip \
@@ -821,6 +822,13 @@ server {
 
 ```.sh
 # Restart Nginx
+sudo systemctl reload nginx
+```
+
+#### Clear cache
+
+```.sh
+sudo rm -rf /var/cache/nginx/*
 sudo systemctl reload nginx
 ```
 

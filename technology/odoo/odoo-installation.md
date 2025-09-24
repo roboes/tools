@@ -69,6 +69,7 @@ source "./venv/bin/activate"
 # Install Python dependencies
 python -m pip install -r "./requirements.txt"
 python -m pip install filetype numpy opencv-python phonenumbers woocommerce
+# python -m pip install email-validator packaging erpbrasil.base
 
 # Exit the virtual environment
 deactivate

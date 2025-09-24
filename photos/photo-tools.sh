@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2025-07-08
+# Last update: 2025-09-21
 
 
 # Rename: ExifTool
@@ -21,6 +21,10 @@ bash
 
 # Install ImageMagick
 # sudo apt install -y imagemagick
+
+# Install Inkscape
+# sudo apt install inkscape -y
+
 
 
 # Settings
@@ -103,6 +107,9 @@ exiftool -ContentIdentifier .
 
 # Manually change DateTimeOriginal
 exiftool -overwrite_original '-DateTimeOriginal=2023-05-07, 13.00.00' -dateFormat '%Y-%m-%d, %H.%M.%S' .
+
+# Manually change MediaCreateDate
+exiftool -overwrite_original '-MediaCreateDate=2025-09-16, 12.05.10' -dateFormat '%Y-%m-%d, %H.%M.%S' .
 
 # Add time to DateTimeOriginal (1 year, 12 month, 28 days, 14 hours, 54 minutes, 32 seconds)
 exiftool -overwrite_original '-DateTimeOriginal+=1:12:28 14:54:32' .
@@ -220,22 +227,23 @@ ffmpeg -i "./Movie.avi" -dump
 
 # Convert .ai to .svg
 for file in *.ai; do
-    dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg";
+    inkscape "$file" --export-filename="${file%.ai}.svg";
 done
 
 # Convert .eps to .svg
 for file in *.eps; do
-    dbus-launch inkscape "$file" --export-filename="${file%.eps}.svg";
+    inkscape "$file" --export-filename="${file%.eps}.svg";
 done
 
 # Convert .pdf to .svg
 for file in *.pdf; do
-	dbus-launch inkscape "$file" --export-filename="${file%.pdf}.svg";
+	inkscape "$file" --export-filename="${file%.pdf}.svg";
 done
 
 # Convert .svg to .png
 for file in *.svg; do
-	dbus-launch inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
+	# inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
+	inkscape "$file" --export-type=png --export-filename="${file%.svg}.png";
 done
 
 
@@ -301,10 +309,13 @@ done
 magick "./input.png" -fill white -colorize 100 "./output.png"
 
 # Replace a specific color by transparent background
-magick mogrify -monitor -fuzz 10% -transparent "#ffffff" "./.png"
+magick mogrify -monitor -fuzz 10% -transparent "#ffffff" "./*.png"
+
+# Replace a specific color by transparent background (alternative)
+# magick mogrify -monitor -alpha on -fuzz 5% -fill none -draw "color 0,0 floodfill" "./*.png"
 
 # Replace a specific color by semi-transparent
-magick mogrify -monitor -fuzz 10% -fill "rgba(255,255,255,0.5)" -opaque "#ffffff" "./.png"
+magick mogrify -monitor -fuzz 10% -fill "rgba(255,255,255,0.5)" -opaque "#ffffff" "./*.png"
 
 # Crop .png keeping only the shapes
 magick mogrify -monitor -trim +repage "./*.png"

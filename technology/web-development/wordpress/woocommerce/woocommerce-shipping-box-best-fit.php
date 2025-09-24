@@ -184,6 +184,7 @@ function calculate_and_store_package_best_fit($order_id)
     $packer = new Packer();
 
     // Define available boxes
+	$packer->addBox(new CustomBox(reference: 'NOME?', outerWidth: 80, outerLength: 120, outerDepth: 180, emptyWeight: 48, innerWidth: (80 - 3), innerLength: (120 - 3), innerDepth: (180 - 3), maxWeight: 20000))
     $packer->addBox(new CustomBox(reference: 'CX ENVIO P', outerWidth: 100, outerLength: 160, outerDepth: 200, emptyWeight: 48, innerWidth: (100 - 3), innerLength: (160 - 3), innerDepth: (200 - 3), maxWeight: 20000));
     $packer->addBox(new CustomBox(reference: 'Box S1', outerWidth: 140, outerLength: 140, outerDepth: 150, emptyWeight: 90, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (150 - 3), maxWeight: 20000));
     $packer->addBox(new CustomBox(reference: 'Box S2', outerWidth: 140, outerLength: 140, outerDepth: 250, emptyWeight: 101, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (250 - 3), maxWeight: 20000));
