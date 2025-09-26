@@ -9,7 +9,7 @@
 # Settings
 
 ## Set working directory
-setwd(file.path(path.expand("~"), "Documents", "Projects", "fom-hochschule", "Quantitative Datenanalyse", "2025-WS", "slides"))
+setwd(file.path(path.expand("~"), "Documents", "Projects", "tools"))
 
 # Lint an entire project folder
 lintr::lint_dir(linters = lintr::linters_with_defaults(line_length_linter = lintr::line_length_linter(220)))

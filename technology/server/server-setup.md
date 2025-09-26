@@ -52,6 +52,11 @@ sudo apt install curl \
   python3-venv
 
 # python -m pip install pipenv --break-system-packages
+
+# Install specific Python version
+# sudo apt install -y pyenv
+# pyenv install 3.11
+# pyenv versions
 ```
 
 ## Virtualmin

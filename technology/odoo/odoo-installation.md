@@ -60,11 +60,18 @@ git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git 
 # Change current directory
 cd "$website_root_path/odoo"
 
+# Remove existing virtual environment
+rm -rf ./venv
+
 # Create a virtual environment
 python -m venv "./venv"
+# Alternative using pyenv: /root/.pyenv/versions/3.11.11/bin/python3.11 -m venv "./venv"
 
 # Activate the virtual environment
 source "./venv/bin/activate"
+
+# Verify the Python version inside the virtual environment
+python -V
 
 # Install Python dependencies
 python -m pip install -r "./requirements.txt"

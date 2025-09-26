@@ -284,6 +284,9 @@ else
 fi
 
 
+## Resize image by adding border
+magick mogrify -monitor -alpha set -bordercolor none -border 100x0 "./*.png"
+
 ## Resize the image to fit within the square dimensions and pad the remaining space
 image="image-1.png"
 
