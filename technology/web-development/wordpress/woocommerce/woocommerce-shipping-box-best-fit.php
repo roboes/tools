@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-07-22
+// Last update: 2025-09-28
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -184,7 +184,7 @@ function calculate_and_store_package_best_fit($order_id)
     $packer = new Packer();
 
     // Define available boxes
-    $packer->addBox(new CustomBox(reference: 'CX ENVIO P', outerWidth: 100, outerLength: 160, outerDepth: 200, emptyWeight: 48, innerWidth: (100 - 3), innerLength: (160 - 3), innerDepth: (200 - 3), maxWeight: 20000));
+    $packer->addBox(new CustomBox(reference: 'Box P', outerWidth: 115, outerLength: 175, outerDepth: 70, emptyWeight: (int)48.5, innerWidth: (115 - 7), innerLength: (175 - 15), innerDepth: (70 - 2), maxWeight: 20000));
     $packer->addBox(new CustomBox(reference: 'Box S1', outerWidth: 140, outerLength: 140, outerDepth: 150, emptyWeight: 90, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (150 - 3), maxWeight: 20000));
     $packer->addBox(new CustomBox(reference: 'Box S2', outerWidth: 140, outerLength: 140, outerDepth: 250, emptyWeight: 101, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (250 - 3), maxWeight: 20000));
     $packer->addBox(new CustomBox(reference: 'Box S3', outerWidth: 140, outerLength: 140, outerDepth: 350, emptyWeight: 118, innerWidth: (140 - 3), innerLength: (140 - 3), innerDepth: (350 - 3), maxWeight: 20000));

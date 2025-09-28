@@ -52,7 +52,7 @@ done
 
 [WP-Optimize](https://wordpress.org/plugins/wp-optimize/):
 
-- Delete tables left behind by old plugins (WP-Optimize > Database > Tables) - look for tables with the "not installed" and "inactive" tags.
+- Delete tables left behind by old plugins (WP-Optimize → Database → Tables) - look for tables with the "not installed" and "inactive" tags.
 
 #### wp_options
 
