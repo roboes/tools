@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-08-26
+> Last update: 2025-09-10
 
 ```.sh
 # Settings
@@ -45,8 +45,18 @@ nano ~/.bashrc
 # Install packages
 sudo apt install curl \
   dnsutils \
+  git \
   wget \
-  python-is-python3
+  python-is-python3 \
+  python3-pip \
+  python3-venv
+
+# python -m pip install pipenv --break-system-packages
+
+# Install specific Python version
+# sudo apt install -y pyenv
+# pyenv install 3.11
+# pyenv versions
 ```
 
 ## Virtualmin
@@ -65,39 +75,39 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 ### Nginx webserver
 
 - [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
-- Check if it worked: `Virtualmin` > `System Settings` > `Features and Plugins` > Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
+- Check if it worked: `Virtualmin` → `System Settings` → `Features and Plugins` → Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
 
 ### Virtualmin
 
 #### General settings
 
-- Home subdirectory: `Virtualmin` > `System Settings` > `Virtualmin Configuration` > `Configuration category`: `Defaults for new domains` > Set the "Home subdirectory" to `${DOM}`.
+- Home subdirectory: `Virtualmin` → `System Settings` → `Virtualmin Configuration` → `Configuration category`: `Defaults for new domains` → Set the "Home subdirectory" to `${DOM}`.
 
-- Timezone: `Webmin` > `Hardware` > `System Time` > `Change Timezone`.
+- Timezone: `Webmin` → `Hardware` → `System Time` → `Change Timezone`.
 
-- Disable POP3: `Webmin` > `Servers` > `Dovecot IMAP/POP3 Server` > `Networking and Protocols` > Uncheck `POP3`.
+- Disable POP3: `Webmin` → `Servers` → `Dovecot IMAP/POP3 Server` → `Networking and Protocols` → Uncheck `POP3`.
 
 #### Security
 
 #### Webmin Configuration
 
-- IP Access Control: `Webmin` > `Webmin` > `Webmin Configuration` > `IP Access Control`
-  - `Allowed IP addresses` > `Only allow from listed addresses` > [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
+- IP Access Control: `Webmin` → `Webmin` → `Webmin Configuration` → `IP Access Control`
+  - `Allowed IP addresses` → `Only allow from listed addresses` → [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
   - Enable `Include local network in list`.
 
 - Two-Factor Authentication (2FA):
-  - Enable: `Webmin` > `Webmin` > `Usermin Configuration` > `Available Modules` > Enable `Two-Factor Authentication`.
-  - Authentication provider: `Webmin` > `Webmin` > `Webmin Configuration` > `Two-Factor Authentication` > `Authentication provider`: `TOTOP Authenticator`.
-  - Setup: `Webmin` > `Webmin` > `Webmin Users` > `Two-Factor Authentication` > `Enroll For Two-Factor Authentication`.
+  - Enable: `Webmin` → `Webmin` → `Usermin Configuration` → `Available Modules` → Enable `Two-Factor Authentication`.
+  - Authentication provider: `Webmin` → `Webmin` → `Webmin Configuration` → `Two-Factor Authentication` → `Authentication provider`: `TOTOP Authenticator`.
+  - Setup: `Webmin` → `Webmin` → `Webmin Users` → `Two-Factor Authentication` → `Enroll For Two-Factor Authentication`.
 
 - Scheduled Upgrades:
-  - Virtualmin > Dashboard > Package updates > Scheduled Upgrades:
+  - Virtualmin → Dashboard → Package updates → Scheduled Upgrades:
     - `Check for updates on schedule`: `Yes, every week`.
     - `Action when update needed`: `Install security updates`.
 
 ##### Fail2Ban
 
-- Fail2Ban: `Webmin` > `Networking` > `Fail2Ban Intrusion Detector` > `Edit Config Files` > `/etc/fail2ban/jail.local`
+- Fail2Ban: `Webmin` → `Networking` → `Fail2Ban Intrusion Detector` → `Edit Config Files` → `/etc/fail2ban/jail.local`
 
 ```.toml
 [DEFAULT]
@@ -171,6 +181,8 @@ PuTTYgen can convert the RSA private key to `.ppk`.
 
 ```.sh
 # Copy SSH key in Windows Subsystem for Linux (WSL)
+# mkdir -p ~/.ssh
+# chmod 700 ~/.ssh
 # cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
 # chmod 600 ~/.ssh/id_rsa
 ```
@@ -232,16 +244,16 @@ Restart server.
 
 #### Cloudflare Zero Trust
 
-Cloudflare > `Zero Trust`
+Cloudflare → `Zero Trust`
 
 ##### Tunnels
 
-`Networks` > `Tunnels` > `Create a tunnel` > `Cloudflared`.
+`Networks` → `Tunnels` → `Create a tunnel` → `Cloudflared`.
 
 Public hostnames:
 
 1) `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
-2) `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` > `TLS` > Enable `No TLS Verify`.
+2) `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` → `TLS` → Enable `No TLS Verify`.
 
 ```.sh
 sudo systemctl status cloudflared
@@ -249,7 +261,7 @@ sudo systemctl status cloudflared
 
 ##### Applications
 
-`Access` > `Applications` > `Add an application` > `Self-hosted`
+`Access` → `Applications` → `Add an application` → `Self-hosted`
 
 1) SSH Access
 `Application name`: `SSH Access`.
@@ -338,7 +350,7 @@ Now "Create Virtual Server".
 
 ### Virtualmin settings (optional)
 
-- Apps: `Virtualmin` > Choose Virtual Server > `Manage Web Apps` > Install `phpMyAdmin` and `RoundCube`.
+- Apps: `Virtualmin` → Choose Virtual Server → `Manage Web Apps` → Install `phpMyAdmin` and `RoundCube`.
 
 ### PHP
 
@@ -369,7 +381,7 @@ sudo apt install htop \
 
 ### DNS Configuration
 
-Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` > Choose Virtual Server > `DNS Settings` > `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
 
 When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.com`) to Cloudflare, ensure its Proxy Status is set to `DNS only`. This is crucial for proper mail flow, as mail servers require direct IP connections.
 
@@ -439,7 +451,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 
 ### Backup
 
-`Virtualmin` > `Backup and Restore` > `Scheduled Backups` > `Add a new backup schedule`.
+`Virtualmin` → `Backup and Restore` → `Scheduled Backups` → `Add a new backup schedule`.
 
 - `Backup description`: `Backup Weekly`.
 - `Servers to save`: `All virtual servers`.
@@ -453,11 +465,11 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 - `Action on error`: Select `Halt the backup immediately`.
 - `Backup compression format`: Select `Default`.
 - `Backup level`: `Full (all files)`.
-- `Scheduled backup time` > `Simple schedule`: `Weekly (on Sundays)`.
+- `Scheduled backup time` → `Simple schedule`: `Weekly (on Sundays)`.
 
 ### Bootup and Shutdown
 
-`Webmin` > `System` > `Bootup and Shutdown`.
+`Webmin` → `System` → `Bootup and Shutdown`.
 
 ```.sh
 # Disable services
@@ -476,7 +488,7 @@ done
 
 ### Nginx directives
 
-#### Webmin > Servers > Nginx Webserver > Edit Configuration Files
+#### Webmin → Servers → Nginx Webserver → Edit Configuration Files
 
 ##### /etc/nginx/nginx.conf
 
@@ -619,6 +631,9 @@ server {
     # Logging
     access_log /var/log/virtualmin/${domain}_access_log;
     error_log /var/log/virtualmin/${domain}_error_log warn;
+
+    # Enable HTTP/2 protocol support
+    http2 on;
 
 
     # Security Headers
@@ -815,15 +830,22 @@ server {
 sudo systemctl reload nginx
 ```
 
+#### Clear cache
+
+```.sh
+sudo rm -rf /var/cache/nginx/*
+sudo systemctl reload nginx
+```
+
 ### Cloudflare
 
 #### DNS
 
-Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` > Choose Virtual Server > `DNS Settings` > `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
 
 #### Security
 
-Cloudflare > Website > `Security` > `Security rules`.
+Cloudflare → Website → `Security` → `Security rules`.
 
 1) ACME Challenge Passthrough
 
@@ -933,14 +955,14 @@ Copy the generated TXT for `_acme-challenge.autodiscover.$domain` value and add 
 dig TXT _acme-challenge.autodiscover.$domain +short
 ```
 
-`Virtualmin` > Choose Virtual Server > `Manage Virtual Server` > `Setup SSL Certificate` > `SSL Providers`.
+`Virtualmin` → Choose Virtual Server → `Manage Virtual Server` → `Setup SSL Certificate` → `SSL Providers`.
 
 ```.sh
 # virtualmin generate-letsencrypt-cert --domain $domain --renew --email-error
 ```
 
 - Enable `Automatically renew certificate`.
-- `Send email on renewal` > `Only on failure`.
+- `Send email on renewal` → `Only on failure`.
 - `Request Certificate`.
 
 If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (orange cloud) to "DNS only" (gray cloud) for the domain.
@@ -957,12 +979,12 @@ rm $domain_root_path/.well-known/acme-challenge/.htaccess
 
 ### Change default domain for server IP address
 
-- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `Website Options` > `Default website for IP address` > `Yes`.
+- `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Default website for IP address` → `Yes`.
 
 ### PHP settings
 
-- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `PHP-FPM Configuration` > `Resource Limits`.
-- `Virtualmin` > Choose Virtual Server > `Web Configuration` > `PHP-FPM Configuration` > `Error Logging` > `Error types to display` > `All errors and warnings`.
+- `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP-FPM Configuration` → `Resource Limits`.
+- `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP-FPM Configuration` → `Error Logging` → `Error types to display` → `All errors and warnings`.
 
 ## WordPress migration
 

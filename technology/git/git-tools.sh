@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-07-14
+# Last update: 2025-09-10
 
 
 # Start Bash (Unix Shell)
@@ -37,13 +37,6 @@ fi
 cd $local_repository
 
 
-## Pre-commit
-# git init
-# git add --all
-# python -m pip install pre-commit
-# brew install pre-commit
-# pre-commit install
-
 # Download .pre-commit-config.yaml file
 curl -o "./.pre-commit-config.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml"
 
@@ -59,6 +52,9 @@ fi
 
 ## Markdown
 markdownlint-cli2 "**/*.md" --fix --disable MD013 MD024 MD033 MD045
+
+## PHP
+find . -type f -name "*.php" -exec php-cs-fixer fix --rules=@PSR12 {} \;
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;

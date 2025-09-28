@@ -2,10 +2,7 @@
 # Last update: 2024-10-12
 
 
-"""About: Speech-to-Text. It requires the FFmpeg (https://ffmpeg.org/download.html)
-Installation
-Windows: winget install ffmpeg
-Mac: brew install ffmpeg"""
+"""About: Speech-to-Text. It requires FFmpeg (https://ffmpeg.org/download.html)."""
 
 
 ###############

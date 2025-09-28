@@ -7,28 +7,25 @@ bash
 
 
 # Install ghostscript
-# brew install ghostscript
+# sudo apt install -y ghostscript
 
-# Install imagemagick
-# brew install imagemagick
+# Install ImageMagick
+# sudo apt install -y imagemagick
 
-# Install ocrmypdf
-# brew install ocrmypdf
+# Install OCRmyPDF
+# sudo apt install -y ocrmypdf
 
-# Install qpdf
-# brew install qpdf
+# Install QPDF
+# sudo apt install -y qpdf
 
-# Install tesseract-lang
-# brew install tesseract-lang
+# Install Tesseract with all language packs
+# sudo apt install -y tesseract-ocr-all
 
-# Install xpdf (pdfinfo)
-# brew install xpdf
+# Install Poppler utilities (provides pdfinfo instead of xpdf)
+# sudo apt install -y poppler-utils
 
-# Install diff-pdf
-# brew install diff-pdf
-
-# Install libreoffice
-# sudo apt install libreoffice
+# Install DiffPDF
+# sudo apt install -y diffpdf
 
 
 # Settings

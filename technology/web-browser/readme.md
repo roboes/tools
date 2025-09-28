@@ -1,5 +1,9 @@
 # Web Browser
 
+## General
+
+- [Disable Firefox Telemetry and Data Collection](https://github.com/K3V1991/Disable-Firefox-Telemetry-and-Data-Collection)
+
 ## Extensions
 
 - [uBlock Origin](https://addons.mozilla.org/firefox/addon/ublock-origin/)
