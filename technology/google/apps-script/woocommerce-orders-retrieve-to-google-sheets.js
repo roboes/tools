@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-09-09
+// Last update: 2025-09-30
 
 
 // https://script.google.com → New project →
@@ -17,15 +17,16 @@
 
 
 // Aggregate order data by customer, classifying each as "New", "Returning", or "Guest" based on their first purchase date, and presents the key metrics in a reportable format
-// =QUERY({'sales_orders_articles'!A:BD, ARRAYFORMULA(IF(ISBLANK('sales_orders_articles'!Q:Q), "Guest", IF('sales_orders_articles'!E:E = VLOOKUP('sales_orders_articles'!Q:Q, QUERY('sales_orders_articles'!E:Q, "SELECT Q, MIN(E) WHERE Q IS NOT NULL GROUP BY Q LABEL MIN(E) ''"), 2, FALSE), "New", "Returning")))}, "SELECT MAX(Col1), MAX(Col2), MAX(Col5), MAX(Col6), MAX(Col7), MAX(Col8), MAX(Col9), MAX(Col10), MAX(Col11), MAX(Col12), MAX(Col13), MAX(Col14), MAX(Col17), SUM(Col44), SUM(Col45), SUM(Col46), SUM(Col47), SUM(Col48), SUM(Col49), SUM(Col50), SUM(Col51), SUM(Col52), SUM(Col53), SUM(Col54), SUM(Col55), SUM(Col56), MAX(Col57) WHERE Col1 IS NOT NULL GROUP BY Col1, Col2, Col17 LABEL MAX(Col1) 'source_system', MAX(Col2) 'order_id', MAX(Col5) 'date_created', MAX(Col6) 'date_created_gmt', MAX(Col7) 'date_modified', MAX(Col8) 'date_modified_gmt', MAX(Col9) 'date_paid', MAX(Col10) 'date_paid_gmt', MAX(Col11) 'date_completed', MAX(Col12) 'date_completed_gmt', MAX(Col13) 'currency', MAX(Col14) 'prices_include_tax', MAX(Col17) 'customer_id', SUM(Col44) 'discount_amount_net', SUM(Col45) 'discount_amount_tax', SUM(Col46) 'discount_amount_gross', SUM(Col47) 'shipping_amount_net', SUM(Col48) 'shipping_amount_tax', SUM(Col49) 'shipping_amount_gross', SUM(Col50) 'items_amount_net', SUM(Col51) 'items_amount_tax', SUM(Col52) 'items_amount_gross', SUM(Col53) 'transaction_fee', SUM(Col54) 'refund_amount_net', SUM(Col55) 'refund_amount_tax', SUM(Col56) 'refund_amount_gross', MAX(Col57) 'customer_role'")
+// =QUERY({sales_orders_articles!A:BD, ARRAYFORMULA(IF(ISBLANK(sales_orders_articles!Q:Q), "Guest", IF(sales_orders_articles!E:E = VLOOKUP(sales_orders_articles!Q:Q, QUERY(sales_orders_articles!E:Q, "SELECT Q, MIN(E) WHERE Q IS NOT NULL GROUP BY Q LABEL MIN(E) ''"), 2, FALSE), "New", "Returning")))}, "SELECT MAX(Col1), MAX(Col2), MAX(Col5), MAX(Col6), MAX(Col7), MAX(Col8), MAX(Col9), MAX(Col10), MAX(Col11), MAX(Col12), MAX(Col13), MAX(Col14), MAX(Col17), SUM(Col44), SUM(Col45), SUM(Col46), SUM(Col47), SUM(Col48), SUM(Col49), SUM(Col50), SUM(Col51), SUM(Col52), SUM(Col53), SUM(Col54), SUM(Col55), SUM(Col56), MAX(Col57) WHERE Col1 IS NOT NULL GROUP BY Col1, Col2, Col17 LABEL MAX(Col1) 'source_system', MAX(Col2) 'order_id', MAX(Col5) 'date_created', MAX(Col6) 'date_created_gmt', MAX(Col7) 'date_modified', MAX(Col8) 'date_modified_gmt', MAX(Col9) 'date_paid', MAX(Col10) 'date_paid_gmt', MAX(Col11) 'date_completed', MAX(Col12) 'date_completed_gmt', MAX(Col13) 'currency', MAX(Col14) 'prices_include_tax', MAX(Col17) 'customer_id', SUM(Col44) 'discount_amount_net', SUM(Col45) 'discount_amount_tax', SUM(Col46) 'discount_amount_gross', SUM(Col47) 'shipping_amount_net', SUM(Col48) 'shipping_amount_tax', SUM(Col49) 'shipping_amount_gross', SUM(Col50) 'items_amount_net', SUM(Col51) 'items_amount_tax', SUM(Col52) 'items_amount_gross', SUM(Col53) 'transaction_fee', SUM(Col54) 'refund_amount_net', SUM(Col55) 'refund_amount_tax', SUM(Col56) 'refund_amount_gross', MAX(Col57) 'customer_role'")
 
 
 function WooCommerceOrdersRetrieve() {
   const options = {
-    site_url: "https://website.com",
-    consumer_key: "ck_xxxxxxxx",
-    consumer_secret: "cs_xxxxxxxx",
-    output_sheet_name: "sales_orders_articles",
+    woocommerce_site_url: "https://website.com",
+    woocommerce_consumer_key: "ck_xxxxxxxx",
+    woocommerce_consumer_secret: "cs_xxxxxxxx",
+    google_sheets_id: "1ABC",
+    google_sheets_tab_name: "sales_orders_articles",
     test_mode: false,
     last_fetch_date_reset: false,
   };
@@ -48,7 +49,7 @@ function WooCommerceOrdersRetrieve() {
 
   // Reusable API fetch function
   const fetchWooCommerceAPI = (endpoint, params = {}) => {
-    let url = options.site_url + "/wp-json/wc/v3/" + endpoint;
+    let url = options.woocommerce_site_url + "/wp-json/wc/v3/" + endpoint;
     const queryString = Object.keys(params)
       .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
       .join('&');
@@ -60,7 +61,7 @@ function WooCommerceOrdersRetrieve() {
     const response = UrlFetchApp.fetch(url, {
       "method": "get",
       "headers": {
-        "Authorization": "Basic " + Utilities.base64Encode(options.consumer_key + ":" + options.consumer_secret),
+        "Authorization": "Basic " + Utilities.base64Encode(options.woocommerce_consumer_key + ":" + options.woocommerce_consumer_secret),
         "X-App-Name": "woocommerce-orders-retrieve-to-google-sheets",
       },
       "muteHttpExceptions": true
@@ -139,8 +140,15 @@ function WooCommerceOrdersRetrieve() {
   }
 
   // Write to Sheet
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(options.output_sheet_name);
-  if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(options.output_sheet_name);
+  let sheet;
+  if (options.google_sheets_id) {
+    const googleSpreadsheet = SpreadsheetApp.openById(options.google_sheets_id);
+    sheet = googleSpreadsheet.getSheetByName(options.google_sheets_tab_name);
+    if (!sheet) sheet = googleSpreadsheet.insertSheet(options.google_sheets_tab_name);
+  } else {
+    throw new Error("Google Sheets ID not provided. Script cannot continue.");
+  }
+
 
   // If sheet is empty, add headers
   if (sheet.getLastRow() === 0) {
