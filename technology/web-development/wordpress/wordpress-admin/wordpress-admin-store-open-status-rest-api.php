@@ -1,12 +1,57 @@
 <?php
 
-// WordPress Admin - Store open status
+// WordPress Admin - Store open status (using REST API)
 // Last update: 2025-10-08
 
-
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
+add_action($hook_name = 'rest_api_init', $callback = 'register_store_hours_endpoint');
+
+function register_store_hours_endpoint()
+{
+    register_rest_route('store/v1', '/hours', [
+        'methods' => 'GET',
+        'callback' => 'get_store_hours_rest',
+        'permission_callback' => '__return_true',
+        'args' => [
+            'lang' => [
+                'required' => false,
+                'default' => 'en',
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+        ],
+    ]);
+}
 
 function store_hours_shortcode()
+{
+    static $instance = 0;
+    $instance++;
+    $unique_id = 'store-hours-container-' . $instance;
+
+    // Get current language in the page context
+    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']))) ? pll_current_language('slug') : 'en';
+
+    $rest_url = esc_url(add_query_arg('lang', $current_language, rest_url('store/v1/hours')));
+
+    return sprintf(
+        '<div id="%1$s"></div>
+        <script type="text/javascript">
+            jQuery(function($) {
+                $.get("%2$s")
+                .done(function(response) {
+                    $("#%1$s").html(response.message);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error("REST API Error:", status, error);
+                });
+            });
+        </script>',
+        esc_attr($unique_id),
+        $rest_url
+    );
+}
+
+function get_store_hours_rest($request)
 {
     // Setup
     $opening_hours = [
@@ -30,36 +75,35 @@ function store_hours_shortcode()
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
 
-    // Get current language
-    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']))) ? pll_current_language('slug') : 'en';
+    // Get language from request parameter
+    $current_language = $request->get_param('lang') ?: 'en';
 
-    // Check if today is a public holiday (early return)
     if (in_array($current_date, $public_holidays, true)) {
-        return generate_message('holiday', $current_language);
+        return ['message' => generate_message('holiday', $current_language)];
     }
 
-    // Check if today is a special day (early return)
-    if (in_array($current_date, $special_days, true)) {
-        return generate_message('special_event', $current_language);
+    if (isset($special_opening_hours[$current_date])) {
+        [$start_time, $end_time] = $special_opening_hours[$current_date];
+    } elseif (isset($opening_hours[$current_day_of_week])) {
+        [$start_time, $end_time] = $opening_hours[$current_day_of_week];
+    } else {
+        return ['message' => generate_message('closed', $current_language)];
     }
 
-    // Determine opening hours for today
-    if (!isset($opening_hours[$current_day_of_week])) {
-        return generate_message('closed', $current_language);
-    }
-
-    [$start_time, $end_time] = $opening_hours[$current_day_of_week];
     $start_datetime = DateTime::createFromFormat('H:i', $start_time, $timezone);
     $end_datetime = DateTime::createFromFormat('H:i', $end_time, $timezone);
     $closing_soon_datetime = (clone $end_datetime)->modify('-1 hour');
 
-    // Determine store status based on current time
-    if ($current_datetime >= $start_datetime && $current_datetime <= $end_datetime) {
-        $status = $current_datetime >= $closing_soon_datetime ? 'closing_soon' : 'open';
-        return generate_message($status, $current_language);
+    if (in_array($current_date, $special_days, true)) {
+        return ['message' => generate_message('special_event', $current_language)];
     }
 
-    return generate_message('closed', $current_language);
+    if ($current_datetime >= $start_datetime && $current_datetime <= $end_datetime) {
+        $status = $current_datetime >= $closing_soon_datetime ? 'closing_soon' : 'open';
+        return ['message' => generate_message($status, $current_language)];
+    }
+
+    return ['message' => generate_message('closed', $current_language)];
 }
 
 function generate_message($status, $language)
