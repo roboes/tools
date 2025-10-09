@@ -3,7 +3,14 @@
 // WooCommerce - Settings
 // Last update: 2025-10-08
 
+
 if (class_exists('WooCommerce') && WC()) {
+
+    // Default sort
+    add_action($hook_name = 'current_screen', $callback = function ($current_screen) {
+        global $is_wc_order_screen;
+        $is_wc_order_screen = ($current_screen->id === 'edit-shop_order');
+    }, $priority = 10, $accepted_args = 1);
 
     // Always show country in formatted addresses (even if same as store base)
     add_filter($hook_name = 'woocommerce_formatted_address_force_country_display', $callback = '__return_true', $priority = 10, $accepted_args = 1);

@@ -3,6 +3,7 @@
 // WordPress Admin - Store open status (using REST API)
 // Last update: 2025-10-08
 
+
 add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
 add_action($hook_name = 'rest_api_init', $callback = 'register_store_hours_endpoint');
 

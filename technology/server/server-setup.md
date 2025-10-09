@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-09-10
+> Last update: 2025-10-09
 
 ```.sh
 # Settings
@@ -392,6 +392,41 @@ Additionally, add the following record:
 - Type: `TXT`
 - Name: `_dmarc`
 - Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s`
+
+### Sender Canonical Maps (Per-User Mapping)
+
+#### Create Sender Canonical Map
+
+```.sh
+nano /etc/postfix/sender_canonical
+```
+
+Add mappings for each virtual server user:
+
+```.txt
+website    noreply@website.com
+```
+
+#### Configure Postfix
+
+```.sh
+nano /etc/postfix/main.cf
+```
+
+Add this line:
+
+```.txt
+sender_canonical_maps = hash:/etc/postfix/sender_canonical
+```
+
+Apply changes:
+
+```.sh
+postmap /etc/postfix/sender_canonical
+systemctl reload postfix
+```
+
+To verify: `Webmin` → `Servers` → `Postfix Mail Server` → `Canonical Mapping` → `Tables for sender addresses`: `hash:/etc/postfix/sender_canonical`.
 
 ### Troubleshooting
 
