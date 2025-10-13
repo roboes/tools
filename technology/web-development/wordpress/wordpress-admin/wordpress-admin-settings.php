@@ -33,4 +33,7 @@ add_filter($hook_name = 'auto_core_update_send_email', $callback = '__return_fal
 add_filter($hook_name = 'auto_plugin_update_send_email', $callback = '__return_false', $priority = 10, $accepted_args = 1);
 
 // Email - Disable automatic WordPress theme update email notification
-add_filter($hook_name = 'auto_theme_update_send_email', '__return_false', $priority = 10, $accepted_args = 1);
+add_filter($hook_name = 'auto_theme_update_send_email', $callback = '__return_false', $priority = 10, $accepted_args = 1);
+
+// Elementor - Disable accordion scroll animation
+// add_filter($hook_name = 'pp_advanced_accordion_scroll_animation', $callback = '__return_false', $priority = 10, $accepted_args = 1);
