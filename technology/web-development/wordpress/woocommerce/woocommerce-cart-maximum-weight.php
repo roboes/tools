@@ -19,7 +19,7 @@ if (class_exists('WooCommerce') && WC()) {
         $total_cart_weight = 0;
 
         // Get current language
-        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
         // Calculate the weight of the current cart items
         foreach (WC()->cart->get_cart() as $cart_item) {
@@ -42,10 +42,10 @@ if (class_exists('WooCommerce') && WC()) {
             $passed = false;
 
             // Custom notice
-            if ($current_language === 'de_DE') {
+            if ($current_language === 'de') {
                 $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $weight_limit / 1000);
-            } elseif ($current_language === 'de_DE_formal') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $weight_limit / 1000);
+            } elseif ($current_language === 'en') {
+                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             } else {
                 $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             }
@@ -68,7 +68,7 @@ if (class_exists('WooCommerce') && WC()) {
         $weight_limit = 30000;
 
         // Get current language
-        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
         // Calculate the total weight of the cart before the quantity change
         $total_cart_weight = 0;
@@ -91,10 +91,10 @@ if (class_exists('WooCommerce') && WC()) {
             $cart->cart_contents[ $cart_item_key ]['quantity'] = $old_quantity;
 
             // Custom notice
-            if ($current_language === 'de_DE') {
+            if ($current_language === 'de') {
                 $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $weight_limit / 1000);
-            } elseif ($current_language === 'de_DE_formal') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.'), $weight_limit / 1000);
+            } elseif ($current_language === 'en') {
+                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             } else {
                 $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
             }

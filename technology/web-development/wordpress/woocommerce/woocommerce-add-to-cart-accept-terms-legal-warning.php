@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to cart" accept legal warning terms
-// Last update: 2025-07-14
+// Last update: 2025-10-14
 
 
 if (class_exists('WooCommerce') && WC()) {
@@ -24,19 +24,17 @@ if (class_exists('WooCommerce') && WC()) {
                 // Settings
                 $messages = [
                     'legal-warning-checkbox' => [
-                        'de_DE' => 'Ich habe die Produktbeschreibung/Rechtliche Hinweise gelesen und bin mit den Bedingungen einverstanden.',
-                        'de_DE_formal' => 'Ich habe die Produktbeschreibung/Rechtliche Hinweise gelesen und bin mit den Bedingungen einverstanden.',
-                        'en_US' => 'I have read the product description/legal notice and I agree with the terms.',
+                        'de' => 'Ich habe die Produktbeschreibung/Rechtliche Hinweise gelesen und bin mit den Bedingungen einverstanden.',
+                        'en' => 'I have read the product description/legal notice and I agree with the terms.',
                     ],
                     'legal-warning-error' => [
-                        'de_DE' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
-                        'de_DE_formal' => 'Sie müssen mit den Bedingungen einverstanden sein, um fortzufahren.',
-                        'en_US' => 'You must agree with the terms to proceed.',
+                        'de' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
+                        'en' => 'You must agree with the terms to proceed.',
                     ],
                 ];
 
                 // Get current language
-                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
                 if (isset($messages['legal-warning-checkbox'][$current_language])) {
 

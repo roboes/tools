@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Set a maximum quantity for individual products and/or individual products in specific categories per cart
-// Last update: 2025-04-26
+// Last update: 2025-10-14
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -21,17 +21,16 @@ if (class_exists('WooCommerce') && WC()) {
     );
 
     // Get current language
-    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
     // Function to get error message
     function get_error_message($max_quantity, $language, $product_name)
     {
-        if ($language === 'de_DE') {
+        if ($language === 'de') {
             return sprintf(__('Ein Warenkorb kann bis zu %d Artikel von "%s" enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.', 'woocommerce'), $max_quantity, $product_name);
-        } elseif ($language === 'de_DE_formal') {
-            return sprintf(__('Ein Warenkorb kann bis zu %d Artikel von "%s" enthalten. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, können Sie uns gerne kontaktieren.', 'woocommerce'), $max_quantity, $product_name);
+        } elseif ($language === 'en') {
+            return sprintf(__('A cart can contain up to %d items of "%s". If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $max_quantity, $product_name);
         } else {
-            // Add other languages here if needed
             return sprintf(__('A cart can contain up to %d items of "%s". If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $max_quantity, $product_name);
         }
     }
