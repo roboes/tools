@@ -50,15 +50,17 @@ if [ "$git_repository" == "tools" ]; then
 	cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
 fi
 
-## Markdown
-markdownlint-cli2 "**/*.md" --fix --disable MD013 MD024 MD033 MD045
+
+## Prettier
+prettier --write --print-width 220 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
 
 ## PHP
-find . -type f -name "*.php" -exec php-cs-fixer fix --rules=@PSR12 {} \;
+php-cs-fixer fix . --rules=@PSR12
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;
 
+## pre-commit
 pre-commit run --all-files
 
 
