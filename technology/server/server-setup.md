@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-10-09
+> Last update: 2025-10-22
 
 ```.sh
 # Settings
@@ -43,13 +43,23 @@ nano ~/.bashrc
 
 ```.sh
 # Install packages
-sudo apt install curl \
+sudo apt install -y \
+  curl \
   dnsutils \
   git \
   wget \
   python-is-python3 \
   python3-pip \
   python3-venv
+
+# sudo apt install -y \
+  # docker.io \
+  # docker-compose
+
+# Docker
+# sudo systemctl enable --now docker
+# docker --version
+# docker compose version
 
 # python -m pip install pipenv --break-system-packages
 
@@ -259,6 +269,17 @@ Public hostnames:
 sudo systemctl status cloudflared
 ```
 
+##### Policies
+
+`Access` → `Policies` → `Add a policy`
+
+`Policy name`: `ACME Challenge Passthrough`.
+`Action`: `Bypass`.
+`Session duration`: `Same as application session timeout`.
+
+`Add rules` → `Include`
+`Selector`: `Everyone`.
+
 ##### Applications
 
 `Access` → `Applications` → `Add an application` → `Self-hosted`
@@ -274,6 +295,12 @@ sudo systemctl status cloudflared
    `Session Duration`: `2 weeks`.
    `Public hostname`: `virtualmin.website.com`.
    `Access policies`: `Select existing policies` or `Create new policy`.
+
+3. website.com ACME Challenge Passthrough
+   `Application name`: `website.com ACME Challenge Passthrough`.
+   `Session Duration`: `No duration, expires immediately`.
+   `Public hostname`: `website.com/.well-known/acme-challenge/*`.
+   `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
 
 ##### Webmin
 
@@ -649,7 +676,7 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    server_name website.com mail.website.com webmail.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -790,6 +817,7 @@ server {
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
         return 500 "Internal Server Error";
     }
+
 }
 ```
 
@@ -804,7 +832,7 @@ server {
     set $domain_root_path /home/${domain}/domains/subdomain.${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    server_name website.com mail.website.com webmail.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -848,14 +876,15 @@ server {
     }
 
     # Location Blocks - General & Security
-    #location / {
-    #    return 301 https://website.com/$request_uri;
-    #}
 
     ## Block access to sensitive files
     location ~ ^/\.user\.ini {
         deny all;
     }
+
+    #location / {
+    #    return 301 https://website.com/$request_uri;
+    #}
 
 }
 ```
@@ -975,8 +1004,8 @@ catch_workers_output = yes
 ### SSL Certificate
 
 ```.sh
-mkdir -p $domain_root_path/.well-known/acme-challenge
-chmod -R 755 $domain_root_path/.well-known
+mkdir -p $domain_root_path/public_html/.well-known/acme-challenge
+chmod -R 755 $domain_root_path/public_html/.well-known
 ```
 
 ```.sh
@@ -1004,7 +1033,7 @@ If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (oran
 
 ```.sh
 # Remove .htaccess
-rm $domain_root_path/.well-known/acme-challenge/.htaccess
+rm $domain_root_path/public_html/.well-known/acme-challenge/.htaccess
 ```
 
 ```.sh
@@ -1027,32 +1056,32 @@ rm $domain_root_path/.well-known/acme-challenge/.htaccess
 
 ```.sh
 # Import .sql
-mysql -u "$system_user" -p "$database_name" < $domain_root_path/"$database_name".sql
+mysql -u "$system_user" -p "$database_name" < $domain_root_path/public_html/"$database_name".sql
 
 # Delete dataset
-rm $domain_root_path/"$database_name".sql
+rm $domain_root_path/public_html/"$database_name".sql
 ```
 
 ### Files migration
 
 ```.sh
-# Extract the contents of the "wordpress_export.zip" file to the $domain_root_path folder
-unzip "$domain_root_path/wordpress_export.zip" "*" -d $domain_root_path
+# Extract the contents of the "wordpress_export.zip" file to the $domain_root_path/public_html folder
+unzip "$domain_root_path/public_html/wordpress_export.zip" "*" -d $domain_root_path/public_html
 
 # Delete .zip file
-rm "$domain_root_path/wordpress_export.zip"
+rm "$domain_root_path/public_html/wordpress_export.zip"
 ```
 
 ### Ownership and permission
 
 ```.sh
 # Change ownership
-chown -R "$system_user" $domain_root_path
+chown -R "$system_user" $domain_root_path/public_html
 
 # Change permissions
-find $domain_root_path -type d -exec chmod 755 {} \;
-find $domain_root_path -type f -exec chmod 644 {} \;
-chmod 600 $domain_root_path/wp-config.php
+find $domain_root_path/public_html -type d -exec chmod 755 {} \;
+find $domain_root_path/public_html -type f -exec chmod 644 {} \;
+chmod 600 $domain_root_path/public_html/wp-config.php
 ```
 
 ### Tools
@@ -1080,10 +1109,10 @@ ab -n 10 $domain
 
 ```.sh
 # Create dump
-mysqldump -u root -p $database_name > $(dirname "$domain_root_path")/backup.sql
+mysqldump -u root -p $database_name > $(dirname "$domain_root_path/public_html")/backup.sql
 
 # Delete file after downloading it
-rm $(dirname "$domain_root_path")/backup.sql
+rm $(dirname "$domain_root_path/public_html")/backup.sql
 ```
 
 ## Cache
@@ -1107,6 +1136,6 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
-tail -n 50 $(dirname "$domain_root_path")/logs/php_log
-# tail -n 50 $(dirname "$domain_root_path")/logs/php_slow.log
+tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
+# tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_slow.log
 ```
