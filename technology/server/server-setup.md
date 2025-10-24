@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-10-22
+> Last update: 2025-10-24
 
 ```.sh
 # Settings
@@ -254,7 +254,7 @@ Restart server.
 
 #### Cloudflare Zero Trust
 
-Cloudflare → `Zero Trust`
+Cloudflare → `Zero Trust`.
 
 ##### Tunnels
 
@@ -271,7 +271,7 @@ sudo systemctl status cloudflared
 
 ##### Policies
 
-`Access` → `Policies` → `Add a policy`
+`Access` → `Policies` → `Add a policy`.
 
 `Policy name`: `ACME Challenge Passthrough`.
 `Action`: `Bypass`.
@@ -303,6 +303,8 @@ sudo systemctl status cloudflared
    `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
 
 ##### Webmin
+
+See [How to set up Cloudflare Tunnel to work properly with Webmin?](https://webmin.com/faq/#how-to-set-up-cloudflare-tunnel-to-work-properly-with-webmin).
 
 ###### /etc/webmin/config
 
@@ -367,7 +369,10 @@ sudo firewall-cmd --zone=public --remove-port=10001-10100/tcp --permanent
 sudo firewall-cmd --reload
 
 # Show interfaces
-firewall-cmd --list-interfaces
+sudo firewall-cmd --list-interfaces
+
+# Show services
+sudo firewall-cmd --list-services
 
 # Show active rules
 sudo firewall-cmd --list-all
@@ -829,10 +834,11 @@ This Nginx configuration serves as a template for a subdomain (`subdomain.domain
 server {
     # Settings
     set $domain website.com;
-    set $domain_root_path /home/${domain}/domains/subdomain.${domain}/public_html;
+    set $subdomain subdomain;
+    set $domain_root_path /home/${domain}/domains/${subdomain}.${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com mail.website.com webmail.website.com;
+    server_name subdomain.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
