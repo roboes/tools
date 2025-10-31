@@ -1,5 +1,5 @@
 ## Windows Subsystem for Linux Packages
-# Last update: 2025-05-14
+# Last update: 2025-10-20
 
 
 # Start Windows Subsystem for Linux (WSL)
@@ -13,10 +13,21 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt cle
 # Install packages
 sudo apt install curl \
   git \
+  nodejs \
+  npm \
   python3 \
   python-is-python3 \
   python3-pip \
   wget
+
+
+# Node.js
+nvm install node
+node -v
+
+# Prettier
+sudo npm install -g prettier
+sudo npm install -g glob
 
 
 # Homebrew install

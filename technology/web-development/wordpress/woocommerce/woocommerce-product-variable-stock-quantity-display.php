@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Display the total available stock quantity for a variable product before the variations form
-// Last update: 2025-03-02
+// Last update: 2025-10-14
 
 if (class_exists('WooCommerce') && WC()) {
 
@@ -17,14 +17,13 @@ if (class_exists('WooCommerce') && WC()) {
             $product_ids = array(17739, 22204, 31437, 31438);
             $messages = [
                 'available-appointments' => [
-                    'de_DE' => 'Verfügbare Termine',
-                    'de_DE_formal' => 'Verfügbare Termine',
-                    'en_US' => 'Available Appointments',
+                    'de' => 'Verfügbare Termine',
+                    'en' => 'Available Appointments',
                 ],
             ];
 
             // Get current language
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('locale'), pll_languages_list(array('fields' => 'locale')))) ? pll_current_language('locale') : 'en_US';
+            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
 
             // Check if current product is in the target product IDs array
             if ($product && $product->is_type('variable') && in_array($product->get_id(), $product_ids)) {

@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]
-> Last update: 2025-09-10
+> Last update: 2025-10-24
 
 ```.sh
 # Settings
@@ -43,13 +43,23 @@ nano ~/.bashrc
 
 ```.sh
 # Install packages
-sudo apt install curl \
+sudo apt install -y \
+  curl \
   dnsutils \
   git \
   wget \
   python-is-python3 \
   python3-pip \
   python3-venv
+
+# sudo apt install -y \
+  # docker.io \
+  # docker-compose
+
+# Docker
+# sudo systemctl enable --now docker
+# docker --version
+# docker compose version
 
 # python -m pip install pipenv --break-system-packages
 
@@ -244,7 +254,7 @@ Restart server.
 
 #### Cloudflare Zero Trust
 
-Cloudflare → `Zero Trust`
+Cloudflare → `Zero Trust`.
 
 ##### Tunnels
 
@@ -252,30 +262,49 @@ Cloudflare → `Zero Trust`
 
 Public hostnames:
 
-1) `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
-2) `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` → `TLS` → Enable `No TLS Verify`.
+1. `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
+2. `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` → `TLS` → Enable `No TLS Verify`.
 
 ```.sh
 sudo systemctl status cloudflared
 ```
 
+##### Policies
+
+`Access` → `Policies` → `Add a policy`.
+
+`Policy name`: `ACME Challenge Passthrough`.
+`Action`: `Bypass`.
+`Session duration`: `Same as application session timeout`.
+
+`Add rules` → `Include`.
+`Selector`: `Everyone`.
+
 ##### Applications
 
 `Access` → `Applications` → `Add an application` → `Self-hosted`
 
-1) SSH Access
-`Application name`: `SSH Access`.
-`Session Duration`: `24 hours`.
-`Public hostname`: `ssh.website.com`.
-`Access policies`: `Select existing policies` or `Create new policy`.
+1. SSH Access
+   `Application name`: `SSH Access`.
+   `Session Duration`: `24 hours`.
+   `Public hostname`: `ssh.website.com`.
+   `Access policies`: `Select existing policies` or `Create new policy`.
 
-2) Virtualmin Access
-`Application name`: `Virtualmin Access`.
-`Session Duration`: `2 weeks`.
-`Public hostname`: `virtualmin.website.com`.
-`Access policies`: `Select existing policies` or `Create new policy`.
+2. Virtualmin Access
+   `Application name`: `Virtualmin Access`.
+   `Session Duration`: `2 weeks`.
+   `Public hostname`: `virtualmin.website.com`.
+   `Access policies`: `Select existing policies` or `Create new policy`.
+
+3. website.com ACME Challenge Passthrough
+   `Application name`: `website.com ACME Challenge Passthrough`.
+   `Session Duration`: `No duration, expires immediately`.
+   `Public hostname`: `website.com/.well-known/acme-challenge/*`.
+   `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
 
 ##### Webmin
+
+See [How to set up Cloudflare Tunnel to work properly with Webmin?](https://webmin.com/faq/#how-to-set-up-cloudflare-tunnel-to-work-properly-with-webmin).
 
 ###### /etc/webmin/config
 
@@ -340,7 +369,10 @@ sudo firewall-cmd --zone=public --remove-port=10001-10100/tcp --permanent
 sudo firewall-cmd --reload
 
 # Show interfaces
-firewall-cmd --list-interfaces
+sudo firewall-cmd --list-interfaces
+
+# Show services
+sudo firewall-cmd --list-services
 
 # Show active rules
 sudo firewall-cmd --list-all
@@ -387,11 +419,46 @@ When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.c
 
 Additionally, add the following record:
 
-1) DMARC record
+1. DMARC record
 
 - Type: `TXT`
 - Name: `_dmarc`
 - Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s`
+
+### Sender Canonical Maps (Per-User Mapping)
+
+#### Create Sender Canonical Map
+
+```.sh
+nano /etc/postfix/sender_canonical
+```
+
+Add mappings for each virtual server user:
+
+```.txt
+website    noreply@website.com
+```
+
+#### Configure Postfix
+
+```.sh
+nano /etc/postfix/main.cf
+```
+
+Add this line:
+
+```.txt
+sender_canonical_maps = hash:/etc/postfix/sender_canonical
+```
+
+Apply changes:
+
+```.sh
+postmap /etc/postfix/sender_canonical
+systemctl reload postfix
+```
+
+To verify: `Webmin` → `Servers` → `Postfix Mail Server` → `Canonical Mapping` → `Tables for sender addresses`: `hash:/etc/postfix/sender_canonical`.
 
 ### Troubleshooting
 
@@ -614,7 +681,7 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    server_name website.com mail.website.com webmail.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -755,6 +822,7 @@ server {
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
         return 500 "Internal Server Error";
     }
+
 }
 ```
 
@@ -766,10 +834,11 @@ This Nginx configuration serves as a template for a subdomain (`subdomain.domain
 server {
     # Settings
     set $domain website.com;
-    set $domain_root_path /home/${domain}/domains/subdomain.${domain}/public_html;
+    set $subdomain subdomain;
+    set $domain_root_path /home/${domain}/domains/${subdomain}.${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com admin.website.com;
+    server_name subdomain.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -813,14 +882,15 @@ server {
     }
 
     # Location Blocks - General & Security
-    #location / {
-    #    return 301 https://website.com/$request_uri;
-    #}
 
     ## Block access to sensitive files
     location ~ ^/\.user\.ini {
         deny all;
     }
+
+    #location / {
+    #    return 301 https://website.com/$request_uri;
+    #}
 
 }
 ```
@@ -847,25 +917,25 @@ Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` �
 
 Cloudflare → Website → `Security` → `Security rules`.
 
-1) ACME Challenge Passthrough
+1. ACME Challenge Passthrough
 
 - `Rule name`: `ACME Challenge Passthrough`.
 - `Expression`: `http.request.uri.path contains "/.well-known/acme-challenge/"`.
 - `Choose action`: `Skip` (select all `WAF components to skip`).
 
-2) Block AI Scrapers and Crawlers
+2. Block AI Scrapers and Crawlers
 
 - `Rule name`: `Block AI Scrapers and Crawlers`.
 - `Expression`: `(cf.verified_bot_category eq "AI Crawler")`.
 - `Choose action`: `Block`.
 
-3) Managed Access
+3. Managed Access
 
 - `Rule name`: `Managed Access`.
 - `Expression`: `(not cf.client.bot and not ip.geoip.country in {"AT" "CH" "DE" "LU"} and ip.src ne $server_ip)`.
 - `Choose action`: `Managed Challenge`.
 
-4) WordPress
+4. WordPress
 
 - `Rule name`: `WordPress`.
 - `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/")`
@@ -940,8 +1010,8 @@ catch_workers_output = yes
 ### SSL Certificate
 
 ```.sh
-mkdir -p $domain_root_path/.well-known/acme-challenge
-chmod -R 755 $domain_root_path/.well-known
+mkdir -p $domain_root_path/public_html/.well-known/acme-challenge
+chmod -R 755 $domain_root_path/public_html/.well-known
 ```
 
 ```.sh
@@ -969,7 +1039,7 @@ If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (oran
 
 ```.sh
 # Remove .htaccess
-rm $domain_root_path/.well-known/acme-challenge/.htaccess
+rm $domain_root_path/public_html/.well-known/acme-challenge/.htaccess
 ```
 
 ```.sh
@@ -992,32 +1062,32 @@ rm $domain_root_path/.well-known/acme-challenge/.htaccess
 
 ```.sh
 # Import .sql
-mysql -u "$system_user" -p "$database_name" < $domain_root_path/"$database_name".sql
+mysql -u "$system_user" -p "$database_name" < $domain_root_path/public_html/"$database_name".sql
 
 # Delete dataset
-rm $domain_root_path/"$database_name".sql
+rm $domain_root_path/public_html/"$database_name".sql
 ```
 
 ### Files migration
 
 ```.sh
-# Extract the contents of the "wordpress_export.zip" file to the $domain_root_path folder
-unzip "$domain_root_path/wordpress_export.zip" "*" -d $domain_root_path
+# Extract the contents of the "wordpress_export.zip" file to the $domain_root_path/public_html folder
+unzip "$domain_root_path/public_html/wordpress_export.zip" "*" -d $domain_root_path/public_html
 
 # Delete .zip file
-rm "$domain_root_path/wordpress_export.zip"
+rm "$domain_root_path/public_html/wordpress_export.zip"
 ```
 
 ### Ownership and permission
 
 ```.sh
 # Change ownership
-chown -R "$system_user" $domain_root_path
+chown -R "$system_user" $domain_root_path/public_html
 
 # Change permissions
-find $domain_root_path -type d -exec chmod 755 {} \;
-find $domain_root_path -type f -exec chmod 644 {} \;
-chmod 600 $domain_root_path/wp-config.php
+find $domain_root_path/public_html -type d -exec chmod 755 {} \;
+find $domain_root_path/public_html -type f -exec chmod 644 {} \;
+chmod 600 $domain_root_path/public_html/wp-config.php
 ```
 
 ### Tools
@@ -1045,10 +1115,10 @@ ab -n 10 $domain
 
 ```.sh
 # Create dump
-mysqldump -u root -p $database_name > $(dirname "$domain_root_path")/backup.sql
+mysqldump -u root -p $database_name > $(dirname "$domain_root_path/public_html")/backup.sql
 
 # Delete file after downloading it
-rm $(dirname "$domain_root_path")/backup.sql
+rm $(dirname "$domain_root_path/public_html")/backup.sql
 ```
 
 ## Cache
@@ -1072,6 +1142,6 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
-tail -n 50 $(dirname "$domain_root_path")/logs/php_log
-# tail -n 50 $(dirname "$domain_root_path")/logs/php_slow.log
+tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
+# tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_slow.log
 ```

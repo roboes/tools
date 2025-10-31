@@ -1,7 +1,6 @@
 # R Styling
 
-> [!NOTE]
-> Last update: 2025-09-14
+> [!NOTE] Last update: 2025-09-14
 
 ## R commands
 
@@ -21,10 +20,7 @@ styler::style_dir()
 ## Prettier / Quarto commands
 
 ```.sh
-npm init -y
-npm install glob
-
 node prettier-qmd-preprocess.js "**/*.qmd"
 npx prettier --write "**/*.qmd"
-node -e "const fs = require('fs'); const glob = require('glob'); const files = glob.sync('**/*.qmd'); files.forEach(file => { const content = fs.readFileSync(file, 'utf8'); const lines = content.split('\n'); if (lines.length >= 2 && lines[lines.length - 2].trim() === '\$\$') { lines.splice(lines.length - 2, 1); fs.writeFileSync(file, lines.join('\n'), 'utf8'); console.log(\`Removed \$\$ from \${file}\`); } });"
+node -e "const fs = require('fs'); const files = fs.globSync('**/*.qmd'); files.forEach(file => { const content = fs.readFileSync(file, 'utf8'); const lines = content.split('\n'); if (lines.length >= 2 && lines[lines.length - 2].trim() === '\$\$') { lines.splice(lines.length - 2, 1); fs.writeFileSync(file, lines.join('\n'), 'utf8'); console.log(\`Removed \$\$ from \${file}\`); } });"
 ```
