@@ -76,7 +76,7 @@ python -V
 # Install Python dependencies
 python -m pip install -r "./requirements.txt"
 python -m pip install filetype numpy opencv-python phonenumbers woocommerce
-# python -m pip install email-validator packaging erpbrasil.base
+# python -m pip install brazilcep brazilfiscalreport email-validator erpbrasil.assinatura erpbrasil.base erpbrasil.edoc lxml_html_clean nfelib packaging pyyaml unidecode workalendar
 
 # Exit the virtual environment
 deactivate

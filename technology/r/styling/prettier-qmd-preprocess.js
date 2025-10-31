@@ -1,27 +1,18 @@
 // Preprocess Quarto files (.qmd) for Prettier
-// Last update: 2025-09-04
-
+// Last update: 2025-10-26
 
 // Notes: Preprocess a Quarto file to fix common formatting issues with Prettier
 
-
-// npm init -y
-// npm install glob
-
-
 // Imports
-const fs = require('fs');
-const glob = require('glob');
-
+const fs = require("fs");
 
 // Get files
 const pattern = process.argv[2] || "**/*.qmd";
-const files = glob.sync(pattern);
+const files = fs.globSync(pattern);
 if (files.length === 0) {
   console.error("No files matched the pattern:", pattern);
   process.exit(1);
 }
-
 
 // Functions
 
@@ -51,6 +42,5 @@ function preprocessQuartoFile(filePath) {
   }
 }
 
-
 // Apply preprocessing
-files.forEach(file => preprocessQuartoFile(file));
+files.forEach((file) => preprocessQuartoFile(file));

@@ -12,114 +12,113 @@
     <title>Printable Labels Table Generator</title>
 
     <style>
-		:root {
-			--cell-padding-block: 4mm;
-			--cell-padding-inline: 5mm;
-		}
+      :root {
+        --cell-padding-block: 4mm;
+        --cell-padding-inline: 5mm;
+      }
 
-		@media all {
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-			}
+      @media all {
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
 
-			table.table-generated {
-				font-size: 12px;
-				border-collapse: collapse;
-				width: 100vw;
-				height: 100vh;
-				table-layout: fixed;
-				margin: 0;
-				padding: 0;
-				break-inside: avoid;
-			}
+        table.table-generated {
+          font-size: 12px;
+          border-collapse: collapse;
+          width: 100vw;
+          height: 100vh;
+          table-layout: fixed;
+          margin: 0;
+          padding: 0;
+          break-inside: avoid;
+        }
 
-			table.table-generated td {
-				text-align: left;
-				overflow: hidden;
-				vertical-align: middle;
-				width: calc(100% / 3);
-				height: calc(100% / 8);
-				box-sizing: border-box;
-				padding: 0;
-				border: 0.5px dashed transparent;
-				position: relative;
-			}
+        table.table-generated td {
+          text-align: left;
+          overflow: hidden;
+          vertical-align: middle;
+          width: calc(100% / 3);
+          height: calc(100% / 8);
+          box-sizing: border-box;
+          padding: 0;
+          border: 0.5px dashed transparent;
+          position: relative;
+        }
 
-			table.table-generated td div {
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				display: flex;
-				flex-direction: row;
-				align-items: center;
-				width: calc(100% - 2 * var(--cell-padding-inline));
-				height: calc(100% - 2 * var(--cell-padding-block));
-				position: absolute;
-				top: var(--cell-padding-block);
-				left: var(--cell-padding-inline);
-				padding: 0;
-				box-sizing: border-box;
-			}
-		}
+        table.table-generated td div {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          width: calc(100% - 2 * var(--cell-padding-inline));
+          height: calc(100% - 2 * var(--cell-padding-block));
+          position: absolute;
+          top: var(--cell-padding-block);
+          left: var(--cell-padding-inline);
+          padding: 0;
+          box-sizing: border-box;
+        }
+      }
 
-		@media screen {
-			body {
-				font-size: 14px;
-				margin: 10px;
-			}
+      @media screen {
+        body {
+          font-size: 14px;
+          margin: 10px;
+        }
 
-			h2 {
-				font-size: 20px;
-			}
+        h2 {
+          font-size: 20px;
+        }
 
-			div {
-				display: none;
-			}
+        div {
+          display: none;
+        }
 
-			table.table-filter {
-				font-size: 12px;
-				border-collapse: collapse;
-				border-style: hidden;
-				width: 70%;
-				margin: 0;
-				padding: 0;
-			}
+        table.table-filter {
+          font-size: 12px;
+          border-collapse: collapse;
+          border-style: hidden;
+          width: 70%;
+          margin: 0;
+          padding: 0;
+        }
 
-			table.table-filter th,
-			table.table-filter td {
-				text-align: left;
-				word-wrap: break-word;
-				overflow: hidden;
-				vertical-align: middle;
-				margin: 0;
-				padding: 8px;
-			}
+        table.table-filter th,
+        table.table-filter td {
+          text-align: left;
+          word-wrap: break-word;
+          overflow: hidden;
+          vertical-align: middle;
+          margin: 0;
+          padding: 8px;
+        }
 
-			table.table-filter th {
-				background-color: #cccccc;
-			}
+        table.table-filter th {
+          background-color: #cccccc;
+        }
 
-			table.table-filter td {
-				border: 0.5px solid #cccccc;
-			}
+        table.table-filter td {
+          border: 0.5px solid #cccccc;
+        }
 
-			table.table-generated td {
-				border: 0.5px dashed #cccccc;
-			}
+        table.table-generated td {
+          border: 0.5px dashed #cccccc;
+        }
 
-			table.table-filter tr:nth-child(even),
-			table.table-generated tr:nth-child(even) {
-				background-color: #f2f2f2;
-			}
+        table.table-filter tr:nth-child(even),
+        table.table-generated tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
 
-			table.table-generated td div {
-				position: static;
-				padding: 5px;
-			}
-
-		}
+        table.table-generated td div {
+          position: static;
+          padding: 5px;
+        }
+      }
     </style>
   </head>
 
@@ -251,222 +250,229 @@
     </div>
 
     <script type="text/javascript">
-	// Get browser language
-	const langAttr = navigator.language || navigator.userLanguage;
-	let language;
+      // Get browser language
+      const langAttr = navigator.language || navigator.userLanguage;
+      let language;
 
-	if (langAttr.length === 2) {
-	  language = langAttr;
-	} else {
-	  language = langAttr.split('-')[0];
-	}
+      if (langAttr.length === 2) {
+        language = langAttr;
+      } else {
+        language = langAttr.split("-")[0];
+      }
 
-	// Default to "en" if language is not "de" or "en"
-	if (!['de', 'en'].includes(language)) {
-	  language = 'en';
-	}
+      // Default to "en" if language is not "de" or "en"
+      if (!["de", "en"].includes(language)) {
+        language = "en";
+      }
 
-	if (language === 'de') {
-		document.querySelectorAll(".language-de").forEach(function(el) {
-			el.style.display = "block";
-		});
-	} else {
-		document.querySelectorAll(".language-en").forEach(function(el) {
-			el.style.display = "block";
-		});
-	}
+      if (language === "de") {
+        document.querySelectorAll(".language-de").forEach(function (el) {
+          el.style.display = "block";
+        });
+      } else {
+        document.querySelectorAll(".language-en").forEach(function (el) {
+          el.style.display = "block";
+        });
+      }
 
-	// Add rows
-	function addRow() {
-		const cellStart = document.querySelector('input[name="cell-start-input"]').cloneNode(true);
-		cellStart.removeAttribute("value");
+      // Add rows
+      function addRow() {
+        const cellStart = document.querySelector('input[name="cell-start-input"]').cloneNode(true);
+        cellStart.removeAttribute("value");
 
-		const cellEnd = document.querySelector('input[name="cell-end-input"]').cloneNode(true);
-		cellEnd.removeAttribute("value");
+        const cellEnd = document.querySelector('input[name="cell-end-input"]').cloneNode(true);
+        cellEnd.removeAttribute("value");
 
-		const productInput = document.querySelector('select[name="product-input"]').cloneNode(true);
-		productInput.removeAttribute("value");
+        const productInput = document.querySelector('select[name="product-input"]').cloneNode(true);
+        productInput.removeAttribute("value");
 
-		const tableInput = document.getElementById("table-input");
-		const row = tableInput.insertRow(-1);
+        const tableInput = document.getElementById("table-input");
+        const row = tableInput.insertRow(-1);
 
-		const cellContents = [
-			cellStart.outerHTML,
-			cellEnd.outerHTML,
-			productInput.outerHTML,
-			`<input type="date" name="date-input" value="${new Date().toISOString().substring(0, 10)}">`,
-			`<button type="button" onclick="removeRow(this)">${language.includes("language-de") ? 'Entfernen' : 'Remove'}</button>`
-		];
+        const cellContents = [
+          cellStart.outerHTML,
+          cellEnd.outerHTML,
+          productInput.outerHTML,
+          `<input type="date" name="date-input" value="${new Date().toISOString().substring(0, 10)}">`,
+          `<button type="button" onclick="removeRow(this)">${language.includes("language-de") ? "Entfernen" : "Remove"}</button>`,
+        ];
 
-		cellContents.forEach(content => {
-			const cell = row.insertCell(-1);
-			cell.innerHTML = content;
-		});
+        cellContents.forEach((content) => {
+          const cell = row.insertCell(-1);
+          cell.innerHTML = content;
+        });
 
-		// Clean table body
-		cleanTableBody();
+        // Clean table body
+        cleanTableBody();
 
-		// Enable "Generate" button
-		enableButton();
-	}
+        // Enable "Generate" button
+        enableButton();
+      }
 
+      // Remove rows
+      function removeRow(button) {
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
 
-	// Remove rows
-	function removeRow(button) {
-		const row = button.parentNode.parentNode;
-		row.parentNode.removeChild(row);
+        // Clean table body
+        cleanTableBody();
 
-		// Clean table body
-		cleanTableBody();
+        // Enable "Generate" button
+        enableButton();
+      }
 
-		// Enable "Generate" button
-		enableButton();
-	}
+      // Get today's date
+      const today = new Date().toISOString().substring(0, 10);
+      document.querySelectorAll('input[name="date-input"]')[0].value = today;
 
+      // Enable "Generate" button
+      function enableButton() {
+        const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        const productInputs = document.querySelectorAll('select[name="product-input"]');
+        const dateInputs = document.querySelectorAll('input[name="date-input"]');
+        const generateTableButtons = document.querySelectorAll('button[name="generate-table"]');
 
-	// Get today's date
-	const today = new Date().toISOString().substring(0, 10);
-	document.querySelectorAll('input[name="date-input"]')[0].value = today;
+        let isValid = true;
 
+        // Check for cells outside interval range and overlapping cells
+        const cellRanges = [];
+        let isOutsideIntervalRange = false;
+        let isOverlapping = false;
 
-	// Enable "Generate" button
-	function enableButton() {
-		const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
-		const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
-		const productInputs = document.querySelectorAll('select[name="product-input"]');
-		const dateInputs = document.querySelectorAll('input[name="date-input"]');
-		const generateTableButtons = document.querySelectorAll('button[name="generate-table"]');
+        for (let i = 0; i < cellStartInputs.length; i++) {
+          const cellStart = parseInt(cellStartInputs[i].value, 10);
+          const cellEnd = parseInt(cellEndInputs[i].value, 10);
 
-		let isValid = true;
+          // Check interval range
+          if (cellStart < 1 || cellStart > 24 || cellEnd < 1 || cellEnd > 24) {
+            isOutsideIntervalRange = true;
+            isValid = false;
+          }
 
-		// Check for cells outside interval range and overlapping cells
-		const cellRanges = [];
-		let isOutsideIntervalRange = false;
-		let isOverlapping = false;
+          // Check overlapping cells
+          for (let j = 0; j < cellRanges.length; j++) {
+            const existingRange = cellRanges[j];
+            if (cellStart <= existingRange.end && cellEnd >= existingRange.start) {
+              isOverlapping = true;
+              isValid = false;
+              break;
+            }
+          }
 
-		for(let i = 0; i < cellStartInputs.length; i++) {
-			const cellStart = parseInt(cellStartInputs[i].value, 10);
-			const cellEnd = parseInt(cellEndInputs[i].value, 10);
+          // Add current cell range to the array
+          cellRanges.push({
+            start: cellStart,
+            end: cellEnd,
+          });
 
-			// Check interval range
-			if(cellStart < 1 || cellStart > 24 || cellEnd < 1 || cellEnd > 24) {
-				isOutsideIntervalRange = true;
-				isValid = false;
-			}
+          // Check for blank inputs
+          if (productInputs[i].value === "" || dateInputs[i].value === "") {
+            isValid = false;
+          }
 
-			// Check overlapping cells
-			for(let j = 0; j < cellRanges.length; j++) {
-				const existingRange = cellRanges[j];
-				if(cellStart <= existingRange.end && cellEnd >= existingRange.start) {
-					isOverlapping = true;
-					isValid = false;
-					break;
-				}
-			}
+          // If any condition fails, exit the loop early
+          if (!isValid) break;
+        }
 
-			// Add current cell range to the array
-			cellRanges.push({
-				start: cellStart,
-				end: cellEnd
-			});
+        // Enable or disable "Generate" button based on validation
+        for (let i = 0; i < generateTableButtons.length; i++) {
+          generateTableButtons[i].disabled = !isValid;
+        }
+      }
 
-			// Check for blank inputs
-			if(productInputs[i].value === "" || dateInputs[i].value === "") {
-				isValid = false;
-			}
+      // Generate table
+      function generateTable() {
+        const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
+        const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
+        const productInputs = document.querySelectorAll('select[name="product-input"]');
+        const dateInputs = document.querySelectorAll('input[name="date-input"]');
+        const tableGenerated = document.querySelector('table[id="table-generated"]');
 
-			// If any condition fails, exit the loop early
-			if(!isValid) break;
-		}
+        for (let i = 0; i < cellStartInputs.length; i++) {
+          const cellStart = parseInt(cellStartInputs[i].value);
+          const cellEnd = parseInt(cellEndInputs[i].value);
+          const productInput = productInputs[i].value;
+          const dateInput = new Date(dateInputs[i].value);
+          const validity = new Date(dateInput);
+          validity.setDate(validity.getDate() + 180);
 
-		// Enable or disable "Generate" button based on validation
-		for(let i = 0; i < generateTableButtons.length; i++) {
-			generateTableButtons[i].disabled = !isValid;
-		}
-	}
+          for (let j = cellStart - 1; j < cellEnd; j++) {
+            const row = Math.floor(j / 3);
+            const col = j % 3;
+            const cell = tableGenerated.rows[row].cells[col];
+            const productText = productInput + "<br>";
 
+            const dateText =
+              "Manufacturing date: " +
+              dateInput.toLocaleDateString("de-DE", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }) +
+              "<br>" +
+              "Expiration date: " +
+              validity.toLocaleDateString("de-DE", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              });
 
-	// Generate table
-	function generateTable() {
-		const cellStartInputs = document.querySelectorAll('input[name="cell-start-input"]');
-		const cellEndInputs = document.querySelectorAll('input[name="cell-end-input"]');
-		const productInputs = document.querySelectorAll('select[name="product-input"]');
-		const dateInputs = document.querySelectorAll('input[name="date-input"]');
-		const tableGenerated = document.querySelector('table[id="table-generated"]');
+            let textDescription = "";
 
-		for(let i = 0; i < cellStartInputs.length; i++) {
-			const cellStart = parseInt(cellStartInputs[i].value);
-			const cellEnd = parseInt(cellEndInputs[i].value);
-			const productInput = productInputs[i].value;
-			const dateInput = new Date(dateInputs[i].value);
-			const validity = new Date(dateInput);
-			validity.setDate(validity.getDate() + 180);
+            switch (productInput) {
+              case "Product A":
+                textDescription = "Description A" + "<br>";
+                break;
+              case "Product B":
+                textDescription = "Description B" + "<br>";
+                break;
+              default:
+                break;
+            }
 
-			for(let j = cellStart - 1; j < cellEnd; j++) {
-				const row = Math.floor(j / 3);
-				const col = j % 3;
-				const cell = tableGenerated.rows[row].cells[col];
-				const productText = productInput + "<br>";
+            if (textDescription !== "") {
+              cell.innerHTML = "<div>" + productText + textDescription + dateText + "</div>";
+            } else {
+              cell.innerHTML = "";
+            }
+          }
+        }
 
-				const dateText = "Manufacturing date: " + dateInput.toLocaleDateString("de-DE", {year: "numeric", month: "2-digit", day: "2-digit"}) + "<br>" +
-				"Expiration date: " + validity.toLocaleDateString("de-DE", {year: "numeric", month: "2-digit", day: "2-digit"});
+        // Enable "table-section" section
+        document.querySelector('div[id="table-section"]').style.display = "block";
 
-				let textDescription = "";
+        // Enable "print-button" section
+        document.querySelector('div[id="print-button"]').style.display = "block";
 
-				switch(productInput) {
-					case "Product A":
-						textDescription = "Description A" + "<br>";
-						break;
-					case "Product B":
-						textDescription = "Description B" + "<br>";
-						break;
-					default:
-						break;
-				}
+        // printTable()
+      }
 
-				if(textDescription !== "") {
-					cell.innerHTML = "<div>" + productText + textDescription + dateText + "</div>";
-				} else {
-					cell.innerHTML = "";
-				}
-			}
-		}
+      // Clean table body
+      function cleanTableBody() {
+        // Clean table body
+        const tableGenerated = document.querySelector('table[id="table-generated"]');
+        const tableGeneratedCells = tableGenerated.querySelectorAll("td");
 
-		// Enable "table-section" section
-		document.querySelector('div[id="table-section"]').style.display = "block";
+        for (let i = 0; i < tableGeneratedCells.length; i++) {
+          tableGeneratedCells[i].innerHTML = "";
+        }
 
-		// Enable "print-button" section
-		document.querySelector('div[id="print-button"]').style.display = "block";
+        // Disable "table-section" section
+        document.querySelector('div[id="table-section"]').style.display = "none";
 
-		// printTable()
-	}
+        // Disable "print-button" section
+        document.querySelector('div[id="print-button"]').style.display = "none";
+      }
 
-	// Clean table body
-	function cleanTableBody() {
-		// Clean table body
-		const tableGenerated = document.querySelector('table[id="table-generated"]');
-		const tableGeneratedCells = tableGenerated.querySelectorAll("td");
-
-		for(let i = 0; i < tableGeneratedCells.length; i++) {
-			tableGeneratedCells[i].innerHTML = "";
-		}
-
-		// Disable "table-section" section
-		document.querySelector('div[id="table-section"]').style.display = "none";
-
-		// Disable "print-button" section
-		document.querySelector('div[id="print-button"]').style.display = "none";
-
-	}
-
-	// Print table
-	function printTable() {
-		const printContents = document.querySelector('table[id="table-generated"]').outerHTML;
-		const originalContents = document.body.innerHTML;
-		document.body.innerHTML = printContents;
-		window.print();
-		document.body.innerHTML = originalContents;
-	}
+      // Print table
+      function printTable() {
+        const printContents = document.querySelector('table[id="table-generated"]').outerHTML;
+        const originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+      }
     </script>
   </body>
 </html>

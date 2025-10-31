@@ -62,6 +62,7 @@ exiftool \
 	'-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+.nc.%e' \
 	-execute \
 	-if '($FileTypeExtension eq "mov" and not defined $ContentIdentifier)' \
+	'-FileName<${MediaCreateDate}%+.nc.%e' \
 	'-FileName<${CreationDate}%+.nc.%e' \
 	'-FileName<${CreationDate}.${SubSecTime}%+.nc.%e' \
 	-execute \

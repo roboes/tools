@@ -2,7 +2,6 @@
 // Last update: 2024-07-30
 // Source: https://daveden.co.uk/tutorials/elementor-pro-form-hacks-add-placeholder-to-your-required-select-fields/
 
-
 document.addEventListener("DOMContentLoaded", function () {
   // Find all forms with class name "elementor-form-select"
   const forms = document.querySelectorAll(".elementor-form-select");
