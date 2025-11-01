@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-09-30
+// Last update: 2025-11-01
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Gmail API
@@ -75,6 +75,10 @@ function WooCommerceOrdersRetrieve() {
 
   // Fetch product data
   const getProductCategories = (productId) => {
+    if (!productId || isNaN(productId) || Number(productId) === 0) {
+      // Skip invalid or non-product line items
+      return [];
+    }
     if (productCache[productId]) {
       return productCache[productId];
     }
@@ -246,7 +250,7 @@ function WooCommerceOrdersRetrieve() {
   // Build index of existing order_ids in sheet
   const existing = {};
   if (sheet.getLastRow() > 1) {
-    const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues(); // col A = order_id
+    const values = sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues(); // col B = order_id
     values.forEach((row, i) => {
       if (row[0]) {
         if (!existing[row[0]]) existing[row[0]] = [];
