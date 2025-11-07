@@ -4,13 +4,13 @@
 // Notes: Preprocess a Quarto file to fix common formatting issues with Prettier
 
 // Imports
-const fs = require("fs");
+const fs = require('fs');
 
 // Get files
-const pattern = process.argv[2] || "**/*.qmd";
+const pattern = process.argv[2] || '**/*.qmd';
 const files = fs.globSync(pattern);
 if (files.length === 0) {
-  console.error("No files matched the pattern:", pattern);
+  console.error('No files matched the pattern:', pattern);
   process.exit(1);
 }
 
@@ -19,25 +19,25 @@ if (files.length === 0) {
 // Function to add a blank line before lines that contain only colons, but only if the previous line is not empty
 function preprocessQuartoFile(filePath) {
   try {
-    const content = fs.readFileSync(filePath, "utf8");
-    const lines = content.split("\n");
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n');
 
     const modifiedLines = lines.reduce((acc, line, i) => {
       const trimmed = line.trim();
       const isColonOnly = /^:+$/.test(trimmed);
 
-      if (isColonOnly && acc.length > 0 && acc[acc.length - 1].trim() !== "") {
-        acc.push(""); // Add a blank line before colon-only line
+      if (isColonOnly && acc.length > 0 && acc[acc.length - 1].trim() !== '') {
+        acc.push(''); // Add a blank line before colon-only line
       }
 
       acc.push(line);
       return acc;
     }, []);
 
-    fs.writeFileSync(filePath, modifiedLines.join("\n"), "utf8");
+    fs.writeFileSync(filePath, modifiedLines.join('\n'), 'utf8');
     console.log(`Successfully added blank lines to ${filePath}`);
   } catch (err) {
-    console.error("Error processing file:", err.message);
+    console.error('Error processing file:', err.message);
     process.exit(1);
   }
 }

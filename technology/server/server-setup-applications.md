@@ -1,6 +1,6 @@
 # Debian and Virtualmin Server Setup - Applications
 
-> [!NOTE]
+> [!NOTE]  
 > Last update: 2025-10-24
 
 ```.sh

@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "00 10 * * *"
-    - cron: "00 17 * * *"
-    - cron: "30 21 * * *"
+    - cron: '00 10 * * *'
+    - cron: '00 17 * * *'
+    - cron: '30 21 * * *'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -35,8 +35,8 @@ jobs:
       - name: Setup Python - https://github.com/actions/setup-python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.x" #  Latest stable major version of Python
-          cache: "pip" # Enables pip caching
+          python-version: '3.x' #  Latest stable major version of Python
+          cache: 'pip' # Enables pip caching
 
       - name: Install Python dependencies
         run: |

@@ -1,6 +1,6 @@
 # WordPress Maintenance
 
-> [!NOTE]
+> [!NOTE]  
 > Last update: 2025-03-28
 
 ```.sh

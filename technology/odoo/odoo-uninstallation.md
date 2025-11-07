@@ -1,6 +1,6 @@
 # Odoo Uninstallation on Debian
 
-> [!NOTE]
+> [!NOTE]  
 > Last update: 2025-06-17
 
 ## Settings

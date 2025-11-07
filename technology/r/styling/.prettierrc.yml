@@ -1,15 +1,8 @@
-# Global defaults (applies to .js, .json, .yml, etc.)
-proseWrap: "always"
-semi: true
-singleQuote: false
-tabWidth: 2
-trailingComma: "es5"
-
 # Quarto-specific override
 overrides:
-  - files: "**/*.qmd"
+  - files: '**/*.qmd'
     options:
-      parser: "markdown"
-      proseWrap: "preserve"
+      parser: 'markdown'
+      proseWrap: 'preserve'
       printWidth: 999
-      embeddedLanguageFormatting: "off"
+      embeddedLanguageFormatting: 'off'

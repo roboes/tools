@@ -1,6 +1,6 @@
 # Odoo Installation on Debian
 
-> [!NOTE]
+> [!NOTE]  
 > Last update: 2025-08-07
 
 ## Settings
