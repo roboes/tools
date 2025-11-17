@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-11-01
+// Last update: 2025-11-17
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Gmail API
@@ -23,8 +23,9 @@ function WooCommerceOrdersRetrieve() {
     woocommerce_consumer_secret: 'cs_xxxxxxxx',
     google_sheets_id: '1ABC',
     google_sheets_tab_name: 'sales_orders_articles',
-    test_mode: false,
+    max_orders_per_run: 2500, // Set to 0 for unlimited
     last_fetch_date_reset: false,
+    max_runtime_minutes: 5, // Maximum runtime before stopping
   };
 
   // Payment method mapping
@@ -36,15 +37,18 @@ function WooCommerceOrdersRetrieve() {
     stripe_cc: 'Stripe',
   };
 
-  if (options.last_fetch_date_reset) PropertiesService.getScriptProperties().deleteProperty('SETTINGS_LAST_SYNC');
+  if (options.last_fetch_date_reset) {
+    PropertiesService.getScriptProperties().deleteProperty('SETTINGS_LAST_SYNC');
+    PropertiesService.getScriptProperties().deleteProperty('LAST_PROCESSED_PAGE');
+  }
 
   // Get last fetch date to fetch only new orders
   let lastFetchDate = PropertiesService.getScriptProperties().getProperty('SETTINGS_LAST_SYNC');
   if (lastFetchDate) lastFetchDate = lastFetchDate.slice(0, lastFetchDate.lastIndexOf('.')) + 'Z';
   Logger.log('The last imported modified date is: ' + lastFetchDate);
 
-  // Reusable API fetch function
-  const fetchWooCommerceAPI = (endpoint, params = {}) => {
+  // Reusable API fetch function with retry logic
+  const fetchWooCommerceAPI = (endpoint, params = {}, retries = 3) => {
     let url = options.woocommerce_site_url + '/wp-json/wc/v3/' + endpoint;
     const queryString = Object.keys(params)
       .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
@@ -54,20 +58,48 @@ function WooCommerceOrdersRetrieve() {
       url += '?' + queryString;
     }
 
-    const response = UrlFetchApp.fetch(url, {
-      method: 'get',
-      headers: {
-        Authorization: 'Basic ' + Utilities.base64Encode(options.woocommerce_consumer_key + ':' + options.woocommerce_consumer_secret),
-        'X-App-Name': 'woocommerce-orders-retrieve-to-google-sheets',
-      },
-      muteHttpExceptions: true,
-    });
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = UrlFetchApp.fetch(url, {
+          method: 'get',
+          headers: {
+            Authorization: 'Basic ' + Utilities.base64Encode(options.woocommerce_consumer_key + ':' + options.woocommerce_consumer_secret),
+            'X-App-Name': 'woocommerce-orders-retrieve-to-google-sheets',
+          },
+          muteHttpExceptions: true,
+        });
 
-    if (response.getResponseCode() !== 200) {
-      Logger.log(`Error fetching ${endpoint}: ${response.getContentText()}`);
-      return null;
+        const statusCode = response.getResponseCode();
+
+        // Success
+        if (statusCode === 200) {
+          return JSON.parse(response.getContentText());
+        }
+
+        // Retry on 504, 502, or 503
+        if ((statusCode === 504 || statusCode === 502 || statusCode === 503) && attempt < retries) {
+          const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+          Logger.log(`${statusCode} error on ${endpoint} (page ${params.page || 'N/A'}), attempt ${attempt + 1}/${retries + 1}. Waiting ${waitTime}ms...`);
+          Utilities.sleep(waitTime);
+          continue;
+        }
+
+        // Other errors
+        Logger.log(`Error fetching ${endpoint}: ${response.getContentText()}`);
+        return null;
+      } catch (e) {
+        if (attempt < retries) {
+          const waitTime = Math.pow(2, attempt) * 1000;
+          Logger.log(`Exception on ${endpoint}, attempt ${attempt + 1}/${retries + 1}: ${e.message}. Waiting ${waitTime}ms...`);
+          Utilities.sleep(waitTime);
+          continue;
+        }
+        Logger.log(`Failed after ${retries + 1} attempts: ${e.message}`);
+        return null;
+      }
     }
-    return JSON.parse(response.getContentText());
+
+    return null;
   };
 
   // WooCommerce product data
@@ -116,11 +148,25 @@ function WooCommerceOrdersRetrieve() {
   }
 
   let orders = [];
-  let page = 1;
+
+  // Get last processed page for resuming after errors
+  let lastProcessedPage = parseInt(PropertiesService.getScriptProperties().getProperty('LAST_PROCESSED_PAGE') || '0');
+  let page = lastProcessedPage + 1;
+
   const perPage = 100;
+  const startTime = new Date().getTime();
+  const maxRuntime = options.max_runtime_minutes * 60 * 1000;
+
+  Logger.log(`Starting from page ${page}${lastProcessedPage > 0 ? ' (resuming from checkpoint)' : ''}`);
 
   // Fetch paginated orders
   while (true) {
+    // Check if we're approaching timeout
+    if (new Date().getTime() - startTime > maxRuntime) {
+      Logger.log(`Approaching timeout (${options.max_runtime_minutes} minutes), stopping at page ${page}`);
+      break;
+    }
+
     const params = {
       per_page: perPage,
       page: page,
@@ -132,12 +178,31 @@ function WooCommerceOrdersRetrieve() {
     }
 
     const data = fetchWooCommerceAPI('orders', params);
-    if (!data || data.length === 0) break; // No more orders or API error
+
+    if (!data) {
+      Logger.log(`Failed to fetch page ${page} after retries. Will resume from this page on next run.`);
+      break; // Exit loop, will resume from this page next time
+    }
+
+    if (data.length === 0) {
+      Logger.log(`No more orders found at page ${page}`);
+      break; // No more orders
+    }
 
     orders = orders.concat(data);
-    page++;
+    Logger.log(`Fetched page ${page}: ${data.length} orders (total so far: ${orders.length})`);
 
-    if (options.test_mode) break; // Stop after first page if test mode
+    // Save checkpoint after successful page fetch
+    PropertiesService.getScriptProperties().setProperty('LAST_PROCESSED_PAGE', page.toString());
+
+    // Check if we've reached the max orders limit
+    if (options.max_orders_per_run > 0 && orders.length >= options.max_orders_per_run) {
+      orders = orders.slice(0, options.max_orders_per_run); // Trim to exact limit
+      Logger.log(`Reached max orders limit: ${options.max_orders_per_run}`);
+      break;
+    }
+
+    page++;
   }
 
   if (orders.length === 0) {
@@ -416,9 +481,18 @@ function WooCommerceOrdersRetrieve() {
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
   }
 
-  // Save newest date to fetch only new orders next time
-  const newestDate = new Date(orders[orders.length - 1].date_modified);
-  PropertiesService.getScriptProperties().setProperty('SETTINGS_LAST_SYNC', newestDate.toISOString());
+  // Only update sync date and clear checkpoint if we completed successfully
+  if (orders.length > 0 && (options.max_orders_per_run === 0 || orders.length < options.max_orders_per_run)) {
+    // Save newest date to fetch only new orders next time
+    const newestDate = new Date(orders[orders.length - 1].date_modified);
+    PropertiesService.getScriptProperties().setProperty('SETTINGS_LAST_SYNC', newestDate.toISOString());
 
-  Logger.log('Orders fetched: ' + orders.length + (options.test_mode ? ' (test mode)' : ''));
+    // Clear checkpoint since we completed successfully
+    PropertiesService.getScriptProperties().deleteProperty('LAST_PROCESSED_PAGE');
+    Logger.log('Sync completed successfully. Checkpoint cleared.');
+  } else {
+    Logger.log('Partial sync - checkpoint preserved for next run.');
+  }
+
+  Logger.log('Orders fetched: ' + orders.length + (options.max_orders_per_run > 0 ? ' (limit: ' + options.max_orders_per_run + ')' : ' (unlimited)'));
 }
