@@ -1,10 +1,14 @@
 # WordPress Maintenance
 
 > [!NOTE]  
-> Last update: 2025-03-28
+> Last update: 2025-11-18
 
 ```.sh
 # Settings
+domain="website.com"
+domain_root_path="/home/$domain/public_html"
+wordpress_username="username"
+
 wordpress_sites_root_path="/home"
 wordpress_site_subdir="public_html"
 ```
@@ -14,6 +18,46 @@ wordpress_site_subdir="public_html"
 [Recommended installation](https://make.wordpress.org/cli/handbook/guides/installing/#recommended-installation)
 
 ### WP-CLI maintenance commands
+
+```.sh
+# Change current directory
+cd "$domain_root_path"
+
+
+# Activate woocommerce plugin
+# wp plugin activate woocommerce
+
+# WooCommerce cache
+wp cache flush
+
+# Redis
+redis-cli FLUSHALL
+
+# Clear transients
+wp wc tool run clear_transients --user=$wordpress_username
+
+# Clear expired transients
+wp wc tool run clear_expired_transients --user=$wordpress_username
+
+# Regenerates posts data from HPOS tables
+# wp wc hpos sync
+# nohup wp wc hpos sync > /tmp/hpos_sync.log 2>&1 &
+
+# wp wc hpos status
+# wp wc hpos verify_data
+# wp wc hpos cleanup all
+
+# Regenerate product lookup tables
+wp wc tool run regenerate_product_lookup_tables --user=$wordpress_username
+
+# Clear analytics cache
+wp wc tool run clear_woocommerce_analytics_cache --user=$wordpress_username
+
+# After clearing the analytics cache, reimport historical data for Analytics to show correct numbers: WordPress → Analytics → Settings → Import historical data
+
+# Clear template cache
+wp wc tool run clear_template_cache --user=$wordpress_username
+```
 
 ```.sh
 for site in "$wordpress_sites_root_path"/*; do
@@ -46,4 +90,9 @@ for site in "$wordpress_sites_root_path"/*; do
     echo "Skipping $site: $wordpress_site_subdir folder not found."
   fi
 done
+```
+
+```.sh
+# Find and replace
+# wp search-replace 'https://oldwebsite.com' 'https://website.com' --dry-run
 ```

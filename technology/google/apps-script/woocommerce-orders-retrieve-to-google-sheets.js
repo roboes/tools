@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-11-17
+// Last update: 2025-11-18
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Gmail API
