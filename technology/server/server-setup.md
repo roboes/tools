@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-10-24
+> Last update: 2025-11-25
 
 ```.sh
 # Settings
@@ -507,7 +507,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 - `Backup description`: `Backup Weekly`.
 - `Servers to save`: `All virtual servers`.
 - `Features to backup`: `Backup all features` (if the backup fails with an error about missing logrotate config, uncheck `Logrotate configuration for log file`).
-- `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
+- `Backup destinations`: `Local file or directory` - `/backups/backup-%Y-%m-%d/`.
 - `Delete old backups`: `Yes, after 30 days`.
 - `Additional destination options`:
   - Enable `Do strftime-style time substitutions on file or directory name`.
@@ -798,6 +798,9 @@ server {
         add_header Cache-Control "public";
     }
 
+    location ^~ /wp-content/uploads/ {
+        autoindex off;
+    }
 
     # Error Handling
     error_page 500 502 503 504 @no_cache;

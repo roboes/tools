@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-11-18
+// Last update: 2025-11-25
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Gmail API
@@ -23,7 +23,7 @@ function WooCommerceOrdersRetrieve() {
     woocommerce_consumer_secret: 'cs_xxxxxxxx',
     google_sheets_id: '1ABC',
     google_sheets_tab_name: 'sales_orders_articles',
-    max_orders_per_run: 2500, // Set to 0 for unlimited
+    max_orders_per_run: 1000, // Set to 0 for unlimited
     last_fetch_date_reset: false,
     max_runtime_minutes: 5, // Maximum runtime before stopping
   };
@@ -153,7 +153,7 @@ function WooCommerceOrdersRetrieve() {
   let lastProcessedPage = parseInt(PropertiesService.getScriptProperties().getProperty('LAST_PROCESSED_PAGE') || '0');
   let page = lastProcessedPage + 1;
 
-  const perPage = 100;
+  const perPage = 50;
   const startTime = new Date().getTime();
   const maxRuntime = options.max_runtime_minutes * 60 * 1000;
 
