@@ -1,6 +1,7 @@
 # R Styling
 
-> [!NOTE] Last update: 2025-09-14
+> [!NOTE]  
+> Last update: 2025-09-14
 
 ## R commands
 

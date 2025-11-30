@@ -1,6 +1,6 @@
 # Immich Installation
 
-> [!NOTE]
+> [!NOTE]  
 > Last update: 2025-10-29
 
 ```.sh
@@ -250,21 +250,15 @@ Cloudflare → `Zero Trust`.
 
 #### Service Token
 
-`Access` → `Service auth` → `Create Service Token`.
-`Service token name`: `Immich Mobile Access`.
-`Service Token Duration`: `Non-expiring`.
+`Access` → `Service auth` → `Create Service Token`. `Service token name`: `Immich Mobile Access`. `Service Token Duration`: `Non-expiring`.
 
 #### Policy
 
 `Access` → `Policies` → `Add a policy`.
 
-`Policy name`: `Immich Mobile App`.
-`Action`: `Bypass`.
-`Session duration`: `Same as application session timeout`.
+`Policy name`: `Immich Mobile App`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
 
-`Add rules` → `Include`.
-`Selector`: `Service Token`.
-`Value`: `Immich Mobile Access`.
+`Add rules` → `Include`. `Selector`: `Service Token`. `Value`: `Immich Mobile Access`.
 
 Then, add the newly created policy to your Immich Cloudflare Zero Trust application.
 

@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-09-28
+# Last update: 2025-11-04
 
 
 # Start Bash (Unix Shell)
@@ -52,13 +52,16 @@ fi
 
 
 ## Prettier
-prettier --write --print-width 220 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
+prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
 
 ## PHP
 php-cs-fixer fix . --rules=@PSR12
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;
+
+## codespell
+codespell . --ignore-words-list=alle,als,bootup,datas,deine,dokument,doubleclick,fo,ges,ist,itens,nax,oder,produkt,referers,ressource,ser,sie,tage,termine # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
 
 ## pre-commit
 pre-commit run --all-files
@@ -76,7 +79,7 @@ if find . -type f -name "*.py" | grep -q "/."; then
 
     # Check if "janitor" is in requirements.txt and replace it with pyjanitor==0.30.0
     if grep -q "janitor" "requirements.txt"; then
-        sed -i '/janitor/c\pyjanitor==0.31.0' requirements.txt
+        sed -i '/janitor/c\pyjanitor==0.32.1' requirements.txt
 		pre-commit run --files "./requirements.txt"
     fi
 

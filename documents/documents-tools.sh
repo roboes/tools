@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2025-07-08
+# Last update: 2025-11-23
 
 
 # Start Bash (Unix Shell)
@@ -72,7 +72,7 @@ gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -sOUTPUTFILE="./output.pdf" -dBATCH "./fi
 
 
 # Extract embedded images from a PDF
-pdfimages -raw "./input.pdf" "./output"
+pdfimages -all -p -print-filenames "./input.pdf" "./output"
 
 
 # Compare PDFs

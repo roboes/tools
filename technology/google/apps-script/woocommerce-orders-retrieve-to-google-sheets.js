@@ -1,5 +1,5 @@
 // WooCommerce - WooCommerce Orders Retrieve to Google Sheets
-// Last update: 2025-09-30
+// Last update: 2025-11-25
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Gmail API
@@ -18,56 +18,88 @@
 
 function WooCommerceOrdersRetrieve() {
   const options = {
-    woocommerce_site_url: "https://website.com",
-    woocommerce_consumer_key: "ck_xxxxxxxx",
-    woocommerce_consumer_secret: "cs_xxxxxxxx",
-    google_sheets_id: "1ABC",
-    google_sheets_tab_name: "sales_orders_articles",
-    test_mode: false,
+    woocommerce_site_url: 'https://website.com',
+    woocommerce_consumer_key: 'ck_xxxxxxxx',
+    woocommerce_consumer_secret: 'cs_xxxxxxxx',
+    google_sheets_id: '1ABC',
+    google_sheets_tab_name: 'sales_orders_articles',
+    max_orders_per_run: 1000, // Set to 0 for unlimited
     last_fetch_date_reset: false,
+    max_runtime_minutes: 5, // Maximum runtime before stopping
   };
 
   // Payment method mapping
   const paymentMethodMap = {
-    "direct-debit": "Direct Bank Transfer",
-    bacs: "Direct Bank Transfer",
-    paypal: "PayPal",
-    "ppcp-gateway": "PayPal",
-    stripe_cc: "Stripe",
+    'direct-debit': 'Direct Bank Transfer',
+    bacs: 'Direct Bank Transfer',
+    paypal: 'PayPal',
+    'ppcp-gateway': 'PayPal',
+    stripe_cc: 'Stripe',
   };
 
-  if (options.last_fetch_date_reset) PropertiesService.getScriptProperties().deleteProperty("SETTINGS_LAST_SYNC");
+  if (options.last_fetch_date_reset) {
+    PropertiesService.getScriptProperties().deleteProperty('SETTINGS_LAST_SYNC');
+    PropertiesService.getScriptProperties().deleteProperty('LAST_PROCESSED_PAGE');
+  }
 
   // Get last fetch date to fetch only new orders
-  let lastFetchDate = PropertiesService.getScriptProperties().getProperty("SETTINGS_LAST_SYNC");
-  if (lastFetchDate) lastFetchDate = lastFetchDate.slice(0, lastFetchDate.lastIndexOf(".")) + "Z";
-  Logger.log("The last imported modified date is: " + lastFetchDate);
+  let lastFetchDate = PropertiesService.getScriptProperties().getProperty('SETTINGS_LAST_SYNC');
+  if (lastFetchDate) lastFetchDate = lastFetchDate.slice(0, lastFetchDate.lastIndexOf('.')) + 'Z';
+  Logger.log('The last imported modified date is: ' + lastFetchDate);
 
-  // Reusable API fetch function
-  const fetchWooCommerceAPI = (endpoint, params = {}) => {
-    let url = options.woocommerce_site_url + "/wp-json/wc/v3/" + endpoint;
+  // Reusable API fetch function with retry logic
+  const fetchWooCommerceAPI = (endpoint, params = {}, retries = 3) => {
+    let url = options.woocommerce_site_url + '/wp-json/wc/v3/' + endpoint;
     const queryString = Object.keys(params)
-      .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(params[key]))
-      .join("&");
+      .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+      .join('&');
 
     if (queryString) {
-      url += "?" + queryString;
+      url += '?' + queryString;
     }
 
-    const response = UrlFetchApp.fetch(url, {
-      method: "get",
-      headers: {
-        Authorization: "Basic " + Utilities.base64Encode(options.woocommerce_consumer_key + ":" + options.woocommerce_consumer_secret),
-        "X-App-Name": "woocommerce-orders-retrieve-to-google-sheets",
-      },
-      muteHttpExceptions: true,
-    });
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = UrlFetchApp.fetch(url, {
+          method: 'get',
+          headers: {
+            Authorization: 'Basic ' + Utilities.base64Encode(options.woocommerce_consumer_key + ':' + options.woocommerce_consumer_secret),
+            'X-App-Name': 'woocommerce-orders-retrieve-to-google-sheets',
+          },
+          muteHttpExceptions: true,
+        });
 
-    if (response.getResponseCode() !== 200) {
-      Logger.log(`Error fetching ${endpoint}: ${response.getContentText()}`);
-      return null;
+        const statusCode = response.getResponseCode();
+
+        // Success
+        if (statusCode === 200) {
+          return JSON.parse(response.getContentText());
+        }
+
+        // Retry on 504, 502, or 503
+        if ((statusCode === 504 || statusCode === 502 || statusCode === 503) && attempt < retries) {
+          const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+          Logger.log(`${statusCode} error on ${endpoint} (page ${params.page || 'N/A'}), attempt ${attempt + 1}/${retries + 1}. Waiting ${waitTime}ms...`);
+          Utilities.sleep(waitTime);
+          continue;
+        }
+
+        // Other errors
+        Logger.log(`Error fetching ${endpoint}: ${response.getContentText()}`);
+        return null;
+      } catch (e) {
+        if (attempt < retries) {
+          const waitTime = Math.pow(2, attempt) * 1000;
+          Logger.log(`Exception on ${endpoint}, attempt ${attempt + 1}/${retries + 1}: ${e.message}. Waiting ${waitTime}ms...`);
+          Utilities.sleep(waitTime);
+          continue;
+        }
+        Logger.log(`Failed after ${retries + 1} attempts: ${e.message}`);
+        return null;
+      }
     }
-    return JSON.parse(response.getContentText());
+
+    return null;
   };
 
   // WooCommerce product data
@@ -75,6 +107,10 @@ function WooCommerceOrdersRetrieve() {
 
   // Fetch product data
   const getProductCategories = (productId) => {
+    if (!productId || isNaN(productId) || Number(productId) === 0) {
+      // Skip invalid or non-product line items
+      return [];
+    }
     if (productCache[productId]) {
       return productCache[productId];
     }
@@ -92,7 +128,7 @@ function WooCommerceOrdersRetrieve() {
   };
 
   // WooCommerce tax rates
-  const taxRatesData = fetchWooCommerceAPI("taxes", { per_page: 100 });
+  const taxRatesData = fetchWooCommerceAPI('taxes', { per_page: 100 });
   const woocommerceTaxRates = {};
   if (taxRatesData) {
     taxRatesData.forEach((rate) => {
@@ -101,7 +137,7 @@ function WooCommerceOrdersRetrieve() {
   }
 
   // WooCommerce shipping methods
-  const shippingMethodsData = fetchWooCommerceAPI("shipping_methods", {
+  const shippingMethodsData = fetchWooCommerceAPI('shipping_methods', {
     per_page: 100,
   });
   const woocommerceShippingMethods = {};
@@ -112,32 +148,65 @@ function WooCommerceOrdersRetrieve() {
   }
 
   let orders = [];
-  let page = 1;
-  const perPage = 100;
+
+  // Get last processed page for resuming after errors
+  let lastProcessedPage = parseInt(PropertiesService.getScriptProperties().getProperty('LAST_PROCESSED_PAGE') || '0');
+  let page = lastProcessedPage + 1;
+
+  const perPage = 50;
+  const startTime = new Date().getTime();
+  const maxRuntime = options.max_runtime_minutes * 60 * 1000;
+
+  Logger.log(`Starting from page ${page}${lastProcessedPage > 0 ? ' (resuming from checkpoint)' : ''}`);
 
   // Fetch paginated orders
   while (true) {
+    // Check if we're approaching timeout
+    if (new Date().getTime() - startTime > maxRuntime) {
+      Logger.log(`Approaching timeout (${options.max_runtime_minutes} minutes), stopping at page ${page}`);
+      break;
+    }
+
     const params = {
       per_page: perPage,
       page: page,
-      orderby: "date",
-      order: "asc",
+      orderby: 'date',
+      order: 'asc',
     };
     if (lastFetchDate) {
       params.modified_after = lastFetchDate;
     }
 
-    const data = fetchWooCommerceAPI("orders", params);
-    if (!data || data.length === 0) break; // No more orders or API error
+    const data = fetchWooCommerceAPI('orders', params);
+
+    if (!data) {
+      Logger.log(`Failed to fetch page ${page} after retries. Will resume from this page on next run.`);
+      break; // Exit loop, will resume from this page next time
+    }
+
+    if (data.length === 0) {
+      Logger.log(`No more orders found at page ${page}`);
+      break; // No more orders
+    }
 
     orders = orders.concat(data);
-    page++;
+    Logger.log(`Fetched page ${page}: ${data.length} orders (total so far: ${orders.length})`);
 
-    if (options.test_mode) break; // Stop after first page if test mode
+    // Save checkpoint after successful page fetch
+    PropertiesService.getScriptProperties().setProperty('LAST_PROCESSED_PAGE', page.toString());
+
+    // Check if we've reached the max orders limit
+    if (options.max_orders_per_run > 0 && orders.length >= options.max_orders_per_run) {
+      orders = orders.slice(0, options.max_orders_per_run); // Trim to exact limit
+      Logger.log(`Reached max orders limit: ${options.max_orders_per_run}`);
+      break;
+    }
+
+    page++;
   }
 
   if (orders.length === 0) {
-    Logger.log("No new orders found.");
+    Logger.log('No new orders found.');
     return;
   }
 
@@ -148,38 +217,38 @@ function WooCommerceOrdersRetrieve() {
     sheet = googleSpreadsheet.getSheetByName(options.google_sheets_tab_name);
     if (!sheet) sheet = googleSpreadsheet.insertSheet(options.google_sheets_tab_name);
   } else {
-    throw new Error("Google Sheets ID not provided. Script cannot continue.");
+    throw new Error('Google Sheets ID not provided. Script cannot continue.');
   }
 
   // If sheet is empty, add headers
   if (sheet.getLastRow() === 0) {
     const headers = [
-      "source_system",
-      "order_id",
+      'source_system',
+      'order_id',
       // "parent_id",
       // "number",
       // "order_key",
-      "created_via",
+      'created_via',
       // "version",
-      "status",
-      "date_created",
-      "date_created_gmt",
-      "date_modified",
-      "date_modified_gmt",
-      "date_paid",
-      "date_paid_gmt",
-      "date_completed",
-      "date_completed_gmt",
-      "currency",
-      "prices_include_tax",
-      "order_attribution_origin",
-      "order_attribution_device_type",
-      "customer_id",
+      'status',
+      'date_created',
+      'date_created_gmt',
+      'date_modified',
+      'date_modified_gmt',
+      'date_paid',
+      'date_paid_gmt',
+      'date_completed',
+      'date_completed_gmt',
+      'currency',
+      'prices_include_tax',
+      'order_attribution_origin',
+      'order_attribution_device_type',
+      'customer_id',
       // "customer_ip_address",
-      "customer_user_agent",
-      "customer_note",
-      "payment_method",
-      "payment_method_title",
+      'customer_user_agent',
+      'customer_note',
+      'payment_method',
+      'payment_method_title',
       // "transaction_id",
       // "cart_hash",
       // "meta_data",
@@ -188,55 +257,55 @@ function WooCommerceOrdersRetrieve() {
       // "fee_lines",
       // "coupon_lines",
       // "refunds",
-      "language_code",
-      "billing_first_name",
-      "billing_last_name",
-      "billing_company",
-      "billing_address_1",
-      "billing_address_2",
-      "billing_city",
-      "billing_state",
-      "billing_postcode",
-      "billing_country",
-      "billing_email",
-      "billing_phone",
-      "shipping_first_name",
-      "shipping_last_name",
-      "shipping_company",
-      "shipping_address_1",
-      "shipping_address_2",
-      "shipping_city",
-      "shipping_state",
-      "shipping_postcode",
-      "shipping_country",
-      "shipping_methods",
-      "discount_amount_net",
-      "discount_amount_tax",
-      "discount_amount_gross",
-      "shipping_amount_net",
-      "shipping_amount_tax",
-      "shipping_amount_gross",
-      "items_amount_net",
-      "items_amount_tax",
-      "items_amount_gross",
-      "transaction_fee",
-      "refund_amount_net",
-      "refund_amount_tax",
-      "refund_amount_gross",
-      "line_item_id",
-      "product_category_id",
-      "product_category_name",
-      "product_id",
-      "product_name",
-      "sku",
-      "variation_id",
-      "variation_name",
-      "tax_class",
-      "quantity",
-      "price_gross",
-      "line_item_amount_net",
-      "line_item_amount_tax",
-      "line_item_amount_gross",
+      'language_code',
+      'billing_first_name',
+      'billing_last_name',
+      'billing_company',
+      'billing_address_1',
+      'billing_address_2',
+      'billing_city',
+      'billing_state',
+      'billing_postcode',
+      'billing_country',
+      'billing_email',
+      'billing_phone',
+      'shipping_first_name',
+      'shipping_last_name',
+      'shipping_company',
+      'shipping_address_1',
+      'shipping_address_2',
+      'shipping_city',
+      'shipping_state',
+      'shipping_postcode',
+      'shipping_country',
+      'shipping_methods',
+      'discount_amount_net',
+      'discount_amount_tax',
+      'discount_amount_gross',
+      'shipping_amount_net',
+      'shipping_amount_tax',
+      'shipping_amount_gross',
+      'items_amount_net',
+      'items_amount_tax',
+      'items_amount_gross',
+      'transaction_fee',
+      'refund_amount_net',
+      'refund_amount_tax',
+      'refund_amount_gross',
+      'line_item_id',
+      'product_category_id',
+      'product_category_name',
+      'product_id',
+      'product_name',
+      'sku',
+      'variation_id',
+      'variation_name',
+      'tax_class',
+      'quantity',
+      'price_gross',
+      'line_item_amount_net',
+      'line_item_amount_tax',
+      'line_item_amount_gross',
       // "taxes",
       // "line_meta_data",
     ];
@@ -246,7 +315,7 @@ function WooCommerceOrdersRetrieve() {
   // Build index of existing order_ids in sheet
   const existing = {};
   if (sheet.getLastRow() > 1) {
-    const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues(); // col A = order_id
+    const values = sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues(); // col B = order_id
     values.forEach((row, i) => {
       if (row[0]) {
         if (!existing[row[0]]) existing[row[0]] = [];
@@ -256,17 +325,17 @@ function WooCommerceOrdersRetrieve() {
   }
 
   const fieldMap = [
-    (order) => "WooCommerce",
+    (order) => 'WooCommerce',
     (order) => order.id,
     // order => order.parent_id,
     // order => order.number,
     // order => order.order_key,
-    (order) => (order.created_via ? order.created_via.charAt(0).toUpperCase() + order.created_via.slice(1) : ""),
+    (order) => (order.created_via ? order.created_via.charAt(0).toUpperCase() + order.created_via.slice(1) : ''),
     // order => order.version,
     (order) => {
-      let status = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "";
-      if (status === "Completed" && order.refunds && order.refunds.some((r) => parseFloat(r.total || 0) !== 0)) {
-        status = "Refunded Partially";
+      let status = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : '';
+      if (status === 'Completed' && order.refunds && order.refunds.some((r) => parseFloat(r.total || 0) !== 0)) {
+        status = 'Refunded Partially';
       }
       return status;
     },
@@ -281,14 +350,14 @@ function WooCommerceOrdersRetrieve() {
     (order) => order.currency,
     (order) => order.prices_include_tax,
     (order) => {
-      let source = (order.meta_data?.find((m) => m.key === "_wc_order_attribution_source_type") || {}).value || "";
-      if (source === "typein") {
-        return "Direct";
+      let source = (order.meta_data?.find((m) => m.key === '_wc_order_attribution_source_type') || {}).value || '';
+      if (source === 'typein') {
+        return 'Direct';
       }
       return source.charAt(0).toUpperCase() + source.slice(1);
     },
-    (order) => (order.meta_data?.find((m) => m.key === "_wc_order_attribution_device_type") || {}).value || "",
-    (order) => (order.customer_id === 0 ? "" : order.customer_id),
+    (order) => (order.meta_data?.find((m) => m.key === '_wc_order_attribution_device_type') || {}).value || '',
+    (order) => (order.customer_id === 0 ? '' : order.customer_id),
     // order => order.customer_ip_address,
     (order) => order.customer_user_agent,
     (order) => order.customer_note,
@@ -302,7 +371,7 @@ function WooCommerceOrdersRetrieve() {
     // order => JSON.stringify(order.fee_lines || []),
     // order => JSON.stringify(order.coupon_lines || []),
     // order => JSON.stringify(order.refunds || []),
-    (order) => order.lang || "",
+    (order) => order.lang || '',
     (order) => order.billing.first_name,
     (order) => order.billing.last_name,
     (order) => order.billing.company,
@@ -312,7 +381,7 @@ function WooCommerceOrdersRetrieve() {
     (order) => order.billing.state,
     (order) => order.billing.postcode,
     (order) => order.billing.country,
-    (order) => (order.billing.email ? order.billing.email.toLowerCase() : ""),
+    (order) => (order.billing.email ? order.billing.email.toLowerCase() : ''),
     (order) => order.billing.phone,
     (order) => order.shipping.first_name,
     (order) => order.shipping.last_name,
@@ -323,7 +392,7 @@ function WooCommerceOrdersRetrieve() {
     (order) => order.shipping.state,
     (order) => order.shipping.postcode,
     (order) => order.shipping.country,
-    (order) => (order.shipping_lines && order.shipping_lines.length > 0 ? order.shipping_lines.map((sl) => woocommerceShippingMethods[sl.method_id] || sl.method_title).join(", ") : ""),
+    (order) => (order.shipping_lines && order.shipping_lines.length > 0 ? order.shipping_lines.map((sl) => woocommerceShippingMethods[sl.method_id] || sl.method_title).join(', ') : ''),
     (order) => order.discount_total,
     (order) => order.discount_tax,
     (order) => parseFloat(order.discount_total || 0) + parseFloat(order.discount_tax || 0),
@@ -334,8 +403,8 @@ function WooCommerceOrdersRetrieve() {
     (order) => order.line_items.reduce((sum, item) => sum + parseFloat(item.total_tax || 0), 0),
     (order) => order.line_items.reduce((sum, item) => sum + parseFloat(item.total || 0) + parseFloat(item.total_tax || 0), 0),
     (order) => {
-      const paypalFee = order.meta_data ? order.meta_data.find((m) => m.key === "PayPal Transaction Fee") : null;
-      const stripeFee = order.meta_data ? order.meta_data.find((m) => m.key === "_stripe_fee") : null;
+      const paypalFee = order.meta_data ? order.meta_data.find((m) => m.key === 'PayPal Transaction Fee') : null;
+      const stripeFee = order.meta_data ? order.meta_data.find((m) => m.key === '_stripe_fee') : null;
       return parseFloat(paypalFee?.value || stripeFee?.value || 0);
     },
     (order) => (order.refunds && order.refunds.length > 0 ? order.refunds.reduce((sum, r) => sum + Math.abs(parseFloat(r.total || 0)), 0) : 0),
@@ -345,11 +414,11 @@ function WooCommerceOrdersRetrieve() {
     (order, item) =>
       getProductCategories(item.product_id)
         .map((c) => c.id)
-        .join(", "),
+        .join(', '),
     (order, item) =>
       getProductCategories(item.product_id)
         .map((c) => c.name)
-        .join(", "),
+        .join(', '),
     (order, item) => item.product_id,
     (order, item) => item.name,
     (order, item) => item.sku,
@@ -357,11 +426,11 @@ function WooCommerceOrdersRetrieve() {
     (order, item) =>
       item.meta_data && item.meta_data.length > 0
         ? item.meta_data
-            .filter((m) => m.key && m.key.indexOf("pa_") === 0)
-            .map((m) => m.display_key + ": " + m.display_value)
-            .join(", ")
-        : "",
-    (order, item) => woocommerceTaxRates[item.tax_class] || (item.tax_class === "" ? woocommerceTaxRates["standard"] : ""),
+            .filter((m) => m.key && m.key.indexOf('pa_') === 0)
+            .map((m) => m.display_key + ': ' + m.display_value)
+            .join(', ')
+        : '',
+    (order, item) => woocommerceTaxRates[item.tax_class] || (item.tax_class === '' ? woocommerceTaxRates['standard'] : ''),
     (order, item) => item.quantity,
     (order, item) => parseFloat(item.price || 0).toFixed(2),
     (order, item) => item.total,
@@ -402,7 +471,7 @@ function WooCommerceOrdersRetrieve() {
       if (r >= 1 && r <= sheet.getLastRow()) {
         sheet.deleteRow(r);
       } else {
-        Logger.log("Skipped deleting out-of-bounds row: " + r);
+        Logger.log('Skipped deleting out-of-bounds row: ' + r);
       }
     }
   }
@@ -412,9 +481,18 @@ function WooCommerceOrdersRetrieve() {
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
   }
 
-  // Save newest date to fetch only new orders next time
-  const newestDate = new Date(orders[orders.length - 1].date_modified);
-  PropertiesService.getScriptProperties().setProperty("SETTINGS_LAST_SYNC", newestDate.toISOString());
+  // Only update sync date and clear checkpoint if we completed successfully
+  if (orders.length > 0 && (options.max_orders_per_run === 0 || orders.length < options.max_orders_per_run)) {
+    // Save newest date to fetch only new orders next time
+    const newestDate = new Date(orders[orders.length - 1].date_modified);
+    PropertiesService.getScriptProperties().setProperty('SETTINGS_LAST_SYNC', newestDate.toISOString());
 
-  Logger.log("Orders fetched: " + orders.length + (options.test_mode ? " (test mode)" : ""));
+    // Clear checkpoint since we completed successfully
+    PropertiesService.getScriptProperties().deleteProperty('LAST_PROCESSED_PAGE');
+    Logger.log('Sync completed successfully. Checkpoint cleared.');
+  } else {
+    Logger.log('Partial sync - checkpoint preserved for next run.');
+  }
+
+  Logger.log('Orders fetched: ' + orders.length + (options.max_orders_per_run > 0 ? ' (limit: ' + options.max_orders_per_run + ')' : ' (unlimited)'));
 }

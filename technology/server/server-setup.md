@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
-> [!NOTE]
-> Last update: 2025-10-24
+> [!NOTE]  
+> Last update: 2025-11-25
 
 ```.sh
 # Settings
@@ -186,8 +186,7 @@ chmod 700 /root/.ssh
 chmod 600 /root/.ssh/authorized_keys
 ```
 
-Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
-PuTTYgen can convert the RSA private key to `.ppk`.
+Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed. PuTTYgen can convert the RSA private key to `.ppk`.
 
 ```.sh
 # Copy SSH key in Windows Subsystem for Linux (WSL)
@@ -273,34 +272,19 @@ sudo systemctl status cloudflared
 
 `Access` → `Policies` → `Add a policy`.
 
-`Policy name`: `ACME Challenge Passthrough`.
-`Action`: `Bypass`.
-`Session duration`: `Same as application session timeout`.
+`Policy name`: `ACME Challenge Passthrough`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
 
-`Add rules` → `Include`.
-`Selector`: `Everyone`.
+`Add rules` → `Include`. `Selector`: `Everyone`.
 
 ##### Applications
 
 `Access` → `Applications` → `Add an application` → `Self-hosted`
 
-1. SSH Access
-   `Application name`: `SSH Access`.
-   `Session Duration`: `24 hours`.
-   `Public hostname`: `ssh.website.com`.
-   `Access policies`: `Select existing policies` or `Create new policy`.
+1. SSH Access `Application name`: `SSH Access`. `Session Duration`: `24 hours`. `Public hostname`: `ssh.website.com`. `Access policies`: `Select existing policies` or `Create new policy`.
 
-2. Virtualmin Access
-   `Application name`: `Virtualmin Access`.
-   `Session Duration`: `2 weeks`.
-   `Public hostname`: `virtualmin.website.com`.
-   `Access policies`: `Select existing policies` or `Create new policy`.
+2. Virtualmin Access `Application name`: `Virtualmin Access`. `Session Duration`: `2 weeks`. `Public hostname`: `virtualmin.website.com`. `Access policies`: `Select existing policies` or `Create new policy`.
 
-3. website.com ACME Challenge Passthrough
-   `Application name`: `website.com ACME Challenge Passthrough`.
-   `Session Duration`: `No duration, expires immediately`.
-   `Public hostname`: `website.com/.well-known/acme-challenge/*`.
-   `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
+3. website.com ACME Challenge Passthrough `Application name`: `website.com ACME Challenge Passthrough`. `Session Duration`: `No duration, expires immediately`. `Public hostname`: `website.com/.well-known/acme-challenge/*`. `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
 
 ##### Webmin
 
@@ -523,7 +507,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 - `Backup description`: `Backup Weekly`.
 - `Servers to save`: `All virtual servers`.
 - `Features to backup`: `Backup all features` (if the backup fails with an error about missing logrotate config, uncheck `Logrotate configuration for log file`).
-- `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
+- `Backup destinations`: `Local file or directory` - `/backups/backup-%Y-%m-%d/`.
 - `Delete old backups`: `Yes, after 30 days`.
 - `Additional destination options`:
   - Enable `Do strftime-style time substitutions on file or directory name`.
@@ -814,6 +798,9 @@ server {
         add_header Cache-Control "public";
     }
 
+    location ^~ /wp-content/uploads/ {
+        autoindex off;
+    }
 
     # Error Handling
     error_page 500 502 503 504 @no_cache;

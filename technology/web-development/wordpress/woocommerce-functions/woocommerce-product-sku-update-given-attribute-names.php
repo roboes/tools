@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce Function - Update SKUs given product attribute names
-// Last update: 2025-03-02
+// Last update: 2025-11-26
 
 function slug_rename($string, $date_rearrange = false)
 {
@@ -49,11 +49,11 @@ function slug_rename($string, $date_rearrange = false)
 }
 
 
-
+// Requires slug_rename()
 function woocommerce_product_sku_update_given_attribute_names()
 {
     // Query to get all products in "Trainings" category
-    $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => 'trainings-en')));
+    $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => array('trainings-en'))));
     $products = get_posts($args);
 
     foreach ($products as $product_post) {
