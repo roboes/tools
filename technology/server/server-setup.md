@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-11-25
+> Last update: 2025-12-01
 
 ```.sh
 # Settings
@@ -959,23 +959,26 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 ```.txt
 [100000000000000]
+; Settings
 user = $system_user
 group = $system_user
 listen.owner = $system_user
 listen.group = $system_user
-listen.mode = 0660
 listen = /run/php/100000000000000.sock
-pm = dynamic
-pm.max_children = 16
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 8
-pm.max_requests = 500
-pm.process_idle_timeout = 60s
 php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
+
+listen.mode = 0660
+pm = dynamic
+pm.max_children = 40
+pm.start_servers = 12
+pm.min_spare_servers = 8
+pm.max_spare_servers = 25
+pm.max_requests = 4000
+pm.process_idle_timeout = 60s
 php_value[log_errors] = On
+php_value[max_execution_time] = 60
 php_admin_value[display_errors] = Off
 php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT
 php_admin_value[memory_limit] = 256M
