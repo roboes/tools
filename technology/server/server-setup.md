@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-12-01
+> Last update: 2025-12-08
 
 ```.sh
 # Settings
@@ -48,6 +48,8 @@ sudo apt install -y \
   dnsutils \
   git \
   wget \
+  wtmpdb \
+  libpam-wtmpdb \
   python-is-python3 \
   python3-pip \
   python3-venv
@@ -315,6 +317,42 @@ redirect_host=virtualmin.website.com
 ```.sh
 sudo systemctl restart webmin
 ```
+
+#### Login alerts
+
+```.sh
+# Display all recorded login sessions for root user
+sudo wtmpdb last | grep root
+```
+
+##### Grafana
+
+Email alerts for any `root` login attempt (successful or failed) on the server. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+
+`Grafana` > `Alerts & IRM` > `Alerting` > `Manage contact points` > `Create contact point`:
+
+- `Name`: `Email Notifications`.
+- `Integration`: `Email`.
+- `Notification settings`: Enable `Disable resolved message`.
+
+`Grafana` > `Alerts & IRM` > `Alerting` > `Alert rules` > `New alert rule`:
+
+Enter alert rule name:
+
+- `Name`: `Root Login`.
+
+Define query and alert condition:
+
+- Loki query: `count_over_time({job=~"ssh_auth|integrations/node_exporter"} |~ "(?i)(accepted.*root|successful login.*root|ROOT LOGIN|session opened for user root.*tty|failed.*root|authentication failure.*root|invalid user root)" [5m])`.
+- Expressions: `Threshold`: `Input A IS ABOVE 0`.
+
+Set evaluation behavior:
+
+- `Evaluation interval`: `Every 1m`.
+- `Pending period`: `None (0s)`.
+- `Keep firing for`: `None (0s)`.
+- `Alert state if no data or all values are null`: `Normal`.
+- `Alert state if execution error or timeout`: `Alerting`.
 
 #### FirewallD
 
