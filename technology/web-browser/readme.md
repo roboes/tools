@@ -13,11 +13,13 @@
 
 ## uBlock Origin Filters
 
-- AdGuard Tracking Protection
-- AdGuard URL Tracking Protection
-- AdGuard/uBO – Cookie Notices
-- AdGuard – Annoyances
-- uBlock filters – Annoyances
+- Privacy
+  - AdGuard URL Tracking Protection
+- Cookie notices
+  - AdGuard/uBO – Cookie Notices
+- Annoyances
+  - AdGuard – Annoyances
+  - uBlock filters – Annoyances
 
 ## Tampermonkey Scripts
 

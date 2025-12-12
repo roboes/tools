@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-12-08
+> Last update: 2025-12-12
 
 ```.sh
 # Settings
@@ -703,7 +703,7 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com mail.website.com webmail.website.com;
+    server_name website.com www.website.com mail.website.com webmail.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];

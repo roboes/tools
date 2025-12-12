@@ -1,20 +1,20 @@
 ## Windows Package Manager Applications
-# Last update: 2025-07-20
+# Last update: 2025-12-12
 
 
 # Format writing zeros to drive - https://www.lifewire.com/use-the-format-command-to-write-zeros-to-a-hard-drive-2626162
 # format d: /fs:exFAT /p:1
 
 
-# List all installed applications
+# List all installed Windows applications
 # winget list
 
 
-# Find applications
+# Find Windows applications
 # winget list --query="PDFsam"
 # winget search "Apple" --source=msstore
 
-# Install applications
+# Install Windows applications
 winget install --exact --id=Microsoft.PowerShell
 winget install --exact --id Microsoft.WindowsTerminal
 winget install --exact --id=Microsoft.PowerToys
@@ -41,7 +41,7 @@ winget install --exact --id=TheDocumentFoundation.LibreOffice
 winget install --exact --id=LocalSend.LocalSend
 winget install --exact --id=9N93MRMSXBF0 # KDE Connect
 
-# Applications not available on winget
+# Windows applications not available on winget
 # https://freefilesync.org/download.php
 # https://github.com/marktext/marktext/releases
 
@@ -55,8 +55,8 @@ winget install --exact --id=9N93MRMSXBF0 # KDE Connect
 # winget install --exact --id=RProject.Rtools
 # winget install --exact --id=Posit.RStudio
 
-# Update applications
-winget upgrade -h --all --accept-package-agreements
+# Update Windows applications
+winget upgrade --all --accept-package-agreements --silent
 # winget upgrade -h --all --include-unknown
 # winget upgrade --exact --id=GIMP.GIMP
 

@@ -77,9 +77,9 @@ pre-commit run --all-files
 if find . -type f -name "*.py" | grep -q "/."; then
 	pipreqs --encoding utf-8 --force "./"
 
-    # Check if "janitor" is in requirements.txt and replace it with pyjanitor==0.30.0
+    # Check if "janitor" is in requirements.txt and replace it with pyjanitor
     if grep -q "janitor" "requirements.txt"; then
-        sed -i '/janitor/c\pyjanitor==0.32.2' requirements.txt
+        sed -i '/janitor/c\pyjanitor==0.32.3' requirements.txt
 		pre-commit run --files "./requirements.txt"
     fi
 
