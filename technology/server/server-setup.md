@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-12-12
+> Last update: 2025-12-18
 
 ```.sh
 # Settings
@@ -327,15 +327,15 @@ sudo wtmpdb last | grep root
 
 ##### Grafana
 
-Email alerts for any `root` login attempt (successful or failed) on the server. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+Email alerts for any `root` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
 
-`Grafana` > `Alerts & IRM` > `Alerting` > `Manage contact points` > `Create contact point`:
+`Grafana` → `Alerts & IRM` → `Alerting` → `Manage contact points` → `Create contact point`:
 
 - `Name`: `Email Notifications`.
 - `Integration`: `Email`.
 - `Notification settings`: Enable `Disable resolved message`.
 
-`Grafana` > `Alerts & IRM` > `Alerting` > `Alert rules` > `New alert rule`:
+`Grafana` → `Alerts & IRM` → `Alerting` → `Alert rules` → `New alert rule`:
 
 Enter alert rule name:
 
@@ -343,8 +343,27 @@ Enter alert rule name:
 
 Define query and alert condition:
 
-- Loki query: `count_over_time({job=~"ssh_auth|integrations/node_exporter"} |~ "(?i)(accepted.*root|successful login.*root|ROOT LOGIN|session opened for user root.*tty|failed.*root|authentication failure.*root|invalid user root)" [5m])`.
+- Loki query:
+
+```.txt
+sum by (instance, job, log_line) (
+  count_over_time(
+    {job="ssh_auth"}
+    |~ "(?i)(sshd.*(accepted|failed).*for root|pam_unix\\((webmin|login):session\\).*session opened for user root|pam_unix\\(webmin:auth\\).*authentication failure.*user.*root)"
+    !~ "(?i)(sudo:session|systemd-user:session)"
+    | label_format log_line="{{ __line__ }}"
+    [5m]
+  )
+)
+```
+
 - Expressions: `Threshold`: `Input A IS ABOVE 0`.
+
+Add folder and labels:
+
+- `Labels` → `Add labels`:
+  - `Choose key`: `severity`.
+  - `Choose value`: `critical`.
 
 Set evaluation behavior:
 
@@ -353,6 +372,11 @@ Set evaluation behavior:
 - `Keep firing for`: `None (0s)`.
 - `Alert state if no data or all values are null`: `Normal`.
 - `Alert state if execution error or timeout`: `Alerting`.
+
+Configure notification message:
+
+- `Summary (optional)`: `Root Login on {{ $labels.instance }} ({{ $labels.job }})`.
+- `Description (optional)`: `{{ $labels.log_line }}`.
 
 #### FirewallD
 

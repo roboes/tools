@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2025-11-04
+# Last update: 2025-12-16
 
 
 # Start Bash (Unix Shell)
@@ -55,7 +55,7 @@ fi
 prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
 
 ## PHP
-php-cs-fixer fix . --rules=@PSR12
+echo "no" | php-cs-fixer fix . --rules=@PSR12 --using-cache=no
 
 ## XML
 find . -name "*.xml" -exec xmllint --format {} --output {} \;
