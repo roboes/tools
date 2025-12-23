@@ -1,5 +1,5 @@
 ## Pre-commit configuration
-# Last update: 2025-10-20
+# Last update: 2025-12-23
 
 # Save this file to '/.pre-commit-config.yaml'
 
@@ -11,6 +11,7 @@ repos:
         entry: prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 --ignore-unknown
         language: node
         types_or: [javascript, jsx, ts, tsx, json, css, scss, html, markdown, yaml]
+        # exclude: \.(html|jsx?)$
         additional_dependencies:
           - prettier@latest
 

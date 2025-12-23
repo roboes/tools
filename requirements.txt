@@ -1,6 +1,6 @@
 defusedxml==0.7.1
 fit2gpx==1.0.2
-geopandas==1.1.1
+geopandas==1.1.2
 geopy==2.4.1
 gpxpy==1.6.2
 numpy==2.4.0

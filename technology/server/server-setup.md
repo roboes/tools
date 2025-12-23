@@ -436,14 +436,14 @@ Now "Create Virtual Server".
 
 ```.sh
 # Remove older PHP Versions
-php_version_old="8.2"
+php_version_old="8.3"
 sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
 sudo apt autoremove
 sudo apt clean
 ```
 
 ```.sh
-php_version_current="8.3"
+php_version_current="8.4"
 sudo apt install php${php_version_current}-sqlite3
 ```
 
@@ -459,7 +459,7 @@ sudo apt install htop \
 
 ### DNS Configuration
 
-Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS (For the SPF record, change `?all` to `-all`).
 
 When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.com`) to Cloudflare, ensure its Proxy Status is set to `DNS only`. This is crucial for proper mail flow, as mail servers require direct IP connections.
 
@@ -511,7 +511,8 @@ To verify: `Webmin` → `Servers` → `Postfix Mail Server` → `Canonical Mappi
 To diagnose general email sending/receiving issues: Open server's mail log in real-time to monitor activity:
 
 ```.sh
-sudo tail -f /var/log/mail.log
+# sudo tail -f /var/log/mail.log
+journalctl -u postfix -f
 ```
 
 While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.

@@ -18,6 +18,7 @@ sudo apt install curl \
   python3 \
   python-is-python3 \
   python3-pip \
+  python3-virtualenv \
   wget
 
 
