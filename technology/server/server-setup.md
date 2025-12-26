@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-12-18
+> Last update: 2025-12-26
 
 ```.sh
 # Settings
@@ -1027,30 +1027,36 @@ user = $system_user
 group = $system_user
 listen.owner = $system_user
 listen.group = $system_user
+listen.mode = 0660
 listen = /run/php/100000000000000.sock
 php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
 
-listen.mode = 0660
-pm = dynamic
-pm.max_children = 40
-pm.start_servers = 12
-pm.min_spare_servers = 8
-pm.max_spare_servers = 25
-pm.max_requests = 4000
-pm.process_idle_timeout = 60s
+; Logging
 php_value[log_errors] = On
-php_value[max_execution_time] = 60
+php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
 php_admin_value[display_errors] = Off
-php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT
-php_admin_value[memory_limit] = 256M
-php_admin_value[upload_max_filesize] = 10M
-request_terminate_timeout = 30s
-catch_workers_output = yes
 
-; request_slowlog_timeout = 10s
-; slowlog = /home/$domain/logs/php_slow.log
+; Timeouts
+request_terminate_timeout = 60s
+catch_workers_output = yes
+decorate_workers_output = no
+
+; PHP Values
+; php_admin_value[memory_limit] = 200M ; Low-traffic
+php_admin_value[memory_limit] = 350M ; Medium-traffic
+php_admin_value[upload_max_filesize] = 32M
+php_admin_value[post_max_size] = 32M
+php_admin_value[max_input_vars] = 3000
+php_value[max_execution_time] = 60
+
+; Process Management
+pm = ondemand
+; pm.max_children = 3 ; Low-traffic
+pm.max_children = 8 ; Medium-traffic
+pm.max_requests = 500
+pm.process_idle_timeout = 10s
 ```
 
 ```.sh
