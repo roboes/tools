@@ -54,6 +54,8 @@ sudo apt install -y \
   python3-pip \
   python3-venv
 
+# sudo apt install -y composer
+
 # sudo apt install -y \
   # docker.io \
   # docker-compose
@@ -435,16 +437,16 @@ Now "Create Virtual Server".
 [Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
 
 ```.sh
+php_version_current="8.4"
+sudo apt install php${php_version_current}-sqlite3
+```
+
+```.sh
 # Remove older PHP Versions
 php_version_old="8.3"
 sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
 sudo apt autoremove
 sudo apt clean
-```
-
-```.sh
-php_version_current="8.4"
-sudo apt install php${php_version_current}-sqlite3
 ```
 
 ### Packages
@@ -1063,7 +1065,7 @@ pm.process_idle_timeout = 10s
 # touch /home/$domain/logs/php_slow.log
 # chown $system_user:$system_user /home/$domain/logs/php_slow.log
 # chmod 664 /home/$domain/logs/php_slow.log
-# sudo systemctl restart php8.3-fpm
+# sudo systemctl restart php8.4-fpm
 ```
 
 ### SSL Certificate
