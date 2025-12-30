@@ -1,14 +1,14 @@
 # Immich Installation
 
 > [!NOTE]  
-> Last update: 2025-10-29
+> Last update: 2025-12-29
 
 ```.sh
 # Settings
 domain="website.com"
 domain_root_path="/home/$domain"
-subdomain="subdomain"
-system_user="system_user"
+subdomain="photos"
+system_user="website"
 # system_user="www-data:www-data"
 postgres_password=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9')
 ```
@@ -45,6 +45,7 @@ services:
     environment:
       - IUO_UPSTREAM=http://immich-server:2283
       - IUO_TASKS_FILE=/app/config/tasks.yaml
+      - IUO_TIMEOUT=3600
     volumes:
       - ./tasks.yaml:/app/config/tasks.yaml:ro
     depends_on:
@@ -62,6 +63,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
+    environment:
+      - IMMICH_HOST=0.0.0.0
+      - IMMICH_PORT=2283
     # ports:
       # - '127.0.0.1:2283:2283'
     depends_on:
@@ -172,13 +176,6 @@ tasks:
       - gif
       - exr
 
-  # HEIC → JPEG → JXL (lossy)
-  - name: heic2jxl
-    command: magick {{.folder}}/{{.name}}.{{.extension}} -quality 90 {{.folder}}/{{.name}}.jpg && cjxl --lossless_jpeg=0 -q 85 {{.folder}}/{{.name}}.jpg {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}.jpg
-    extensions:
-      - heic
-      - heif
-
   # Lossless optimization for other formats
   - name: caesium-lossless
     command: caesiumclt --keep-dates --exif --quality=0 --output={{.folder}} {{.folder}}/{{.name}}.{{.extension}}
@@ -189,7 +186,7 @@ tasks:
 
   # Video compression with HandBrake
   - name: handbrake-video
-    command: HandBrakeCLI --preset "H.265 MKV 1080p30" -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    command: HandBrakeCLI --preset "Fast 1080p30" --encoder x264 --keep-display-aspect -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
       - 3gpp
@@ -215,6 +212,8 @@ tasks:
     extensions:
       - avif
       - bmp
+      - heic
+      - heif
       - insp
       - jxl
       - psd

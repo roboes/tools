@@ -7,7 +7,7 @@
 # Settings
 domain="website.com"
 domain_root_path="/home/$domain"
-subdomain="subdomain"
+subdomain="photos"
 ```
 
 ```.sh
