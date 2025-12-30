@@ -29,25 +29,25 @@
   if (langAttr.length === 2) {
     language = langAttr;
   } else {
-    language = langAttr.split("-")[0];
+    language = langAttr.split('-')[0];
   }
 
   // Default to "en" if language is not "de" or "en"
-  if (!["de", "en"].includes(language)) {
-    language = "en";
+  if (!['de', 'en'].includes(language)) {
+    language = 'en';
   }
 
   // Show the correct language option
-  const selectElement = document.getElementById("mapSelect");
-  const optionDe = document.querySelector(".language-de");
-  const optionEn = document.querySelector(".language-en");
+  const selectElement = document.getElementById('mapSelect');
+  const optionDe = document.querySelector('.language-de');
+  const optionEn = document.querySelector('.language-en');
 
-  if (language === "de") {
-    optionDe.style.display = "block";
+  if (language === 'de') {
+    optionDe.style.display = 'block';
     optionDe.selected = true;
     optionEn.remove();
   } else {
-    optionEn.style.display = "block";
+    optionEn.style.display = 'block';
     optionEn.selected = true;
     optionDe.remove();
   }
@@ -55,7 +55,7 @@
   function openSelectedMap(url) {
     if (url) {
       // Attempt to open the URL in a new window/tab
-      const newWindow = window.open(url, "_blank");
+      const newWindow = window.open(url, '_blank');
 
       // Check if the new window was successfully opened
       if (newWindow) {

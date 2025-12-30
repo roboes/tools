@@ -257,36 +257,36 @@
       if (langAttr.length === 2) {
         language = langAttr;
       } else {
-        language = langAttr.split("-")[0];
+        language = langAttr.split('-')[0];
       }
 
       // Default to "en" if language is not "de" or "en"
-      if (!["de", "en"].includes(language)) {
-        language = "en";
+      if (!['de', 'en'].includes(language)) {
+        language = 'en';
       }
 
-      if (language === "de") {
-        document.querySelectorAll(".language-de").forEach(function (el) {
-          el.style.display = "block";
+      if (language === 'de') {
+        document.querySelectorAll('.language-de').forEach(function (el) {
+          el.style.display = 'block';
         });
       } else {
-        document.querySelectorAll(".language-en").forEach(function (el) {
-          el.style.display = "block";
+        document.querySelectorAll('.language-en').forEach(function (el) {
+          el.style.display = 'block';
         });
       }
 
       // Add rows
       function addRow() {
         const cellStart = document.querySelector('input[name="cell-start-input"]').cloneNode(true);
-        cellStart.removeAttribute("value");
+        cellStart.removeAttribute('value');
 
         const cellEnd = document.querySelector('input[name="cell-end-input"]').cloneNode(true);
-        cellEnd.removeAttribute("value");
+        cellEnd.removeAttribute('value');
 
         const productInput = document.querySelector('select[name="product-input"]').cloneNode(true);
-        productInput.removeAttribute("value");
+        productInput.removeAttribute('value');
 
-        const tableInput = document.getElementById("table-input");
+        const tableInput = document.getElementById('table-input');
         const row = tableInput.insertRow(-1);
 
         const cellContents = [
@@ -294,7 +294,7 @@
           cellEnd.outerHTML,
           productInput.outerHTML,
           `<input type="date" name="date-input" value="${new Date().toISOString().substring(0, 10)}">`,
-          `<button type="button" onclick="removeRow(this)">${language.includes("language-de") ? "Entfernen" : "Remove"}</button>`,
+          `<button type="button" onclick="removeRow(this)">${language.includes('language-de') ? 'Entfernen' : 'Remove'}</button>`,
         ];
 
         cellContents.forEach((content) => {
@@ -367,7 +367,7 @@
           });
 
           // Check for blank inputs
-          if (productInputs[i].value === "" || dateInputs[i].value === "") {
+          if (productInputs[i].value === '' || dateInputs[i].value === '') {
             isValid = false;
           }
 
@@ -401,49 +401,49 @@
             const row = Math.floor(j / 3);
             const col = j % 3;
             const cell = tableGenerated.rows[row].cells[col];
-            const productText = productInput + "<br>";
+            const productText = productInput + '<br>';
 
             const dateText =
-              "Manufacturing date: " +
-              dateInput.toLocaleDateString("de-DE", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
+              'Manufacturing date: ' +
+              dateInput.toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
               }) +
-              "<br>" +
-              "Expiration date: " +
-              validity.toLocaleDateString("de-DE", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
+              '<br>' +
+              'Expiration date: ' +
+              validity.toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
               });
 
-            let textDescription = "";
+            let textDescription = '';
 
             switch (productInput) {
-              case "Product A":
-                textDescription = "Description A" + "<br>";
+              case 'Product A':
+                textDescription = 'Description A' + '<br>';
                 break;
-              case "Product B":
-                textDescription = "Description B" + "<br>";
+              case 'Product B':
+                textDescription = 'Description B' + '<br>';
                 break;
               default:
                 break;
             }
 
-            if (textDescription !== "") {
-              cell.innerHTML = "<div>" + productText + textDescription + dateText + "</div>";
+            if (textDescription !== '') {
+              cell.innerHTML = '<div>' + productText + textDescription + dateText + '</div>';
             } else {
-              cell.innerHTML = "";
+              cell.innerHTML = '';
             }
           }
         }
 
         // Enable "table-section" section
-        document.querySelector('div[id="table-section"]').style.display = "block";
+        document.querySelector('div[id="table-section"]').style.display = 'block';
 
         // Enable "print-button" section
-        document.querySelector('div[id="print-button"]').style.display = "block";
+        document.querySelector('div[id="print-button"]').style.display = 'block';
 
         // printTable()
       }
@@ -452,17 +452,17 @@
       function cleanTableBody() {
         // Clean table body
         const tableGenerated = document.querySelector('table[id="table-generated"]');
-        const tableGeneratedCells = tableGenerated.querySelectorAll("td");
+        const tableGeneratedCells = tableGenerated.querySelectorAll('td');
 
         for (let i = 0; i < tableGeneratedCells.length; i++) {
-          tableGeneratedCells[i].innerHTML = "";
+          tableGeneratedCells[i].innerHTML = '';
         }
 
         // Disable "table-section" section
-        document.querySelector('div[id="table-section"]').style.display = "none";
+        document.querySelector('div[id="table-section"]').style.display = 'none';
 
         // Disable "print-button" section
-        document.querySelector('div[id="print-button"]').style.display = "none";
+        document.querySelector('div[id="print-button"]').style.display = 'none';
       }
 
       // Print table

@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
-> [!NOTE]
-> Last update: 2025-10-24
+> [!NOTE]  
+> Last update: 2025-12-26
 
 ```.sh
 # Settings
@@ -48,9 +48,13 @@ sudo apt install -y \
   dnsutils \
   git \
   wget \
+  wtmpdb \
+  libpam-wtmpdb \
   python-is-python3 \
   python3-pip \
   python3-venv
+
+# sudo apt install -y composer
 
 # sudo apt install -y \
   # docker.io \
@@ -186,8 +190,7 @@ chmod 700 /root/.ssh
 chmod 600 /root/.ssh/authorized_keys
 ```
 
-Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed.
-PuTTYgen can convert the RSA private key to `.ppk`.
+Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed. PuTTYgen can convert the RSA private key to `.ppk`.
 
 ```.sh
 # Copy SSH key in Windows Subsystem for Linux (WSL)
@@ -273,34 +276,19 @@ sudo systemctl status cloudflared
 
 `Access` → `Policies` → `Add a policy`.
 
-`Policy name`: `ACME Challenge Passthrough`.
-`Action`: `Bypass`.
-`Session duration`: `Same as application session timeout`.
+`Policy name`: `ACME Challenge Passthrough`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
 
-`Add rules` → `Include`.
-`Selector`: `Everyone`.
+`Add rules` → `Include`. `Selector`: `Everyone`.
 
 ##### Applications
 
 `Access` → `Applications` → `Add an application` → `Self-hosted`
 
-1. SSH Access
-   `Application name`: `SSH Access`.
-   `Session Duration`: `24 hours`.
-   `Public hostname`: `ssh.website.com`.
-   `Access policies`: `Select existing policies` or `Create new policy`.
+1. SSH Access `Application name`: `SSH Access`. `Session Duration`: `24 hours`. `Public hostname`: `ssh.website.com`. `Access policies`: `Select existing policies` or `Create new policy`.
 
-2. Virtualmin Access
-   `Application name`: `Virtualmin Access`.
-   `Session Duration`: `2 weeks`.
-   `Public hostname`: `virtualmin.website.com`.
-   `Access policies`: `Select existing policies` or `Create new policy`.
+2. Virtualmin Access `Application name`: `Virtualmin Access`. `Session Duration`: `2 weeks`. `Public hostname`: `virtualmin.website.com`. `Access policies`: `Select existing policies` or `Create new policy`.
 
-3. website.com ACME Challenge Passthrough
-   `Application name`: `website.com ACME Challenge Passthrough`.
-   `Session Duration`: `No duration, expires immediately`.
-   `Public hostname`: `website.com/.well-known/acme-challenge/*`.
-   `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
+3. website.com ACME Challenge Passthrough `Application name`: `website.com ACME Challenge Passthrough`. `Session Duration`: `No duration, expires immediately`. `Public hostname`: `website.com/.well-known/acme-challenge/*`. `Access policies`: `Select existing policies` → `ACME Challenge Passthrough`.
 
 ##### Webmin
 
@@ -331,6 +319,66 @@ redirect_host=virtualmin.website.com
 ```.sh
 sudo systemctl restart webmin
 ```
+
+#### Login alerts
+
+```.sh
+# Display all recorded login sessions for root user
+sudo wtmpdb last | grep root
+```
+
+##### Grafana
+
+Email alerts for any `root` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+
+`Grafana` → `Alerts & IRM` → `Alerting` → `Manage contact points` → `Create contact point`:
+
+- `Name`: `Email Notifications`.
+- `Integration`: `Email`.
+- `Notification settings`: Enable `Disable resolved message`.
+
+`Grafana` → `Alerts & IRM` → `Alerting` → `Alert rules` → `New alert rule`:
+
+Enter alert rule name:
+
+- `Name`: `Root Login`.
+
+Define query and alert condition:
+
+- Loki query:
+
+```.txt
+sum by (instance, job, log_line) (
+  count_over_time(
+    {job="ssh_auth"}
+    |~ "(?i)(sshd.*(accepted|failed).*for root|pam_unix\\((webmin|login):session\\).*session opened for user root|pam_unix\\(webmin:auth\\).*authentication failure.*user.*root)"
+    !~ "(?i)(sudo:session|systemd-user:session)"
+    | label_format log_line="{{ __line__ }}"
+    [5m]
+  )
+)
+```
+
+- Expressions: `Threshold`: `Input A IS ABOVE 0`.
+
+Add folder and labels:
+
+- `Labels` → `Add labels`:
+  - `Choose key`: `severity`.
+  - `Choose value`: `critical`.
+
+Set evaluation behavior:
+
+- `Evaluation interval`: `Every 1m`.
+- `Pending period`: `None (0s)`.
+- `Keep firing for`: `None (0s)`.
+- `Alert state if no data or all values are null`: `Normal`.
+- `Alert state if execution error or timeout`: `Alerting`.
+
+Configure notification message:
+
+- `Summary (optional)`: `Root Login on {{ $labels.instance }} ({{ $labels.job }})`.
+- `Description (optional)`: `{{ $labels.log_line }}`.
 
 #### FirewallD
 
@@ -389,16 +437,16 @@ Now "Create Virtual Server".
 [Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
 
 ```.sh
-# Remove older PHP Versions
-php_version_old="8.2"
-sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
-sudo apt autoremove
-sudo apt clean
+php_version_current="8.4"
+sudo apt install php${php_version_current}-sqlite3
 ```
 
 ```.sh
-php_version_current="8.3"
-sudo apt install php${php_version_current}-sqlite3
+# Remove older PHP Versions
+php_version_old="8.3"
+sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
+sudo apt autoremove
+sudo apt clean
 ```
 
 ### Packages
@@ -413,7 +461,7 @@ sudo apt install htop \
 
 ### DNS Configuration
 
-Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
+Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` record; and `TXT` DKIM and SPF records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS (For the SPF record, change `?all` to `-all`).
 
 When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.com`) to Cloudflare, ensure its Proxy Status is set to `DNS only`. This is crucial for proper mail flow, as mail servers require direct IP connections.
 
@@ -465,7 +513,8 @@ To verify: `Webmin` → `Servers` → `Postfix Mail Server` → `Canonical Mappi
 To diagnose general email sending/receiving issues: Open server's mail log in real-time to monitor activity:
 
 ```.sh
-sudo tail -f /var/log/mail.log
+# sudo tail -f /var/log/mail.log
+journalctl -u postfix -f
 ```
 
 While the logs are open, send a test email from your mail client (e.g. Roundcube) to an external address and also to an address on own domain.
@@ -523,7 +572,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 - `Backup description`: `Backup Weekly`.
 - `Servers to save`: `All virtual servers`.
 - `Features to backup`: `Backup all features` (if the backup fails with an error about missing logrotate config, uncheck `Logrotate configuration for log file`).
-- `Backup destinations`: `Local file or directory` - `/backup/backup-%Y-%m-%d/`.
+- `Backup destinations`: `Local file or directory` - `/backups/backup-%Y-%m-%d/`.
 - `Delete old backups`: `Yes, after 30 days`.
 - `Additional destination options`:
   - Enable `Do strftime-style time substitutions on file or directory name`.
@@ -681,7 +730,7 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com mail.website.com webmail.website.com;
+    server_name website.com www.website.com mail.website.com webmail.website.com;
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -814,6 +863,9 @@ server {
         add_header Cache-Control "public";
     }
 
+    location ^~ /wp-content/uploads/ {
+        autoindex off;
+    }
 
     # Error Handling
     error_page 500 502 503 504 @no_cache;
@@ -972,39 +1024,48 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 ```.txt
 [100000000000000]
+; Settings
 user = $system_user
 group = $system_user
 listen.owner = $system_user
 listen.group = $system_user
 listen.mode = 0660
 listen = /run/php/100000000000000.sock
-pm = dynamic
-pm.max_children = 16
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 8
-pm.max_requests = 500
-pm.process_idle_timeout = 60s
 php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
-php_value[log_errors] = On
-php_admin_value[display_errors] = Off
-php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT
-php_admin_value[memory_limit] = 256M
-php_admin_value[upload_max_filesize] = 10M
-request_terminate_timeout = 30s
-catch_workers_output = yes
 
-; request_slowlog_timeout = 10s
-; slowlog = /home/$domain/logs/php_slow.log
+; Logging
+php_value[log_errors] = On
+php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
+php_admin_value[display_errors] = Off
+
+; Timeouts
+request_terminate_timeout = 60s
+catch_workers_output = yes
+decorate_workers_output = no
+
+; PHP Values
+; php_admin_value[memory_limit] = 200M ; Low-traffic
+php_admin_value[memory_limit] = 380M ; Medium-traffic
+php_admin_value[upload_max_filesize] = 32M
+php_admin_value[post_max_size] = 32M
+php_admin_value[max_input_vars] = 3000
+php_value[max_execution_time] = 60
+
+; Process Management
+pm = ondemand
+; pm.max_children = 3 ; Low-traffic
+pm.max_children = 8 ; Medium-traffic
+pm.max_requests = 500
+pm.process_idle_timeout = 10s
 ```
 
 ```.sh
 # touch /home/$domain/logs/php_slow.log
 # chown $system_user:$system_user /home/$domain/logs/php_slow.log
 # chmod 664 /home/$domain/logs/php_slow.log
-# sudo systemctl restart php8.3-fpm
+# sudo systemctl restart php8.4-fpm
 ```
 
 ### SSL Certificate

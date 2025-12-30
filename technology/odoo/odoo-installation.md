@@ -1,7 +1,7 @@
 # Odoo Installation on Debian
 
-> [!NOTE]
-> Last update: 2025-08-07
+> [!NOTE]  
+> Last update: 2025-11-20
 
 ## Settings
 
@@ -107,7 +107,6 @@ db_password = $database_password
 addons_path = $website_root_path/odoo/addons
 logfile = /var/log/odoo/$website.log
 workers = 2
-server_wide_modules = web,queue_job
 
 [queue_job]
 channels = root:2
@@ -126,7 +125,6 @@ After=network.target postgresql.service
 Type=simple
 User=$system_user
 Group=$system_group
-ExecStartPre=$website_root_path/odoo/venv/bin/python3 $website_root_path/odoo/odoo-bin --config=$odoo_conf --database $database_name --init base --without-demo=all
 ExecStart=$website_root_path/odoo/venv/bin/python3 $website_root_path/odoo/odoo-bin --config=$odoo_conf --without-demo=all
 Restart=always
 
@@ -167,7 +165,7 @@ cd "$website_root_path/odoo"
 source "./venv/bin/activate"
 
 # Run Odoo manually
-./odoo-bin --config=$odoo_conf --database $database_name --load=base,web --without-demo=all --update=all
+./odoo-bin --config=$odoo_conf --database $database_name --init base,web,account,contacts,delivery,product,sale_management,stock,stock_account --update=all --without-demo=all --stop-after-init
 ```
 
 ## Start and Enable Odoo Service

@@ -1,5 +1,5 @@
 ## Windows Subsystem for Linux Packages
-# Last update: 2025-10-20
+# Last update: 2025-11-04
 
 
 # Start Windows Subsystem for Linux (WSL)
@@ -18,16 +18,21 @@ sudo apt install curl \
   python3 \
   python-is-python3 \
   python3-pip \
+  python3-virtualenv \
   wget
 
 
 # Node.js
 nvm install node
 node -v
+nvm alias default 25
 
 # Prettier
 sudo npm install -g prettier
 sudo npm install -g glob
+
+# codespell
+sudo apt install codespell
 
 
 # Homebrew install

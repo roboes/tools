@@ -42,18 +42,6 @@ for file in ./*.svg; do
 done
 ```
 
-### Optimization
-
-[Embed Google Fonts](https://de.wordpress.org/plugins/embed-google-fonts/)\
-[W3 Total Cache](https://wordpress.org/plugins/w3-total-cache/):
-
-- [The Ideal W3 Total Cache Settings](https://onlinemediamasters.com/w3-total-cache-settings/)
-- [How to Configure W3 Total Cache & CloudFlare](https://www.thewebmaster.com/guide-to-w3-total-cache-settings-with-cloudflare/)
-
-[WP-Optimize](https://wordpress.org/plugins/wp-optimize/):
-
-- Delete tables left behind by old plugins (WP-Optimize → Database → Tables) - look for tables with the "not installed" and "inactive" tags.
-
 #### wp_options
 
 ```sql

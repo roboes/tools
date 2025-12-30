@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-09-28
+// Last update: 2025-12-27
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -20,35 +20,10 @@
 // }
 
 
-// Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) to be installed in the "wp-content" folder (no Composer needed)
-require_once WP_CONTENT_DIR . '/boxpacker/src/Box.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/BoxList.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/BoxSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/DefaultBoxSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/Item.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/ItemList.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/ItemSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/DefaultItemSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/LayerPacker.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/LayerStabiliser.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/OrientatedItem.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/OrientatedItemFactory.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/OrientatedItemSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBox.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBoxList.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedBoxSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/DefaultPackedBoxSorter.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedItem.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedItemList.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/PackedLayer.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/Packer.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/Rotation.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/VolumePacker.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/WeightRedistributor.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/WorkingVolume.php';
-require_once WP_CONTENT_DIR . '/boxpacker/src/Exception/NoBoxesAvailableException.php';
-// require_once WP_CONTENT_DIR . '/boxpacker/tests/Test/TestBox.php';
-// require_once WP_CONTENT_DIR . '/boxpacker/tests/Test/TestItem.php';
+// Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) installed via Composer:
+// cd /home/website.com/public_html/wp-content/
+// composer require dvdoug/boxpacker
+require_once WP_CONTENT_DIR . '/vendor/autoload.php';
 
 use DVDoug\BoxPacker\Box;
 use DVDoug\BoxPacker\DefaultItemSorter;
