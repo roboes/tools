@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Test - Export WooCommerce products to .csv (run it on WP Console)
-// Last update: 2024-06-13
+// Last update: 2026-01-02
 
 function export_woocommerce_products_to_csv()
 {
@@ -59,7 +59,7 @@ function export_woocommerce_products_to_csv()
         array('Category', 'Type', 'ID', 'SKU', 'Name', 'Price', 'Stock'),
         $attribute_names
     );
-    fputcsv($output, $headers);
+    fputcsv($output, $headers, ",", '"', "");
 
     // Query WooCommerce products again to output data
     $loop = new WP_Query($args);
@@ -90,11 +90,11 @@ function export_woocommerce_products_to_csv()
         // Handle simple products
         if ($product_type == 'simple') {
             $row = array_merge($row, $attribute_values);
-            fputcsv($output, $row);
+            fputcsv($output, $row, ",", '"', "");
         } elseif ($product_type == 'variable') {
             // Output variable product data
             $row = array_merge($row, $attribute_values);
-            fputcsv($output, $row);
+            fputcsv($output, $row, ",", '"', "");
 
             // Get product variations
             $variations = $product->get_available_variations();
@@ -124,7 +124,7 @@ function export_woocommerce_products_to_csv()
                 }
 
                 $variation_row = array_merge($variation_row, $variation_attribute_values);
-                fputcsv($output, $variation_row);
+                fputcsv($output, $variation_row, ",", '"', "");
             }
         }
     }

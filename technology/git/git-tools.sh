@@ -1,9 +1,9 @@
 ## Git Tools
-# Last update: 2025-12-16
+# Last update: 2026-01-02
 
 
 # Start Bash (Unix Shell)
-bash
+[ -z "$BASH" ] && exec bash
 
 
 # Ignore certificate validation
@@ -14,10 +14,10 @@ bash
 
 # Settings
 git_hostname="github.com"
-git_account=$(git config user.name) # Username or Organization
+git_account="$(git config user.name)" # Username or Organization
 git_repository="tools"
 git_branch="main"
-local_repository=$git_repository
+local_repository="$git_repository"
 
 
 # Set working directory
@@ -30,11 +30,11 @@ fi
 
 # Clone repository if directory does not exist
 if [ ! -d "${local_repository}" ]; then
-    git clone --branch "${git_branch}" "https://${git_hostname}/${git_account}/${git_repository}.git" ${local_repository}
+    git clone --branch "${git_branch}" "https://${git_hostname}/${git_account}/${git_repository}.git" "${local_repository}"
 fi
 
 # Set working directory
-cd $local_repository
+cd "$local_repository"
 
 
 # Download .pre-commit-config.yaml file
@@ -55,10 +55,10 @@ fi
 prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
 
 ## PHP
-echo "no" | php-cs-fixer fix . --rules=@PSR12 --using-cache=no
+find . -type f -name "*.php" | grep -q . && php-cs-fixer fix . --rules=@PSR12 --using-cache=no --no-interaction
 
 ## XML
-find . -name "*.xml" -exec xmllint --format {} --output {} \;
+find . -type f -name "*.xml" -exec xmllint --format --output {} {} \;
 
 ## codespell
 codespell . --ignore-words-list=alle,als,bootup,datas,deine,dokument,doubleclick,fo,ges,ist,itens,nax,oder,produkt,referers,ressource,ser,sie,tage,termine # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
@@ -74,12 +74,12 @@ pre-commit run --all-files
 
 ## Python requirements.txt file
 # python -m pip install pipreqs
-if find . -type f -name "*.py" | grep -q "/."; then
+if find . -type f -name "*.py" | grep -q .; then
 	pipreqs --encoding utf-8 --force "./"
 
     # Check if "janitor" is in requirements.txt and replace it with pyjanitor
     if grep -q "janitor" "requirements.txt"; then
-        sed -i '/janitor/c\pyjanitor==0.32.7' requirements.txt
+        sed -i '/janitor/c\pyjanitor==0.32.8' requirements.txt
 		pre-commit run --files "./requirements.txt"
     fi
 
@@ -121,7 +121,7 @@ git commit --all --message="Update"
 git remote set-url origin "https://${git_hostname}/${git_account}/${git_repository}.git"
 
 # Write commits to remote repository
-git push --force origin ${git_branch}
+git push --force origin "${git_branch}"
 
 
 
@@ -129,7 +129,7 @@ git push --force origin ${git_branch}
 ## Squash commit history - https://stackoverflow.com/a/56878987/9195104
 
 # Count of commits
-git rev-list --count HEAD ${git_branch}
+git rev-list --count HEAD "${git_branch}"
 
 
 # Create a temporary file to store commits to keep
@@ -162,8 +162,8 @@ rm --force $TOKEEP
 
 
 # Repository force update
-git push --force origin ${git_branch}
+git push --force origin "${git_branch}"
 
 
 # New count of commits
-git rev-list --count HEAD ${git_branch}
+git rev-list --count HEAD "${git_branch}"

@@ -3,7 +3,7 @@
 
 
 # Start Windows Subsystem for Linux (WSL)
-bash
+[ -z "$BASH" ] && exec bash
 
 
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
