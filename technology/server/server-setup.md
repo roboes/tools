@@ -1,13 +1,14 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2025-12-26
+> Last update: 2026-01-03
 
 ```.sh
 # Settings
 server_ip="100.00.000.01"
 domain="website.com"
 domain_root_path="/home/$domain/public_html"
+admin_user="sysadmin"
 system_user="system_user"
 # system_user="www-data:www-data"
 database_name="database_name"
@@ -73,11 +74,177 @@ sudo apt install -y \
 # pyenv versions
 ```
 
+## User management
+
+```.sh
+# Create the admin user
+sudo adduser $admin_user
+
+# Add user to the sudo group
+sudo usermod -aG sudo $admin_user
+```
+
+## SSH
+
+(Local machine) Generate SSH key pair.
+
+```.sh
+if [ -n "$admin_user" ] && [ -n "$domain" ] && [ -n "$server_ip" ]; then
+    ssh-keygen -t ed25519 -C "$admin_user@$server_ip" -f ~/.ssh/id_ed25519_$domain
+else
+    echo "Error: admin_user, domain, and/or server_ip is not defined"
+fi
+```
+
+```.sh
+# (Optional) Backup SSH key to another folder
+cp ~/.ssh/id_ed25519_$domain /mnt/c/Users/$USER/Documents/
+cp ~/.ssh/id_ed25519_$domain.pub /mnt/c/Users/$USER/Documents/
+```
+
+(Local machine) Get the SSH public key string.
+
+```.sh
+cat ~/.ssh/id_ed25519_$domain.pub
+```
+
+```.sh
+# echo sshpass -P \"passphrase\" -p \"PASSPHRASE\" -v ssh -i \"~/.ssh/id_ed25519_$domain\" -o ProxyCommand=\"cloudflared access ssh --hostname ssh.$domain\" \"$admin_user@$server_ip\"
+```
+
+(Server) Add the ssh public key to the authorized keys.
+
+```.sh
+# The public key string you copied from your local machine
+ssh_public_key="ssh-ed25519 AAAA... $admin_user@$server_ip"
+
+# Create the directory for the admin user and set permissions
+sudo mkdir -p /home/$admin_user/.ssh
+chmod 700 /home/$admin_user/.ssh
+
+# Append the key only if it doesn't already exist in the file
+if ! grep -qF "$ssh_public_key" /home/$admin_user/.ssh/authorized_keys 2>/dev/null; then
+    echo "$ssh_public_key" >> /home/$admin_user/.ssh/authorized_keys
+fi
+
+chmod 600 /home/$admin_user/.ssh/authorized_keys
+```
+
+Configure SSH to use key-based authentication by adding "$admin_user" to the `AllowUsers` directive.
+
+```.sh
+sudo nano /etc/ssh/sshd_config
+```
+
+```.txt
+PubkeyAuthentication yes
+AllowUsers $admin_user
+```
+
+```.sh
+sudo systemctl reload sshd
+```
+
+(Local machine) Test the SSH connection.
+
+```.sh
+ssh -i ~/.ssh/id_ed25519_$domain $admin_user@$server_ip
+```
+
+Removing "root" from the `AllowUsers` directive. Completely disable "root" login.
+
+```.sh
+sudo nano /etc/ssh/sshd_config
+```
+
+Complete file:
+
+```.txt
+# This is the sshd server system-wide configuration file. See
+# sshd_config(5) for more information.
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+
+# Connection settings
+
+## Port
+Port 22
+
+## Timeout and connection limits
+LoginGraceTime 60
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 3
+MaxStartups 10:30:100
+AllowTcpForwarding no
+UseDNS no
+
+
+# Authentication settings
+
+## Disable password authentication and enable key-based login
+PasswordAuthentication no
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+
+## Disable password-based root login
+PermitRootLogin no
+
+## Allow a specific user to log in via SSH
+AllowUsers $admin_user
+
+
+# Other settings
+
+## Enable Pluggable Authentication Modules (PAM) authentication
+UsePAM yes
+
+## Disables printing the message of the day upon login
+PrintMotd no
+
+## Override default of no subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server
+```
+
+Tests before restarting the ssh:
+
+```.sh
+# Check SSH key existence
+sudo ls -la /home/$admin_user/.ssh/authorized_keys
+
+# Check permissions
+sudo chown -R $admin_user:$admin_user /home/$admin_user/.ssh
+sudo chmod 700 /home/$admin_user/.ssh
+sudo chmod 600 /home/$admin_user/.ssh/authorized_keys
+
+# Check for typos in the sshd config (if it returns nothing, config is valid)
+sudo sshd -t
+```
+
+```.sh
+sudo systemctl reload sshd
+```
+
+Keep current terminal window open and open a new terminal window trying to login as $admin_user.
+
+(Server) Remove any server-generated SSH keys if needed. After confirming key-based login works, remove old server-generated keys if they exist.
+
+```.sh
+ls -la /root/.ssh/
+ls -la /home/$admin_user/.ssh/
+# sudo rm -f /root/.ssh/id_rsa
+```
+
+```.sh
+sudo systemctl reload sshd
+```
+
 ## Virtualmin
 
 ```.sh
 # Installation
-wget http://software.virtualmin.com/gpl/scripts/install.sh
+wget https://software.virtualmin.com/gpl/scripts/install.sh
 chmod a+x install.sh
 ./install.sh
 
@@ -113,6 +280,17 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
   - Enable: `Webmin` → `Webmin` → `Usermin Configuration` → `Available Modules` → Enable `Two-Factor Authentication`.
   - Authentication provider: `Webmin` → `Webmin` → `Webmin Configuration` → `Two-Factor Authentication` → `Authentication provider`: `TOTOP Authenticator`.
   - Setup: `Webmin` → `Webmin` → `Webmin Users` → `Two-Factor Authentication` → `Enroll For Two-Factor Authentication`.
+
+- Webmin Users:
+  - Create a new privileged user: `Webmin` → `Webmin` → `Webmin Users` → `Create a new privileged user`:
+  - `Webmin user access rights`:
+    - `Username`: `$admin_user`.
+    - `Password`: `Unix authentication`.
+  - `Security and limits options`:
+    - `Two-factor authentication type`: `Enable Two-Factor for User`.
+  - `Available Webmin modules`: `Select all`.
+  - Remove `root` Webmin user: Logout of the `root` Webmin user and login as the new `$admin_user` Webmin user. Then:
+    - `Webmin` → `Webmin` → `Webmin Users` → `root` → `Delete`.
 
 - Scheduled Upgrades:
   - Virtualmin → Dashboard → Package updates → Scheduled Upgrades:
@@ -177,83 +355,6 @@ sudo systemctl restart fail2ban
 # sudo systemctl status saslauthd
 # sudo systemctl enable saslauthd
 ```
-
-#### SSH
-
-```.sh
-# Generate the SSH Key Pair
-ssh-keygen -t rsa -b 4096 -C "root@$server_ip"
-
-# Add the Public Key to the Authorized Keys
-cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-chmod 700 /root/.ssh
-chmod 600 /root/.ssh/authorized_keys
-```
-
-Save the RSA private key (`id_rsa`) on your local machine. Rename it as needed. PuTTYgen can convert the RSA private key to `.ppk`.
-
-```.sh
-# Copy SSH key in Windows Subsystem for Linux (WSL)
-# mkdir -p ~/.ssh
-# chmod 700 ~/.ssh
-# cp "/mnt/c/Users/${USER}/Downloads/id_rsa" ~/.ssh/
-# chmod 600 ~/.ssh/id_rsa
-```
-
-Configure SSH to Use Key-Based Authentication
-
-```.sh
-nano /etc/ssh/sshd_config
-```
-
-```.txt
-# This is the sshd server system-wide configuration file. See
-# sshd_config(5) for more information.
-
-Include /etc/ssh/sshd_config.d/*.conf
-
-
-# Connection settings
-
-## Port
-Port 22
-
-## Timeout and connection limits
-LoginGraceTime 60
-MaxAuthTries 3
-ClientAliveInterval 300
-ClientAliveCountMax 3
-MaxStartups 10:30:100
-AllowTcpForwarding no
-UseDNS no
-
-
-# Authentication settings
-
-## Disable password authentication and enable key-based login
-PasswordAuthentication no
-PubkeyAuthentication yes
-
-## Disable password-based root login
-PermitRootLogin prohibit-password
-
-## Allow a specific user to log in via SSH
-AllowUsers root
-
-
-# Other settings
-
-## Enable Pluggable Authentication Modules (PAM) authentication
-UsePAM yes
-
-## Disables printing the message of the day upon login
-PrintMotd no
-
-## Override default of no subsystems
-Subsystem sftp /usr/lib/openssh/sftp-server
-```
-
-Restart server.
 
 #### Cloudflare Zero Trust
 
@@ -329,7 +430,7 @@ sudo wtmpdb last | grep root
 
 ##### Grafana
 
-Email alerts for any `root` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+Email alerts for any `root` or `$admin_user` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
 
 `Grafana` → `Alerts & IRM` → `Alerting` → `Manage contact points` → `Create contact point`:
 
@@ -341,7 +442,7 @@ Email alerts for any `root` login attempt (successful or failed) on the server v
 
 Enter alert rule name:
 
-- `Name`: `Root Login`.
+- `Name`: `Server Login`.
 
 Define query and alert condition:
 
@@ -351,7 +452,7 @@ Define query and alert condition:
 sum by (instance, job, log_line) (
   count_over_time(
     {job="ssh_auth"}
-    |~ "(?i)(sshd.*(accepted|failed).*for root|pam_unix\\((webmin|login):session\\).*session opened for user root|pam_unix\\(webmin:auth\\).*authentication failure.*user.*root)"
+    |~ "(?i)(sshd.*(accepted|failed).*for (root|$admin_user)|pam_unix\\((webmin|login):session\\).*session opened for user (root|$admin_user)|pam_unix\\(webmin:auth\\).*authentication failure.*user.*(root|$admin_user))"
     !~ "(?i)(sudo:session|systemd-user:session)"
     | label_format log_line="{{ __line__ }}"
     [5m]
@@ -377,7 +478,7 @@ Set evaluation behavior:
 
 Configure notification message:
 
-- `Summary (optional)`: `Root Login on {{ $labels.instance }} ({{ $labels.job }})`.
+- `Summary (optional)`: `Login Event: {{ $labels.instance }} ({{ $labels.job }})`.
 - `Description (optional)`: `{{ $labels.log_line }}`.
 
 #### FirewallD
@@ -465,13 +566,7 @@ Obtain core mail DNS records (`A` and `AAAA` records for the mail server; `MX` r
 
 When adding the `A` and `AAAA` records for the mail server (e.g. `mail.website.com`) to Cloudflare, ensure its Proxy Status is set to `DNS only`. This is crucial for proper mail flow, as mail servers require direct IP connections.
 
-Additionally, add the following record:
-
-1. DMARC record
-
-- Type: `TXT`
-- Name: `_dmarc`
-- Content: `v=DMARC1; p=none; fo=1; adkim=s; aspf=s`
+Additionally, enable `Email` → `DMARC Management`, which will add a DMARC record to the DNS.
 
 ### Sender Canonical Maps (Per-User Mapping)
 
@@ -718,6 +813,35 @@ http {
     # Include Virtual Host Configurations
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
+
+    # Cloudflare Real IP Restoration (updated from https://www.cloudflare.com/ips/)
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 104.16.0.0/13;
+    set_real_ip_from 104.24.0.0/14;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 131.0.72.0/22;
+
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2a06:98c0::/29;
+    set_real_ip_from 2c0f:f248::/32;
+
+    real_ip_header CF-Connecting-IP;
+    real_ip_recursive off; # Not needed for CF-Connecting-IP (single IP)
+
 }
 ```
 
@@ -1056,16 +1180,44 @@ php_value[max_execution_time] = 60
 ; Process Management
 pm = ondemand
 ; pm.max_children = 3 ; Low-traffic
-pm.max_children = 8 ; Medium-traffic
-pm.max_requests = 500
-pm.process_idle_timeout = 10s
+pm.max_children = 12 ; Medium-traffic
+pm.max_requests = 1000
+pm.process_idle_timeout = 30s
+
+; Per-Domain OPcache Logic
+php_admin_flag[opcache.enable] = on
+php_admin_value[opcache.revalidate_freq] = 2
+php_admin_value[opcache.validate_timestamps] = 1
 ```
 
 ```.sh
-# touch /home/$domain/logs/php_slow.log
-# chown $system_user:$system_user /home/$domain/logs/php_slow.log
-# chmod 664 /home/$domain/logs/php_slow.log
-# sudo systemctl restart php8.4-fpm
+sudo systemctl restart php8.4-fpm
+```
+
+#### OPcache
+
+```.sh
+sudo nano /etc/php/8.4/fpm/php.ini
+```
+
+```.txt
+[opcache]
+opcache.enable=1
+opcache.enable_cli=0
+opcache.memory_consumption=192
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=2
+opcache.optimization_level=0x7FFFBFFF
+opcache.jit=off
+opcache.jit_buffer_size=0
+opcache.save_comments=1
+opcache.huge_code_pages=0
+```
+
+```.sh
+sudo systemctl restart php8.4-fpm
 ```
 
 ### SSL Certificate
@@ -1204,5 +1356,4 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 # PHP
 tail -n 50 /var/log/php8.4-fpm.log
 tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
-# tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_slow.log
 ```
