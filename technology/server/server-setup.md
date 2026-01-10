@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-01-03
+> Last update: 2026-01-10
 
 ```.sh
 # Settings
@@ -9,8 +9,7 @@ server_ip="100.00.000.01"
 domain="website.com"
 domain_root_path="/home/$domain/public_html"
 admin_user="sysadmin"
-system_user="system_user"
-# system_user="www-data:www-data"
+system_user="website"
 database_name="database_name"
 ```
 
@@ -53,7 +52,8 @@ sudo apt install -y \
   libpam-wtmpdb \
   python-is-python3 \
   python3-pip \
-  python3-venv
+  python3-venv \
+  resolvconf
 
 # sudo apt install -y composer
 
@@ -72,6 +72,38 @@ sudo apt install -y \
 # sudo apt install -y pyenv
 # pyenv install 3.11
 # pyenv versions
+```
+
+## DNS
+
+```.sh
+# Check if resolvconf is running
+sudo systemctl status resolvconf.service
+```
+
+```.sh
+# Edit the resolvconf "head" file
+sudo nano /etc/resolvconf/resolv.conf.d/head
+```
+
+```.txt
+# Cloudflare DNS (IPv4)
+nameserver 1.1.1.1
+nameserver 1.0.0.1
+
+# Cloudflare DNS (IPv6)
+nameserver 2606:4700:4700::1111
+nameserver 2606:4700:4700::1001
+```
+
+```.sh
+# Apply the changes
+sudo resolvconf -u
+```
+
+```.sh
+# Verify the DNS
+time nslookup google.com
 ```
 
 ## User management
@@ -1144,6 +1176,17 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 ### PHP-FPM Configuration
 
+```.sh
+# Create PHP slow log
+sudo touch /home/$domain/logs/php_slow.log
+
+# Set ownership
+sudo chown $system_user:$system_user /home/$domain/logs/php_slow.log
+
+# Set permissions
+sudo chmod 664 /home/$domain/logs/php_slow.log
+```
+
 #### Local
 
 ```.txt
@@ -1158,6 +1201,7 @@ listen = /run/php/100000000000000.sock
 php_value[upload_tmp_dir] = /home/$domain/tmp
 php_value[session.save_path] = /home/$domain/tmp
 php_value[error_log] = /home/$domain/logs/php_log
+slowlog = /home/$domain/logs/php_slow.log
 
 ; Logging
 php_value[log_errors] = On
@@ -1179,7 +1223,7 @@ php_value[max_execution_time] = 60
 
 ; Process Management
 pm = ondemand
-; pm.max_children = 3 ; Low-traffic
+; pm.max_children = 8 ; Low-traffic
 pm.max_children = 12 ; Medium-traffic
 pm.max_requests = 1000
 pm.process_idle_timeout = 30s
@@ -1188,10 +1232,14 @@ pm.process_idle_timeout = 30s
 php_admin_flag[opcache.enable] = on
 php_admin_value[opcache.revalidate_freq] = 2
 php_admin_value[opcache.validate_timestamps] = 1
+
+; PHP slow log
+request_slowlog_timeout = 5s
 ```
 
 ```.sh
-sudo systemctl restart php8.4-fpm
+# Restart PHP-FPM service
+sudo systemctl restart php*-fpm
 ```
 
 #### OPcache
@@ -1217,7 +1265,7 @@ opcache.huge_code_pages=0
 ```
 
 ```.sh
-sudo systemctl restart php8.4-fpm
+sudo systemctl restart php*-fpm
 ```
 
 ### SSL Certificate
@@ -1294,10 +1342,10 @@ rm "$domain_root_path/public_html/wordpress_export.zip"
 ### Ownership and permission
 
 ```.sh
-# Change ownership
+# Set ownership
 chown -R "$system_user" $domain_root_path/public_html
 
-# Change permissions
+# Set permissions
 find $domain_root_path/public_html -type d -exec chmod 755 {} \;
 find $domain_root_path/public_html -type f -exec chmod 644 {} \;
 chmod 600 $domain_root_path/public_html/wp-config.php
