@@ -1,50 +1,59 @@
 <?php
 
 // WooCommerce - Display the total available stock quantity for a variable product before the variations form
-// Last update: 2025-10-14
+// Last update: 2026-01-12
+
 
 if (class_exists('WooCommerce') && WC()) {
+    add_action('woocommerce_before_variations_form', 'product_variable_stock_total_display');
 
-    add_action($hook_name = 'woocommerce_before_variations_form', $callback = 'product_variable_stock_total_display', $priority = 10, $accepted_args = 1);
-
-    function product_variable_stock_total_display()
+    function product_variable_stock_total_display(): void
     {
+        if (!is_product()) {
+            return;
+        }
 
-        if (is_product()) {
-            global $product;
+        // Settings
+        $product_ids = [17739, 22204, 31437, 31438];
+        $messages = [
+            'available-appointments' => [
+                'de' => 'Verfügbare Termine',
+                'en' => 'Available Appointments',
+            ],
+        ];
 
-            // Settings
-            $product_ids = array(17739, 22204, 31437, 31438);
-            $messages = [
-                'available-appointments' => [
-                    'de' => 'Verfügbare Termine',
-                    'en' => 'Available Appointments',
-                ],
-            ];
+        $product = wc_get_product(get_the_ID());
 
-            // Get current language
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+        if (!$product instanceof WC_Product_Variable) {
+            return;
+        }
 
-            // Check if current product is in the target product IDs array
-            if ($product && $product->is_type('variable') && in_array($product->get_id(), $product_ids)) {
+        if (!in_array($product->get_id(), $product_ids, true)) {
+            return;
+        }
 
-                // Use the shortcode to get the stock quantity
-                if (shortcode_exists('product_variable_stock_quantity')) {
-                    $stock_quantity = do_shortcode('[product_variable_stock_quantity id="' . $product->get_id() . '"]');
-                } else {
-                    $stock_quantity = 0;
-                }
-
-                // Display the total stock
-                if ($stock_quantity > 0) {
-                    echo '<div class="total-stock-totals">';
-                    echo '<br>';
-                    echo '<strong>' . $messages['available-appointments'][$current_language] . '</strong><br>';
-                    echo esc_html($stock_quantity);
-                    echo '</div><br>';
-                }
+        // Get current language (Polylang)
+        $current_language = 'en';
+        if (function_exists('pll_current_language')) {
+            $pll_lang = pll_current_language('slug');
+            if ($pll_lang && in_array($pll_lang, pll_languages_list(['fields' => 'slug']), true)) {
+                $current_language = $pll_lang;
             }
         }
-    }
 
+        // Get stock quantity via shortcode
+        $stock_quantity = shortcode_exists('product_variable_stock_quantity')
+            ? (int) do_shortcode('[product_variable_stock_quantity id="' . $product->get_id() . '"]')
+            : 0;
+
+        if ($stock_quantity <= 0) {
+            return;
+        }
+
+        printf(
+            '<div class="total-stock-totals"><br><strong>%s</strong><br>%s</div><br>',
+            esc_html($messages['available-appointments'][$current_language] ?? $messages['available-appointments']['en']),
+            esc_html($stock_quantity)
+        );
+    }
 }
