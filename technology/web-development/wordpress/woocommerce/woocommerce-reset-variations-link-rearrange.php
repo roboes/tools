@@ -3,7 +3,7 @@
 // WooCommerce - Rearrange the reset variations link below the <tbody> argument
 // Last update: 2024-07-24
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_action($hook_name = 'wp_footer', $callback = 'woocommerce_reset_variations_link_rearrange', $priority = 10, $accepted_args = 1);
 

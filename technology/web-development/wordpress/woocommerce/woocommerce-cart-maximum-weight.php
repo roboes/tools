@@ -5,7 +5,7 @@
 
 // Calculate whether an item being added to the cart passes the weight criteria - triggered on add to cart action
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_weight_add_to_cart_validation', $priority = 10, $accepted_args = 5);
 

@@ -3,7 +3,7 @@
 // WooCommerce - Delete all products in English
 // Last update: 2024-07-31
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     function delete_all_english_products()
     {

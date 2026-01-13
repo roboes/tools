@@ -47,7 +47,7 @@ function cron_job_run_slugs_update()
 {
 
     // Custom Field 'product_shipping_class'
-    if (class_exists('WooCommerce') && WC()) {
+    if (function_exists('WC')) {
 
         $products = wc_get_products(array('limit' => -1));
 
@@ -170,7 +170,7 @@ function cron_job_run_slugs_update()
 
 
     // Regenerate slugs for products
-    if (class_exists('WooCommerce') && WC()) {
+    if (function_exists('WC')) {
 
         // Settings
         $post_id_exempt = array(18215, 18373, 20116, 27123, 31441, 31459, 31488, 31538);
@@ -272,7 +272,7 @@ function cron_job_run_slugs_update()
     }
 
     // Turn product brand name into a custom field
-    if (class_exists('WooCommerce') && WC()) {
+    if (function_exists('WC')) {
         // Get all products (you can limit the query if needed)
         $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => 'publish');
 

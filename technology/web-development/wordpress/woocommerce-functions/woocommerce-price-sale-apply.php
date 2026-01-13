@@ -4,7 +4,7 @@
 // Last update: 2025-07-14
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     function woocommerce_sale_price_update($product_id, $start_date, $end_date, $discount_percentage, $round_precision)
     {

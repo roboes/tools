@@ -4,7 +4,7 @@
 // Last update: 2025-10-14
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Add "Delete Account" button to the "Account Details" page
     add_action($hook_name = 'woocommerce_account_edit-account_endpoint', $callback = 'delete_account_button_adder', $priority = 10, $accepted_args = 1);

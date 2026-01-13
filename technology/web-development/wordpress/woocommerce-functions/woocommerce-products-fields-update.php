@@ -4,7 +4,7 @@
 // Last update: 2025-03-21
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     function batch_update_variation_dimensions($category_slug)
     {

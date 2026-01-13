@@ -4,7 +4,7 @@
 
 // Notes: Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Add "+" button after quantity input
     add_action($hook_name = 'woocommerce_after_add_to_cart_quantity', $callback = 'ts_quantity_plus_sign', $priority = 10, $accepted_args = 1);

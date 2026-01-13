@@ -3,7 +3,7 @@
 // WooCommerce - Set a maximum quantity for individual products and/or individual products in specific categories per cart
 // Last update: 2025-10-14
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Settings
     $product_quantity_rules = array(

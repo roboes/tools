@@ -27,7 +27,7 @@
 // calculate_package_best_fit(array(array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518), array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518)));
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Add best package fit inside WooCommerce orders using a custom field
     // add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);

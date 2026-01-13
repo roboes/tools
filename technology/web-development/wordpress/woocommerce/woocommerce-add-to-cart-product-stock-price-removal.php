@@ -3,7 +3,7 @@
 // WooCommerce - Remove stock inventory count and price from "Add to Cart" session
 // Last update: 2024-09-07
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_filter($hook_name = 'woocommerce_get_stock_html', $callback = function () {return '';}, $priority = 10, $accepted_args = 1);
 

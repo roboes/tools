@@ -3,7 +3,7 @@
 // WooCommerce - Remove "Calculate shipping" if one or more products added to the cart belong to the $shipping_class_name = 'local-pickup-only'
 // Last update: 2024-07-24
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_filter($hook_name = 'woocommerce_product_needs_shipping', $callback = 'woocommerce_shipping_method_local_pickup_only_remove_calculate_shipping', $priority = 10, $accepted_args = 1);
 

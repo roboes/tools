@@ -4,7 +4,7 @@
 // Last update: 2025-10-08
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Default sort
     add_action($hook_name = 'current_screen', $callback = function ($current_screen) {

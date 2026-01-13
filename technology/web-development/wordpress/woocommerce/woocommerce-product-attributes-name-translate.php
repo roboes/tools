@@ -4,7 +4,7 @@
 // Last update: 2024-11-22
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_action($hook_name = 'after_setup_theme', $callback = 'translate_attributes_name', $priority = 10, $accepted_args = 1);
 

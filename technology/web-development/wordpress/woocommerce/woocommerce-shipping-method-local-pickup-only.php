@@ -5,7 +5,7 @@
 
 // Notes: The new "WooCommerce Blocks: Local Pickup" does not work with Elementor as it requires the Checkout block to enable it (as described here https://woocommerce.com/document/using-the-new-block-based-checkout/)
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_filter($hook_name = 'woocommerce_package_rates', $callback = 'woocommerce_shipping_method_local_pickup_only', $priority = 10, $accepted_args = 1);
 

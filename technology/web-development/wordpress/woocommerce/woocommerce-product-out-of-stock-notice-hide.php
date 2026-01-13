@@ -4,7 +4,7 @@
 // Last update: 2025-06-25
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_action($hook_name = 'wp_head', $callback = function () {
 

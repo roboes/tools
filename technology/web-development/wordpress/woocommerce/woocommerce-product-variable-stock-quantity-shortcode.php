@@ -4,7 +4,7 @@
 // Last update: 2025-06-20
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_shortcode($tag = 'product_variable_stock_quantity', $callback = 'product_variable_stock_quantity_shortcode');
 

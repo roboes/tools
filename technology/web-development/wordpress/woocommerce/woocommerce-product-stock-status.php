@@ -4,7 +4,7 @@
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_shortcode('woocommerce_product_stock_status', 'product_stock_status');
 

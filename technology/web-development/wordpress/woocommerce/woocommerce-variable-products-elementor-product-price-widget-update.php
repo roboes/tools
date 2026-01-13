@@ -3,7 +3,7 @@
 // Last update: 2024-10-16
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     add_action($hook_name = 'wp_footer', $callback = 'custom_variation_price_update_script', $priority = 10, $accepted_args = 1);
 

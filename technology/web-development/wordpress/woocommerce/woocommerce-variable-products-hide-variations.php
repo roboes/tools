@@ -8,7 +8,7 @@
 // Last update: 2024-11-04
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Change the default "woocommerce_ajax_variation_threshold" setting to increase variable product variation threshold
     add_filter($hook_name = 'woocommerce_ajax_variation_threshold', $callback = function ($qty, $product) {

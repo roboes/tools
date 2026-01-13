@@ -570,9 +570,11 @@ Now "Create Virtual Server".
 [Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
 
 ```.sh
-php_version_current="8.4"
+php_version_current="8.5"
 sudo apt install php${php_version_current}-sqlite3
 ```
+
+Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
 
 ```.sh
 # Remove older PHP Versions
@@ -1245,7 +1247,7 @@ sudo systemctl restart php*-fpm
 #### OPcache
 
 ```.sh
-sudo nano /etc/php/8.4/fpm/php.ini
+sudo nano /etc/php/8.5/fpm/php.ini
 ```
 
 ```.txt
@@ -1402,6 +1404,6 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 
 # PHP
-tail -n 50 /var/log/php8.4-fpm.log
+tail -n 50 /var/log/php8.5-fpm.log
 tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
 ```

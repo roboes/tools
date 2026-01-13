@@ -4,7 +4,7 @@
 // Last update: 2026-01-12
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
     add_action('woocommerce_before_variations_form', 'product_variable_stock_total_display');
 
     function product_variable_stock_total_display(): void
