@@ -3,7 +3,7 @@
 // WooCommerce - Product brand name shortcode
 // Last update: 2025-01-24
 
-add_shortcode($tag = 'product_brand_name', $callback = function () {
+add_shortcode(tag: 'product_brand_name', callback: function () {
 
     $product = wc_get_product(get_the_ID());
 

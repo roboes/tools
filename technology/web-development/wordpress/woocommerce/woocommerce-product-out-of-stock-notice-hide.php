@@ -6,7 +6,7 @@
 
 if (function_exists('WC')) {
 
-    add_action($hook_name = 'wp_head', $callback = function () {
+    add_action(hook_name: 'wp_head', callback: function () {
 
         if (is_product()) {
 
@@ -29,6 +29,6 @@ if (function_exists('WC')) {
 
         }
 
-    }, $priority = 10, $accepted_args = 1);
+    }, priority: 10, accepted_args: 1);
 
 };

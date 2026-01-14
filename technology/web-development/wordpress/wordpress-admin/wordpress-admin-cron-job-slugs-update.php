@@ -12,7 +12,7 @@
 
 
 // Add custom cron schedules
-/* add_filter($hook_name = 'cron_schedules', $callback = 'custom_cron_schedules', $priority = 10, $accepted_args = 1);
+/* add_filter(hook_name: 'cron_schedules', callback: 'custom_cron_schedules', priority: 10, accepted_args: 1);
 
 function custom_cron_schedules($schedules)
 {
@@ -25,7 +25,7 @@ function custom_cron_schedules($schedules)
 
 
 // Schedule cron job if not already scheduled
-add_action($hook_name = 'wp_loaded', $callback = function () {
+add_action(hook_name: 'wp_loaded', callback: function () {
 
     if (!wp_next_scheduled($hook = 'cron_job_schedule_slugs_update', $args = array())) {
 
@@ -38,10 +38,10 @@ add_action($hook_name = 'wp_loaded', $callback = function () {
         wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'weekly', $hook = 'cron_job_schedule_slugs_update', $args = array(), $wp_error = false);
     }
 
-}, $priority = 10, $accepted_args = 1);
+}, priority: 10, accepted_args: 1);
 
 
-add_action($hook_name = 'cron_job_schedule_slugs_update', $callback = 'cron_job_run_slugs_update', $priority = 10, $accepted_args = 1);
+add_action(hook_name: 'cron_job_schedule_slugs_update', callback: 'cron_job_run_slugs_update', priority: 10, accepted_args: 1);
 
 function cron_job_run_slugs_update()
 {

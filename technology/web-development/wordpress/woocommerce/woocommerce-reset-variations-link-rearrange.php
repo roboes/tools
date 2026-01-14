@@ -5,7 +5,7 @@
 
 if (function_exists('WC')) {
 
-    add_action($hook_name = 'wp_footer', $callback = 'woocommerce_reset_variations_link_rearrange', $priority = 10, $accepted_args = 1);
+    add_action(hook_name: 'wp_footer', callback: 'woocommerce_reset_variations_link_rearrange', priority: 10, accepted_args: 1);
 
     function woocommerce_reset_variations_link_rearrange()
     {

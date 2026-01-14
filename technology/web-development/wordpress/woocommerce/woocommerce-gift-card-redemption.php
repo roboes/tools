@@ -9,10 +9,10 @@
 
 if (function_exists('WC')) {
 
-    add_action($hook_name = 'woocommerce_before_add_to_cart_button', $callback = 'woocommerce_add_gift_card_checkbox', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'wp_footer', $callback = 'cf7_prefill_script_add', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'wpcf7_mail_sent', $callback = 'cf7_gift_card_redemption_tools', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_order_status_completed', $callback = 'order_completed_gift_card_redemption_tools', $priority = 10, $accepted_args = 1);
+    add_action(hook_name: 'woocommerce_before_add_to_cart_button', callback: 'woocommerce_add_gift_card_checkbox', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'wp_footer', callback: 'cf7_prefill_script_add', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'wpcf7_mail_sent', callback: 'cf7_gift_card_redemption_tools', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_order_status_completed', callback: 'order_completed_gift_card_redemption_tools', priority: 10, accepted_args: 1);
 
 
     function woocommerce_add_gift_card_checkbox()

@@ -6,7 +6,7 @@
 
 if (function_exists('WC')) {
 
-    add_shortcode($tag = 'product_variable_stock_quantity', $callback = 'product_variable_stock_quantity_shortcode');
+    add_shortcode(tag: 'product_variable_stock_quantity', callback: 'product_variable_stock_quantity_shortcode');
 
     function product_variable_stock_total_calculate($product_id)
     {

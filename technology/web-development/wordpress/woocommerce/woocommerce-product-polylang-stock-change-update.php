@@ -6,8 +6,8 @@
 
 if (class_exists('WooCommerce') && WC() && class_exists('Polylang')) {
 
-    add_action($hook_name = 'woocommerce_product_set_stock', $callback = 'polylang_update_modified_date_on_stock_change', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_variation_set_stock', $callback = 'polylang_update_modified_date_on_stock_change', $priority = 10, $accepted_args = 1);
+    add_action(hook_name: 'woocommerce_product_set_stock', callback: 'polylang_update_modified_date_on_stock_change', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_variation_set_stock', callback: 'polylang_update_modified_date_on_stock_change', priority: 10, accepted_args: 1);
 
     function polylang_update_modified_date_on_stock_change($product)
     {

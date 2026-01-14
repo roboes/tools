@@ -3,7 +3,7 @@
 // WooCommerce - "Add to cart" accept product warning terms
 // Last update: 2026-01-13
 
-if (function_exists('WC')) {
+if (function_exists('WC') && !is_admin()) {
 
     add_action(hook_name: 'wp_footer', callback: 'woocommerce_add_terms_checkbox_product_warning', priority: 10, accepted_args: 1);
 

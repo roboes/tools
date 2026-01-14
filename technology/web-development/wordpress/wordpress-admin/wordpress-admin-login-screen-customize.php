@@ -1,13 +1,15 @@
 <?php
 // WordPress Admin - Customize Login Screen
-// Last update: 2024-08-18
+// Last update: 2026-01-14
 
 
 // Customize Login Screen
-add_action($hook_name = 'login_enqueue_scripts', $callback = 'login_screen_customize', $priority = 10, $accepted_args = 1);
+add_action(hook_name: 'login_enqueue_scripts', callback: 'login_screen_customize', priority: 10, accepted_args: 1);
 
-function login_screen_customize()
+function login_screen_customize(): void
 {
+    $website_logo_url = esc_url(get_option(option: 'siteurl') . '/wp-content/uploads/' . 'logo.png');
+
     ?>
     <style type="text/css">
         :root {
@@ -23,7 +25,7 @@ function login_screen_customize()
 
         /* Logo */
         .login h1 a {
-            background-image: url("<?php echo get_option($option = 'siteurl', $default_value = false); ?>/wp-content/uploads/logo.png") !important;
+            background-image: url("<?php echo $website_logo_url; ?>") !important;
             height: 80px !important;
             width: auto !important;
             background-size: contain !important;
@@ -79,7 +81,7 @@ function login_screen_customize()
         document.addEventListener("DOMContentLoaded", function() {
             const wpLink = document.querySelector(".login h1 a");
             if (wpLink) {
-                wpLink.href = "";
+                wpLink.href = "<?php echo esc_url(home_url()); ?>";
             }
         });
     </script>

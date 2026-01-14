@@ -1,14 +1,17 @@
 <?php
 
 // WordPress Admin - Store open status
-// Last update: 2025-10-26
+// Last update: 2026-01-14
 
+add_shortcode(tag: 'wordpress_admin_store_open_status', callback: 'store_hours_shortcode');
 
-add_shortcode($tag = 'wordpress_admin_store_open_status', $callback = 'store_hours_shortcode');
-
-function store_hours_shortcode()
+function store_hours_shortcode(): string
 {
-    // Setup
+    if (is_admin() && !defined('DOING_AJAX')) {
+        return '';
+    }
+
+    // Settings
     $opening_hours = [
         'Monday' => ['10:00', '17:00'],
         'Tuesday' => ['10:00', '17:00'],
@@ -30,7 +33,12 @@ function store_hours_shortcode()
     $current_date = $current_datetime->format('Y-m-d');
 
     // Get current language
-    $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']))) ? pll_current_language('slug') : 'en';
+    $current_language = 'en';
+    if (function_exists('pll_current_language')) {
+        if (pll_current_language('slug') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']), true)) {
+            $current_language = pll_current_language('slug');
+        }
+    }
 
     if (in_array($current_date, $public_holidays, true)) {
         return generate_message('holiday', $current_language);
@@ -65,7 +73,7 @@ function store_hours_shortcode()
     return generate_message('closed', $current_language);
 }
 
-function generate_message($status, $language)
+function generate_message(string $status, string $language): string
 {
     static $statuses = [
         'open' => [

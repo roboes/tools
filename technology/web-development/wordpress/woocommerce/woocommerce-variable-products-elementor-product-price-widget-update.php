@@ -5,7 +5,7 @@
 
 if (function_exists('WC')) {
 
-    add_action($hook_name = 'wp_footer', $callback = 'custom_variation_price_update_script', $priority = 10, $accepted_args = 1);
+    add_action(hook_name: 'wp_footer', callback: 'custom_variation_price_update_script', priority: 10, accepted_args: 1);
 
     function custom_variation_price_update_script()
     {

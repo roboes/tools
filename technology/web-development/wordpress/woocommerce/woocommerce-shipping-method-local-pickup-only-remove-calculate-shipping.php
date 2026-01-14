@@ -5,7 +5,7 @@
 
 if (function_exists('WC')) {
 
-    add_filter($hook_name = 'woocommerce_product_needs_shipping', $callback = 'woocommerce_shipping_method_local_pickup_only_remove_calculate_shipping', $priority = 10, $accepted_args = 1);
+    add_filter(hook_name: 'woocommerce_product_needs_shipping', callback: 'woocommerce_shipping_method_local_pickup_only_remove_calculate_shipping', priority: 10, accepted_args: 1);
 
     function woocommerce_shipping_method_local_pickup_only_remove_calculate_shipping()
     {

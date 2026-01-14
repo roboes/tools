@@ -9,7 +9,7 @@
 
 
 // Schedule cron job on a specific date and time if not already scheduled
-add_action($hook_name = 'wp_loaded', $callback = 'schedule_custom_cron_job_function_product_set_out_of_stock', $priority = 10, $accepted_args = 1);
+add_action(hook_name: 'wp_loaded', callback: 'schedule_custom_cron_job_function_product_set_out_of_stock', priority: 10, accepted_args: 1);
 
 function schedule_custom_cron_job_function_product_set_out_of_stock()
 {

@@ -11,13 +11,13 @@
 if (function_exists('WC')) {
 
     // Change the default "woocommerce_ajax_variation_threshold" setting to increase variable product variation threshold
-    add_filter($hook_name = 'woocommerce_ajax_variation_threshold', $callback = function ($qty, $product) {
+    add_filter(hook_name: 'woocommerce_ajax_variation_threshold', callback: function ($qty, $product) {
         return 60;
-    }, $priority = 10, $accepted_args = 2);
+    }, priority: 10, accepted_args: 2);
 
 
     // Modify available variations (handles large variation sets)
-    add_filter($hook_name = 'woocommerce_available_variation', $callback = 'hide_unavailable_variations', $priority = 10, $accepted_args = 3);
+    add_filter(hook_name: 'woocommerce_available_variation', callback: 'hide_unavailable_variations', priority: 10, accepted_args: 3);
 
     function hide_unavailable_variations($variation_data, $product, $variation)
     {

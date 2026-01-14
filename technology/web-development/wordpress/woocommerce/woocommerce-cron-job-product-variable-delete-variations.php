@@ -12,7 +12,7 @@
 
 
 // Schedule cron job if not already scheduled
-add_action($hook_name = 'wp_loaded', $callback = function () {
+add_action(hook_name: 'wp_loaded', callback: function () {
 
     if (!wp_next_scheduled($hook = 'cron_job_schedule_variable_product_delete_variations', $args = array())) {
 
@@ -24,11 +24,11 @@ add_action($hook_name = 'wp_loaded', $callback = function () {
         wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'weekly', $hook = 'cron_job_schedule_variable_product_delete_variations', $args = array(), $wp_error = false);
 
     }
-}, $priority = 10, $accepted_args = 1);
+}, priority: 10, accepted_args: 1);
 
 
 // Hook the function to the scheduled event
-add_action($hook_name = 'cron_job_schedule_variable_product_delete_variations', $callback = 'cron_job_run_variable_product_delete_variations', $priority = 10, $accepted_args = 1);
+add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'cron_job_run_variable_product_delete_variations', priority: 10, accepted_args: 1);
 
 
 // Define the function to be hooked

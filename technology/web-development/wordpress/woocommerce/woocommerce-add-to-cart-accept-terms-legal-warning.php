@@ -3,7 +3,7 @@
 // WooCommerce - "Add to cart" accept legal warning terms
 // Last update: 2026-01-13
 
-if (function_exists('WC')) {
+if (function_exists('WC') && !is_admin()) {
 
     add_action(hook_name: 'woocommerce_before_add_to_cart_button', callback: 'woocommerce_add_terms_checkbox_legal_warning', priority: 10, accepted_args: 1);
 

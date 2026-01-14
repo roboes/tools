@@ -4,16 +4,16 @@
 // Last update: 2025-07-14
 
 
-// add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
-// add_action($hook_name = 'woocommerce_before_cart_totals', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_cart_item_removed', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_cart_item_restored', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
+// add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: 'validate_package_fit_on_add_to_cart', priority: 10, accepted_args: 4);
+// add_action(hook_name: 'woocommerce_before_cart_totals', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_after_cart_item_quantity_update', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_cart_item_removed', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_cart_item_restored', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
 
 
 // Modify shipping package
-// add_filter($hook_name = 'woocommerce_cart_shipping_packages', $callback = 'modify_shipping_package', $priority = 10, $accepted_args = 1);
-// add_filter($hook_name = 'woocommerce_get_cart_item_from_session', $callback = 'override_cart_item_dimensions', $priority = 10, $accepted_args = 3);
+// add_filter(hook_name: 'woocommerce_cart_shipping_packages', callback: 'modify_shipping_package', priority: 10, accepted_args: 1);
+// add_filter(hook_name: 'woocommerce_get_cart_item_from_session', callback: 'override_cart_item_dimensions', priority: 10, accepted_args: 3);
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -30,9 +30,9 @@
 if (function_exists('WC')) {
 
     // Add best package fit inside WooCommerce orders using a custom field
-    // add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit_recent_orders', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_admin_order_data_after_order_details', $callback = 'display_custom_order_meta', $priority = 10, $accepted_args = 1);
+    // add_action(hook_name: 'woocommerce_payment_complete', callback: 'calculate_and_store_package_best_fit', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_payment_complete', callback: 'calculate_and_store_package_best_fit_recent_orders', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
 
 
     function get_cart_items()
