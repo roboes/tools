@@ -5,7 +5,7 @@
 
 
 if (function_exists('WC')) {
-    add_action('woocommerce_before_variations_form', 'product_variable_stock_total_display');
+    add_action(hook_name: 'woocommerce_before_variations_form', callback: 'product_variable_stock_total_display', priority: 10, accepted_args: 0);
 
     function product_variable_stock_total_display(): void
     {
@@ -32,12 +32,11 @@ if (function_exists('WC')) {
             return;
         }
 
-        // Get current language (Polylang)
+        // Get current language
         $current_language = 'en';
         if (function_exists('pll_current_language')) {
-            $pll_lang = pll_current_language('slug');
-            if ($pll_lang && in_array($pll_lang, pll_languages_list(['fields' => 'slug']), true)) {
-                $current_language = $pll_lang;
+            if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                $current_language = pll_current_language('slug');
             }
         }
 

@@ -57,7 +57,16 @@ function search_pages_for_terms($search_terms, $languages = array())
             $page_id = $page->ID;
 
             // Get language of the page using Polylang function
-            $page_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($page_id, 'slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_get_post_language($page_id, 'slug') : '';
+            $page_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($page_id, 'slug'), pll_languages_list(['fields' => 'slug']))) ? pll_get_post_language($page_id, 'slug') : '';
+
+            // Get page language
+            $page_language = '';
+            if (function_exists('pll_get_post_language')) {
+                if (pll_get_post_language($page_id, 'slug') && in_array(needle: pll_get_post_language($page_id, 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                    $page_language = pll_get_post_language($page_id, 'slug');
+                }
+            }
+
 
             // Check if page language is in allowed languages or if no languages are specified
             if (empty($allowed_languages) || in_array($page_language, $allowed_languages)) {

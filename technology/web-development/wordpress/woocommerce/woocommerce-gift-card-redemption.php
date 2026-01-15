@@ -34,7 +34,12 @@ if (function_exists('WC')) {
                 ];
 
                 // Get current language
-                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+                $current_language = 'en';
+                if (function_exists('pll_current_language')) {
+                    if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                        $current_language = pll_current_language('slug');
+                    }
+                }
 
                 if ($current_language == 'de') {
                     $cf7_url = site_url('/de/gutschein-einlosen/');
@@ -216,7 +221,7 @@ if (function_exists('WC')) {
             $product_variation_appointment_time = isset($product_variation_appointment_datetime[1]) ? $product_variation_appointment_datetime[1] : '';
 
             // Get the current date and time (date of submission)
-            $inserted_date = (new DateTime('now', wp_timezone()))->format('Y-m-d H:i:s');
+            $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
             send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
@@ -272,7 +277,12 @@ if (function_exists('WC')) {
         $order = wc_get_order($order_id);
 
         // Get current language
-        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+        $current_language = 'en';
+        if (function_exists('pll_current_language')) {
+            if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                $current_language = pll_current_language('slug');
+            }
+        }
 
         // Initialize an empty array to hold product data
         $data_array = array();
@@ -326,7 +336,7 @@ if (function_exists('WC')) {
             $customer_order_notes = $order->get_customer_note();
 
             // Get the current date and time (date of order completion)
-            $inserted_date = (new DateTime('now', wp_timezone()))->format('Y-m-d H:i:s');
+            $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
             send_training_confirmation_email($product_id = $product_id, $customer_email = $customer_email, $customer_name = $customer_name, $product_name = $product_name, $product_variation_own_portafilter_machine = $product_variation_own_portafilter_machine, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $product_quantity = $product_quantity, $language = $current_language);
@@ -420,11 +430,10 @@ if (function_exists('WC')) {
                 'en' => 'Thank you for your booking',
             ],
             'body' => [
-                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat('Y-m-d', $product_variation_appointment_date)->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
-        $timezone = get_option('timezone_string');
 
         // Retrieve custom meta for training duration
         $product_training_duration_minutes = wc_get_product($product_id)->get_meta('product_training_duration_minutes', true);
@@ -435,7 +444,7 @@ if (function_exists('WC')) {
         }
 
         // Generate the .ics content
-        $ics_content = calendar_event_ics_generator($product_name = $product_name, $product_training_location = $product_training_location, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $appointment_duration = $product_training_duration_minutes, $calendar_notification = 2880, $timezone);
+        $ics_content = calendar_event_ics_generator($product_name = $product_name, $product_training_location = $product_training_location, $product_variation_appointment_date = $product_variation_appointment_date, $product_variation_appointment_time = $product_variation_appointment_time, $appointment_duration = $product_training_duration_minutes, $calendar_notification = 2880, $timezone = wp_timezone_string());
 
         // Create a unique temporary folder
         $temp_folder = sys_get_temp_dir() . '/' . sanitize_title($product_name) . '-' . time();
@@ -477,7 +486,7 @@ if (function_exists('WC')) {
     {
 
         // Define the start and end times for the event
-        $start_time = new DateTime($product_variation_appointment_date . ' ' . $product_variation_appointment_time, new DateTimeZone($timezone));
+        $start_time = new DateTime(datetime: $product_variation_appointment_date . ' ' . $product_variation_appointment_time, timezone: wp_timezone());
         $start_time_str = $start_time->format('Ymd\THis');
 
         // Define the end time

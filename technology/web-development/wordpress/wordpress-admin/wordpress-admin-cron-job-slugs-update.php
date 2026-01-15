@@ -1,14 +1,14 @@
 <?php
 
-// WordPress Admin - Run slugs update daily (cron job)
-// Last update: 2025-17-14
+// WordPress Admin - Run slugs update (cron job)
+// Last update: 2025-07-14
 
 // Unschedule all events attached to a given hook
-// wp_clear_scheduled_hook($hook='cron_job_schedule_slugs_update', $args=array(), $wp_error=false);
+// wp_clear_scheduled_hook(hook: 'cron_job_schedule_slugs_update', args: array(), wp_error: false);
 
 
 // Run action once (run on WP Console)
-// do_action($hook_name='cron_job_schedule_slugs_update');
+// do_action(hook_name: 'cron_job_schedule_slugs_update');
 
 
 // Add custom cron schedules
@@ -27,15 +27,15 @@ function custom_cron_schedules($schedules)
 // Schedule cron job if not already scheduled
 add_action(hook_name: 'wp_loaded', callback: function () {
 
-    if (!wp_next_scheduled($hook = 'cron_job_schedule_slugs_update', $args = array())) {
+    if (!wp_next_scheduled(hook: 'cron_job_schedule_slugs_update', args: array())) {
 
         // Settings
-        $start_datetime = '2025-01-05 02:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
+        $start_datetime = '2026-01-04 02:00:00';
 
-        $start_datetime = new DateTime($start_datetime);
+        $start_datetime = new DateTime(datetime: $start_datetime, timezone: wp_timezone());
         $start_timestamp = $start_datetime->getTimestamp();
 
-        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'weekly', $hook = 'cron_job_schedule_slugs_update', $args = array(), $wp_error = false);
+        wp_schedule_event(timestamp: $start_timestamp, recurrence: 'weekly', hook: 'cron_job_schedule_slugs_update', args: array(), wp_error: false);
     }
 
 }, priority: 10, accepted_args: 1);
@@ -73,8 +73,13 @@ function cron_job_run_slugs_update()
 
         if (!empty($products)) {
             foreach ($products as $product) {
-                // Determine the language slug of the product
-                $product_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($product->ID, 'slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_get_post_language($product->ID, 'slug') : 'en';
+                // Get product language
+                $product_language = 'en';
+                if (function_exists('pll_get_post_language')) {
+                    if (pll_get_post_language($product->ID, 'slug') && in_array(needle: pll_get_post_language($product->ID, 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                        $product_language = pll_get_post_language($product->ID, 'slug');
+                    }
+                }
 
                 foreach ($attribute_custom_field_pairs as $pair) {
                     $attribute_id = $pair['attribute_id'];

@@ -23,7 +23,7 @@ if (function_exists('WC') && !is_admin()) {
     // Get current language
     $current_language = 'en';
     if (function_exists('pll_current_language')) {
-        if (pll_current_language('slug') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']), true)) {
+        if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
             $current_language = pll_current_language('slug');
         }
     }

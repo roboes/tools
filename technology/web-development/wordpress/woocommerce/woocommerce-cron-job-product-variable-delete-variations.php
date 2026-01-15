@@ -1,54 +1,54 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2025-10-13
+// Last update: 2026-01-15
 
 // Unschedule all events attached to a given hook
-// wp_clear_scheduled_hook($hook='cron_job_schedule_variable_product_delete_variations', $args=array(), $wp_error=false);
+// wp_clear_scheduled_hook(hook: 'cron_job_schedule_variable_product_delete_variations', args: array(), wp_error: false);
 
 
 // Run action once (run on WP Console)
-// do_action($hook_name='cron_job_schedule_variable_product_delete_variations');
+// do_action(hook_name: 'cron_job_schedule_variable_product_delete_variations');
 
 
 // Schedule cron job if not already scheduled
-add_action(hook_name: 'wp_loaded', callback: function () {
+if (function_exists('WC')) {
+    add_action(hook_name: 'wp_loaded', callback: function (): void {
 
-    if (!wp_next_scheduled($hook = 'cron_job_schedule_variable_product_delete_variations', $args = array())) {
+        if (!wp_next_scheduled(hook: 'cron_job_schedule_variable_product_delete_variations', args: [])) {
 
-        // Settings
-        $start_datetime = '2025-01-05 03:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
-        $start_datetime = new DateTime($start_datetime);
-        $start_timestamp = $start_datetime->getTimestamp();
+            // Settings
+            $start_datetime = '2026-01-04 02:00:00';
+            $start_datetime_obj = new DateTime(datetime: $start_datetime, timezone: wp_timezone());
+            $start_timestamp = $start_datetime_obj->getTimestamp();
 
-        wp_schedule_event($timestamp = $start_timestamp, $recurrence = 'weekly', $hook = 'cron_job_schedule_variable_product_delete_variations', $args = array(), $wp_error = false);
-
-    }
-}, priority: 10, accepted_args: 1);
-
-
-// Hook the function to the scheduled event
-add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'cron_job_run_variable_product_delete_variations', priority: 10, accepted_args: 1);
-
-
-// Define the function to be hooked
-function cron_job_run_variable_product_delete_variations()
-{
-    product_variable_delete_variations($product_ids = [17739, 22204], $delete = true);
+            wp_schedule_event(timestamp: $start_timestamp, recurrence: 'weekly', hook: 'cron_job_schedule_variable_product_delete_variations', args: [], wp_error: false);
+        }
+    }, priority: 10, accepted_args: 0);
 }
 
 
-function product_variable_delete_variations($product_ids, $delete = false)
+// Hook the function to the scheduled event
+add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'product_variable_delete_variations', priority: 10, accepted_args: 1);
+
+
+function product_variable_delete_variations(bool $delete = true): void
 {
-    $timezone = get_option('timezone_string');
-    $current_datetime = new DateTime('now', new DateTimeZone($timezone));
+    if (!function_exists('WC')) {
+        return;
+    }
+
+    // Settings
+    $product_ids = [17739, 22204];
+
+    $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
 
     foreach ($product_ids as $product_id) {
         // Handle Polylang translations
-        if (class_exists('Polylang') && function_exists('pll_get_post_translations')) {
-            $product_ids_to_process = array_values(pll_get_post_translations($product_id));
+        if (class_exists(class: 'Polylang') && function_exists(function: 'pll_get_post_translations')) {
+            $product_ids_to_process = array_values(pll_get_post_translations(post_id: (int) $product_id));
         } else {
-            $product_ids_to_process = [$product_id];
+            $product_ids_to_process = [(int) $product_id];
         }
 
         // Now loop through all product IDs (original + translations)
@@ -56,33 +56,37 @@ function product_variable_delete_variations($product_ids, $delete = false)
 
             $product = wc_get_product($product_id_current);
 
-            if (!$product) {
+            if (!$product instanceof WC_Product) {
                 echo "Product ID {$product_id_current} not found.";
                 continue;
             }
 
             $product_name = $product->get_name();  // Get product name
 
-            if ($product->is_type('variable')) {
+            if ($product->is_type(type: 'variable')) {
                 $variations = $product->get_children();
                 $variations_to_delete = [];
 
                 foreach ($variations as $variation_id) {
                     $variation = new WC_Product_Variation($variation_id);
+                    if (!$variation->get_id()) {
+                        continue;
+                    }
+
                     $variation_name = $variation->get_name();  // Get variation name
                     $attributes = $variation->get_variation_attributes(); // Get variation attributes
 
                     // Check for 'Termin' attribute
-                    $attribute_value = $variation->get_attribute('Termin');
+                    $attribute_value = $variation->get_attribute(attribute: 'Termin');
                     if ($attribute_value) {
-                        $term_date = substr($attribute_value, 0, 10); // Extract date (DD.MM.YYYY)
-                        if (preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $term_date)) {
-                            $term_date = DateTime::createFromFormat('d.m.Y - H:i', $attribute_value, new DateTimeZone($timezone));
+                        $term_date_prefix = substr(string: $attribute_value, offset: 0, length: 10); // Extract date (DD.MM.YYYY)
+                        if (preg_match(pattern: '/^\d{2}\.\d{2}\.\d{4}$/', subject: $term_date_prefix)) {
+                            $term_date = DateTime::createFromFormat(format: 'd.m.Y - H:i', datetime: $attribute_value, timezone: wp_timezone());
 
                             # Check if $term_date is false
                             if (!$term_date) {
-                                echo "Warning: Could not parse date string '$term_date' for variation ID {$variation_id} on product ID {$product_id_current}.\n";
-                                continue; // Skip to the next variation
+                                echo "Warning: Could not parse date string '$attribute_value' for variation ID {$variation_id}.\n";
+                                continue;
                             }
 
                             // Check if the date is in the past
@@ -103,43 +107,43 @@ function product_variable_delete_variations($product_ids, $delete = false)
                 if (!empty($variations_to_delete)) {
                     if ($delete) {
                         // Clear caches before deletion
-                        wc_delete_product_transients($product_id_current);
-                        delete_transient('wc_var_prices_' . $product_id_current);
+                        wc_delete_product_transients(product_id: $product_id_current);
+                        delete_transient(transient: 'wc_var_prices_' . $product_id_current);
 
-                        foreach ($variations_to_delete as $variation) {
+                        foreach ($variations_to_delete as $variation_item) {
                             // Delete variation (force delete)
-                            wp_delete_post($variation['variation_id'], true);
+                            wp_delete_post(post_id: $variation_item['variation_id'], force_delete: true);
 
                             // Clear variation-specific caches
-                            wc_delete_product_transients($variation['variation_id']);
+                            wc_delete_product_transients(product_id: $variation_item['variation_id']);
 
-                            echo "Deleted variation - Product ID: {$variation['product_id_current']}, Product Name: {$variation['product_name']}, Variation ID: {$variation['variation_id']}, Variation Name: {$variation['variation_name']}, Attributes: " . json_encode($variation['attributes']) . "\n";
+                            echo "Deleted variation - Product ID: {$variation_item['product_id_current']}, Product Name: {$variation_item['product_name']}, Variation ID: {$variation_item['variation_id']}, Variation Name: {$variation_item['variation_name']}, Attributes: " . wp_json_encode(data: $variation_item['attributes']) . "\n";
                         }
 
                         // Refresh the product object to get updated children list
                         $product = wc_get_product($product_id_current);
 
-                        // Sync the parent product to update available variations
-                        WC_Product_Variable::sync($product);
-
-                        // Save the parent product
-                        $product->save();
+                        if ($product instanceof WC_Product_Variable) {
+                            // Sync the parent product to update available variations
+                            WC_Product_Variable::sync(product_id: $product_id_current);
+                            $product->save();
+                        }
 
                         // Clear all caches again after save
-                        wc_delete_product_transients($product_id_current);
-                        delete_transient('wc_var_prices_' . $product_id_current);
-                        wp_cache_delete('product-' . $product_id_current, 'products');
-                        clean_post_cache($product_id_current);
+                        wc_delete_product_transients(product_id: $product_id_current);
+                        delete_transient(transient: 'wc_var_prices_' . $product_id_current);
+                        wp_cache_delete(key: 'product-' . $product_id_current, group: 'products');
+                        clean_post_cache(post: $product_id_current);
 
                         // If using Redis/Object Cache, clear product-specific cache
-                        wp_cache_delete($product_id_current, 'post_meta');
-                        wp_cache_delete($product_id_current, 'posts');
+                        wp_cache_delete(key: $product_id_current, group: 'post_meta');
+                        wp_cache_delete(key: $product_id_current, group: 'posts');
 
                         echo "Synced and saved product ID $product_id_current.\n";
 
                     } else {
-                        foreach ($variations_to_delete as $variation) {
-                            echo "Variation to be deleted - Product ID: {$variation['product_id_current']}, Product Name: {$variation['product_name']}, Variation ID: {$variation['variation_id']}, Variation Name: {$variation['variation_name']}, Attributes: " . json_encode($variation['attributes']) . "\n";
+                        foreach ($variations_to_delete as $variation_item) {
+                            echo "Variation to be deleted - Product ID: {$variation_item['product_id_current']}, Product Name: {$variation_item['product_name']}, Variation ID: {$variation_item['variation_id']}, Variation Name: {$variation_item['variation_name']}, Attributes: " . wp_json_encode(data: $variation_item['attributes']) . "\n";
                         }
                     }
                 } else {

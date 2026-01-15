@@ -295,7 +295,12 @@ if (function_exists('WC')) {
             $product_cart_quantity = $cart_item ? $cart_item['quantity'] : null;
 
             // Get current language
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+            $current_language = 'en';
+            if (function_exists('pll_current_language')) {
+                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                    $current_language = pll_current_language('slug');
+                }
+            }
 
             if ($cart_item_key && $new_quantity !== null) {
                 if ($product_cart_quantity !== null) {
@@ -357,9 +362,15 @@ if (function_exists('WC')) {
         error_log('Best package fit: ' . json_encode($package_best_fit));
 
         if (!$package_best_fit) {
-            // No suitable package found, display an error message
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+            // Get current language
+            $current_language = 'en';
+            if (function_exists('pll_current_language')) {
+                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                    $current_language = pll_current_language('slug');
+                }
+            }
 
+            // No suitable package found, display an error message
             if ($current_language === 'pt') {
                 $message = __('O produto selecionado não pôde ser adicionado ao seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
             } else {

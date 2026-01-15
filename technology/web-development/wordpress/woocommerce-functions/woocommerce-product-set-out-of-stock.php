@@ -5,7 +5,7 @@
 
 
 // Unschedule all events attached to a given hook
-// wp_clear_scheduled_hook( $hook='function_product_set_out_of_stock', $args=array(), $wp_error=false );
+// wp_clear_scheduled_hook(hook: 'function_product_set_out_of_stock', args: array(), wp_error: false);
 
 
 // Schedule cron job on a specific date and time if not already scheduled
@@ -13,15 +13,15 @@ add_action(hook_name: 'wp_loaded', callback: 'schedule_custom_cron_job_function_
 
 function schedule_custom_cron_job_function_product_set_out_of_stock()
 {
-    if (! wp_next_scheduled($hook = 'function_product_set_out_of_stock', $args = array())) {
+    if (! wp_next_scheduled(hook: 'function_product_set_out_of_stock', args: array())) {
 
         // Settings
-        $start_datetime = '2024-06-22 00:00:00'; // Time is the same as the WordPress defined get_option('timezone_string');
+        $start_datetime = '2024-06-22 00:00:00';
 
-        $start_datetime = new DateTime($start_datetime);
+        $start_datetime = new DateTime(datetime: $start_datetime, timezone: wp_timezone());
         $start_timestamp = $start_datetime->getTimestamp();
 
-        wp_schedule_single_event($timestamp = $start_timestamp, $hook = 'function_product_set_out_of_stock', $args = array(), $wp_error = false);
+        wp_schedule_single_event(timestamp: $start_timestamp, hook: 'function_product_set_out_of_stock', args: array(), wp_error: false);
     }
 }
 

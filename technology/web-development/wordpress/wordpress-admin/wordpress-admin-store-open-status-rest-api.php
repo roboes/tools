@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status (using REST API)
-// Last update: 2026-01-14
+// Last update: 2026-01-15
 
 add_shortcode(tag: 'wordpress_admin_store_open_status', callback: 'store_hours_shortcode');
 add_action(hook_name: 'rest_api_init', callback: 'register_store_hours_endpoint', priority: 10, accepted_args: 1);
@@ -35,7 +35,7 @@ function store_hours_shortcode(): string
     // Get current language
     $current_language = 'en';
     if (function_exists('pll_current_language')) {
-        if (pll_current_language('slug') && in_array(pll_current_language('slug'), pll_languages_list(['fields' => 'slug']), true)) {
+        if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
             $current_language = pll_current_language('slug');
         }
     }
@@ -86,8 +86,7 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
     $closed_days = ['2026-12-24', '2026-12-31', '2027-12-24', '2027-12-31'];
     $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
 
-    $timezone = new DateTimeZone(get_option('timezone_string') ?: 'UTC');
-    $current_datetime = new DateTime('now', $timezone);
+    $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
 
@@ -101,10 +100,10 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
         $message = generate_message('special_event', $current_language);
     } elseif (isset($special_opening_hours[$current_date])) {
         [$start_time, $end_time] = $special_opening_hours[$current_date];
-        $message = get_status_for_hours($current_datetime, $start_time, $end_time, $timezone, $current_language);
+        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $current_language);
     } elseif (isset($opening_hours[$current_day_of_week])) {
         [$start_time, $end_time] = $opening_hours[$current_day_of_week];
-        $message = get_status_for_hours($current_datetime, $start_time, $end_time, $timezone, $current_language);
+        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $current_language);
     } else {
         $message = generate_message('closed', $current_language);
     }
@@ -125,8 +124,8 @@ function get_status_for_hours(
     DateTimeZone $timezone,
     string $language
 ): string {
-    $start_datetime = DateTime::createFromFormat('H:i', $start_time, $timezone);
-    $end_datetime = DateTime::createFromFormat('H:i', $end_time, $timezone);
+    $start_datetime = DateTime::createFromFormat(format: 'H:i', datetime: $start_time, timezone: $timezone);
+    $end_datetime = DateTime::createFromFormat(format: 'H:i', datetime: $end_time, timezone: $timezone);
     $closing_soon_datetime = (clone $end_datetime)->modify('-1 hour');
 
     if ($current_datetime >= $start_datetime && $current_datetime < $end_datetime) {

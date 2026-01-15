@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Display multilingual top notices and inline badges based on product attributes on edit order page
-// Last update: 2026-01-14
+// Last update: 2026-01-15
 
 if (function_exists('WC')) {
     add_action(hook_name: 'admin_notices', callback: 'woocommerce_order_page_alerts', priority: 10, accepted_args: 1);

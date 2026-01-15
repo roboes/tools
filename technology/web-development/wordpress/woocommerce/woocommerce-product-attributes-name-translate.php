@@ -1,14 +1,12 @@
 <?php
 
 // WooCommerce - Product attributes name translate
-// Last update: 2024-11-22
+// Last update: 2026-01-15
 
+if (function_exists('WC') && !is_admin()) {
+    add_action(hook_name: 'init', callback: 'translate_attributes_name', priority: 10, accepted_args: 0);
 
-if (function_exists('WC')) {
-
-    add_action(hook_name: 'after_setup_theme', callback: 'translate_attributes_name', priority: 10, accepted_args: 1);
-
-    function translate_attributes_name()
+    function translate_attributes_name(): void
     {
 
         if (function_exists('pll_current_language')) {
@@ -30,15 +28,21 @@ if (function_exists('WC')) {
             );
 
             // Hook into the gettext filter
-            add_filter(hook_name: 'gettext', callback: function ($translated, $text, $domain) use ($translations) {
-                $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+            add_filter(hook_name: 'gettext', callback: function (string $translated, string $text, string $domain) use ($translations): string {
+                // Get current language
+                $current_language = 'en';
+                if (function_exists('pll_current_language')) {
+                    if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                        $current_language = pll_current_language('slug');
+                    }
+                }
+
                 if (isset($translations[$current_language][$text])) {
                     $translated = $translations[$current_language][$text];
                 }
-                return $translated;
 
+                return $translated;
             }, priority: 10, accepted_args: 3);
         }
     }
-
 }
