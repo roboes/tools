@@ -1,23 +1,28 @@
 <?php
 
+
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2026-01-14
+// Last update: 2026-01-15
 
 
+/*
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
-// $orders = wc_get_orders(['limit' => -1]);
-// foreach ($orders as $order) {
-// calculate_and_store_package_best_fit($order->get_id());
-// }
+$orders = wc_get_orders(['limit' => -1]);
+foreach ($orders as $order) {
+    calculate_and_store_package_best_fit($order->get_id());
+}
+*/
 
+/*
 // Delete best package fit meta data
-// $orders = wc_get_orders(['limit' => -1]);
-// foreach ($orders as $order) {
-// if (!empty($order->get_meta('order_package_best_fit', true))) {
-// $order->delete_meta_data('order_package_best_fit');
-// $order->save();
-// }
-// }
+$orders = wc_get_orders(['limit' => -1]);
+foreach ($orders as $order) {
+    if (!empty($order->get_meta('order_package_best_fit', true))) {
+        $order->delete_meta_data('order_package_best_fit');
+        $order->save();
+    }
+}
+*/
 
 
 // Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) installed via Composer:
@@ -31,7 +36,7 @@ use DVDoug\BoxPacker\Packer;
 use DVDoug\BoxPacker\Rotation;
 use DVDoug\BoxPacker\Exception\NoBoxesAvailableException;
 
-if (function_exists('WC')) {
+if (function_exists('WC') && is_admin()) {
     add_action(hook_name: 'woocommerce_checkout_order_processed', callback: 'calculate_and_store_package_best_fit', priority: 10, accepted_args: 1);
     add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
 }

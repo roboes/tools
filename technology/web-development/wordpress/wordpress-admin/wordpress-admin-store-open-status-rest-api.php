@@ -3,8 +3,12 @@
 // WordPress Admin - Store open status (using REST API)
 // Last update: 2026-01-15
 
-add_shortcode(tag: 'wordpress_admin_store_open_status', callback: 'store_hours_shortcode');
+
 add_action(hook_name: 'rest_api_init', callback: 'register_store_hours_endpoint', priority: 10, accepted_args: 1);
+
+if (!is_admin()) {
+    add_shortcode(tag: 'wordpress_admin_store_open_status', callback: 'store_hours_shortcode');
+}
 
 function register_store_hours_endpoint(): void
 {
@@ -24,10 +28,6 @@ function register_store_hours_endpoint(): void
 
 function store_hours_shortcode(): string
 {
-    if (is_admin() && !defined('DOING_AJAX')) {
-        return '';
-    }
-
     static $instance = 0;
     $instance++;
     $unique_id = 'store-hours-container-' . $instance;

@@ -1,18 +1,10 @@
 <?php
 
 // WooCommerce - Settings
-// Last update: 2026-01-14
+// Last update: 2026-01-15
+
 
 if (function_exists('WC')) {
-
-    // Default sort
-    add_action(hook_name: 'current_screen', callback: function (WP_Screen $current_screen): void {
-        if (!is_admin()) {
-            return;
-        }
-        global $is_wc_order_screen;
-        $is_wc_order_screen = ($current_screen->id === 'edit-shop_order');
-    }, priority: 10, accepted_args: 1);
 
     // Always show country in formatted addresses (even if same as store base)
     add_filter(hook_name: 'woocommerce_formatted_address_force_country_display', callback: '__return_true', priority: 10, accepted_args: 1);
@@ -58,7 +50,7 @@ if (function_exists('WC')) {
     // PhastPress - Disable PhastPress on WooCommerce checkout and cart pages
     if (class_exists('\Kibo\PhastPlugins\PhastPress\WordPress')) {
         add_filter(hook_name: 'phastpress_disable', callback: function (bool $disable): bool {
-            if (is_admin() && !defined('DOING_AJAX')) {
+            if (is_admin()) {
                 return $disable;
             }
             return $disable || is_cart() || is_checkout();
@@ -68,7 +60,7 @@ if (function_exists('WC')) {
     // Hello Elementor theme - Disable gallery lightbox/slider/zoom
     if ('hello-elementor' === get_template()) {
         add_action(hook_name: 'wp', callback: function (): void {
-            if (is_admin() && !defined('DOING_AJAX')) {
+            if (is_admin()) {
                 return;
             }
             remove_theme_support('wc-product-gallery-lightbox');

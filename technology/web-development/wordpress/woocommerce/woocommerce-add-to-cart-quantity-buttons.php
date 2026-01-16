@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - "Add to cart" quantity buttons
-// Last update: 2026-01-14
+// Last update: 2026-01-15
 
 
 // Notes: Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)

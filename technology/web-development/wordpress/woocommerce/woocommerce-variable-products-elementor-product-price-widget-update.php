@@ -1,98 +1,101 @@
 <?php
 // WooCommerce - Variable products price update after variable selection for Elementor's "Product Price" widget
-// Last update: 2024-10-16
+// Last update: 2026-01-15
 
 
-if (function_exists('WC')) {
+if (function_exists('WC') && !is_admin()) {
 
-    add_action(hook_name: 'wp_footer', callback: 'custom_variation_price_update_script', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'wp_footer', callback: 'custom_variation_price_update_script', priority: 10, accepted_args: 0);
 
-    function custom_variation_price_update_script()
+    function custom_variation_price_update_script(): void
     {
+        if (!is_product()) {
+            return;
+        }
 
-        if (is_product()) {
+        $product = wc_get_product(get_queried_object_id());
 
-            global $product;
+        if (!$product instanceof WC_Product || !$product->is_type(type: 'variable')) {
+            return;
+        }
 
-            if ($product->is_type('variable')) {
-                ?>
-                <script type="text/javascript">
-                jQuery(document).ready(function($) {
-                    console.log('Variation price update script loaded.');
+        try {
+            $currency_symbol = get_woocommerce_currency_symbol();
+            $currency_pos = get_option(option: 'woocommerce_currency_pos');
+            $decimals = (int) wc_get_price_decimals();
 
-                    // Decode HTML entities for currency symbol
-                    const decodeHtmlEntities = (str) => {
-                        const txt = document.createElement("textarea");
-                        txt.innerHTML = str;
-                        return txt.value;
-                    };
+            // Get current language
+            $current_language = 'en';
+            if (function_exists('pll_current_language')) {
+                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                    $current_language = pll_current_language('slug');
+                }
+            }
 
-                    // Retrieve WooCommerce settings
-                    const currencySymbol = decodeHtmlEntities('<?php echo esc_js(get_woocommerce_currency_symbol()); ?>');
-                    const currencyPosition = '<?php echo esc_js(get_option("woocommerce_currency_pos")); ?>';
-                    const currencyDecimals = '<?php echo esc_js(wc_get_price_decimals()); ?>';
-                    const locale = 'de-DE';
+            $locale = match ($current_language) {
+                'de' => 'de-DE',
+                default => 'en-US',
+            };
 
-                    // Number formatter for price
-                    const formatter = new Intl.NumberFormat(locale, {
-                        minimumFractionDigits: parseInt(currencyDecimals),
-                        maximumFractionDigits: parseInt(currencyDecimals)
-                    });
+            ?>
+            <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                const priceContainer = $('.elementor-widget-woocommerce-product-price .elementor-widget-container p.price');
+                if (!priceContainer.length) return;
 
-                    // Function to format price based on currency position
-                    function formatPrice(price) {
-                        if (price === undefined) return ''; // Handle undefined price
-                        let formattedPrice = formatter.format(price);
-                        switch(currencyPosition) {
-                            case 'left':
-                                return currencySymbol + formattedPrice;
-                            case 'right':
-                                return formattedPrice + currencySymbol;
-                            case 'left_space':
-                                return currencySymbol + ' ' + formattedPrice;
-                            case 'right_space':
-                                return formattedPrice + ' ' + currencySymbol;
-                            default:
-                                return currencySymbol + formattedPrice; // default to left if unknown position
-                        }
+                // Cache original price range
+                const originalPriceHtml = priceContainer.html();
+
+                const decodeHtmlEntities = (str) => {
+                    const txt = document.createElement("textarea");
+                    txt.innerHTML = str;
+                    return txt.value;
+                };
+
+                const currencySymbol = decodeHtmlEntities('<?php echo esc_js($currency_symbol); ?>');
+                const currencyPosition = '<?php echo esc_js($currency_pos); ?>';
+                const currencyDecimals = <?php echo $decimals; ?>;
+                const locale = '<?php echo esc_js($locale); ?>';
+
+                const formatter = new Intl.NumberFormat(locale, {
+                    minimumFractionDigits: currencyDecimals,
+                    maximumFractionDigits: currencyDecimals
+                });
+
+                function formatPrice(price) {
+                    if (price === undefined || price === null) return '';
+                    let formattedPrice = formatter.format(price);
+                    switch(currencyPosition) {
+                        case 'left': return currencySymbol + formattedPrice;
+                        case 'right': return formattedPrice + currencySymbol;
+                        case 'left_space': return currencySymbol + ' ' + formattedPrice;
+                        case 'right_space': return formattedPrice + ' ' + currencySymbol;
+                        default: return currencySymbol + formattedPrice;
                     }
+                }
 
-                    // Listen to variation changes
-                    $('form.variations_form').on('found_variation', function(event, variation) {
-                        console.log('Variation found:', variation);
-
-                        // Use display_price for formatting
-                        const displayPrice = formatPrice(variation.display_price);
-                        const priceContainer = $('.elementor-widget-woocommerce-product-price .elementor-widget-container p.price');
-
-                        // Clear existing content in price container
-                        priceContainer.html(''); // Use html() instead of text() to avoid stripping markup
-
-                        // Append the formatted price
-                        if (displayPrice) {
-                            priceContainer.html(displayPrice);
-                        }
-
-                        // Handle sale price if necessary
+                $('form.variations_form')
+                    .on('found_variation', function(event, variation) {
+                        let htmlContent = '';
                         if (variation.display_price !== variation.display_regular_price) {
-                            console.log('Price with sale detected.');
                             const salePrice = formatPrice(variation.display_price);
                             const regularPrice = formatPrice(variation.display_regular_price);
-                            console.log('Sale price formatted:', salePrice);
-                            console.log('Regular price formatted:', regularPrice);
-
-                            // Display sale price and regular price in HTML with WooCommerce structure
-                            priceContainer.html('<del>' + regularPrice + '</del> <ins>' + salePrice + '</ins>');
+                            htmlContent = '<del aria-hidden="true">' + regularPrice + '</del> <ins>' + salePrice + '</ins>';
                         } else {
-                            // No sale price, show regular price
-                            priceContainer.html(displayPrice);
+                            htmlContent = formatPrice(variation.display_price);
                         }
+                        priceContainer.html(htmlContent);
+                    })
+                    .on('reset_data', function() {
+                        priceContainer.html(originalPriceHtml);
                     });
-                });
-                </script>
-                <?php
+            });
+            </script>
+            <?php
+        } catch (Throwable $error) {
+            if (defined(constant_name: 'WP_DEBUG') && WP_DEBUG) {
+                error_log(message: $error->getMessage());
             }
         }
     }
-
 }

@@ -1,7 +1,7 @@
 <?php
-
 // WooCommerce - Remove stock inventory count and price from "Add to Cart" session
-// Last update: 2025-01-14
+// Last update: 2026-01-15
+
 
 if (function_exists('WC') && !is_admin()) {
 

@@ -4,7 +4,7 @@
 // Last update: 2026-01-14
 
 // Get the timestamp when the function is scheduled
-$scheduled_timestamp = wp_next_scheduled(hook: 'function_slugs_update_daily', args: array());
+$scheduled_timestamp = wp_next_scheduled(hook: 'function_slugs_update_daily', args: []);
 
 if ($scheduled_timestamp !== false) {
     // Convert the timestamp to a readable date and time format

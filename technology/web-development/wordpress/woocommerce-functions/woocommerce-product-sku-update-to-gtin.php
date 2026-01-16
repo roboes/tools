@@ -3,10 +3,11 @@
 // WooCommerce Function - Update SKUs for all products and variations based on GTIN
 // Last update: 2025-07-14
 
+
 function woocommerce_product_sku_update_to_gtin()
 {
     // Query to get all products
-    $args = array('post_type' => array('product', 'product_variation'), 'posts_per_page' => -1, 'post_status' => array('publish', 'private'));
+    $args = ['post_type' => ['product', 'product_variation'], 'posts_per_page' => -1, 'post_status' => ['publish', 'private']];
     $products = get_posts($args);
 
     foreach ($products as $product_post) {

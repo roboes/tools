@@ -7,10 +7,10 @@
 function update_product_prices()
 {
     // Define the category slug
-    $category_slugs = array('specialty-coffees-de');
+    $category_slugs = ['specialty-coffees-de'];
 
     // Define the price mapping (current price => new price) as string keys
-    $price_updates = array(
+    $price_updates = [
         '7.00' => 7.90,
         '12.40' => 13.90,
         '24.80' => 27.80,
@@ -18,10 +18,10 @@ function update_product_prices()
         '11.15' => 12.50,
         '22.30' => 25.00,
         '11.00' => 15.00
-    );
+    ];
 
     // Convert category slugs to IDs
-    $category_ids = array();
+    $category_ids = [];
     foreach ($category_slugs as $slug) {
         $term = get_term_by('slug', $slug, 'product_cat');
         if ($term) {
@@ -35,19 +35,19 @@ function update_product_prices()
     }
 
     // Get all products in the category
-    $products = get_posts(array(
+    $products = get_posts([
         'post_type'      => 'product',
         'posts_per_page' => -1,
-        'tax_query'      => array(
-            array(
+        'tax_query'      => [
+            [
                 'taxonomy' => 'product_cat',
                 'field'    => 'term_id',
                 'terms'    => $category_ids,
                 'operator' => 'IN'
-            )
-        ),
-        'post_status' => array('publish', 'private')
-    ));
+            ]
+        ],
+        'post_status' => ['publish', 'private']
+    ]);
 
     foreach ($products as $product) {
         $product_id = $product->ID;

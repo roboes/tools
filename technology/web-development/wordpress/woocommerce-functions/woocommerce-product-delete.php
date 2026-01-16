@@ -8,11 +8,11 @@ if (function_exists('WC')) {
     function delete_all_english_products()
     {
         // Fetch all English products
-        $english_products = get_posts(array(
+        $english_products = get_posts([
             'post_type' => 'product',
             'lang' => 'en',
             'posts_per_page' => -1
-        ));
+        ]);
 
         foreach ($english_products as $english_product) {
             // Delete product

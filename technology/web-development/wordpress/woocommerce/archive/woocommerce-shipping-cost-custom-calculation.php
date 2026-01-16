@@ -24,7 +24,7 @@
 
 
 // Test
-// calculate_package_best_fit(array(array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518), array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518)));
+// calculate_package_best_fit([['quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518],['quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518]]);
 
 
 if (function_exists('WC')) {
@@ -95,7 +95,7 @@ if (function_exists('WC')) {
                     'height' => $new_height,
                 ];
                 if (calculate_package_best_fit_helper_try_fit($all_orientations, $index + 1, $new_dimensions, $package_dimensions)) {
-                    return true;
+                    return;
                 }
             }
         }

@@ -3,8 +3,9 @@
 // WordPress WooCommerce - Variable product delete variations (cron job)
 // Last update: 2026-01-15
 
+
 // Unschedule all events attached to a given hook
-// wp_clear_scheduled_hook(hook: 'cron_job_schedule_variable_product_delete_variations', args: array(), wp_error: false);
+// wp_clear_scheduled_hook(hook: 'cron_job_schedule_variable_product_delete_variations', args: [], wp_error: false);
 
 
 // Run action once (run on WP Console)
@@ -12,27 +13,23 @@
 
 
 // Schedule cron job if not already scheduled
-if (function_exists('WC')) {
-    add_action(hook_name: 'wp_loaded', callback: function (): void {
+add_action(hook_name: 'init', callback: function (): void {
 
-        if (!wp_next_scheduled(hook: 'cron_job_schedule_variable_product_delete_variations', args: [])) {
+    if (!wp_next_scheduled(hook: 'cron_job_schedule_variable_product_delete_variations', args: [])) {
 
-            // Settings
-            $start_datetime = '2026-01-04 02:00:00';
-            $start_datetime_obj = new DateTime(datetime: $start_datetime, timezone: wp_timezone());
-            $start_timestamp = $start_datetime_obj->getTimestamp();
+        // Settings
+        $start_datetime = new DateTime(datetime: 'next sunday 03:00:00', timezone: wp_timezone());
 
-            wp_schedule_event(timestamp: $start_timestamp, recurrence: 'weekly', hook: 'cron_job_schedule_variable_product_delete_variations', args: [], wp_error: false);
-        }
-    }, priority: 10, accepted_args: 0);
-}
+        wp_schedule_event(timestamp: $start_datetime->getTimestamp(), recurrence: 'weekly', hook: 'cron_job_schedule_variable_product_delete_variations', args: [], wp_error: false);
+    }
+
+}, priority: 10, accepted_args: 0);
 
 
-// Hook the function to the scheduled event
-add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'product_variable_delete_variations', priority: 10, accepted_args: 1);
+add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'product_variable_delete_variations', priority: 10, accepted_args: 0);
 
 
-function product_variable_delete_variations(bool $delete = true): void
+function product_variable_delete_variations(): void
 {
     if (!function_exists('WC')) {
         return;
@@ -40,6 +37,7 @@ function product_variable_delete_variations(bool $delete = true): void
 
     // Settings
     $product_ids = [17739, 22204];
+    $delete = true;
 
     $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
 

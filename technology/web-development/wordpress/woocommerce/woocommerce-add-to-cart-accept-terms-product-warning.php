@@ -1,7 +1,7 @@
 <?php
-
 // WooCommerce - "Add to cart" accept product warning terms
-// Last update: 2026-01-13
+// Last update: 2026-01-15
+
 
 if (function_exists('WC') && !is_admin()) {
 
@@ -13,7 +13,7 @@ if (function_exists('WC') && !is_admin()) {
             return;
         }
 
-        global $product;
+        $product = wc_get_product(get_the_ID());
 
         if (!$product instanceof WC_Product) {
             return;

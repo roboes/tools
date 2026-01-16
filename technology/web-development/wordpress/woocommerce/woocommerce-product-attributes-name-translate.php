@@ -3,6 +3,10 @@
 // WooCommerce - Product attributes name translate
 // Last update: 2026-01-15
 
+
+// Note: Manual translation for product attributes not registered in WooCommerce > Attributes. Standard global attributes should be translated via Polylang's "Translations" settings instead
+
+
 if (function_exists('WC') && !is_admin()) {
     add_action(hook_name: 'init', callback: 'translate_attributes_name', priority: 10, accepted_args: 0);
 
@@ -12,8 +16,8 @@ if (function_exists('WC') && !is_admin()) {
         if (function_exists('pll_current_language')) {
 
             // Setup
-            $translations = array(
-                'en' => array(
+            $translations = [
+                'en' => [
                     'Termin' => 'Appointment',
                     'Auswahl 1' => 'Selection 1',
                     'Auswahl 2' => 'Selection 2',
@@ -24,8 +28,8 @@ if (function_exists('WC') && !is_admin()) {
                     'Zubehör' => 'Accesories',
                     '2x Cappuccino Tasse' => '2x Cappuccino Cup',
                     '2x Espresso Tasse' => '2x Espresso Cup',
-                )
-            );
+                ]
+            ];
 
             // Hook into the gettext filter
             add_filter(hook_name: 'gettext', callback: function (string $translated, string $text, string $domain) use ($translations): string {

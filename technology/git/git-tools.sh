@@ -17,14 +17,15 @@ git_hostname="github.com"
 git_account="$(git config user.name)" # Username or Organization
 git_repository="tools"
 git_branch="main"
+# git_branch="18.0"
 local_repository="$git_repository"
 
 
 # Set working directory
 if grep -qi microsoft /proc/version; then
-	cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
+    cd "/mnt/c/Users/${USER}/Documents/Documents/Projects"
 else
-	cd "${HOME}/Documents/Documents/Projects"
+    cd "${HOME}/Documents/Documents/Projects"
 fi
 
 
@@ -47,7 +48,7 @@ curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location 
 pre-commit autoupdate
 
 if [ "$git_repository" == "tools" ]; then
-	cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
+    cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
 fi
 
 
@@ -74,15 +75,19 @@ pre-commit run --all-files
 
 ## Python requirements.txt file
 # python -m pip install pipreqs
-if find . -type f -name "*.py" | grep -q .; then
-	pipreqs --encoding utf-8 --force "./"
+if [ $(basename "$PWD") != "odoo-woocommerce-sync" ]; then
+    if find . -type f -name "*.py" | grep -q .; then
+        pipreqs --encoding utf-8 --force "./"
 
-    # Check if "janitor" is in requirements.txt and replace it with pyjanitor
-    if grep -q "janitor" "requirements.txt"; then
-        sed -i '/janitor/c\pyjanitor==0.32.8' requirements.txt
-		pre-commit run --files "./requirements.txt"
+        # Check if "janitor" is in requirements.txt and replace it with pyjanitor
+        if grep -q "janitor" "requirements.txt"; then
+            sed -i '/janitor/c\pyjanitor==0.32.8' requirements.txt
+            pre-commit run --files "./requirements.txt"
+        fi
+
     fi
-
+else
+    echo "Skipping requirements update"
 fi
 
 ## Update requirements.txt

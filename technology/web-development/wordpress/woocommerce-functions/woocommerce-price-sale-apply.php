@@ -39,15 +39,15 @@ if (function_exists('WC')) {
     {
 
         // Settings
-        $category_slugs = array('specialty-coffees-de');
-        $product_ids_except = array();
+        $category_slugs = ['specialty-coffees-de'];
+        $product_ids_except = [];
         $start_date = '2024-07-19';
         $end_date = '2024-07-22';
         $discount_percentage = 0.2;
         $round_precision = 1;
 
         // Convert $category_slugs to IDs
-        $category_ids = array();
+        $category_ids = [];
         foreach ($category_slugs as $slug) {
             $term = get_term_by('slug', $slug, 'product_cat');
             if ($term) {
@@ -55,7 +55,7 @@ if (function_exists('WC')) {
             }
         }
 
-        $products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $category_ids, 'operator' => 'IN'))));
+        $products = get_posts(['post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $category_ids, 'operator' => 'IN']]]);
 
         foreach ($products as $product) {
             $product_id = $product->ID;

@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Display product currency and price inside "Add to Cart" button
-// Last update: 2026-01-13
+// Last update: 2026-01-15
 
 
 if (function_exists('WC') && !is_admin()) {

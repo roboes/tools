@@ -1,10 +1,10 @@
 <?php
 
 // WooCommerce - Display the total available stock quantity for a variable product before the variations form
-// Last update: 2026-01-12
+// Last update: 2026-01-15
 
 
-if (function_exists('WC')) {
+if (function_exists('WC') && !is_admin()) {
     add_action(hook_name: 'woocommerce_before_variations_form', callback: 'product_variable_stock_total_display', priority: 10, accepted_args: 0);
 
     function product_variable_stock_total_display(): void

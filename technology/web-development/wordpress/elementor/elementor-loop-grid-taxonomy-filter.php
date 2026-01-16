@@ -16,8 +16,8 @@ if (is_plugin_active('elementor/elementor.php')) {
         document.addEventListener("DOMContentLoaded", function() {
             const filterMap = {
                 'specialty-coffees': 'specialty-coffees',
-                'specialty-trainings': 'trainings',
-                'specialty-accessories': 'accessories'
+                'trainings': 'trainings',
+                'accessories': 'accessories'
             };
 
             function scrollToElement(element) {
@@ -70,28 +70,31 @@ if (is_plugin_active('elementor/elementor.php')) {
     add_action(hook_name: 'wp_footer', callback: function (): void {
         ?>
         <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('load', () => { // Changed from DOMContentLoaded to load
             const ANCHOR_ID = 'products';
             const SCROLL_OFFSET = 100;
             
-            // Parse fragment params: #section?filter=value
-            const hashQuery = new URL(location.href).hash.split('?')[1];
-            const filterValue = hashQuery ? new URLSearchParams(hashQuery).get('filter') : null;
+            // Simplified parsing: Look for everything after "?filter="
+            const urlParts = window.location.hash.split('?filter=');
+            const filterValue = urlParts.length > 1 ? urlParts[1] : null;
             
             if (!filterValue) return;
             
             const section = document.getElementById(ANCHOR_ID);
             if (!section) return;
             
-            window.scrollTo({
-                behavior: 'smooth',
-                top: section.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
-            });
-            
-            // Click filter after scroll settles
+            // Wrapped in a slight timeout to ensure Elementor is ready
             setTimeout(() => {
-                document.querySelector(`button[data-filter="${CSS.escape(filterValue)}"]`)?.click();
-            }, 150);
+                window.scrollTo({
+                    behavior: 'smooth',
+                    top: section.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+                });
+
+                // Click filter after scroll
+                setTimeout(() => {
+                    document.querySelector(`button[data-filter="${CSS.escape(filterValue)}"]`)?.click();
+                }, 300); 
+            }, 200);
         });
         </script>
         <?php

@@ -3,11 +3,12 @@
 // WordPress Admin - Store open status
 // Last update: 2026-01-15
 
+
 add_shortcode(tag: 'wordpress_admin_store_open_status', callback: 'store_hours_shortcode');
 
 function store_hours_shortcode(): string
 {
-    if (is_admin() && !defined('DOING_AJAX')) {
+    if (is_admin()) {
         return '';
     }
 
