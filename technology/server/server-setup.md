@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-01-10
+> Last update: 2026-01-17
 
 ```.sh
 # Settings
@@ -12,6 +12,10 @@ admin_user="sysadmin"
 system_user="website"
 database_name="database_name"
 ```
+
+## Notes
+
+Check for new [virtualmin-nginx module releases](https://github.com/virtualmin/virtualmin-nginx/releases).
 
 ## Initial setup
 
@@ -300,6 +304,16 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Disable POP3: `Webmin` → `Servers` → `Dovecot IMAP/POP3 Server` → `Networking and Protocols` → Uncheck `POP3`.
 
+- Change default domain for server IP address: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Default website for IP address` → `Yes`.
+
+- Enable HTTP2 protocol support: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Enable HTTP2 protocol support` → `Yes`.
+
+```.sh
+# Alternatively
+# virtualmin modify-web --domain $domain --protocols "http/1.1 h2"
+# virtualmin list-domains --domain $domain --multiline | grep "HTTP protocols"
+```
+
 #### Security
 
 #### Webmin Configuration
@@ -578,10 +592,15 @@ Important: Upgrading or downgrading PHP versions via control panels like Virtual
 
 ```.sh
 # Remove older PHP Versions
-php_version_old="8.3"
-sudo apt purge php${php_version_old} php${php_version_old}-cli php${php_version_old}-fpm php${php_version_old}-common php${php_version_old}-mysql php${php_version_old}-xml php${php_version_old}-opcache php${php_version_old}-curl php${php_version_old}-mbstring
-sudo apt autoremove
+php_version_old="8.4"
+sudo apt purge "php${php_version_old}*"
+
+# Clean up dependencies
+sudo apt autoremove --purge
 sudo apt clean
+
+# Sync Virtualmin with system changes
+virtualmin check-config
 ```
 
 ### Packages
@@ -897,6 +916,41 @@ server {
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
     set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
+    # PHP Processing
+    fastcgi_split_path_info "^(.+\\.php)(/.+)$";
+
+    location ~ "\.php(/|$)" {
+        try_files $uri $fastcgi_script_name =404;
+
+        # FastCGI core settings
+        include fastcgi_params;
+        fastcgi_pass ${php_socket_path};
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_intercept_errors on;
+
+        # Security and header handling
+        fastcgi_hide_header 'X-Powered-By';
+        fastcgi_param HTTP_PROXY "";
+
+        # Caching controls
+        set $skip_cache 0;
+        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
+        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
+
+        fastcgi_cache MYCACHE;
+        fastcgi_cache_valid 200 301 302 1h;
+        fastcgi_cache_valid 404 1m;
+        fastcgi_cache_use_stale error timeout updating;
+        fastcgi_cache_bypass $skip_cache;
+        fastcgi_no_cache $skip_cache;
+        add_header X-Nginx-Cache-Status $upstream_cache_status always;
+    }
+
 
     # Main Web Root Setup
     root ${domain_root_path};
@@ -971,42 +1025,6 @@ server {
         access_log off;
         log_not_found off;
     }
-
-    # PHP Processing
-    fastcgi_split_path_info "^(.+\\.php)(/.+)$";
-
-    location ~ "\.php(/|$)" {
-        try_files $uri $fastcgi_script_name =404;
-
-        # FastCGI core settings
-        include fastcgi_params;
-        fastcgi_pass ${php_socket_path};
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_param PATH_INFO $fastcgi_path_info;
-        fastcgi_intercept_errors on;
-
-        # Security and header handling
-        fastcgi_hide_header 'X-Powered-By';
-        fastcgi_param HTTP_PROXY "";
-
-        # Caching controls
-        set $skip_cache 0;
-        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
-        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
-        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
-        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
-        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
-
-        fastcgi_cache MYCACHE;
-        fastcgi_cache_valid 200 301 302 1h;
-        fastcgi_cache_valid 404 1m;
-        fastcgi_cache_use_stale error timeout updating;
-        fastcgi_cache_bypass $skip_cache;
-        fastcgi_no_cache $skip_cache;
-        add_header X-Nginx-Cache-Status $upstream_cache_status always;
-    }
-
 
     # Static Asset Caching
     location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
@@ -1223,11 +1241,19 @@ php_admin_value[post_max_size] = 32M
 php_admin_value[max_input_vars] = 3000
 php_value[max_execution_time] = 60
 
-; Process Management
-pm = ondemand
-; pm.max_children = 8 ; Low-traffic
-pm.max_children = 12 ; Medium-traffic
-pm.max_requests = 1000
+; Process Management (low-traffic)
+; pm = ondemand
+; pm.max_children = 8
+; pm.max_requests = 500
+; pm.process_idle_timeout = 30s
+
+; Process Management (medium-traffic)
+pm = dynamic
+pm.max_children = 30
+pm.start_servers = 8
+pm.min_spare_servers = 6
+pm.max_spare_servers = 12
+pm.max_requests = 500
 pm.process_idle_timeout = 30s
 
 ; Per-Domain OPcache Logic
@@ -1246,28 +1272,66 @@ sudo systemctl restart php*-fpm
 
 #### OPcache
 
-```.sh
-sudo nano /etc/php/8.5/fpm/php.ini
+`Webmin` → `Tools` → `PHP Configuration` → `Module config` (⚙) → `Configurable options`:
+
+```.txt
+/etc/php*/cgi/php.ini,/etc/php/*/cgi/php.ini=Configuration for CGI
+/etc/php*/cli/php.ini,/etc/php/*/cli/php.ini=Configuration for CLI
+/etc/php*/fpm/php.ini,/etc/php/*/fpm/php.ini=Configuration for PHP-FPM
 ```
+
+Select `/etc/php/*/fpm/php.ini` → `Edit Manually`:
 
 ```.txt
 [opcache]
 opcache.enable=1
-opcache.enable_cli=0
-opcache.memory_consumption=192
-opcache.interned_strings_buffer=16
-opcache.max_accelerated_files=20000
+opcache.enable_cli=1
+opcache.memory_consumption=384
+opcache.interned_strings_buffer=48
+opcache.max_accelerated_files=40000
 opcache.validate_timestamps=1
 opcache.revalidate_freq=2
-opcache.optimization_level=0x7FFFBFFF
-opcache.jit=off
-opcache.jit_buffer_size=0
+opcache.enable_file_override=1
+; opcache.optimization_level=0x7FFFBFFF
+opcache.jit=off ; SIGSEGV (Signal 11) during loops/updates, see: https://github.com/php/php-src/issues/20166
+opcache.jit_buffer_size=128M
 opcache.save_comments=1
 opcache.huge_code_pages=0
 ```
 
 ```.sh
 sudo systemctl restart php*-fpm
+```
+
+Important: Changing PHP configuration often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
+
+### MariaDB
+
+```.sh
+sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+```
+
+```.txt
+[mariadbd]
+# Connections
+max_connections = 100
+table_open_cache = 2000
+
+# InnoDB Performance
+innodb_buffer_pool_size = 4G
+innodb_buffer_pool_instances = 4
+innodb_log_file_size = 512M
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+
+# Query optimizations
+tmp_table_size = 128M
+max_heap_table_size = 128M
+join_buffer_size = 4M
+```
+
+```.sh
+sudo systemctl restart mariadb
 ```
 
 ### SSL Certificate
@@ -1310,11 +1374,15 @@ rm $domain_root_path/public_html/.well-known/acme-challenge/.htaccess
 # sudo certbot delete --cert-name autodiscover.$domain
 ```
 
-### Change default domain for server IP address
-
-- `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Default website for IP address` → `Yes`.
-
 ### PHP settings
+
+- `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP Options` → `PHP script execution mode`: `FPM`.
+
+```.sh
+# Alternatively
+# virtualmin modify-web --domain $domain --mode fpm
+# virtualmin list-domains --domain $domain --multiline | grep "PHP mode"
+```
 
 - `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP-FPM Configuration` → `Resource Limits`.
 - `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP-FPM Configuration` → `Error Logging` → `Error types to display` → `All errors and warnings`.
@@ -1353,14 +1421,14 @@ find $domain_root_path/public_html -type f -exec chmod 644 {} \;
 chmod 600 $domain_root_path/public_html/wp-config.php
 ```
 
-### Tools
+## Tools
 
 ```.sh
 # Delete empty folders recursively
 # find /var/www/vhosts/"$domain"/httpdocs/wp-content/uploads -type d -empty -delete
 ```
 
-## Emails migration
+### Emails migration
 
 ```.sh
 imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "password-server1" \
@@ -1368,13 +1436,7 @@ imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "pass
   --exclude "Spam"
 ```
 
-## Server stress test
-
-```.sh
-ab -n 10 $domain
-```
-
-## Export MariaDB database
+### Export MariaDB database
 
 ```.sh
 # Create dump
@@ -1384,15 +1446,9 @@ mysqldump -u root -p $database_name > $(dirname "$domain_root_path/public_html")
 rm $(dirname "$domain_root_path/public_html")/backup.sql
 ```
 
-## Cache
+## Troubleshooting
 
-```.sh
-# Clear nginx cache
-sudo rm -rf /var/cache/nginx/*
-sudo systemctl reload nginx
-```
-
-## Logs
+### Logs
 
 ```.sh
 # Nginx
@@ -1406,4 +1462,45 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 # PHP
 tail -n 50 /var/log/php8.5-fpm.log
 tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
+```
+
+### Cache
+
+```.sh
+# Clear nginx cache
+sudo rm -rf /var/cache/nginx/*
+sudo systemctl reload nginx
+```
+
+### Server stress test
+
+```.sh
+ab -n 10 $domain
+```
+
+#### Virtualmin Nginx module
+
+```.sh
+# Verify version
+cat /usr/share/webmin/virtualmin-nginx/module.info | grep version
+
+# Backup current module
+cp -r /usr/share/webmin/virtualmin-nginx /usr/share/webmin/virtualmin-nginx.bak
+
+# Download latest from GitHub
+cd /tmp
+wget https://github.com/virtualmin/virtualmin-nginx/archive/refs/heads/master.zip
+unzip master.zip
+
+# Install it
+cp -r virtualmin-nginx-master/* /usr/share/webmin/virtualmin-nginx/
+
+# Restart Webmin
+systemctl restart webmin
+
+# Verify version
+cat /usr/share/webmin/virtualmin-nginx/module.info | grep version
+
+# Remove the backup
+# rm -rf /usr/share/webmin/virtualmin-nginx.bak
 ```
