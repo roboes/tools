@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Display the total available stock quantity for a variable product before the variations form
-// Last update: 2026-01-15
+// Last update: 2026-01-18
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -15,10 +15,11 @@ if (function_exists('WC') && !is_admin()) {
 
         // Settings
         $product_ids = [17739, 22204, 31437, 31438];
+        $product_variation_ids_exception = [44043, 44044];
         $messages = [
             'available-appointments' => [
-                'de' => 'Verfügbare Termine',
                 'en' => 'Available Appointments',
+                'de' => 'Verfügbare Termine',
             ],
         ];
 
@@ -42,7 +43,7 @@ if (function_exists('WC') && !is_admin()) {
 
         // Get stock quantity via shortcode
         $stock_quantity = shortcode_exists('product_variable_stock_quantity')
-            ? (int) do_shortcode('[product_variable_stock_quantity id="' . $product->get_id() . '"]')
+            ? (int) do_shortcode('[product_variable_stock_quantity product_variable_id="' . $product->get_id() . '" product_variation_ids_exception="' . implode(',', $product_variation_ids_exception) . '"]')
             : 0;
 
         if ($stock_quantity <= 0) {

@@ -140,33 +140,33 @@ function generate_message(string $status, string $language): string
 {
     static $statuses = [
         'open' => [
-            'de' => 'Geschäft ist jetzt geöffnet',
             'en' => 'Store is now open',
+            'de' => 'Geschäft ist jetzt geöffnet',
             'color' => '#50C878',
         ],
         'closing_soon' => [
-            'de' => 'Geschäft schließt bald',
             'en' => 'Store is closing soon',
+            'de' => 'Geschäft schließt bald',
             'color' => '#EAA300',
         ],
         'closed' => [
-            'de' => 'Geschäft ist jetzt geschlossen',
             'en' => 'Store is now closed',
+            'de' => 'Geschäft ist jetzt geschlossen',
             'color' => '#B20000',
         ],
         'closed_date' => [
-            'de' => 'Geschäft ist heute geschlossen',
             'en' => 'Store is closed today',
+            'de' => 'Geschäft ist heute geschlossen',
             'color' => '#B20000',
         ],
         'holiday' => [
-            'de' => 'Geschäft ist aufgrund eines Feiertags heute geschlossen',
             'en' => 'Store is closed today due to public holiday',
+            'de' => 'Geschäft ist aufgrund eines Feiertags heute geschlossen',
             'color' => '#B20000',
         ],
         'special_event' => [
-            'de' => 'Geschäft ist aufgrund einer Veranstaltung heute geschlossen',
             'en' => 'Store is closed today due to an event',
+            'de' => 'Geschäft ist aufgrund einer Veranstaltung heute geschlossen',
             'color' => '#B20000',
         ],
     ];

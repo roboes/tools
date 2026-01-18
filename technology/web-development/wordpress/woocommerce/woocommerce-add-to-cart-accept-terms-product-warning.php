@@ -22,12 +22,12 @@ if (function_exists('WC') && !is_admin()) {
         // Settings
         $messages = [
             'product-warning-checkbox' => [
-                'de' => 'Ich bestätige, dass ich hiermit Rohkaffee bestelle.',
                 'en' => 'I confirm that I hereby order green coffee.',
+                'de' => 'Ich bestätige, dass ich hiermit Rohkaffee bestelle.',
             ],
             'product-warning-error' => [
-                'de' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
                 'en' => 'You must agree with the terms to proceed.',
+                'de' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
             ],
         ];
         $attributes_allowed = ["coffee-processing-green-coffee-de", "coffee-processing-green-coffee-en"];

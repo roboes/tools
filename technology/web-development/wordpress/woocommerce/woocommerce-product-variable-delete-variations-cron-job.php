@@ -1,7 +1,7 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2026-01-15
+// Last update: 2026-01-18
 
 
 // Unschedule all events attached to a given hook
@@ -76,6 +76,12 @@ function product_variable_delete_variations(): void
 
                     // Check for 'Termin' attribute
                     $attribute_value = $variation->get_attribute(attribute: 'Termin');
+
+                    // Explicitly ignore Vouchers so they are never deleted
+                    if (stripos($attribute_value, 'Gutschein') !== false || stripos($attribute_value, 'Voucher') !== false) {
+                        continue;
+                    }
+
                     if ($attribute_value) {
                         $term_date_prefix = substr(string: $attribute_value, offset: 0, length: 10); // Extract date (DD.MM.YYYY)
                         if (preg_match(pattern: '/^\d{2}\.\d{2}\.\d{4}$/', subject: $term_date_prefix)) {

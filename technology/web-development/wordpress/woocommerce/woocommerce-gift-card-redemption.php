@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-10-15
+// Last update: 2026-10-18
 
 
 // Add this line to wp-config.php file
@@ -27,14 +27,16 @@ if (function_exists('WC')) {
                 return;
             }
 
+            // Settings
             $product_ids = [22204, 31437];
+            $product_variation_ids_exception = [44043, 44044];
 
             if (in_array($product->get_id(), $product_ids, strict: true)) {
 
                 $messages = [
                     'gift-card' => [
-                        'de' => 'Ich möchte einen Gutschein einlösen.',
                         'en' => 'I would like to redeem a gift card.',
+                        'de' => 'Ich möchte einen Gutschein einlösen.',
                     ],
                 ];
 
@@ -54,7 +56,7 @@ if (function_exists('WC')) {
                     $cf7_url = site_url('/en/gift-card-redemption/');
                 }
 
-                $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px;">
+                $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px; display: block;">
                             <label>
                                 <input type="checkbox" name="checkbox_gift_card" id="checkbox_gift_card" />
                                 <span style="line-height: 20px;">' . ($messages['gift-card'][$current_language] ?? $messages['gift-card']['en']) . '</span>
@@ -65,6 +67,22 @@ if (function_exists('WC')) {
                     jQuery(document).ready(function($) {
                         // Find the gift card checkbox
                         const $giftCardCheckbox = $(".gift-card-checkbox");
+						const productVariationIdsException = ' . json_encode($product_variation_ids_exception) . ';
+
+                        // Listen for WooCommerce Variation Change
+                        $(document).on("found_variation", "form.cart", function(event, variation) {
+                            if (productVariationIdsException.includes(variation.variation_id)) {
+                                $giftCardCheckbox.hide();
+								$("#checkbox_gift_card").prop("checked", false);
+                            } else {
+                                $giftCardCheckbox.show();
+                            }
+                        });
+						
+						$(document).on("reset_data", "form.cart", function() {
+							$giftCardCheckbox.show();
+						});
+ 
                         // Find the single variation element
                         const $singleVariation = $(".woocommerce-variation.single_variation");
 
@@ -82,7 +100,7 @@ if (function_exists('WC')) {
                                 return;
                             }
 
-                            if ($("#checkbox_gift_card").length && $("#checkbox_gift_card").prop("checked")) {
+                            if ($("#checkbox_gift_card").is(":visible") && $("#checkbox_gift_card").prop("checked")) {
                                 event.preventDefault(); // Prevent default action
 
                                 const productId = ' . (int) $product->get_id() . ';
@@ -278,8 +296,9 @@ if (function_exists('WC')) {
             return;
         }
 
-        // Define the product IDs to check for
+        // Settings
         $product_ids = [22204, 31437, 17739, 31438];
+        $product_variation_ids_exception = [44043, 44044];
 
         // Get the order object
         $order = wc_get_order($order_id);
@@ -307,6 +326,10 @@ if (function_exists('WC')) {
 
             $product_id = (int) $item->get_product_id();  // Get the parent product ID
             $product_variation_id = (int) $item->get_variation_id();  // Get the variation ID if it exists
+
+            if (in_array($product_variation_id, $product_variation_ids_exception, true)) {
+                continue;
+            }
 
             // Check if the parent product ID is in the array of specified product IDs
             if (!in_array($product_id, $product_ids, strict: true)) {
@@ -442,16 +465,16 @@ if (function_exists('WC')) {
         // Settings
         $messages = [
             'subject' => [
-                'de' => 'Bestätigung deiner Buchung bei ' . get_option('blogname'),
-                'en' => 'Confirmation of your booking at ' . get_option('blogname'),
+                'en' => 'Confirmation of your booking at ' . get_option(option: 'blogname'),
+                'de' => 'Bestätigung deiner Buchung bei ' . get_option(option: 'blogname'),
             ],
             'heading' => [
-                'de' => 'Vielen Dank für deine Buchung',
                 'en' => 'Thank you for your booking',
+                'de' => 'Vielen Dank für deine Buchung',
             ],
             'body' => [
-                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option('date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
 
@@ -480,18 +503,12 @@ if (function_exists('WC')) {
         // Email headers
         $headers = [
             'Content-Type: text/html; charset=UTF-8',
-            'From: ' . get_option('woocommerce_email_from_name') . ' <' . get_option('woocommerce_email_from_address') . '>'
+            'From: ' . get_option(option: 'woocommerce_email_from_name') . ' <' . get_option(option: 'woocommerce_email_from_address') . '>'
         ];
 
-        $email = WC()->mailer();
-        $message = $email->wrap_message($messages['heading'][$language], $messages['body'][$language]);
-
-        // Send the email using WooCommerce mailer
-        // wp_mail(to: $customer_email, subject: $messages['subject'][$language], message: $message, headers: $headers, attachments: $attachments);
-
-        // Send the email using WooCommerce's email sending method
-        $email = new WC_Email();
-        $email->send(to: $customer_email, subject: $messages['subject'][$language], message: $message, headers: $headers, attachments: $attachments);
+        // Send email
+        $mailer = WC()->mailer();
+        $mailer->send(to: $customer_email, subject: $messages['subject'][$language], message: $mailer->wrap_message(email_heading: $messages['heading'][$language], message: $messages['body'][$language]), headers: $headers, attachments: $attachments);
 
         // Remove the temporary file after sending
         unlink($ics_attachment);

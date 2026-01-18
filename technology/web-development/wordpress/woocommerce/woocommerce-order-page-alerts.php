@@ -15,8 +15,8 @@ if (function_exists('WC') && is_admin()) {
         $alerts = [
             'green_coffee' => [
                 'product-attribute-slugs' => ['coffee-processing-green-coffee-en', 'coffee-processing-green-coffee-de'],
-                'alert-top'   => ['de' => '⚠️ Diese Bestellung enthält Rohkaffee.', 'en' => '⚠️ This order contains Green Coffee.'],
-                'alert-badge' => ['de' => '⚠️ Rohkaffee', 'en' => '⚠️ Green Coffee'],
+                'alert-top'   => ['en' => '⚠️ This order contains Green Coffee.', 'de' => '⚠️ Diese Bestellung enthält Rohkaffee.',],
+                'alert-badge' => ['en' => '⚠️ Green Coffee', 'de' => '⚠️ Rohkaffee',],
                 'alert-color' => '#d63638'
             ],
         ];

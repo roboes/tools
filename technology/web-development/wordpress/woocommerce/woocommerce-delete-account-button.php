@@ -18,13 +18,13 @@ if (function_exists('WC') && !is_admin()) {
         // Settings
         $messages = [
             'account_delete_button' => [
-                'de' => 'Account Löschen',
                 'en' => 'Delete Account',
+                'de' => 'Account Löschen',
                 'pt' => 'Excluir Conta',
             ],
             'confirm_deletion' => [
-                'de' => 'Bist du sicher, dass du dein Konto dauerhaft löschen möchtest? Dies kann nicht rückgängig gemacht werden.',
                 'en' => 'Are you sure you want to permanently delete your account? This action cannot be undone.',
+                'de' => 'Bist du sicher, dass du dein Konto dauerhaft löschen möchtest? Dies kann nicht rückgängig gemacht werden.',
                 'pt' => 'Tem certeza de que deseja excluir permanentemente sua conta? Esta ação não pode ser desfeita.',
             ],
         ];
@@ -65,8 +65,8 @@ if (function_exists('WC') && !is_admin()) {
         // Settings
         $messages = [
             'account_delete_error' => [
-                'de' => 'Du kannst dein Konto derzeit nicht löschen. Bitte stelle sicher, dass alle Bestellungen abgeschlossen sind und deine letzte Bestellung mindestens 14 Tage alt ist.',
                 'en' => 'You cannot delete your account at this time. Make sure all orders are completed and the last order is at least 14 days old.',
+                'de' => 'Du kannst dein Konto derzeit nicht löschen. Bitte stelle sicher, dass alle Bestellungen abgeschlossen sind und deine letzte Bestellung mindestens 14 Tage alt ist.',
                 'pt' => 'Você não pode excluir sua conta no momento. Certifique-se de que todos os pedidos estejam concluídos e que o último pedido tenha pelo menos 14 dias.',
             ],
         ];

@@ -1303,8 +1303,6 @@ opcache.huge_code_pages=0
 sudo systemctl restart php*-fpm
 ```
 
-Important: Changing PHP configuration often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
-
 ### MariaDB
 
 ```.sh

@@ -27,12 +27,12 @@ if (function_exists('WC') && !is_admin()) {
             // Settings
             $messages = [
                 'legal-warning-checkbox' => [
-                    'de' => 'Ich habe die Produktbeschreibung/Rechtliche Hinweise gelesen und bin mit den Bedingungen einverstanden.',
                     'en' => 'I have read the product description/legal notice and I agree with the terms.',
+                    'de' => 'Ich habe die Produktbeschreibung/Rechtliche Hinweise gelesen und bin mit den Bedingungen einverstanden.',
                 ],
                 'legal-warning-error' => [
-                    'de' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
                     'en' => 'You must agree with the terms to proceed.',
+                    'de' => 'Du musst mit den Bedingungen einverstanden sein, um fortzufahren.',
                 ],
             ];
 

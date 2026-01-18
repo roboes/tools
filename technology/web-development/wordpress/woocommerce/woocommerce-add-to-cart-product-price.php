@@ -44,7 +44,7 @@ if (function_exists('WC') && !is_admin()) {
                 }
             }',
             get_woocommerce_currency_symbol() |> wp_json_encode(...),
-            get_option('woocommerce_currency_pos') |> wp_json_encode(...),
+            get_option(option: 'woocommerce_currency_pos') |> wp_json_encode(...),
             wc_get_price_decimals() |> wp_json_encode(...),
             ($current_language === 'de' ? 'de-DE' : 'en-US') |> wp_json_encode(...)
         );
