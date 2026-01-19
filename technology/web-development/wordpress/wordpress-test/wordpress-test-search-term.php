@@ -57,14 +57,11 @@ function search_pages_for_terms($search_terms, $languages = [])
             // Get page ID
             $page_id = $page->ID;
 
-            // Get language of the page using Polylang function
-            $page_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($page_id, 'slug'), pll_languages_list(['fields' => 'slug']))) ? pll_get_post_language($page_id, 'slug') : '';
-
             // Get page language
             $page_language = '';
             if (function_exists('pll_get_post_language')) {
-                if (pll_get_post_language($page_id, 'slug') && in_array(needle: pll_get_post_language($page_id, 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $page_language = pll_get_post_language($page_id, 'slug');
+                if (pll_get_post_language(post_id: $page_id, field: 'slug') && in_array(needle: pll_get_post_language(post_id: $page_id, field: 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                    $page_language = pll_get_post_language(post_id: $page_id, field: 'slug');
                 }
             }
 

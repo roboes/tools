@@ -68,8 +68,8 @@ function cron_job_run_slugs_update(): void
                 // Get product language
                 $product_language = 'en';
                 if (function_exists('pll_get_post_language')) {
-                    if (pll_get_post_language($post->ID, 'slug') && in_array(needle: pll_get_post_language($post->ID, 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                        $product_language = pll_get_post_language($post->ID, 'slug');
+                    if (pll_get_post_language(post_id: $post->ID, field: 'slug') && in_array(needle: pll_get_post_language(post_id: $post->ID, field: 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
+                        $product_language = pll_get_post_language(post_id: $post->ID, field: 'slug');
                     }
                 }
 

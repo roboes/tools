@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Settings
-// Last update: 2026-01-15
+// Last update: 2026-01-19
 
 // Default sort
 add_action(hook_name: 'pre_get_posts', callback: function (WP_Query $query): void {
@@ -21,7 +21,7 @@ add_action(hook_name: 'pre_get_posts', callback: function (WP_Query $query): voi
 
     $post_type = $query->get('post_type');
 
-    if (in_array(needle: $post_type, haystack: ['post', 'page', 'product', 'elementor_library'], strict: true)) {
+    if (in_array(needle: $post_type, haystack: ['attachment', 'page', 'post', 'product', 'elementor_library'], strict: true)) {
         $query->set('orderby', 'title');
         $query->set('order', 'ASC');
     }

@@ -27,7 +27,7 @@ if (function_exists('WC')) {
         update_post_meta($product_id, '_sale_price', $sale_price);
 
         $product = get_post($product_id);
-        echo 'Product price updated: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
+        echo 'Product price updated: ' . $product->get_id() . ' - ' . $product->get_name() . ' (' . $product->get_slug() . ')<br>';
         echo 'Regular Price: ' . $regular_price . '<br>';
         echo 'Sale Price: ' . $sale_price . '<br>';
         echo 'Sale Start Date: ' . $start_date->format('Y-m-d') . '<br>';
@@ -58,11 +58,11 @@ if (function_exists('WC')) {
         $products = get_posts(['post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $category_ids, 'operator' => 'IN']]]);
 
         foreach ($products as $product) {
-            $product_id = $product->ID;
+            $product_id = $product->get_id();
 
             // Skip if product ID is in the exclusion list
             if (in_array($product_id, $product_ids_except)) {
-                echo 'Product skipped: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
+                echo 'Product skipped: ' . $product->get_id() . ' - ' . $product->get_name() . ' (' . $product->get_slug() . ')<br>';
                 continue;
             }
 

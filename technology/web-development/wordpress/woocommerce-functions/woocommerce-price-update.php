@@ -50,7 +50,7 @@ function update_product_prices()
     ]);
 
     foreach ($products as $product) {
-        $product_id = $product->ID;
+        $product_id = $product->get_id();
         $product_obj = wc_get_product($product_id);
 
         if ($product_obj->is_type('variable')) {
@@ -88,7 +88,7 @@ function update_product_price($product_id, $price_updates)
             $product->save();
 
             $product = get_post($product_id);
-            echo 'Product price updated: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
+            echo 'Product price updated: ' . $product->get_id() . ' - ' . $product->get_name() . ' (' . $product->post_name . ')<br>';
             echo 'Old Regular Price: ' . $regular_price . '<br>';
             echo 'New Regular Price: ' . ($new_price_cents / 100) . '<br><br>';
             return; // Exit after the first match

@@ -59,7 +59,7 @@ if (function_exists('WC') && !is_admin()) {
     }
 
     // Validate on "Add to Cart"
-    add_filter(hook_name: 'woocommerce_add_to_cart_validation', priority: 10, accepted_args: 5, callback: function (bool $passed, int $product_id, int $quantity, $variation_id = '', $variations = '') use ($product_quantity_rules, $current_language): bool {
+    add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function (bool $passed, int $product_id, int $quantity, $variation_id = '', $variations = '') use ($product_quantity_rules, $current_language): bool {
         if (!WC()->cart) {
             return $passed;
         }
@@ -92,10 +92,10 @@ if (function_exists('WC') && !is_admin()) {
         }
 
         return $passed;
-    });
+    }, priority: 10, accepted_args: 5);
 
     // Validate on Cart Update
-    add_filter(hook_name: 'woocommerce_update_cart_validation', priority: 10, accepted_args: 4, callback: function (bool $passed, string $cart_item_key, array $values, int $quantity) use ($product_quantity_rules, $current_language): bool {
+    add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function (bool $passed, string $cart_item_key, array $values, int $quantity) use ($product_quantity_rules, $current_language): bool {
         $product = $values['data'];
         if (!$product instanceof WC_Product) {
             return $passed;
@@ -111,10 +111,10 @@ if (function_exists('WC') && !is_admin()) {
         }
 
         return $passed;
-    });
+    }, priority: 10, accepted_args: 4);
 
     // Set max quantity input
-    add_filter(hook_name: 'woocommerce_quantity_input_args', priority: 10, accepted_args: 2, callback: function (array $args, WC_Product $product) use ($product_quantity_rules): array {
+    add_filter(hook_name: 'woocommerce_quantity_input_args', callback: function (array $args, WC_Product $product) use ($product_quantity_rules): array {
         $product_id = (int) $product->get_id();
         $parent_id = (int) $product->get_parent_id();
         $rule = get_matching_rule($product_id, $parent_id, $product_quantity_rules);
@@ -125,5 +125,5 @@ if (function_exists('WC') && !is_admin()) {
         }
 
         return $args;
-    });
+    }, priority: 10, accepted_args: 2);
 }
