@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-10-18
+// Last update: 2026-10-19
 
 
 // Add this line to wp-config.php file
@@ -35,8 +35,8 @@ if (function_exists('WC')) {
 
                 $messages = [
                     'gift-card' => [
-                        'en' => 'I would like to redeem a gift card.',
-                        'de' => 'Ich möchte einen Gutschein einlösen.',
+                        'en' => 'I would like to redeem a gift card (purchased on-site).',
+                        'de' => 'Ich möchte eine Gutschein-Karte (vor Ort gekauft) einlösen.',
                     ],
                 ];
 
@@ -67,21 +67,21 @@ if (function_exists('WC')) {
                     jQuery(document).ready(function($) {
                         // Find the gift card checkbox
                         const $giftCardCheckbox = $(".gift-card-checkbox");
-						const productVariationIdsException = ' . json_encode($product_variation_ids_exception) . ';
+                        const productVariationIdsException = ' . json_encode($product_variation_ids_exception) . ';
 
                         // Listen for WooCommerce Variation Change
                         $(document).on("found_variation", "form.cart", function(event, variation) {
                             if (productVariationIdsException.includes(variation.variation_id)) {
                                 $giftCardCheckbox.hide();
-								$("#checkbox_gift_card").prop("checked", false);
+                                $("#checkbox_gift_card").prop("checked", false);
                             } else {
                                 $giftCardCheckbox.show();
                             }
                         });
-						
-						$(document).on("reset_data", "form.cart", function() {
-							$giftCardCheckbox.show();
-						});
+                        
+                        $(document).on("reset_data", "form.cart", function() {
+                            $giftCardCheckbox.show();
+                        });
  
                         // Find the single variation element
                         const $singleVariation = $(".woocommerce-variation.single_variation");
@@ -246,7 +246,7 @@ if (function_exists('WC')) {
             $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
-            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_name: $product_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
 
             // Perform English version for Google Sheets
             $product_name = preg_replace(pattern: '/Kaffeetraining /', replacement: '', subject: $product_name);
@@ -377,7 +377,7 @@ if (function_exists('WC')) {
             $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
-            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_name: $product_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
 
             // Perform English version for Google Sheets
             $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
@@ -448,7 +448,7 @@ if (function_exists('WC')) {
     }
 
 
-    function send_training_confirmation_email(int $product_id, string $customer_email, string $customer_name, string $product_name, string $product_variation_own_portafilter_machine, string $product_variation_appointment_date, string $product_variation_appointment_time, int $product_quantity, string $language = 'en'): void
+    function send_training_confirmation_email(int $product_id, string $customer_email, string $customer_name, string $product_variation_own_portafilter_machine, string $product_variation_appointment_date, string $product_variation_appointment_time, int $product_quantity, string $language = 'en'): void
     {
 
         // Retrieve custom meta for training location
@@ -456,6 +456,8 @@ if (function_exists('WC')) {
         if (!$product instanceof WC_Product) {
             return;
         }
+
+        $product_name = $product->get_name();
 
         $product_training_location = $product->get_meta('product_training_location', true);
         if (!$product_training_location) {
@@ -474,7 +476,7 @@ if (function_exists('WC')) {
             ],
             'body' => [
                 'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
 
@@ -539,8 +541,10 @@ if (function_exists('WC')) {
         // ICS format content
         $ics_content = "BEGIN:VCALENDAR\n";
         $ics_content .= "VERSION:2.0\n";
+        $ics_content .= "METHOD:PUBLISH\n";
         $ics_content .= "BEGIN:VEVENT\n";
         $ics_content .= "UID:" . uniqid('', true) . "\n";
+        $ics_content .= "ORGANIZER;CN=" . get_option('blogname') . ":MAILTO:" . get_option(option: 'woocommerce_email_from_address') . "\n";
         $ics_content .= "SUMMARY:{$product_name}\n";
         $ics_content .= "DTSTART;TZID={$timezone}:{$start_time_str}\n";
         $ics_content .= "DTEND;TZID={$timezone}:{$end_time_str}\n";
@@ -560,3 +564,7 @@ if (function_exists('WC')) {
     }
 
 }
+
+
+// Test
+// send_training_confirmation_email(product_id: 22204, customer_email: 'email@website.com', customer_name: 'Customer Name', product_variation_own_portafilter_machine: 'Mit', product_variation_appointment_date: '2026-05-09', product_variation_appointment_time: '14:30', product_quantity: 1, language: 'de');

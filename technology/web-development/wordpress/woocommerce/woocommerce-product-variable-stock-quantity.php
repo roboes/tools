@@ -5,7 +5,7 @@
 
 
 // Notes: Returns total stock for all variations; used in Dynamic Conditions to hide/show sections based on availability
-// Usage: [product_variable_stock_quantity product_variable_id="22204", product_variation_ids_exception="44043,44044"]
+// Usage: [product_variable_stock_quantity product_variable_id="22204" product_variation_ids_exception="44043,44044"]
 
 
 if (function_exists('WC')) {

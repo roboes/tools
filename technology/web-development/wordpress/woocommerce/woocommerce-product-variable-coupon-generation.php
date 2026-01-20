@@ -1,7 +1,7 @@
 <?php
 
-// WooCommerce - Automated course voucher system
-// Last update: 2026-01-18
+// WooCommerce - Automated course coupon system
+// Last update: 2026-01-20
 
 
 // Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
@@ -151,8 +151,8 @@ if (function_exists('WC')) {
                 $coupon->set_date_expires(date: $coupon_expiry_date->getTimestamp());
                 $coupon->save();
 
-                $order->update_meta_data('_voucher_code_' . $variation_id, $coupon_code);
-                $order->update_meta_data('_voucher_expiry_' . $variation_id, $coupon_expiry_date->getTimestamp());
+                $order->update_meta_data('_coupon_code_' . $variation_id, $coupon_code);
+                $order->update_meta_data('_coupon_expiry_' . $variation_id, $coupon_expiry_date->getTimestamp());
                 $order->save();
 
                 // Log to order
@@ -171,11 +171,11 @@ if (function_exists('WC')) {
     {
 
         // Setup
-        $customer_name  = $order->get_billing_first_name();
+        $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $customer_email = $order->get_billing_email();
-        $product_name   = get_the_title($variation_id);
-        $coupon_code    = $order->get_meta('_voucher_code_' . $variation_id);
-        $coupon_expiry_date = DateTimeImmutable::createFromFormat(format: 'U', datetime: $order->get_meta('_voucher_expiry_' . $variation_id));
+        $product_name = get_the_title($variation_id);
+        $coupon_code = $order->get_meta('_coupon_code_' . $variation_id);
+        $coupon_expiry_date = DateTimeImmutable::createFromFormat(format: 'U', datetime: $order->get_meta('_coupon_expiry_' . $variation_id));
 
         // Get order language
         $language = 'en';
@@ -185,22 +185,25 @@ if (function_exists('WC')) {
             }
         }
 
+        $email_coupon_code_style = 'font-family: "Courier New", Courier, monospace;';
+
         $email_data = [
             'en' => [
-                'subject' => get_option(option: 'blogname') . " - {$product_name} Voucher",
-                'heading' => "{$product_name} Voucher",
-                'body'    => "Hello {$customer_name},<br><br>Thank you for your order! Your voucher code for the training is now active.<br><br>Coupon: <strong>{$coupon_code}</strong><br>Valid until: <strong>{$coupon_expiry_date->format(format: get_option(option: 'date_format'))}</strong><br><br>Simply use this coupon at checkout for your next booking."
+                'subject' => get_option(option: 'blogname') . " - {$product_name} Gift Card",
+                'heading' => "{$product_name} Gift Card",
+                'body'    => "Hello {$customer_name},<br><br>Thank you for your order! Your gift card code for <strong>{$product_name}</strong> is now active.<br><br>Coupon: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong><br>Valid until: <strong>{$coupon_expiry_date->format(format: get_option(option: 'date_format'))}</strong><br><br>Simply use this coupon at checkout for your next booking."
+
             ],
             'de' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_name} Gutschein",
                 'heading' => "{$product_name} Gutschein",
-                'body'    => "Hallo {$customer_name},<br><br>vielen Dank für deine Bestellung! Dein Gutscheincode für das Training ist jetzt aktiv.<br><br>Gutschein: <strong>{$coupon_code}</strong><br>Gültig bis: <strong>{$coupon_expiry_date->format(format: get_option(option: 'date_format'))}</strong><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb."
+                'body'    => "Hallo {$customer_name},<br><br>vielen Dank für deine Bestellung! Dein Gutscheincode für <strong>{$product_name}</strong> ist jetzt aktiv.<br><br>Gutschein: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong><br>Gültig bis: <strong>{$coupon_expiry_date->format(format: get_option(option: 'date_format'))}</strong><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb."
             ],
         ];
 
         $content = $email_data[$language] ?? $email_data['en'];
 
-        $attachment_pdf_path = generate_kaffeeart_voucher_pdf($order, $variation_id);
+        $attachment_pdf_path = generate_kaffeeart_gift_card_pdf($order, $variation_id);
 
         // Send email
         $mailer  = WC()->mailer();
@@ -210,7 +213,7 @@ if (function_exists('WC')) {
 
     }
 
-    function generate_kaffeeart_voucher_pdf($order, $variation_id)
+    function generate_kaffeeart_gift_card_pdf($order, $variation_id)
     {
         if (!$order instanceof WC_Order) {
             return;
@@ -230,8 +233,8 @@ if (function_exists('WC')) {
             }
         }
 
-        $coupon_code    = $order->get_meta('_voucher_code_' . $variation_id);
-        $expiry_ts      = $order->get_meta('_voucher_expiry_' . $variation_id);
+        $coupon_code    = $order->get_meta('_coupon_code_' . $variation_id);
+        $expiry_ts      = $order->get_meta('_coupon_expiry_' . $variation_id);
         $product_name   = get_the_title($variation_id);
 
         // 2. Translations
@@ -244,9 +247,9 @@ if (function_exists('WC')) {
             $text_until    = "Gültig bis";
             $text_redeem   = "Einlösbar unter";
         } else {
-            $text_for      = "Voucher for";
-            $text_code     = "Voucher Code";
-            $text_valid    = "This voucher is valid for a";
+            $text_for      = "Gift card for";
+            $text_code     = "Gift card code";
+            $text_valid    = "This gift card is valid for a";
             $text_at       = "at";
             $text_bought   = "Purchased on";
             $text_until    = "Valid until";
@@ -290,7 +293,7 @@ if (function_exists('WC')) {
 				}
 				.logo { width: 220px; margin-bottom: 50px; }
 				.label { text-transform: uppercase; letter-spacing: 2px; font-size: 13px; opacity: 0.8; margin-bottom: 8px; }
-				.voucher-title { font-size: 34px; font-weight: bold; text-transform: uppercase; line-height: 1.1; margin-bottom: 30px; }
+				.gift-card-title { font-size: 34px; font-weight: bold; text-transform: uppercase; line-height: 1.1; margin-bottom: 30px; }
 				.product-highlight {
 					font-size: 20px;
 					margin: 40px 0;
@@ -307,7 +310,7 @@ if (function_exists('WC')) {
 					margin: 20px auto;
 					width: 80%;
 				}
-				.coupon-code { font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
+				.coupon-code { font-family: 'Courier', 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
 				.meta-info { margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.8); }
 				.footer-branding {
 					position: absolute;
@@ -327,7 +330,7 @@ if (function_exists('WC')) {
 				<img src="<?php echo $logo_url; ?>" class="logo">
 				
 				<div class="label"><?php echo esc_html($text_for); ?></div>
-				<div class="voucher-title"><?php echo esc_html($product_name); ?></div>
+				<div class="gift-card-title"><?php echo esc_html($product_name); ?></div>
 
 				<div class="product-highlight"><?php echo esc_html($text_code); ?></div>
 
@@ -341,7 +344,7 @@ if (function_exists('WC')) {
 
 				<div class="meta-info">
 					<?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format('d.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', $expiry_ts); ?><br>
-					<?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html(str_replace(['https://','http://'], '', $site_url)); ?></a>
+					<?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html($site_url); ?></a>
 				</div>
 			</div>
 
