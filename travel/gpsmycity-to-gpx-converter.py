@@ -24,23 +24,13 @@ import requests
 from werkzeug.utils import secure_filename
 
 
-# Settings
-
-## Set working directory
-os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
-
-## Copy-on-Write (will be enabled by default in version 3.0)
-if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
-    pd.options.mode.copy_on_write = True
-
-
 ###########
 # Functions
 ###########
 
 
 # GPSmyCity to GPX converter
-def gpsmycity_tour_import(*, urls):
+def gpsmycity_tour_import(*, urls, output_folder):
     for url in urls:
         # Import page source
         page_source = requests.get(url=url, headers=None, timeout=5, verify=True).content.decode('utf-8')
@@ -177,7 +167,7 @@ def gpsmycity_tour_import(*, urls):
 
         # Save .gpx file
         with open(
-            file=f'{secure_filename(filename=tour_name)}.gpx',
+            file=os.path.join(output_folder, f'{secure_filename(filename=tour_name)}.gpx'),
             mode='w',
             encoding='utf-8',
         ) as file_out:
@@ -195,4 +185,5 @@ gpsmycity_tour_import(
         'https://www.gpsmycity.com/blog/main-sights-to-see-in-augsburg-3414.html',
         'https://www.gpsmycity.com/tours/edinburgh-introduction-walking-tour-6397.html',
     ],
+    output_folder=os.path.join(os.path.expanduser('~'), 'Downloads'),
 )

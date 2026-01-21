@@ -23,7 +23,7 @@ if (function_exists('WC')) {
     {
 
         // Settings
-        $coupon_settings = [
+        $settings_coupon = [
             [
                 'coupon_prefix'        => 'KA-Training-',
                 'product_ids'          => [22204, 31437],
@@ -36,7 +36,7 @@ if (function_exists('WC')) {
             'de' => 'Nur ein Gutschein pro Bestellung erlaubt.',
         ];
 
-        foreach ($coupon_settings as $group) {
+        foreach ($settings_coupon as $group) {
             if (in_array(needle: $variation_id, haystack: $group['coupon_variation_ids'], strict: true)) {
 
                 // Get language of the specific variation
@@ -103,7 +103,7 @@ if (function_exists('WC')) {
 
 
     // Generate Coupon on Purchase
-    add_action(hook_name: 'woocommerce_order_status_completed', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_order_status_paid', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
 
     function generate_coupon_on_purchase(int $order_id): void
     {
@@ -123,6 +123,11 @@ if (function_exists('WC')) {
 
         foreach ($order->get_items() as $item) {
             $variation_id = (int) $item->get_variation_id();
+
+            if ($order->get_meta('_coupon_code_' . $variation_id)) {
+                continue;
+            }
+
             $coupon_data  = get_coupon_variation_validation(variation_id: $variation_id);
 
             if ($coupon_data) {
@@ -161,7 +166,6 @@ if (function_exists('WC')) {
                 // Send email
                 send_coupon_email(order: $order, variation_id: $variation_id);
 
-                break;
             }
         }
     }
@@ -267,94 +271,94 @@ if (function_exists('WC')) {
 
         ob_start();
         ?>
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<style>
-				@page { margin: 0; }
-				body { 
-					margin: 0; padding: 0; 
-					font-family: 'Helvetica', sans-serif; 
-					background-color: #8a694e; 
-					color: #ffffff;
-					line-height: 1.4;
-				}
-				.header-image {
-					width: 100%;
-					height: 440px;
-					background: url('<?php echo $image_url; ?>') no-repeat center center;
-					background-size: cover;
-					display: block;
-				}
-				.content {
-					text-align: center;
-					padding: 60px 60px 0 60px;
-					position: relative;
-				}
-				.logo { width: 220px; margin-bottom: 50px; }
-				.label { text-transform: uppercase; letter-spacing: 2px; font-size: 13px; opacity: 0.8; margin-bottom: 8px; }
-				.gift-card-title { font-size: 34px; font-weight: bold; text-transform: uppercase; line-height: 1.1; margin-bottom: 30px; }
-				.product-highlight {
-					font-size: 20px;
-					margin: 40px 0;
-					border-top: 1px solid rgba(255,255,255,0.3);
-					border-bottom: 1px solid rgba(255,255,255,0.3);
-					padding: 12px 0;
-					text-transform: uppercase;
-					letter-spacing: 2px;
-				}
-				.coupon-container {
-					background: rgba(0, 0, 0, 0.1);
-					border: 2px dashed #ffffff;
-					padding: 20px;
-					margin: 20px auto;
-					width: 80%;
-				}
-				.coupon-code { font-family: 'Courier', 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
-				.meta-info { margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.8); }
-				.footer-branding {
-					position: absolute;
-					bottom: 30px;
-					width: 100%;
-					text-align: center;
-					font-size: 11px;
-					opacity: 0.7;
-				}
-				a { color: #ffffff; text-decoration: none; }
-			</style>
-		</head>
-		<body>
-			<div class="header-image"></div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                @page { margin: 0; }
+                body { 
+                    margin: 0; padding: 0; 
+                    font-family: 'Helvetica', sans-serif; 
+                    background-color: #8a694e; 
+                    color: #ffffff;
+                    line-height: 1.4;
+                }
+                .header-image {
+                    width: 100%;
+                    height: 440px;
+                    background: url('<?php echo $image_url; ?>') no-repeat center center;
+                    background-size: cover;
+                    display: block;
+                }
+                .content {
+                    text-align: center;
+                    padding: 60px 60px 0 60px;
+                    position: relative;
+                }
+                .logo { width: 220px; margin-bottom: 50px; }
+                .label { text-transform: uppercase; letter-spacing: 2px; font-size: 13px; opacity: 0.8; margin-bottom: 8px; }
+                .gift-card-title { font-size: 34px; font-weight: bold; text-transform: uppercase; line-height: 1.1; margin-bottom: 30px; }
+                .product-highlight {
+                    font-size: 20px;
+                    margin: 40px 0;
+                    border-top: 1px solid rgba(255,255,255,0.3);
+                    border-bottom: 1px solid rgba(255,255,255,0.3);
+                    padding: 12px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                }
+                .coupon-container {
+                    background: rgba(0, 0, 0, 0.1);
+                    border: 2px dashed #ffffff;
+                    padding: 20px;
+                    margin: 20px auto;
+                    width: 80%;
+                }
+                .coupon-code { font-family: 'Courier', 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
+                .meta-info { margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.8); }
+                .footer-branding {
+                    position: absolute;
+                    bottom: 30px;
+                    width: 100%;
+                    text-align: center;
+                    font-size: 11px;
+                    opacity: 0.7;
+                }
+                a { color: #ffffff; text-decoration: none; }
+            </style>
+        </head>
+        <body>
+            <div class="header-image"></div>
 
-			<div class="content">
-				<img src="<?php echo $logo_url; ?>" class="logo">
-				
-				<div class="label"><?php echo esc_html($text_for); ?></div>
-				<div class="gift-card-title"><?php echo esc_html($product_name); ?></div>
+            <div class="content">
+                <img src="<?php echo $logo_url; ?>" class="logo">
+                
+                <div class="label"><?php echo esc_html($text_for); ?></div>
+                <div class="gift-card-title"><?php echo esc_html($product_name); ?></div>
 
-				<div class="product-highlight"><?php echo esc_html($text_code); ?></div>
+                <div class="product-highlight"><?php echo esc_html($text_code); ?></div>
 
-				<div style="font-size: 15px; margin-bottom: 20px;">
-					<?php echo esc_html($text_valid); ?> <strong><?php echo esc_html($product_name); ?></strong> <?php echo esc_html($text_at); ?> <?php echo esc_html($blog_name); ?>.
-				</div>
+                <div style="font-size: 15px; margin-bottom: 20px;">
+                    <?php echo esc_html($text_valid); ?> <strong><?php echo esc_html($product_name); ?></strong> <?php echo esc_html($text_at); ?> <?php echo esc_html($blog_name); ?>.
+                </div>
 
-				<div class="coupon-container">
-					<span class="coupon-code"><?php echo esc_html($coupon_code); ?></span>
-				</div>
+                <div class="coupon-container">
+                    <span class="coupon-code"><?php echo esc_html($coupon_code); ?></span>
+                </div>
 
-				<div class="meta-info">
-					<?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format('d.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', $expiry_ts); ?><br>
-					<?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html($site_url); ?></a>
-				</div>
-			</div>
+                <div class="meta-info">
+                    <?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format('d.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', $expiry_ts); ?><br>
+                    <?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html($site_url); ?></a>
+                </div>
+            </div>
 
-			<div class="footer-branding">
-				<?php echo esc_html($blog_name); ?><br>
-				<?php echo esc_html($site_url); ?>
-			</div>
-		</body>
-		</html>
-		<?php
+            <div class="footer-branding">
+                <?php echo esc_html($blog_name); ?><br>
+                <?php echo esc_html($site_url); ?>
+            </div>
+        </body>
+        </html>
+        <?php
         $html = ob_get_clean();
 
         $dompdf->loadHtml($html);
