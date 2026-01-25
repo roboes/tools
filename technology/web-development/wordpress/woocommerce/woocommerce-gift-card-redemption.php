@@ -243,7 +243,7 @@ if (function_exists('WC')) {
             $product_variation_appointment_time = $product_variation_appointment_datetime[1] ?? '';
 
             // Get the current date and time (date of submission)
-            $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
+            $inserted_date = (new DateTimeImmutable(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
             send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
@@ -374,7 +374,7 @@ if (function_exists('WC')) {
             $customer_order_notes = $order->get_customer_note();
 
             // Get the current date and time (date of order completion)
-            $inserted_date = (new DateTime(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
+            $inserted_date = (new DateTimeImmutable(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
             send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
@@ -475,8 +475,8 @@ if (function_exists('WC')) {
                 'de' => 'Vielen Dank für deine Buchung',
             ],
             'body' => [
-                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'de' => sprintf('Hallo %s,<br><br>du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTime::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
 
@@ -525,17 +525,15 @@ if (function_exists('WC')) {
     {
 
         // Define the start and end times for the event
-        $start_time = new DateTime(datetime: $product_variation_appointment_date . ' ' . $product_variation_appointment_time, timezone: new DateTimeZone($timezone));
+        $start_time = new DateTimeImmutable(datetime: $product_variation_appointment_date . ' ' . $product_variation_appointment_time, timezone: new DateTimeZone($timezone));
         $start_time_str = $start_time->format('Ymd\THis');
 
         // Define the end time
-        $end_time = clone $start_time;
-        $end_time->modify('+' . $appointment_duration . ' minutes');
+        $end_time = $start_time->modify("+$appointment_duration minutes");
         $end_time_str = $end_time->format('Ymd\THis');
 
         // Set meeting notification
-        $calendar_notification_time = clone $start_time;
-        $calendar_notification_time->modify('-' . $calendar_notification . ' minutes');
+        $calendar_notification_time = $start_time->modify('-' . $calendar_notification . ' minutes');
         $calendar_notification_time_str = $calendar_notification_time->format('Ymd\THis');
 
         // ICS format content

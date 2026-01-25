@@ -86,7 +86,7 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
     $closed_days = ['2026-12-24', '2026-12-31', '2027-12-24', '2027-12-31'];
     $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
 
-    $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
+    $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
 
@@ -118,15 +118,15 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
 }
 
 function get_status_for_hours(
-    DateTime $current_datetime,
+    DateTimeImmutable $current_datetime,
     string $start_time,
     string $end_time,
     DateTimeZone $timezone,
     string $language
 ): string {
-    $start_datetime = DateTime::createFromFormat(format: 'H:i', datetime: $start_time, timezone: $timezone);
-    $end_datetime = DateTime::createFromFormat(format: 'H:i', datetime: $end_time, timezone: $timezone);
-    $closing_soon_datetime = (clone $end_datetime)->modify('-1 hour');
+    $start_datetime = DateTimeImmutable::createFromFormat(format: 'H:i', datetime: $start_time, timezone: $timezone);
+    $end_datetime = DateTimeImmutable::createFromFormat(format: 'H:i', datetime: $end_time, timezone: $timezone);
+    $closing_soon_datetime = $end_datetime->modify('-1 hour');
 
     if ($current_datetime >= $start_datetime && $current_datetime < $end_datetime) {
         $status = $current_datetime >= $closing_soon_datetime ? 'closing_soon' : 'open';

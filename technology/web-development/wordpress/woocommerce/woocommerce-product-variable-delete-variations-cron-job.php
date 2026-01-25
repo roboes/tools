@@ -18,7 +18,7 @@ add_action(hook_name: 'init', callback: function (): void {
     if (!wp_next_scheduled(hook: 'cron_job_schedule_variable_product_delete_variations', args: [])) {
 
         // Settings
-        $start_datetime = new DateTime(datetime: 'next sunday 03:00:00', timezone: wp_timezone());
+        $start_datetime = new DateTimeImmutable(datetime: 'next sunday 03:00:00', timezone: wp_timezone());
 
         wp_schedule_event(timestamp: $start_datetime->getTimestamp(), recurrence: 'weekly', hook: 'cron_job_schedule_variable_product_delete_variations', args: [], wp_error: false);
     }
@@ -39,7 +39,7 @@ function product_variable_delete_variations(): void
     $product_ids = [17739, 22204];
     $delete = true;
 
-    $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
+    $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
 
     foreach ($product_ids as $product_id) {
         // Handle Polylang translations
@@ -85,7 +85,7 @@ function product_variable_delete_variations(): void
                     if ($attribute_value) {
                         $term_date_prefix = substr(string: $attribute_value, offset: 0, length: 10); // Extract date (DD.MM.YYYY)
                         if (preg_match(pattern: '/^\d{2}\.\d{2}\.\d{4}$/', subject: $term_date_prefix)) {
-                            $term_date = DateTime::createFromFormat(format: 'd.m.Y - H:i', datetime: $attribute_value, timezone: wp_timezone());
+                            $term_date = DateTimeImmutable::createFromFormat(format: 'd.m.Y - H:i', datetime: $attribute_value, timezone: wp_timezone());
 
                             # Check if $term_date is false
                             if (!$term_date) {

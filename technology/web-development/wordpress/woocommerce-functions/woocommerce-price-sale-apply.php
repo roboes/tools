@@ -9,8 +9,8 @@ if (function_exists('WC')) {
     function woocommerce_sale_price_update($product_id, $start_date, $end_date, $discount_percentage, $round_precision)
     {
         // Start and end dates
-        $start_date = new DateTime(datetime: $start_date, timezone: wp_timezone());
-        $end_date = (new DateTime(datetime: $end_date, timezone: wp_timezone()))->modify('+1 day');
+        $start_date = (new DateTimeImmutable(datetime: $start_date, timezone: wp_timezone()));
+        $end_date = (new DateTimeImmutable(datetime: $end_date, timezone: wp_timezone()))->modify('+1 day');
 
         // Set sale start and end dates with time zone consideration
         update_post_meta($product_id, '_sale_price_dates_from', $start_date->getTimestamp());

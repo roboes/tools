@@ -1176,6 +1176,7 @@ Cloudflare → Website → `Security` → `Security rules`.
 - Custom filter expression:
 
 ```.txt
+(starts_with(http.host, "virtualmin.")) or
 (http.request.method in {"POST" "PUT" "DELETE"}) or
 (http.cookie contains "PHPSESSID") or
 (http.request.uri.path contains "/wp-admin") or

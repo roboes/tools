@@ -30,8 +30,6 @@ if (function_exists('WC') && !is_admin()) {
             return false;
         }
 
-        $current_datetime = new DateTime(datetime: 'now', timezone: wp_timezone());
-
         // Setup: Check for 'Termin' attribute
         $attribute_value = $variation->get_attribute(attribute: 'Termin');
 
@@ -40,7 +38,8 @@ if (function_exists('WC') && !is_admin()) {
             $term_date_string = substr(string: $attribute_value, offset: 0, length: 10); // Extract the date from the attribute (DD.MM.YYYY)
 
             if (preg_match(pattern: '/^\d{2}\.\d{2}\.\d{4}$/', subject: $term_date_string)) {
-                $term_date = DateTime::createFromFormat(format: 'd.m.Y', datetime: $term_date_string, timezone: wp_timezone());
+                $term_date = DateTimeImmutable::createFromFormat(format: 'd.m.Y', datetime: $term_date_string, timezone: wp_timezone());
+                $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
                 // Completely hide variation if the date is in the past
                 if ($term_date && $term_date < $current_datetime) {
                     return false;

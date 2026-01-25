@@ -18,7 +18,7 @@ add_action(hook_name: 'init', callback: function (): void {
     if (!wp_next_scheduled(hook: 'cron_job_schedule_slugs_update', args: [])) {
 
         // Settings
-        $start_datetime = new DateTime(datetime: 'next sunday 02:00:00', timezone: wp_timezone());
+        $start_datetime = new DateTimeImmutable(datetime: 'next sunday 02:00:00', timezone: wp_timezone());
 
         wp_schedule_event(timestamp: $start_datetime->getTimestamp(), recurrence: 'weekly', hook: 'cron_job_schedule_slugs_update', args: [], wp_error: false);
     }
