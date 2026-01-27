@@ -1,5 +1,5 @@
 <?php
-// WooCommerce - "Add to cart" accept product warning terms
+// WooCommerce - "Add to Cart" accept product warning terms
 // Last update: 2026-01-15
 
 

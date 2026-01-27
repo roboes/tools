@@ -1,16 +1,24 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-01-25
+// Last update: 2026-01-27
+
+
+// Notes:
+// - Custom product gift card amount purchase: Adds a numerical input field to specific products that allows users to choose a gift card value integer with 1 step.
+// - Price overriding: Dynamically sets the product price in the cart to match the Custom product gift card amount purchase by the user.
+// - Quantity restrictions: Forces the quantity of these products to exactly one per order and blocks users from adding multiple gift cards of the same type to the cart.
+// - Automated coupon creation: When an order is paid, it automatically generates a unique WooCommerce coupon code using a random character string and a specific prefix (e.g. KA-Gift- or KA-Training-).
+// - Smart coupon expiry: Sets all generated coupons to expire on December 31st of the third year following the purchase.
+// - PDF generation & emailing: Creates a custom PDF gift card using the Dompdf library and emails it to the customer automatically upon payment.
+// - Voucher balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
+// - Multilingual support: Uses Polylang to detect the order language and provides all notifications, emails, and PDF text in either German or English.
+// - Usage restrictions: Restricts coupons to specific products if configured (e.g., training courses), but allows them to be used by any customer at checkout.
 
 
 // Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
 // cd /home/website.com/public_html/wp-content/
 // composer require dompdf/dompdf
-
-
-
-
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -19,47 +27,46 @@ require_once WP_CONTENT_DIR . '/vendor/autoload.php';
 
 if (function_exists('WC')) {
 
-    function get_coupon_variation_validation(int $variation_id): object|bool
+    function get_coupon_variation_validation(int $item_id): object|bool
     {
 
         // Settings
         $settings_coupon = [
             [
-                'coupon_prefix'        => 'KA-Training-',
-                'meta_key_suffix'      => 'training_home_barista',
-                'product_ids'          => [22204, 31437],
-                'coupon_variation_ids' => [44043, 44044],
-                'coupon_is_fixed_amount'      => false,
+                'coupon_prefix'          => 'KA-Training-',
+                'meta_key_suffix'        => 'training_home_barista',
+                'purchasable_ids'        => [44043, 44044], // The product or product variation IDs that, when purchased, trigger the generation of a coupon
+                'redeemable_product_ids' => [22204, 31437], // Specific products to which the these coupons can be applied to
+                'coupon_is_fixed_amount' => false,
             ],
             [
-                'coupon_prefix'        => 'KA-Gift-',
-                'meta_key_suffix'      => 'gift_card',
-                'product_ids'          => [],
-                'coupon_variation_ids' => [44185, 44187],
-                'coupon_is_fixed_amount'      => true,
+                'coupon_prefix'          => 'KA-Gift-',
+                'meta_key_suffix'        => 'gift_card',
+                'purchasable_ids'        => [44185, 44187],
+                'redeemable_product_ids' => [],
+                'coupon_is_fixed_amount' => true,
             ],
         ];
-
-        $messages = [
+        $settings_messages = [
             'en' => 'Only one coupon allowed per order.',
             'de' => 'Nur ein Gutschein pro Bestellung erlaubt.',
         ];
 
         foreach ($settings_coupon as $group) {
-            if (in_array(needle: $variation_id, haystack: $group['coupon_variation_ids'], strict: true)) {
+            if (in_array(needle: $item_id, haystack: $group['purchasable_ids'], strict: true)) {
 
                 // Get language of the specific variation
-                $product_lang = 'en';
+                $product_language = 'en';
                 if (function_exists('pll_get_post_language')) {
-                    if (pll_get_post_language(post_id: $variation_id, field: 'slug') && in_array(needle: pll_get_post_language(post_id: $variation_id, field: 'slug'), haystack: pll_languages_list(args: ['fields' => 'slug']), strict: true)) {
-                        $product_lang = pll_get_post_language(post_id: $variation_id, field: 'slug');
+                    if (pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug') && in_array(needle: pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug'), haystack: pll_languages_list(args: ['fields' => 'slug']), strict: true)) {
+                        $product_language = pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug');
                     }
                 }
 
                 return (object) [
                     'is_coupon'     => true,
-                    'error_message' => $messages[$product_lang] ?? $messages['en'],
-                    'language'      => $product_lang,
+                    'error_message' => $settings_messages[$product_language] ?? $settings_messages['en'],
+                    'language'      => $product_language,
                     'config'        => $group,
                     'meta_suffix'   => $group['meta_key_suffix'],
                 ];
@@ -73,7 +80,7 @@ if (function_exists('WC')) {
 
         // Cart validation: Force quantity to 1 on product page
         add_filter(hook_name: 'woocommerce_quantity_input_args', callback: function ($args, $product) {
-            if (get_coupon_variation_validation(variation_id: $product->get_id())) {
+            if (get_coupon_variation_validation(item_id: $product->get_id())) {
                 return array_merge($args, ['min_value' => 1, 'max_value' => 1, 'input_value' => 1]);
             }
             return $args;
@@ -83,12 +90,13 @@ if (function_exists('WC')) {
         // Cart validation: Block adding more than one to cart
         add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function ($passed, $product_id, $quantity, $variation_id = 0) {
             $target_id   = $variation_id ?: $product_id;
-            $coupon_data = get_coupon_variation_validation(variation_id: $target_id);
+            $coupon_data = get_coupon_variation_validation(item_id: $target_id);
 
             if ($passed && $coupon_data) {
                 foreach (WC()->cart->get_cart() as $cart_item) {
                     $item_id = $cart_item['variation_id'] ?: $cart_item['product_id'];
-                    if (get_coupon_variation_validation(variation_id: $item_id)) {
+                    $existing_coupon_data = get_coupon_variation_validation($item_id);
+                    if ($existing_coupon_data && $existing_coupon_data->meta_suffix === $coupon_data->meta_suffix) {
                         wc_add_notice(message: $coupon_data->error_message, notice_type: 'error');
                         return false;
                     }
@@ -100,7 +108,7 @@ if (function_exists('WC')) {
         // Cart validation: Block quantity updates in the Cart page
         add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function ($passed, $cart_item_key, $values, $quantity) {
             $target_id   = $values['variation_id'] ?: $values['product_id'];
-            $coupon_data = get_coupon_variation_validation(variation_id: $target_id);
+            $coupon_data = get_coupon_variation_validation(item_id: $target_id);
 
             if ($passed && $quantity > 1 && $coupon_data) {
                 wc_add_notice(message: $coupon_data->error_message, notice_type: 'error');
@@ -140,8 +148,8 @@ if (function_exists('WC')) {
         $purchase_date = $order->get_date_created();
 
         foreach ($order->get_items() as $line_item) {
-            $variation_id = (int) $line_item->get_variation_id();
-            $coupon_data = get_coupon_variation_validation(variation_id: $variation_id);
+            $item_id = $line_item->get_variation_id() ?: $line_item->get_product_id();
+            $coupon_data = get_coupon_variation_validation(item_id: $item_id);
 
             if ($coupon_data) {
                 if ($order->get_meta('_coupon_code_' . $coupon_data->meta_suffix)) {
@@ -156,8 +164,8 @@ if (function_exists('WC')) {
                 $coupon_is_fixed_amount = (isset($config['coupon_is_fixed_amount']) && $config['coupon_is_fixed_amount'] === true);
                 $coupon_amount = $line_item->get_total();
                 $coupon_amount_formatted = html_entity_decode(wp_strip_all_tags(wc_price($coupon_amount)));
-                $product_parent_name   = get_the_title($variation_id);
-                $product_variation_name = $line_item->get_name();
+                $product_parent_id = wp_get_post_parent_id($item_id) ?: $item_id;
+                $product_parent_name   = get_the_title($product_parent_id);
                 $description    = "{$product_parent_name} - Purchased on {$purchase_date->date(format: 'Y-m-d H:i:s')}";
 
                 // Create coupon
@@ -184,10 +192,10 @@ if (function_exists('WC')) {
                     }
                 }
                 $coupon->set_description(description: $description);
-                $coupon->set_product_ids(product_ids: $config['product_ids']);
+                $coupon->update_meta_data('_coupon_purchased_on_order_id', $order_id);
+                $coupon->set_product_ids(product_ids: $config['redeemable_product_ids']);
                 $coupon->set_usage_limit(usage_limit: 1);
                 $coupon->set_individual_use(is_individual_use: true);
-                $coupon->set_email_restrictions(emails: [$order->get_billing_email()]);
 
                 $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format('Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
 
@@ -202,27 +210,22 @@ if (function_exists('WC')) {
                 $order->add_order_note(note: "Coupon created: {$coupon_code}. Valid for: {$product_parent_name}. Expires: {$coupon_expiry_date->format(format: 'Y-m-d')}");
 
                 // Send email
-                send_coupon_email(order: $order, variation_id: $variation_id, product_display_name: $product_display_name, meta_suffix: $coupon_data->meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $language);
+                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, meta_suffix: $coupon_data->meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $language);
 
             }
         }
     }
 
     // Send coupon per email
-    function send_coupon_email(WC_Order $order, int $variation_id, string $product_display_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $coupon_code, string $language): void
+    function send_coupon_email(WC_Order $order, string $product_parent_name, string $product_display_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $coupon_code, string $language): void
     {
 
         // Setup
         $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $customer_email = $order->get_billing_email();
-        $product_parent_name = get_the_title($variation_id);
         $coupon_expiry_date = DateTimeImmutable::createFromFormat(format: 'U', datetime: $order->get_meta('_coupon_expiry_' . $meta_suffix));
 
-
-
         $email_coupon_code_style = 'font-family: "Courier New", Courier, monospace;';
-
-
 
         $email_data = [
             'en' => [
@@ -243,7 +246,7 @@ if (function_exists('WC')) {
 
         $content = $email_data[$language] ?? $email_data['en'];
 
-        $attachment_pdf_path = generate_gift_card_pdf(order: $order, variation_id: $variation_id, meta_suffix: $meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, language: $language);
+        $attachment_pdf_path = generate_gift_card_pdf(order: $order, product_parent_name: $product_parent_name, meta_suffix: $meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, language: $language);
 
         // Send email
         $mailer  = WC()->mailer();
@@ -256,7 +259,7 @@ if (function_exists('WC')) {
 
     }
 
-    function generate_gift_card_pdf(WC_Order $order, int $variation_id, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $language): string
+    function generate_gift_card_pdf(WC_Order $order, string $product_parent_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $language): string
     {
         // Setup
         $customer_email = $order->get_billing_email();
@@ -265,7 +268,6 @@ if (function_exists('WC')) {
         $blog_name      = get_option(option: 'blogname');
         $coupon_code    = $order->get_meta('_coupon_code_' . $meta_suffix);
         $coupon_expiry_date_timestamp      = $order->get_meta('_coupon_expiry_' . $meta_suffix);
-        $product_parent_name   = get_the_title($variation_id);
 
         // Translations
         if ($language === 'de') {
@@ -405,6 +407,314 @@ if (function_exists('WC')) {
 
         return $attachment_pdf_path;
 
+    }
+
+
+    // Deducts used amount from coupon balance and tracks redemption history
+    add_action(hook_name: 'woocommerce_order_status_processed', callback: 'coupon_balance', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_order_status_completed', callback: 'coupon_balance', priority: 10, accepted_args: 1);
+
+    function coupon_balance(int $order_id): void
+    {
+        $order = wc_get_order($order_id);
+
+        // Safety check: Prevents re-running if status changes from "Processed" to "Completed"
+        if (!$order || $order->get_meta('_coupon_balance_processed') === 'yes') {
+            return;
+        }
+
+        $coupons_applied = $order->get_coupon_codes();
+        if (empty($coupons_applied)) {
+            return;
+        }
+
+        foreach ($coupons_applied as $coupon_code) {
+            $coupon = new WC_Coupon($coupon_code);
+
+            // Target all fixed_cart coupons
+            if ($coupon->get_id() !== 0 && $coupon->get_discount_type() === 'fixed_cart') {
+
+                // Get the specific discount this coupon provided in this order
+                $discount_applied = 0;
+                foreach ($order->get_coupons() as $order_coupon) {
+                    if (strcasecmp($order_coupon->get_code(), $coupon_code) === 0) {
+                        $discount_applied = (float) $order_coupon->get_discount();
+                        break;
+                    }
+                }
+
+                // Update redemption history
+                $history = $coupon->get_meta('_coupon_redeemed_in_order_ids');
+                if (!is_array($history)) {
+                    $history = [];
+                }
+
+                if (!in_array($order_id, $history)) {
+                    $history[] = $order_id;
+                    $coupon->update_meta_data('_coupon_redeemed_in_order_ids', $history);
+                }
+
+                // Subtract saldo
+                $coupon_current_balance = (float) $coupon->get_amount();
+                $coupon_new_balance = $coupon_current_balance - $discount_applied;
+
+                if ($coupon_new_balance > 0) {
+                    $coupon->set_amount($coupon_new_balance);
+                    // Reduce usage count so the coupon remains "Unused" (active)
+                    $coupon->set_usage_count($coupon->get_usage_count() - 1);
+                }
+
+                $coupon->save();
+            }
+        }
+
+        // Lock the order so the balance is not subtracted again
+        $order->update_meta_data('_coupon_balance_processed', 'yes');
+        $order->save();
+    }
+
+    // Gift card product logic
+    add_action(hook_name: 'woocommerce_before_add_to_cart_form', callback: 'add_custom_coupon_amount_field', priority: 10, accepted_args: 0);
+
+    function add_custom_coupon_amount_field(): void
+    {
+        $product = wc_get_product();
+
+        // Settings
+        static $product_ids = [44185, 44187];
+        $messages = [
+            'en' => [
+                'label' => 'Gift Card Amount',
+                'range' => '€15,00 - €250,00',
+                'error_empty' => 'Please enter a gift card amount between €15 and €250.',
+                'error_range' => 'The gift card amount must be between €15 and €250.'
+            ],
+            'de' => [
+                'label' => 'Gutscheinwert',
+                'range' => '€15,00 - €250,00',
+                'error_empty' => 'Bitte gib einen Gutscheinbetrag zwischen €15 und €250 ein.',
+                'error_range' => 'Der Gutscheinbetrag muss zwischen €15 und €250 liegen.'
+            ]
+        ];
+
+        if (!$product || !in_array($product->get_id(), $product_ids)) {
+            return;
+        }
+
+        $language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+
+        $text = $messages[$language] ?? $messages['de'];
+
+        // Pull WooCommerce settings for JavaScript
+        $currency_params = [
+            'symbol'    => get_woocommerce_currency_symbol(),
+            'pos'       => get_option('woocommerce_currency_pos'),
+            'decimals'  => wc_get_price_decimals(),
+            'locale'    => ($language === 'de' ? 'de-DE' : 'en-US')
+        ];
+
+        ?>
+		<style>
+			.coupon-amount-table {
+				width: 80%;
+				max-width: 80%;
+				table-layout: fixed;
+			}
+			#coupon_amount {
+				width: 100%;
+				max-width: none;
+				border: 1px solid #262626;
+				border-radius: 0;
+				padding: 8px 12px;
+				background: transparent;
+				color: #262626;
+				font-family: 'Inter', sans-serif;
+				font-size: 15px;
+				box-sizing: border-box;
+				text-align: center; 
+			}
+			#coupon_amount:focus {
+				outline: none;
+				border-color: #262626;
+			}
+		</style>
+		<form class="variations_form cart" method="post" enctype="multipart/form-data">
+			<table class="variations coupon-amount-table">
+				<tbody>
+					<tr>
+						<th class="label"><label for="coupon_amount"><?php echo esc_html($text['label']); ?></label></th>
+						<td class="value">
+							<input type="number" id="coupon_amount" name="coupon_amount" min="15" max="250" step="1" value="" placeholder="<?php echo esc_attr($text['range']); ?>" required>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</form> 
+
+		<script type="text/javascript">
+		jQuery(function($) {
+			const params = <?php echo wp_json_encode($currency_params); ?>;
+			const $input = $('#coupon_amount');
+			const $button = $(".single_add_to_cart_button");
+			const $wcForm = $('form.cart').not($input.closest('form')); 
+
+			// Add hidden field to the real WooCommerce form
+			$wcForm.append('<input type="hidden" name="coupon_amount" id="coupon_amount_hidden" value="">');
+			const $hiddenInput = $('#coupon_amount_hidden');
+
+			const formatter = new Intl.NumberFormat(params.locale, {
+				minimumFractionDigits: parseInt(params.decimals),
+				maximumFractionDigits: parseInt(params.decimals)
+			});
+
+			function formatPrice(price) {
+				const formatted = formatter.format(price);
+				switch(params.pos) {
+					case "left": return params.symbol + formatted;
+					case "right": return formatted + params.symbol;
+					case "left_space": return params.symbol + " " + formatted;
+					case "right_space": return formatted + " " + params.symbol;
+					default: return params.symbol + formatted;
+				}
+			}
+
+			// Round to nearest integer on input and sync to hidden field
+			$input.on('input', function() {
+				const val = parseFloat($(this).val());
+				if (!isNaN(val)) {
+					const rounded = Math.round(val);
+					$(this).val(rounded);
+					$hiddenInput.val(rounded);
+				} else {
+					$hiddenInput.val('');
+				}
+			});
+
+			// Round on blur to ensure integer value
+			$input.on('blur', function() {
+				const val = parseFloat($(this).val());
+				if (!isNaN(val)) {
+					const rounded = Math.round(val);
+					$(this).val(rounded);
+					$hiddenInput.val(rounded);
+				}
+			});
+
+			// Sync on change as well
+			$input.on('change', function() {
+				$hiddenInput.val($(this).val());
+			});
+
+			function updateDisplay() {
+				const val = parseFloat($input.val()) || 0;
+				const qty = parseInt($('input[name="quantity"]').val(), 10) || 1;
+				const totalPrice = val * qty;
+				const formattedPrice = formatPrice(totalPrice)
+				
+				// Update the "Add to Cart" button
+				$button.find('span[data-price]').remove();
+				if (val > 0) {
+					$button.append('<span data-price> - ' + formattedPrice + '</span>');
+				}
+
+				// Update the Elementor "Price" widget
+				const $priceDisplay = $('.elementor-widget-woocommerce-product-price .price .woocommerce-Price-amount bdi');
+				
+				if ($priceDisplay.length && val > 0) {
+					$priceDisplay.html(formattedPrice);
+				} else if ($priceDisplay.length) {
+					// Reset to 0 if input is empty
+					$priceDisplay.html(formatPrice(0));
+				}
+			}
+			
+			$input.on('input change', updateDisplay);
+			updateDisplay();
+		});
+		</script>
+		<?php
+    }
+
+    // Validation with localized error messages
+    add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: 'validate_custom_coupon_amount', priority: 10, accepted_args: 3);
+
+    function validate_custom_coupon_amount(bool $passed, int $product_id, int $quantity): bool
+    {
+
+        // Settings
+        static $product_ids = [44185, 44187];
+        $messages = [
+            'en' => [
+                'error_empty' => 'Please enter a gift card amount between €15 and €250.',
+                'error_range' => 'The gift card amount must be between €15 and €250.'
+            ],
+            'de' => [
+                'error_empty' => 'Bitte gib einen Gutscheinbetrag zwischen €15 und €250 ein.',
+                'error_range' => 'Der Gutscheinbetrag muss zwischen €15 und €250 liegen.'
+            ]
+        ];
+
+        if (in_array($product_id, $product_ids)) {
+            $language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+
+            $text = $messages[$language] ?? $messages['de'];
+
+            if (!isset($_POST['coupon_amount']) || $_POST['coupon_amount'] === '') {
+                wc_add_notice($text['error_empty'], 'error');
+                return false;
+            }
+
+            $amount = round(floatval($_POST['coupon_amount']));
+            if ($amount < 15 || $amount > 250) {
+                wc_add_notice($text['error_range'], 'error');
+                return false;
+            }
+
+            // Update POST with rounded value
+            $_POST['coupon_amount'] = $amount;
+        }
+        return $passed;
+    }
+
+
+    // Store amount in cart
+    add_filter(hook_name: 'woocommerce_add_cart_item_data', callback: 'store_custom_coupon_amount', priority: 10, accepted_args: 3);
+
+    function store_custom_coupon_amount(array $cart_item_data, int $product_id, int $variation_id): array
+    {
+        // Settings
+        static $product_ids = [44185, 44187];
+
+        if (in_array($product_id, $product_ids) && !empty($_POST['coupon_amount'])) {
+            $cart_item_data['coupon_amount'] = round(floatval($_POST['coupon_amount']));
+        }
+        return $cart_item_data;
+    }
+
+    // Set price in cart
+    add_filter(hook_name: 'woocommerce_add_cart_item', callback: 'set_custom_coupon_price', priority: 10, accepted_args: 1);
+
+    function set_custom_coupon_price(array $cart_item): array
+    {
+        if (isset($cart_item['coupon_amount'])) {
+            $cart_item['data']->set_price((float) $cart_item['coupon_amount']);
+        }
+        return $cart_item;
+    }
+
+    // Persist price
+    add_action(hook_name: 'woocommerce_before_calculate_totals', callback: 'persist_custom_coupon_price_in_cart', priority: 10, accepted_args: 1);
+
+    function persist_custom_coupon_price_in_cart(WC_Cart $cart): void
+    {
+        if ((is_admin() && !defined('DOING_AJAX')) || did_action('woocommerce_before_calculate_totals') >= 2) {
+            return;
+        }
+        foreach ($cart->get_cart() as $cart_item) {
+            if (isset($cart_item['coupon_amount'])) {
+                $cart_item['data']->set_price((float) $cart_item['coupon_amount']);
+            }
+        }
     }
 
 }

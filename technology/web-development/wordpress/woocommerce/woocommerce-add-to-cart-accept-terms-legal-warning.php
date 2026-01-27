@@ -1,6 +1,6 @@
 <?php
 
-// WooCommerce - "Add to cart" accept legal warning terms
+// WooCommerce - "Add to Cart" accept legal warning terms
 // Last update: 2026-01-15
 
 

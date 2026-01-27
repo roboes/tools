@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-10-19
+// Last update: 2026-10-27
 
 
 // Add this line to wp-config.php file
@@ -290,7 +290,7 @@ if (function_exists('WC')) {
     }
 
 
-    function order_completed_gift_card_redemption_tools($order_id): void
+    function order_completed_gift_card_redemption_tools($order_id, $send_training_confirmation_email_skip = false): void
     {
         if (!$order_id) {
             return;
@@ -377,7 +377,9 @@ if (function_exists('WC')) {
             $inserted_date = (new DateTimeImmutable(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
-            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+            if (!$send_training_confirmation_email_skip) {
+                send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+            }
 
             // Perform English version for Google Sheets
             $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
@@ -559,6 +561,133 @@ if (function_exists('WC')) {
         $ics_content .= "END:VCALENDAR";
 
         return $ics_content;
+    }
+
+
+    // Schedule cron job to sync missing orders to Google Sheets
+    add_action(hook_name: 'init', callback: function (): void {
+
+        if (!wp_next_scheduled(hook: 'cron_job_sync_missing_trainings_to_google_sheets', args: [])) {
+
+            // Settings
+            $start_datetime = new DateTimeImmutable(datetime: 'next sunday 04:00:00', timezone: wp_timezone());
+
+            wp_schedule_event(timestamp: $start_datetime->getTimestamp(), recurrence: 'weekly', hook: 'cron_job_sync_missing_trainings_to_google_sheets', args: [], wp_error: false);
+
+        }
+
+    }, priority: 10, accepted_args: 0);
+
+
+    add_action(hook_name: 'cron_job_sync_missing_trainings_to_google_sheets', callback: 'sync_missing_trainings_to_google_sheets', priority: 10, accepted_args: 0);
+
+    function sync_missing_trainings_to_google_sheets(): void
+    {
+        global $wpdb;
+
+        // Settings
+        $product_ids = [22204, 31437, 17739, 31438];
+        $product_variation_ids_exception = [44043, 44044];
+
+        // Get all existing order numbers from Google Sheets in one call
+        $existing_order_ids = get_all_order_ids_from_google_sheets();
+        if ($existing_order_ids === false) {
+            error_log('Failed to fetch existing order IDs from Google Sheets');
+            return;
+        }
+
+        error_log('Found ' . count($existing_order_ids) . ' existing orders in Google Sheets');
+
+        // Get all completed orders from the last 3 months using wpdb (HPOS compatible)
+        $order_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT o.id 
+			FROM {$wpdb->prefix}wc_orders o
+			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
+			INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
+			WHERE o.status = 'wc-completed'
+			AND o.date_created_gmt >= %s
+			AND oim.meta_key = '_product_id'
+			AND oim.meta_value IN (" . implode(',', array_fill(0, count($product_ids), '%d')) . ")
+			ORDER BY o.id ASC",
+            array_merge([date('Y-m-d H:i:s', strtotime('-3 months'))], $product_ids)
+        ));
+
+        error_log('Found ' . count($order_ids) . ' potential orders from WooCommerce');
+
+        $synced = 0;
+        $skipped = 0;
+
+        foreach ($order_ids as $order_id) {
+            $order_id_str = (string)$order_id;
+
+            // Skip if already in Google Sheets (local array check - super fast!)
+            if (in_array($order_id_str, $existing_order_ids, true)) {
+                $skipped++;
+                continue;
+            }
+
+            // Load order and validate
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                continue;
+            }
+
+            // Check if order has valid training products (not exception variations)
+            $has_valid_training_product = false;
+            foreach ($order->get_items() as $item) {
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+
+                // Skip if it's an exception variation
+                if (in_array($variation_id, $product_variation_ids_exception, true)) {
+                    continue;
+                }
+
+                if (in_array($product_id, $product_ids, true)) {
+                    $has_valid_training_product = true;
+                    break;
+                }
+            }
+
+            if (!$has_valid_training_product) {
+                continue;
+            }
+
+            // Sync to Google Sheets
+            order_completed_gift_card_redemption_tools(order_id: $order_id, send_training_confirmation_email_skip: true);
+            $synced++;
+            error_log("Synced order: $order_id");
+
+            // Small delay to avoid overwhelming Google Sheets API
+            sleep(1);
+        }
+
+        error_log("Sync complete: $synced synced, $skipped already existed");
+    }
+
+    function get_all_order_ids_from_google_sheets(): array|false
+    {
+        if (!defined('GOOGLE_APPS_SCRIPT_GIFT_CARD')) {
+            return false;
+        }
+
+        $url = add_query_arg('action', 'getAllOrderNumbers', GOOGLE_APPS_SCRIPT_GIFT_CARD);
+        $response = wp_remote_get($url, ['timeout' => 30]);
+
+        if (is_wp_error($response)) {
+            error_log('Error fetching order IDs from Google Sheets: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $order_ids = json_decode($body, true);
+
+        if (!is_array($order_ids)) {
+            error_log('Invalid response from Google Sheets: ' . $body);
+            return false;
+        }
+
+        return $order_ids;
     }
 
 }

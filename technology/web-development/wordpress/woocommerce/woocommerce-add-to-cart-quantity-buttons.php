@@ -1,35 +1,55 @@
 <?php
-// WooCommerce - "Add to cart" quantity buttons
-// Last update: 2026-01-15
+// WooCommerce - "Add to Cart" quantity buttons
+// Last update: 2026-01-26
 
 
-// Notes: Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)
-
+// Notes:
+// - Use this snippet code together with the plugin "WC Variations Radio Buttons" (https://github.com/8manos/wc-variations-radio-buttons)
+// - To disable the "Add to Cart" quantity buttons, use this filter: add_filter(hook_name: 'woocommerce_before_add_to_cart_quantity_disable', callback: '__return_true', priority: 10, accepted_args: 0);
 
 if (function_exists('WC') && !is_admin()) {
+
+    // Disable buttons for "sold individually" products
+    add_filter(
+        hook_name: 'woocommerce_before_add_to_cart_quantity_disable',
+        callback: function ($disable) {
+            if (!is_product()) {
+                return $disable;
+            }
+
+            global $product;
+            if ($product && $product->is_sold_individually()) {
+                return true;
+            }
+
+            return $disable;
+        },
+        priority: 10,
+        accepted_args: 1,
+    );
 
     // Add - button before quantity input
     add_action(
         hook_name: 'woocommerce_before_add_to_cart_quantity',
         callback: function (): void {
-            if (!is_product()) {
-                return;
+            if (is_product() && !apply_filters('woocommerce_before_add_to_cart_quantity_disable', false)) {
+                echo '<button type="button" class="minus" aria-label="Decrease quantity">-</button>';
             }
-            echo '<button type="button" class="minus" aria-label="Decrease quantity">-</button>';
         },
-        priority: 10
+        priority: 10,
+        accepted_args: 0,
     );
 
     // Add + button after quantity input
     add_action(
         hook_name: 'woocommerce_after_add_to_cart_quantity',
         callback: function (): void {
-            if (!is_product()) {
-                return;
+            if (is_product() && !apply_filters('woocommerce_before_add_to_cart_quantity_disable', false)) {
+                echo '<button type="button" class="plus" aria-label="Increase quantity">+</button>';
             }
-            echo '<button type="button" class="plus" aria-label="Increase quantity">+</button>';
         },
-        priority: 10
+        priority: 10,
+        accepted_args: 0,
     );
 
     // JavaScript to manage plus/minus functionality
@@ -45,19 +65,19 @@ if (function_exists('WC') && !is_admin()) {
                 $('body').on('click', 'button.plus, button.minus', function(e) {
                     e.preventDefault();
                     
-                    let $qty = $(this).siblings('.qty');
-                    if (!$qty.length) {
-                        $qty = $(this).closest('.quantity').find('.qty');
+                    let $quantity = $(this).siblings('.qty');
+                    if (!$quantity.length) {
+                        $quantity = $(this).closest('.quantity').find('.qty');
                     }
-                    if (!$qty.length) {
-                        $qty = $(this).parent().find('input.qty');
+                    if (!$quantity.length) {
+                        $quantity = $(this).parent().find('input.qty');
                     }
                     
-                    if ($qty.length) {
-                        const val = parseFloat($qty.val()) || 1;
-                        const max = parseFloat($qty.attr('max')) || 999;
-                        const min = parseFloat($qty.attr('min')) || 1;
-                        const step = parseFloat($qty.attr('step')) || 1;
+                    if ($quantity.length) {
+                        const val = parseFloat($quantity.val()) || 1;
+                        const max = parseFloat($quantity.attr('max')) || 999;
+                        const min = parseFloat($quantity.attr('min')) || 1;
+                        const step = parseFloat($quantity.attr('step')) || 1;
                         
                         let newVal;
                         if ($(this).hasClass('plus')) {
@@ -66,7 +86,7 @@ if (function_exists('WC') && !is_admin()) {
                             newVal = Math.max(val - step, min);
                         }
                         
-                        $qty.val(newVal).trigger('change');
+                        $quantity.val(newVal).trigger('change');
                     }
                 });
                 
@@ -83,6 +103,10 @@ if (function_exists('WC') && !is_admin()) {
         hook_name: 'woocommerce_quantity_input_args',
         callback: function (array $args, \WC_Product $product): array {
             if (!is_product()) {
+                return $args;
+            }
+
+            if ($product->is_sold_individually()) {
                 return $args;
             }
 

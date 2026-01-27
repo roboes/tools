@@ -1171,12 +1171,27 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 #### Caching
 
-- Rule name: `Cache Bypass`.
+Cloudflare → Website → `Caching` → `Cache Rules`.
 
-- Custom filter expression:
+1. Cache Bypass
+
+- Rule name: `Cache Bypass - Virtualmin`.
+- If incoming requests match...: `Custom filter expression`:
 
 ```.txt
-(starts_with(http.host, "virtualmin.")) or
+(starts_with(http.host, "virtualmin."))
+```
+
+- Then... `Bypass cache`.
+
+- Browser TTL: `Respect origin TTL`.
+
+2. Cache Bypass
+
+- Rule name: `Cache Bypass`.
+- If incoming requests match...: `Custom filter expression`:
+
+```.txt
 (http.request.method in {"POST" "PUT" "DELETE"}) or
 (http.cookie contains "PHPSESSID") or
 (http.request.uri.path contains "/wp-admin") or
@@ -1194,6 +1209,12 @@ Cloudflare → Website → `Security` → `Security rules`.
 ```
 
 - Then... `Bypass cache`.
+
+3. Cache Everything
+
+- Rule name: `Cache Everything`.
+- If incoming requests match...: `All incoming requests`.
+- Then... `Eligible for cache`.
 
 ### PHP-FPM Configuration
 
