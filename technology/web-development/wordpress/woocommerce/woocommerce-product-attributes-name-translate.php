@@ -15,7 +15,10 @@ if (function_exists('WC') && !is_admin()) {
 
     function translate_attribute_name($label, $name, $product)
     {
-        if (function_exists('pll_current_language') && pll_current_language('slug') === 'en') {
+
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+
+        if ($browsing_language === 'en') {
             $titles = [
                 'Termin' => 'Appointment',
                 'Gutschein (Termin später wählbar)' => 'Voucher (Date to be arranged)',
@@ -39,7 +42,10 @@ if (function_exists('WC') && !is_admin()) {
 
     function translate_attribute_term_name($term_name)
     {
-        if (function_exists('pll_current_language') && pll_current_language('slug') === 'en') {
+
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+
+        if ($browsing_language === 'en') {
             $values = [
                 'Gutschein (Termin später wählbar)' => 'Voucher (Date to be arranged)',
                 'Gutschein (Später wählbar)'        => 'Voucher (Selection later)',

@@ -32,17 +32,12 @@ function store_hours_shortcode(): string
     $instance++;
     $unique_id = 'store-hours-container-' . $instance;
 
-    // Get current language
-    $current_language = 'en';
-    if (function_exists('pll_current_language')) {
-        if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-            $current_language = pll_current_language('slug');
-        }
-    }
+    // Get current language (Polylang/WPML)
+    $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
     // Add cache-busting timestamp parameter
     $rest_url = esc_url(add_query_arg([
-        'lang' => $current_language,
+        'lang' => $browsing_language,
         '_' => time(),
     ], rest_url('store/v1/hours')));
 
@@ -90,22 +85,22 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
 
-    $current_language = filter_var($request->get_param('lang') ?: 'en', FILTER_DEFAULT, FILTER_THROW_ON_FAILURE);
+    $browsing_language = filter_var($request->get_param('lang') ?: 'en', FILTER_DEFAULT, FILTER_THROW_ON_FAILURE);
 
     if (in_array($current_date, $public_holidays, true)) {
-        $message = generate_message('holiday', $current_language);
+        $message = generate_message('holiday', $browsing_language);
     } elseif (in_array($current_date, $closed_days, true)) {
-        $message = generate_message('closed_date', $current_language);
+        $message = generate_message('closed_date', $browsing_language);
     } elseif (in_array($current_date, $special_days, true)) {
-        $message = generate_message('special_event', $current_language);
+        $message = generate_message('special_event', $browsing_language);
     } elseif (isset($special_opening_hours[$current_date])) {
         [$start_time, $end_time] = $special_opening_hours[$current_date];
-        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $current_language);
+        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $browsing_language);
     } elseif (isset($opening_hours[$current_day_of_week])) {
         [$start_time, $end_time] = $opening_hours[$current_day_of_week];
-        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $current_language);
+        $message = get_status_for_hours($current_datetime, $start_time, $end_time, wp_timezone(), $browsing_language);
     } else {
-        $message = generate_message('closed', $current_language);
+        $message = generate_message('closed', $browsing_language);
     }
 
     // Return response with no-cache headers
@@ -117,23 +112,18 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
     return $response;
 }
 
-function get_status_for_hours(
-    DateTimeImmutable $current_datetime,
-    string $start_time,
-    string $end_time,
-    DateTimeZone $timezone,
-    string $language
-): string {
+function get_status_for_hours(DateTimeImmutable $current_datetime, string $start_time, string $end_time, DateTimeZone $timezone, string $language): string
+{
     $start_datetime = DateTimeImmutable::createFromFormat(format: 'H:i', datetime: $start_time, timezone: $timezone);
     $end_datetime = DateTimeImmutable::createFromFormat(format: 'H:i', datetime: $end_time, timezone: $timezone);
     $closing_soon_datetime = $end_datetime->modify('-1 hour');
 
     if ($current_datetime >= $start_datetime && $current_datetime < $end_datetime) {
         $status = $current_datetime >= $closing_soon_datetime ? 'closing_soon' : 'open';
-        return generate_message($status, $language);
+        return generate_message(status: $status, language: $language);
     }
 
-    return generate_message('closed', $language);
+    return generate_message(status: 'closed', language: $language);
 }
 
 function generate_message(string $status, string $language): string

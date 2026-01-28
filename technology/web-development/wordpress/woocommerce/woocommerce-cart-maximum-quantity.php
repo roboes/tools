@@ -21,13 +21,8 @@ if (function_exists('WC') && !is_admin()) {
         ],
     ];
 
-    // Get current language
-    $current_language = 'en';
-    if (function_exists('pll_current_language')) {
-        if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-            $current_language = pll_current_language('slug');
-        }
-    }
+    // Get current language (Polylang/WPML)
+    $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
     function get_error_message(int $max_quantity, string $language, string $product_name): string
     {
@@ -59,7 +54,7 @@ if (function_exists('WC') && !is_admin()) {
     }
 
     // Validate on "Add to Cart"
-    add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function (bool $passed, int $product_id, int $quantity, $variation_id = '', $variations = '') use ($product_quantity_rules, $current_language): bool {
+    add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function (bool $passed, int $product_id, int $quantity, $variation_id = '', $variations = '') use ($product_quantity_rules, $browsing_language): bool {
         if (!WC()->cart) {
             return $passed;
         }
@@ -86,7 +81,7 @@ if (function_exists('WC') && !is_admin()) {
             }
 
             if ($product_cart_quantity > (int) $rule['max_quantity']) {
-                wc_add_notice(get_error_message((int) $rule['max_quantity'], $current_language, $product->get_name()), 'error');
+                wc_add_notice(get_error_message((int) $rule['max_quantity'], $browsing_language, $product->get_name()), 'error');
                 return false;
             }
         }
@@ -95,7 +90,7 @@ if (function_exists('WC') && !is_admin()) {
     }, priority: 10, accepted_args: 5);
 
     // Validate on Cart Update
-    add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function (bool $passed, string $cart_item_key, array $values, int $quantity) use ($product_quantity_rules, $current_language): bool {
+    add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function (bool $passed, string $cart_item_key, array $values, int $quantity) use ($product_quantity_rules, $browsing_language): bool {
         $product = $values['data'];
         if (!$product instanceof WC_Product) {
             return $passed;
@@ -106,7 +101,7 @@ if (function_exists('WC') && !is_admin()) {
         $rule = get_matching_rule($product_id, $parent_id, $product_quantity_rules);
 
         if ($rule && $quantity > (int) $rule['max_quantity']) {
-            wc_add_notice(get_error_message((int) $rule['max_quantity'], $current_language, $product->get_name()), 'error');
+            wc_add_notice(get_error_message((int) $rule['max_quantity'], $browsing_language, $product->get_name()), 'error');
             return false;
         }
 

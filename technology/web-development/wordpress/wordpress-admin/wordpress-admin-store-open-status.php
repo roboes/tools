@@ -33,24 +33,19 @@ function store_hours_shortcode(): string
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
 
-    // Get current language
-    $current_language = 'en';
-    if (function_exists('pll_current_language')) {
-        if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-            $current_language = pll_current_language('slug');
-        }
-    }
+    // Get current language (Polylang/WPML)
+    $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
     if (in_array($current_date, $public_holidays, true)) {
-        return generate_message('holiday', $current_language);
+        return generate_message('holiday', $browsing_language);
     }
 
     if (in_array($current_date, $closed_days, true)) {
-        return generate_message('closed_date', $current_language);
+        return generate_message('closed_date', $browsing_language);
     }
 
     if (in_array($current_date, $special_days, true)) {
-        return generate_message('special_event', $current_language);
+        return generate_message('special_event', $browsing_language);
     }
 
     if (isset($special_opening_hours[$current_date])) {
@@ -58,7 +53,7 @@ function store_hours_shortcode(): string
     } elseif (isset($opening_hours[$current_day_of_week])) {
         [$start_time, $end_time] = $opening_hours[$current_day_of_week];
     } else {
-        return generate_message('closed', $current_language);
+        return generate_message('closed', $browsing_language);
     }
 
     $start_datetime = DateTimeImmutable::createFromFormat(format: 'H:i', datetime: $start_time, timezone: wp_timezone());
@@ -68,10 +63,10 @@ function store_hours_shortcode(): string
     // Determine store status based on current time
     if ($current_datetime >= $start_datetime && $current_datetime < $end_datetime) {
         $status = $current_datetime >= $closing_soon_datetime ? 'closing_soon' : 'open';
-        return generate_message($status, $current_language);
+        return generate_message($status, $browsing_language);
     }
 
-    return generate_message('closed', $current_language);
+    return generate_message('closed', $browsing_language);
 }
 
 function generate_message(string $status, string $language): string

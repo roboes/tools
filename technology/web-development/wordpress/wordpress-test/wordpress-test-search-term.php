@@ -57,13 +57,8 @@ function search_pages_for_terms($search_terms, $languages = [])
             // Get page ID
             $page_id = $page->ID;
 
-            // Get page language
-            $page_language = '';
-            if (function_exists('pll_get_post_language')) {
-                if (pll_get_post_language(post_id: $page_id, field: 'slug') && in_array(needle: pll_get_post_language(post_id: $page_id, field: 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $page_language = pll_get_post_language(post_id: $page_id, field: 'slug');
-                }
-            }
+            // Get page language (Polylang/WPML)
+            $page_language = apply_filters('wpml_element_language_code', null, ['element_id' => $page_id, 'element_type' => 'post']) ?: '';
 
 
             // Check if page language is in allowed languages or if no languages are specified

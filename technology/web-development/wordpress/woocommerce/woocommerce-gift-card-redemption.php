@@ -40,17 +40,12 @@ if (function_exists('WC')) {
                     ],
                 ];
 
-                // Get current language
-                $current_language = 'en';
-                if (function_exists('pll_current_language')) {
-                    if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                        $current_language = pll_current_language('slug');
-                    }
-                }
+                // Get current language (Polylang/WPML)
+                $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-                if ($current_language === 'de') {
+                if ($browsing_language === 'de') {
                     $cf7_url = site_url('/de/gutschein-einlosen/');
-                } elseif ($current_language === 'en') {
+                } elseif ($browsing_language === 'en') {
                     $cf7_url = site_url('/en/gift-card-redemption/');
                 } else {
                     $cf7_url = site_url('/en/gift-card-redemption/');
@@ -59,7 +54,7 @@ if (function_exists('WC')) {
                 $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px; display: block;">
                             <label>
                                 <input type="checkbox" name="checkbox_gift_card" id="checkbox_gift_card" />
-                                <span style="line-height: 20px;">' . ($messages['gift-card'][$current_language] ?? $messages['gift-card']['en']) . '</span>
+                                <span style="line-height: 20px;">' . ($messages['gift-card'][$browsing_language] ?? $messages['gift-card']['en']) . '</span>
                             </label>
                         </div>';
 
@@ -213,11 +208,11 @@ if (function_exists('WC')) {
 
         // Get current language from form ID
         if ($form_id === 38604) {
-            $current_language = 'de';
+            $browsing_language = 'de';
         } elseif ($form_id === 38645) {
-            $current_language = 'en';
+            $browsing_language = 'en';
         } else {
-            $current_language = 'en';
+            $browsing_language = 'en';
         }
 
         // Extract form data
@@ -246,7 +241,7 @@ if (function_exists('WC')) {
             $inserted_date = (new DateTimeImmutable(datetime: 'now', timezone: wp_timezone()))->format('Y-m-d H:i:s');
 
             // Send training confirmation per email
-            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+            send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $browsing_language);
 
             // Perform English version for Google Sheets
             $product_name = preg_replace(pattern: '/Kaffeetraining /', replacement: '', subject: $product_name);
@@ -306,13 +301,8 @@ if (function_exists('WC')) {
             return;
         }
 
-        // Get current language
-        $current_language = 'en';
-        if (function_exists('pll_current_language')) {
-            if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                $current_language = pll_current_language('slug');
-            }
-        }
+        // Get current language (Polylang/WPML)
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
         // Initialize an empty array to hold product data
         $data_array = [];
@@ -378,7 +368,7 @@ if (function_exists('WC')) {
 
             // Send training confirmation per email
             if (!$send_training_confirmation_email_skip) {
-                send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $current_language);
+                send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $browsing_language);
             }
 
             // Perform English version for Google Sheets

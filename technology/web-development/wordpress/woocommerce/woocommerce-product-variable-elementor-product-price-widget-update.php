@@ -24,15 +24,10 @@ if (function_exists('WC') && !is_admin()) {
             $currency_pos = get_option(option: 'woocommerce_currency_pos');
             $decimals = (int) wc_get_price_decimals();
 
-            // Get current language
-            $current_language = 'en';
-            if (function_exists('pll_current_language')) {
-                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $current_language = pll_current_language('slug');
-                }
-            }
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-            $locale = match ($current_language) {
+            $locale = match ($browsing_language) {
                 'de' => 'de-DE',
                 default => 'en-US',
             };

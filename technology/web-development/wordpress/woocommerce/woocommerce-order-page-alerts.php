@@ -33,7 +33,7 @@ if (function_exists('WC') && is_admin()) {
         ];
 
         // Get current language
-        $current_language = substr(get_user_locale(), 0, 2);
+        $user_language = substr(get_user_locale(), 0, 2);
         $current_filter = current_filter();
 
         // Top alert
@@ -56,14 +56,14 @@ if (function_exists('WC') && is_admin()) {
                 foreach ($alerts as $key => $alert) {
                     // SKU check
                     if ($alert['type'] === 'sku' && $item_product && in_array($item_product->get_sku(), $alert['match'], true)) {
-                        $found_notices[$key] = $alert['alert-top'][$current_language] ?? $alert['alert-top']['en'];
+                        $found_notices[$key] = $alert['alert-top'][$user_language] ?? $alert['alert-top']['en'];
                     }
 
                     // Attribute check
                     if ($alert['type'] === 'attribute') {
                         foreach ($order_item->get_meta_data() as $meta) {
                             if (str_contains((string)$meta->key, 'coffee-processing') && in_array($meta->value, $alert['match'], true)) {
-                                $found_notices[$key] = $alert['alert-top'][$current_language] ?? $alert['alert-top']['en'];
+                                $found_notices[$key] = $alert['alert-top'][$user_language] ?? $alert['alert-top']['en'];
                             }
                         }
                     }
@@ -98,7 +98,7 @@ if (function_exists('WC') && is_admin()) {
                 }
 
                 if ($is_match) {
-                    $alert_badge = $alert['alert-badge'][$current_language] ?? $alert['alert-badge']['en'];
+                    $alert_badge = $alert['alert-badge'][$user_language] ?? $alert['alert-badge']['en'];
                     echo "<style>tr.item[data-order_item_id='" . esc_attr((string)$item_id) . "'] { background: #fff0f0 !important; }</style>";
                     echo "<div style='display:inline-block; margin-top:5px; padding:2px 8px; background:" . esc_attr($alert['alert-color']) . "; color:#fff; border-radius:3px; font-size:12px;'>" . esc_html($alert_badge) . "</div>";
                 }

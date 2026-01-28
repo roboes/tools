@@ -13,13 +13,8 @@ if (function_exists('WC') && !is_admin()) {
             return $button_text;
         }
 
-        // Get current language
-        $current_language = 'en';
-        if (function_exists('pll_current_language')) {
-            if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                $current_language = pll_current_language('slug');
-            }
-        }
+        // Get current language (Polylang/WPML)
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
         // Common configuration for both product types
         $currency_config = sprintf(
@@ -46,7 +41,7 @@ if (function_exists('WC') && !is_admin()) {
             get_woocommerce_currency_symbol() |> wp_json_encode(...),
             get_option(option: 'woocommerce_currency_pos') |> wp_json_encode(...),
             wc_get_price_decimals() |> wp_json_encode(...),
-            ($current_language === 'de' ? 'de-DE' : 'en-US') |> wp_json_encode(...)
+            ($browsing_language === 'de' ? 'de-DE' : 'en-US') |> wp_json_encode(...)
         );
 
         if ($product->is_type('variable')) {

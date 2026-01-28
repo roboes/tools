@@ -36,18 +36,13 @@ if (function_exists('WC') && !is_admin()) {
                 ],
             ];
 
-            // Get current language
-            $current_language = 'en';
-            if (function_exists('pll_current_language')) {
-                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $current_language = pll_current_language('slug');
-                }
-            }
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-            $checkbox_text = $messages['legal-warning-checkbox'][$current_language]
+            $checkbox_text = $messages['legal-warning-checkbox'][$browsing_language]
                 ?? array_first($messages['legal-warning-checkbox']);
 
-            $error_text = $messages['legal-warning-error'][$current_language]
+            $error_text = $messages['legal-warning-error'][$browsing_language]
                 ?? array_first($messages['legal-warning-error']);
 
             $html = '<div class="product-terms-checkbox" style="margin-bottom: 20px;">

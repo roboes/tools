@@ -294,13 +294,8 @@ if (function_exists('WC')) {
             $cart_item = isset($cart->cart_contents[$cart_item_key]) ? $cart->cart_contents[$cart_item_key] : null;
             $product_cart_quantity = $cart_item ? $cart_item['quantity'] : null;
 
-            // Get current language
-            $current_language = 'en';
-            if (function_exists('pll_current_language')) {
-                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $current_language = pll_current_language('slug');
-                }
-            }
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
             if ($cart_item_key && $new_quantity !== null) {
                 if ($product_cart_quantity !== null) {
@@ -309,14 +304,14 @@ if (function_exists('WC')) {
 
                     if ($adjusted_quantity > 0) {
                         $cart->cart_contents[$cart_item_key]['quantity'] = $adjusted_quantity;
-                        if ($current_language === 'pt') {
+                        if ($browsing_language === 'pt') {
                             $message = __('A quantidade do item foi ajustada para caber num pacote de envio. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
                         } else {
                             $message = __('The item quantity has been adjusted to fit in a shipping package. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');
                         }
                     } else {
                         $cart->remove_cart_item($cart_item_key);
-                        if ($current_language === 'pt') {
+                        if ($browsing_language === 'pt') {
                             $message = __('O produto foi removido do seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
                         } else {
                             $message = __('The product was removed from your cart because the total cart items cannot be accommodated in any available shipping boxes. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');
@@ -362,16 +357,11 @@ if (function_exists('WC')) {
         error_log('Best package fit: ' . json_encode($package_best_fit));
 
         if (!$package_best_fit) {
-            // Get current language
-            $current_language = 'en';
-            if (function_exists('pll_current_language')) {
-                if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                    $current_language = pll_current_language('slug');
-                }
-            }
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
             // No suitable package found, display an error message
-            if ($current_language === 'pt') {
+            if ($browsing_language === 'pt') {
                 $message = __('O produto selecionado não pôde ser adicionado ao seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
             } else {
                 $message = __('The selected product could not be added to your cart because it does not fit in any available shipping boxes. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');

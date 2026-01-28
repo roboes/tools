@@ -39,15 +39,20 @@ function product_variable_delete_variations(): void
     $product_ids = [17739, 22204];
     $delete = true;
 
-    $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
+	$current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
 
-    foreach ($product_ids as $product_id) {
-        // Handle Polylang translations
-        if (class_exists(class: 'Polylang') && function_exists(function: 'pll_get_post_translations')) {
-            $product_ids_to_process = array_values(pll_get_post_translations(post_id: (int) $product_id));
-        } else {
-            $product_ids_to_process = [(int) $product_id];
-        }
+	foreach ($product_ids as $product_id) {
+		// Handle Polylang/WPML translations
+		$translations = apply_filters('wpml_get_element_translations', null, $product_id, 'post_product');
+
+		if (!empty($translations) && is_array($translations)) {
+			// Extract the IDs from the translation objects
+			$product_ids_to_process = array_values(array_filter(array_column($translations, 'element_id')));
+		} else {
+			// Fallback if no translations exist or plugin is inactive
+			$product_ids_to_process = [(int) $product_id];
+		}
+	}
 
         // Now loop through all product IDs (original + translations)
         foreach ($product_ids_to_process as $product_id_current) {

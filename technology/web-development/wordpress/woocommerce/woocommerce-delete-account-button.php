@@ -29,16 +29,11 @@ if (function_exists('WC') && !is_admin()) {
             ],
         ];
 
-        // Get current language
-        $current_language = 'en';
-        if (function_exists('pll_current_language')) {
-            if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                $current_language = pll_current_language('slug');
-            }
-        }
+        // Get current language (Polylang/WPML)
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-        $button_text = esc_html($messages['account_delete_button'][$current_language]);
-        $confirm_text = esc_js($messages['confirm_deletion'][$current_language]);
+        $button_text = esc_html($messages['account_delete_button'][$browsing_language]);
+        $confirm_text = esc_js($messages['confirm_deletion'][$browsing_language]);
 
         echo '<br>
         <p>
@@ -82,14 +77,9 @@ if (function_exists('WC') && !is_admin()) {
                 exit;
             } else {
                 // Get current language
-                $current_language = 'en';
-                if (function_exists('pll_current_language')) {
-                    if (pll_current_language('slug') && in_array(needle: pll_current_language('slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                        $current_language = pll_current_language('slug');
-                    }
-                }
+                $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-                wc_add_notice($messages['account_delete_error'][$current_language], 'error');
+                wc_add_notice($messages['account_delete_error'][$browsing_language], 'error');
                 wp_redirect(wc_get_account_endpoint_url('edit-account'));
                 exit;
             }

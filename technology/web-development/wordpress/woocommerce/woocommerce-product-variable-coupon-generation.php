@@ -12,7 +12,7 @@
 // - Smart coupon expiry: Sets all generated coupons to expire on December 31st of the third year following the purchase.
 // - PDF generation & emailing: Creates a custom PDF gift card using the Dompdf library and emails it to the customer automatically upon payment.
 // - Voucher balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
-// - Multilingual support: Uses Polylang to detect the order language and provides all notifications, emails, and PDF text in either German or English.
+// - Multilingual support: Uses Polylang/WPML to detect the order language and provides all notifications, emails, and PDF text in either German or English.
 // - Usage restrictions: Restricts coupons to specific products if configured (e.g., training courses), but allows them to be used by any customer at checkout.
 
 
@@ -47,25 +47,21 @@ if (function_exists('WC')) {
                 'coupon_is_fixed_amount' => true,
             ],
         ];
-        $settings_messages = [
-            'en' => 'Only one coupon allowed per order.',
-            'de' => 'Nur ein Gutschein pro Bestellung erlaubt.',
-        ];
 
         foreach ($settings_coupon as $group) {
             if (in_array(needle: $item_id, haystack: $group['purchasable_ids'], strict: true)) {
 
-                // Get language of the specific variation
-                $product_language = 'en';
-                if (function_exists('pll_get_post_language')) {
-                    if (pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug') && in_array(needle: pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug'), haystack: pll_languages_list(args: ['fields' => 'slug']), strict: true)) {
-                        $product_language = pll_get_post_language(post_id: wp_get_post_parent_id($item_id) ?: $item_id, field: 'slug');
-                    }
-                }
+                // Get product language (Polylang/WPML)
+                $product_language = apply_filters('wpml_element_language_code', null, ['element_id' => $item_id, 'element_type' => 'post']) ?: 'en';
+
+                $messages = [
+                    'en' => 'Only one coupon allowed per order.',
+                    'de' => 'Nur ein Gutschein pro Bestellung erlaubt.',
+                ];
 
                 return (object) [
                     'is_coupon'     => true,
-                    'error_message' => $settings_messages[$product_language] ?? $settings_messages['en'],
+                    'error_message' => $messages[$product_language] ?? $messages['en'],
                     'language'      => $product_language,
                     'config'        => $group,
                     'meta_suffix'   => $group['meta_key_suffix'],
@@ -134,13 +130,8 @@ if (function_exists('WC')) {
             return;
         }
 
-        // Get order language
-        $language = 'en';
-        if (function_exists('pll_get_post_language')) {
-            if (pll_get_post_language($order->get_id(), 'slug') && in_array(needle: pll_get_post_language($order->get_id(), 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                $language = pll_get_post_language($order->get_id(), 'slug');
-            }
-        }
+        // Get order language (Polylang/WPML)
+        $order_language = apply_filters('wpml_element_language_code', null, ['element_id' => $order->get_id(), 'element_type' => 'post']) ?: 'en';
 
         $customer_name = "{$order->get_billing_first_name()} {$order->get_billing_last_name()}";
         $customer_email = $order->get_billing_email();
@@ -176,7 +167,7 @@ if (function_exists('WC')) {
                     // Fixed amount
                     $coupon->set_amount($coupon_amount);
                     $coupon->set_discount_type('fixed_cart');
-                    if ($language == 'de') {
+                    if ($order_language == 'de') {
                         $product_display_name = $product_parent_name . ' im Wert von ' . $coupon_amount_formatted;
                     } else {
                         $product_display_name = $product_parent_name . ' with a value of ' . $coupon_amount_formatted;
@@ -185,7 +176,7 @@ if (function_exists('WC')) {
                     // 100% training voucher
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
-                    if ($language == 'de') {
+                    if ($order_language == 'de') {
                         $product_display_name = 'Gutschein ' . $product_parent_name;
                     } else {
                         $product_display_name = 'Gift card ' . $product_parent_name;
@@ -210,7 +201,7 @@ if (function_exists('WC')) {
                 $order->add_order_note(note: "Coupon created: {$coupon_code}. Valid for: {$product_parent_name}. Expires: {$coupon_expiry_date->format(format: 'Y-m-d')}");
 
                 // Send email
-                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, meta_suffix: $coupon_data->meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $language);
+                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, meta_suffix: $coupon_data->meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $order_language);
 
             }
         }
@@ -501,16 +492,16 @@ if (function_exists('WC')) {
             return;
         }
 
-        $language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
 
-        $text = $messages[$language] ?? $messages['de'];
+        $text = $messages[$browsing_language] ?? $messages['de'];
 
         // Pull WooCommerce settings for JavaScript
         $currency_params = [
             'symbol'    => get_woocommerce_currency_symbol(),
             'pos'       => get_option('woocommerce_currency_pos'),
             'decimals'  => wc_get_price_decimals(),
-            'locale'    => ($language === 'de' ? 'de-DE' : 'en-US')
+            'locale'    => ($browsing_language === 'de' ? 'de-DE' : 'en-US')
         ];
 
         ?>
@@ -655,9 +646,9 @@ if (function_exists('WC')) {
         ];
 
         if (in_array($product_id, $product_ids)) {
-            $language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
 
-            $text = $messages[$language] ?? $messages['de'];
+            $text = $messages[$browsing_language] ?? $messages['de'];
 
             if (!isset($_POST['coupon_amount']) || $_POST['coupon_amount'] === '') {
                 wc_add_notice($text['error_empty'], 'error');

@@ -65,13 +65,8 @@ function cron_job_run_slugs_update(): void
                 // Get the post object inside the loop
                 $post = get_post($post_id);
 
-                // Get product language
-                $product_language = 'en';
-                if (function_exists('pll_get_post_language')) {
-                    if (pll_get_post_language(post_id: $post->ID, field: 'slug') && in_array(needle: pll_get_post_language(post_id: $post->ID, field: 'slug'), haystack: pll_languages_list(['fields' => 'slug']), strict: true)) {
-                        $product_language = pll_get_post_language(post_id: $post->ID, field: 'slug');
-                    }
-                }
+                // Get product language (Polylang/WPML)
+                $product_language = apply_filters('wpml_element_language_code', null, ['element_id' => $post->ID, 'element_type' => 'post']) ?: 'en';
 
                 foreach ($attribute_custom_field_pairs as $pair) {
                     $attribute_id = $pair['attribute_id'];
