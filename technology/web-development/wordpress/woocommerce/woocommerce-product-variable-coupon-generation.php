@@ -1,19 +1,31 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-01-27
+// Last update: 2026-01-29
 
 
-// Notes:
-// - Custom product gift card amount purchase: Adds a numerical input field to specific products that allows users to choose a gift card value integer with 1 step.
-// - Price overriding: Dynamically sets the product price in the cart to match the Custom product gift card amount purchase by the user.
-// - Quantity restrictions: Forces the quantity of these products to exactly one per order and blocks users from adding multiple gift cards of the same type to the cart.
-// - Automated coupon creation: When an order is paid, it automatically generates a unique WooCommerce coupon code using a random character string and a specific prefix (e.g. KA-Gift- or KA-Training-).
-// - Smart coupon expiry: Sets all generated coupons to expire on December 31st of the third year following the purchase.
-// - PDF generation & emailing: Creates a custom PDF gift card using the Dompdf library and emails it to the customer automatically upon payment.
-// - Voucher balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
-// - Multilingual support: Uses Polylang/WPML to detect the order language and provides all notifications, emails, and PDF text in either German or English.
-// - Usage restrictions: Restricts coupons to specific products if configured (e.g., training courses), but allows them to be used by any customer at checkout.
+/*
+Notes:
+- Custom product gift card amount purchase: Adds a numerical input field to specific simple products that allows users to choose a gift card value integer with 1 step.
+- Price overriding: Dynamically sets the product price in the cart to match the custom product gift card amount purchased by the user.
+- Quantity restrictions: Forces the quantity of these products to exactly one per order and blocks users from adding multiple gift cards of the same type to the cart.
+- Automated coupon creation: When an order is paid, it automatically generates a unique WooCommerce coupon code using a random character string and a specific prefix (e.g. KA-Gift- or KA-Training-).
+- Smart coupon expiry: Sets all generated coupons to expire on December 31st of the third year following the purchase.
+- Usage restrictions: Restricts coupons to specific products if configured (e.g., training courses), but allows them to be used by any customer at checkout.
+- Voucher balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
+- Multiple redemptions: Native WooCommerce support allows customers to apply multiple gift card codes to a single order. The system iterates through all applied coupons to deduct balances accordingly.
+- Native compatibility: Supports multiple gift cards per order and "split payments" (e.g. gift card + credit card) natively through WooCommerce's standard coupon and payment flow.
+- Coupon usage tracking: Each coupon stores metadata including:
+  (1) "_coupon_purchased_on_order_id": The order ID that generated the coupon.
+  (2) "_coupon_remaining_balance": Current balance after each use (updated with every redemption).
+  (3) "_coupon_redeemed_in_order_ids": Array of all order IDs where the coupon has been applied.
+- Each order related to creation or redemption of a coupon stores metadata including:
+  (1) "_coupon_code_{meta_suffix}": The generated coupon code.
+  (2) "_coupon_expiry_{meta_suffix}": Unix timestamp of coupon expiration date.
+  (3) "_coupon_balance_processed": Flag indicating balance deduction was completed.
+- PDF generation & emailing: Creates a custom PDF gift card using the Dompdf library and emails it to the customer automatically upon payment.
+- Multilingual support: Uses Polylang/WPML to detect the order language and provides all notifications, emails, and PDF text in either German or English.
+*/
 
 
 // Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
@@ -402,8 +414,7 @@ if (function_exists('WC')) {
 
 
     // Deducts used amount from coupon balance and tracks redemption history
-    add_action(hook_name: 'woocommerce_order_status_processed', callback: 'coupon_balance', priority: 10, accepted_args: 1);
-    add_action(hook_name: 'woocommerce_order_status_completed', callback: 'coupon_balance', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_checkout_order_processed', callback: 'coupon_balance', priority: 10, accepted_args: 1);
 
     function coupon_balance(int $order_id): void
     {
@@ -529,6 +540,8 @@ if (function_exists('WC')) {
 				border-color: #262626;
 			}
 		</style>
+		
+		<!-- UI Styling: Mimics the "Variations Form" layout for single products to ensure design consistency with the theme's standard variable products -->
 		<form class="variations_form cart" method="post" enctype="multipart/form-data">
 			<table class="variations coupon-amount-table">
 				<tbody>

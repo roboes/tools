@@ -406,9 +406,9 @@ sudo systemctl restart fail2ban
 
 Cloudflare → `Zero Trust`.
 
-##### Tunnels
+##### Connectors
 
-`Networks` → `Tunnels` → `Create a tunnel` → `Cloudflared`.
+`Networks` → `Connectors` → `Create a tunnel` → `Cloudflared`.
 
 Public hostnames:
 
