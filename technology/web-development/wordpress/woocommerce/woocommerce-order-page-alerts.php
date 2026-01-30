@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Display multilingual top notices and inline badges based on product attributes on edit order page
-// Last update: 2026-01-20
+// Last update: 2026-01-30
 
 
 if (function_exists('WC') && is_admin()) {
@@ -20,14 +20,24 @@ if (function_exists('WC') && is_admin()) {
                 'alert-badge' => ['en' => '⚠️ Green Coffee', 'de' => '⚠️ Rohkaffee',],
                 'alert-color' => '#d63638'
             ],
-            'training_voucher' => [
+            'gift_card_training' => [
                 'type'          => 'sku',
-                'match'         => ['KA-Training-Home-Barista-Coupon'],
+                'match'         => ['KA-Training-Home-Barista-Gift-Card'],
                 'alert-top'     => [
-                    'en' => '⚠️ This order contains a voucher. If this order is cancelled, manually delete the coupon here: <a href="' . esc_url(admin_url('edit.php?post_type=shop_coupon')) . '">Manage Coupons</a>.',
+                    'en' => '⚠️ This order contains a gift card. If this order is cancelled, manually delete the coupon here: <a href="' . esc_url(admin_url('edit.php?post_type=shop_coupon')) . '">Manage Coupons</a>.',
                     'de' => '⚠️ Diese Bestellung enthält einen Gutschein. Falls diese Bestellung storniert wird, muss der Gutschein hier manuell gelöscht werden: <a href="' . esc_url(admin_url('edit.php?post_type=shop_coupon')) . '">Gutscheine verwalten</a>.'
                 ],
-                'alert-badge'   => ['en' => '🎫 Voucher Product', 'de' => '🎫 Gutschein-Produkt'],
+                'alert-badge'   => ['en' => '🎫 Gift Card Product', 'de' => '🎫 Gutschein-Produkt'],
+                'alert-color'   => '#d63638'
+            ],
+            'gift_card' => [
+                'type'          => 'sku',
+                'match'         => ['KA-Gift-Card-Online-Shop'],
+                'alert-top'     => [
+                    'en' => '⚠️ This order contains a gift card. If this order is cancelled, manually delete the coupon here: <a href="' . esc_url(admin_url('edit.php?post_type=shop_coupon')) . '">Manage Coupons</a>.',
+                    'de' => '⚠️ Diese Bestellung enthält einen Gutschein. Falls diese Bestellung storniert wird, muss der Gutschein hier manuell gelöscht werden: <a href="' . esc_url(admin_url('edit.php?post_type=shop_coupon')) . '">Gutscheine verwalten</a>.'
+                ],
+                'alert-badge'   => ['en' => '🎫 Gift Card Product', 'de' => '🎫 Gutschein-Produkt'],
                 'alert-color'   => '#d63638'
             ],
         ];

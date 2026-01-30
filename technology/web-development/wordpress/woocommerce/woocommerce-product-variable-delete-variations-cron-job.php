@@ -84,8 +84,8 @@ function product_variable_delete_variations(): void
                 // Check for 'Termin' attribute
                 $attribute_value = $variation->get_attribute(attribute: 'Termin');
 
-                // Explicitly ignore Vouchers so they are never deleted
-                if (stripos($attribute_value, 'Gutschein') !== false || stripos($attribute_value, 'Voucher') !== false) {
+                // Explicitly ignore gift cards so they are never deleted
+                if (stripos($attribute_value, 'Gutschein') !== false || stripos($attribute_value, 'Gift Card') !== false) {
                     continue;
                 }
 

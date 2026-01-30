@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-01-29
+// Last update: 2026-01-30
 
 
 /*
@@ -9,10 +9,10 @@ Notes:
 - Custom product gift card amount purchase: Adds a numerical input field to specific simple products that allows users to choose a gift card value integer with 1 step.
 - Price overriding: Dynamically sets the product price in the cart to match the custom product gift card amount purchased by the user.
 - Quantity restrictions: Forces the quantity of these products to exactly one per order and blocks users from adding multiple gift cards of the same type to the cart.
-- Automated coupon creation: When an order is paid, it automatically generates a unique WooCommerce coupon code using a random character string and a specific prefix (e.g. KA-Gift- or KA-Training-).
+- Automated coupon creation: When an order is paid, it automatically generates a unique WooCommerce coupon code using a random character string and a specific prefix (e.g. KA-GIFT- or KA-TRAINING-).
 - Smart coupon expiry: Sets all generated coupons to expire on December 31st of the third year following the purchase.
 - Usage restrictions: Restricts coupons to specific products if configured (e.g., training courses), but allows them to be used by any customer at checkout.
-- Voucher balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
+- Coupon balance tracking: For "fixed amount" coupons, the system tracks the remaining balance. If a coupon is partially used, it calculates the new balance and allows the code to be used again by any user until the value reaches zero.
 - Multiple redemptions: Native WooCommerce support allows customers to apply multiple gift card codes to a single order. The system iterates through all applied coupons to deduct balances accordingly.
 - Native compatibility: Supports multiple gift cards per order and "split payments" (e.g. gift card + credit card) natively through WooCommerce's standard coupon and payment flow.
 - Coupon usage tracking: Each coupon stores metadata including:
@@ -45,17 +45,19 @@ if (function_exists('WC')) {
         // Settings
         $settings_coupon = [
             [
-                'coupon_prefix'          => 'KA-Training-',
+                'coupon_prefix'          => 'KA-TRAINING-',
                 'meta_key_suffix'        => 'training_home_barista',
                 'purchasable_ids'        => [44043, 44044], // The product or product variation IDs that, when purchased, trigger the generation of a coupon
                 'redeemable_product_ids' => [22204, 31437], // Specific products to which the these coupons can be applied to
+                'excluded_redeemable_product_ids' => [],
                 'coupon_is_fixed_amount' => false,
             ],
             [
-                'coupon_prefix'          => 'KA-Gift-',
+                'coupon_prefix'          => 'KA-GIFT-',
                 'meta_key_suffix'        => 'gift_card',
                 'purchasable_ids'        => [44185, 44187],
                 'redeemable_product_ids' => [],
+                'excluded_redeemable_product_ids' => [44185, 44187],
                 'coupon_is_fixed_amount' => true,
             ],
         ];
@@ -130,6 +132,7 @@ if (function_exists('WC')) {
 
     // Generate Coupon on Purchase
     add_action(hook_name: 'woocommerce_order_status_paid', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_order_status_completed', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
 
     function generate_coupon_on_purchase(int $order_id): void
     {
@@ -179,15 +182,17 @@ if (function_exists('WC')) {
                     // Fixed amount
                     $coupon->set_amount($coupon_amount);
                     $coupon->set_discount_type('fixed_cart');
+                    $coupon->set_usage_limit(0); // Unlimited
                     if ($order_language == 'de') {
                         $product_display_name = $product_parent_name . ' im Wert von ' . $coupon_amount_formatted;
                     } else {
                         $product_display_name = $product_parent_name . ' with a value of ' . $coupon_amount_formatted;
                     }
                 } else {
-                    // 100% training voucher
+                    // 100% training gift card
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
+                    $coupon->set_usage_limit(usage_limit: 1);
                     if ($order_language == 'de') {
                         $product_display_name = 'Gutschein ' . $product_parent_name;
                     } else {
@@ -196,8 +201,8 @@ if (function_exists('WC')) {
                 }
                 $coupon->set_description(description: $description);
                 $coupon->update_meta_data('_coupon_purchased_on_order_id', $order_id);
-                $coupon->set_product_ids(product_ids: $config['redeemable_product_ids']);
-                $coupon->set_usage_limit(usage_limit: 1);
+                $coupon->set_product_ids(product_ids: $config['redeemable_product_ids'] ?? []);
+                $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_product_ids'] ?? []);
                 $coupon->set_individual_use(is_individual_use: true);
 
                 $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format('Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
@@ -234,14 +239,14 @@ if (function_exists('WC')) {
             'en' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_display_name}",
                 'heading' => "{$product_display_name}",
-                'body' => "Hello {$customer_name},<br><br>Thank you for your order! Your <strong>{$product_display_name}</strong> is now active.<br><br>Gift card: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
+                'body' => "Hello {$customer_name},<br><br>Thank you for your order! Your <strong>{$product_display_name}</strong> is now active.<br><br>Gift card code: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Amount: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
                     "<br>Valid until: <strong>{$coupon_expiry_date->format(get_option('date_format'))}</strong><br><br>Simply use this coupon at checkout for your next booking."
             ],
             'de' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_display_name}",
                 'heading' => "{$product_display_name}",
-                'body' => "Hallo {$customer_name},<br><br>vielen Dank für deine Bestellung! Dein <strong>{$product_display_name}</strong> ist jetzt aktiv.<br><br>Gutschein: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
+                'body' => "Hallo {$customer_name},<br><br>vielen Dank für deine Bestellung! Dein <strong>{$product_display_name}</strong> ist jetzt aktiv.<br><br>Gutscheincode: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Wert: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
                     "<br>Gültig bis: <strong>{$coupon_expiry_date->format(get_option('date_format'))}</strong><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb."
             ],
@@ -274,19 +279,19 @@ if (function_exists('WC')) {
 
         // Translations
         if ($language === 'de') {
-            $text_for      = "Gutschein für";
-            $text_code     = "Gutschein-Code";
-            $text_title = $coupon_is_fixed_amount ? "Wert: " . $coupon_amount_formatted : $product_parent_name;
-            $text_valid    = $coupon_is_fixed_amount ? "Dieser Gutschein hat einen Wert von <strong>{$coupon_amount_formatted}</strong> und ist einlösbar" : "Dieser Gutschein ist gültig für ein <strong>{$product_parent_name}</strong>";
-            $text_at       = "bei";
+            $text_for      = "Gutschein für den";
+            $text_code     = "Gutscheincode";
+            $text_title    = $coupon_is_fixed_amount ? "Online-Shop im Wert von " . $coupon_amount_formatted : $product_parent_name;
+            $text_valid    = $coupon_is_fixed_amount ? "Dieser Gutschein hat einen Wert von <strong>{$coupon_amount_formatted}</strong> und ist im Online-Shop einlösbar" : "Dieser Gutschein ist gültig für ein <strong>{$product_parent_name}</strong>";
+            $text_at       = $coupon_is_fixed_amount ? "von" : "bei";
             $text_bought   = "Gekauft am";
             $text_until    = "Gültig bis";
             $text_redeem   = "Einlösbar unter";
         } else {
-            $text_for      = "Gift card for";
+            $text_for      = "Gift card for the";
             $text_code     = "Gift card code";
-            $text_title = $coupon_is_fixed_amount ? "Value: " . $coupon_amount_formatted : $product_parent_name;
-            $text_valid    = $coupon_is_fixed_amount ? "This gift card has a value of <strong>{$coupon_amount_formatted}</strong> and is redeemable" : "This gift card is valid for a <strong>{$product_parent_name}</strong>";
+            $text_title = $coupon_is_fixed_amount ? "online shop with a value of " . $coupon_amount_formatted : $product_parent_name;
+            $text_valid    = $coupon_is_fixed_amount ? "This gift card has a value of <strong>{$coupon_amount_formatted}</strong> and is redeemable at the online shop" : "This gift card is valid for a <strong>{$product_parent_name}</strong>";
             $text_at       = "at";
             $text_bought   = "Purchased on";
             $text_until    = "Valid until";
@@ -316,6 +321,20 @@ if (function_exists('WC')) {
                     color: #ffffff;
                     line-height: 1.4;
                 }
+
+                /* Fold Mark Styling using CSS calc for A4 (297mm height) */
+                .fold-mark {
+                    position: absolute;
+                    width: 12px;
+                    height: 1px;
+                    background-color: rgba(255, 255, 255, 0.25);
+                    z-index: 10;
+                }
+                .fold-mark.left { left: 0; }
+                .fold-mark.right { right: 0; }
+                .fold-mark.top-fold { top: calc(297mm / 3); }
+                .fold-mark.bottom-fold { top: calc(297mm * 2 / 3); }
+
                 .header-image {
                     width: 100%;
                     height: 440px;
@@ -361,6 +380,11 @@ if (function_exists('WC')) {
             </style>
         </head>
         <body>
+            <div class="fold-mark left top-fold"></div>
+            <div class="fold-mark right top-fold"></div>
+            <div class="fold-mark left bottom-fold"></div>
+            <div class="fold-mark right bottom-fold"></div>
+            
             <div class="header-image"></div>
 
             <div class="content">
@@ -405,7 +429,7 @@ if (function_exists('WC')) {
             wp_mkdir_p($folder_path);
         }
 
-        $attachment_pdf_path = $folder_path . '/gift_card_' . $coupon_code . '.pdf';
+        $attachment_pdf_path = $folder_path . '/Gift-Card-' . $coupon_code . '.pdf';
         file_put_contents(filename: $attachment_pdf_path, data: $dompdf->output());
 
         return $attachment_pdf_path;
@@ -420,7 +444,7 @@ if (function_exists('WC')) {
     {
         $order = wc_get_order($order_id);
 
-        // Safety check: Prevents re-running if status changes from "Processed" to "Completed"
+        // Safety check: Prevents re-running if status changes
         if (!$order || $order->get_meta('_coupon_balance_processed') === 'yes') {
             return;
         }
@@ -440,7 +464,12 @@ if (function_exists('WC')) {
                 $discount_applied = 0;
                 foreach ($order->get_coupons() as $order_coupon) {
                     if (strcasecmp($order_coupon->get_code(), $coupon_code) === 0) {
-                        $discount_applied = (float) $order_coupon->get_discount();
+                        // Use gross for gift cards if shop includes tax; otherwise use net
+                        if (wc_prices_include_tax()) {
+                            $discount_applied = (float) $order_coupon->get_discount() + (float) $order_coupon->get_discount_tax();
+                        } else {
+                            $discount_applied = (float) $order_coupon->get_discount();
+                        }
                         break;
                     }
                 }
@@ -456,14 +485,14 @@ if (function_exists('WC')) {
                     $coupon->update_meta_data('_coupon_redeemed_in_order_ids', $history);
                 }
 
-                // Subtract saldo
+                // Subtract balance
                 $coupon_current_balance = (float) $coupon->get_amount();
-                $coupon_new_balance = $coupon_current_balance - $discount_applied;
+                $coupon_new_balance = max(0, $coupon_current_balance - $discount_applied);
+                $coupon->set_amount($coupon_new_balance);
 
-                if ($coupon_new_balance > 0) {
-                    $coupon->set_amount($coupon_new_balance);
-                    // Reduce usage count so the coupon remains "Unused" (active)
-                    $coupon->set_usage_count($coupon->get_usage_count() - 1);
+                // If the balance is now zero, set the limit to the current usage so it officially "expires" and can't be added to future carts
+                if ($coupon_new_balance <= 0.01) {
+                    $coupon->set_usage_limit($coupon->get_usage_count());
                 }
 
                 $coupon->save();
@@ -474,6 +503,49 @@ if (function_exists('WC')) {
         $order->update_meta_data('_coupon_balance_processed', 'yes');
         $order->save();
     }
+
+
+    add_action(hook_name: 'woocommerce_cart_totals_after_order_total', callback: 'gift_card_balance_projected_display', priority: 10, accepted_args: 0);
+    add_action(hook_name: 'woocommerce_review_order_after_order_total', callback: 'gift_card_balance_projected_display', priority: 10, accepted_args: 0);
+
+    // Displays the projected remaining balance for gift cards on the cart and checkout pages
+    function gift_card_balance_projected_display()
+    {
+        $browsing_language = (defined('ICL_LANGUAGE_CODE')) ? ICL_LANGUAGE_CODE : 'en';
+
+        foreach (WC()->cart->get_applied_coupons() as $coupon_code) {
+            $coupon = new WC_Coupon($coupon_code);
+
+            // If it's not a fixed amount coupon, skip it immediately
+            if ($coupon->get_discount_type() !== 'fixed_cart') {
+                continue;
+            }
+
+            $coupon_balance_current = (float) $coupon->get_amount();
+
+            // Calculate deduction based on Mehrzweckgutschein (Gross) vs standard (Net)
+            if (wc_prices_include_tax()) {
+                $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code) + (float) WC()->cart->get_coupon_discount_tax_amount($coupon_code);
+            } else {
+                $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code);
+            }
+
+            $coupon_balance_remaining_after_purchase = $coupon_balance_current - $coupon_balance_deduction;
+
+            // Threshold check to avoid showing €0,00
+            if ($coupon_balance_remaining_after_purchase <= 0.01) {
+                continue;
+            }
+
+            $label = ($browsing_language === 'de') ? 'Gutschein-Restguthaben nach Kauf' : 'Gift Card balance after purchase';
+
+            echo '<tr class="gift-card-balance-info">
+				<th>' . esc_html($label) . '</th>
+				<td data-title="' . esc_attr($label) . '"><strong>' . wc_price($coupon_balance_remaining_after_purchase) . '</strong></td>
+			</tr>';
+        }
+    }
+
 
     // Gift card product logic
     add_action(hook_name: 'woocommerce_before_add_to_cart_form', callback: 'add_custom_coupon_amount_field', priority: 10, accepted_args: 0);
@@ -503,9 +575,9 @@ if (function_exists('WC')) {
             return;
         }
 
-        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-        $text = $messages[$browsing_language] ?? $messages['de'];
+        $text = $messages[$browsing_language] ?? $messages['en'];
 
         // Pull WooCommerce settings for JavaScript
         $currency_params = [
@@ -516,127 +588,127 @@ if (function_exists('WC')) {
         ];
 
         ?>
-		<style>
-			.coupon-amount-table {
-				width: 80%;
-				max-width: 80%;
-				table-layout: fixed;
-			}
-			#coupon_amount {
-				width: 100%;
-				max-width: none;
-				border: 1px solid #262626;
-				border-radius: 0;
-				padding: 8px 12px;
-				background: transparent;
-				color: #262626;
-				font-family: 'Inter', sans-serif;
-				font-size: 15px;
-				box-sizing: border-box;
-				text-align: center; 
-			}
-			#coupon_amount:focus {
-				outline: none;
-				border-color: #262626;
-			}
-		</style>
-		
-		<!-- UI Styling: Mimics the "Variations Form" layout for single products to ensure design consistency with the theme's standard variable products -->
-		<form class="variations_form cart" method="post" enctype="multipart/form-data">
-			<table class="variations coupon-amount-table">
-				<tbody>
-					<tr>
-						<th class="label"><label for="coupon_amount"><?php echo esc_html($text['label']); ?></label></th>
-						<td class="value">
-							<input type="number" id="coupon_amount" name="coupon_amount" min="15" max="250" step="1" value="" placeholder="<?php echo esc_attr($text['range']); ?>" required>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</form> 
+        <style>
+            .coupon-amount-table {
+                width: 80%;
+                max-width: 80%;
+                table-layout: fixed;
+            }
+            #coupon_amount {
+                width: 100%;
+                max-width: none;
+                border: 1px solid #262626;
+                border-radius: 0;
+                padding: 8px 12px;
+                background: transparent;
+                color: #262626;
+                font-family: 'Inter', sans-serif;
+                font-size: 15px;
+                box-sizing: border-box;
+                text-align: center; 
+            }
+            #coupon_amount:focus {
+                outline: none;
+                border-color: #262626;
+            }
+        </style>
+        
+        <!-- UI Styling: Mimics the "Variations Form" layout for single products to ensure design consistency with the theme's standard variable products -->
+        <form class="variations_form cart" method="post" enctype="multipart/form-data">
+            <table class="variations coupon-amount-table">
+                <tbody>
+                    <tr>
+                        <th class="label"><label for="coupon_amount"><?php echo esc_html($text['label']); ?></label></th>
+                        <td class="value">
+                            <input type="number" id="coupon_amount" name="coupon_amount" min="15" max="250" step="1" value="" placeholder="<?php echo esc_attr($text['range']); ?>" required>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form> 
 
-		<script type="text/javascript">
-		jQuery(function($) {
-			const params = <?php echo wp_json_encode($currency_params); ?>;
-			const $input = $('#coupon_amount');
-			const $button = $(".single_add_to_cart_button");
-			const $wcForm = $('form.cart').not($input.closest('form')); 
+        <script type="text/javascript">
+        jQuery(function($) {
+            const params = <?php echo wp_json_encode($currency_params); ?>;
+            const $input = $('#coupon_amount');
+            const $button = $(".single_add_to_cart_button");
+            const $wcForm = $('form.cart').not($input.closest('form')); 
 
-			// Add hidden field to the real WooCommerce form
-			$wcForm.append('<input type="hidden" name="coupon_amount" id="coupon_amount_hidden" value="">');
-			const $hiddenInput = $('#coupon_amount_hidden');
+            // Add hidden field to the real WooCommerce form
+            $wcForm.append('<input type="hidden" name="coupon_amount" id="coupon_amount_hidden" value="">');
+            const $hiddenInput = $('#coupon_amount_hidden');
 
-			const formatter = new Intl.NumberFormat(params.locale, {
-				minimumFractionDigits: parseInt(params.decimals),
-				maximumFractionDigits: parseInt(params.decimals)
-			});
+            const formatter = new Intl.NumberFormat(params.locale, {
+                minimumFractionDigits: parseInt(params.decimals),
+                maximumFractionDigits: parseInt(params.decimals)
+            });
 
-			function formatPrice(price) {
-				const formatted = formatter.format(price);
-				switch(params.pos) {
-					case "left": return params.symbol + formatted;
-					case "right": return formatted + params.symbol;
-					case "left_space": return params.symbol + " " + formatted;
-					case "right_space": return formatted + " " + params.symbol;
-					default: return params.symbol + formatted;
-				}
-			}
+            function formatPrice(price) {
+                const formatted = formatter.format(price);
+                switch(params.pos) {
+                    case "left": return params.symbol + formatted;
+                    case "right": return formatted + params.symbol;
+                    case "left_space": return params.symbol + " " + formatted;
+                    case "right_space": return formatted + " " + params.symbol;
+                    default: return params.symbol + formatted;
+                }
+            }
 
-			// Round to nearest integer on input and sync to hidden field
-			$input.on('input', function() {
-				const val = parseFloat($(this).val());
-				if (!isNaN(val)) {
-					const rounded = Math.round(val);
-					$(this).val(rounded);
-					$hiddenInput.val(rounded);
-				} else {
-					$hiddenInput.val('');
-				}
-			});
+            // Round to nearest integer on input and sync to hidden field
+            $input.on('input', function() {
+                const val = parseFloat($(this).val());
+                if (!isNaN(val)) {
+                    const rounded = Math.round(val);
+                    $(this).val(rounded);
+                    $hiddenInput.val(rounded);
+                } else {
+                    $hiddenInput.val('');
+                }
+            });
 
-			// Round on blur to ensure integer value
-			$input.on('blur', function() {
-				const val = parseFloat($(this).val());
-				if (!isNaN(val)) {
-					const rounded = Math.round(val);
-					$(this).val(rounded);
-					$hiddenInput.val(rounded);
-				}
-			});
+            // Round on blur to ensure integer value
+            $input.on('blur', function() {
+                const val = parseFloat($(this).val());
+                if (!isNaN(val)) {
+                    const rounded = Math.round(val);
+                    $(this).val(rounded);
+                    $hiddenInput.val(rounded);
+                }
+            });
 
-			// Sync on change as well
-			$input.on('change', function() {
-				$hiddenInput.val($(this).val());
-			});
+            // Sync on change as well
+            $input.on('change', function() {
+                $hiddenInput.val($(this).val());
+            });
 
-			function updateDisplay() {
-				const val = parseFloat($input.val()) || 0;
-				const qty = parseInt($('input[name="quantity"]').val(), 10) || 1;
-				const totalPrice = val * qty;
-				const formattedPrice = formatPrice(totalPrice)
-				
-				// Update the "Add to Cart" button
-				$button.find('span[data-price]').remove();
-				if (val > 0) {
-					$button.append('<span data-price> - ' + formattedPrice + '</span>');
-				}
+            function updateDisplay() {
+                const val = parseFloat($input.val()) || 0;
+                const qty = parseInt($('input[name="quantity"]').val(), 10) || 1;
+                const totalPrice = val * qty;
+                const formattedPrice = formatPrice(totalPrice)
+                
+                // Update the "Add to Cart" button
+                $button.find('span[data-price]').remove();
+                if (val > 0) {
+                    $button.append('<span data-price> - ' + formattedPrice + '</span>');
+                }
 
-				// Update the Elementor "Price" widget
-				const $priceDisplay = $('.elementor-widget-woocommerce-product-price .price .woocommerce-Price-amount bdi');
-				
-				if ($priceDisplay.length && val > 0) {
-					$priceDisplay.html(formattedPrice);
-				} else if ($priceDisplay.length) {
-					// Reset to 0 if input is empty
-					$priceDisplay.html(formatPrice(0));
-				}
-			}
-			
-			$input.on('input change', updateDisplay);
-			updateDisplay();
-		});
-		</script>
-		<?php
+                // Update the Elementor "Price" widget
+                const $priceDisplay = $('.elementor-widget-woocommerce-product-price .price .woocommerce-Price-amount bdi');
+                
+                if ($priceDisplay.length && val > 0) {
+                    $priceDisplay.html(formattedPrice);
+                } else if ($priceDisplay.length) {
+                    // Reset to 0 if input is empty
+                    $priceDisplay.html(formatPrice(0));
+                }
+            }
+            
+            $input.on('input change', updateDisplay);
+            updateDisplay();
+        });
+        </script>
+        <?php
     }
 
     // Validation with localized error messages
@@ -659,9 +731,9 @@ if (function_exists('WC')) {
         ];
 
         if (in_array($product_id, $product_ids)) {
-            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-            $text = $messages[$browsing_language] ?? $messages['de'];
+            $text = $messages[$browsing_language] ?? $messages['en'];
 
             if (!isset($_POST['coupon_amount']) || $_POST['coupon_amount'] === '') {
                 wc_add_notice($text['error_empty'], 'error');

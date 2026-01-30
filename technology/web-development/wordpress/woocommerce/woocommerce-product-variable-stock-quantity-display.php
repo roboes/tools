@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Display the total available stock quantity for a variable product before the variations form
-// Last update: 2026-01-18
+// Last update: 2026-01-30
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -45,10 +45,14 @@ if (function_exists('WC') && !is_admin()) {
             return;
         }
 
-        printf(
-            '<div class="total-stock-totals"><br><strong>%s</strong><br>%s</div><br>',
-            esc_html($messages['available-appointments'][$browsing_language] ?? $messages['available-appointments']['en']),
-            esc_html($stock_quantity)
-        );
+
+        ?>
+        <style>.total-stock-totals { width: 100%; text-align: left; }</style>
+        <div class="total-stock-totals">
+            <br><strong><?php echo esc_html($messages['available-appointments'][$browsing_language] ?? $messages['available-appointments']['en']); ?></strong>
+            <br><?php echo esc_html($stock_quantity); ?>
+        </div><br>
+        <?php
     }
+
 }

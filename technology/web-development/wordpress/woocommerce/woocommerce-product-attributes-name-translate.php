@@ -21,7 +21,7 @@ if (function_exists('WC') && !is_admin()) {
         if ($browsing_language === 'en') {
             $titles = [
                 'Termin' => 'Appointment',
-                'Gutschein (Termin später wählbar)' => 'Voucher (Date to be arranged)',
+                'Gutschein (Termin später wählbar)' => 'Gift Card (Date to be arranged)',
                 'Auswahl 1' => 'Selection 1',
                 'Auswahl 2' => 'Selection 2',
                 'Auswahl 3' => 'Selection 3',
@@ -47,8 +47,8 @@ if (function_exists('WC') && !is_admin()) {
 
         if ($browsing_language === 'en') {
             $values = [
-                'Gutschein (Termin später wählbar)' => 'Voucher (Date to be arranged)',
-                'Gutschein (Später wählbar)'        => 'Voucher (Selection later)',
+                'Gutschein (Termin später wählbar)' => 'Gift Card (Date to be arranged)',
+                'Gutschein (Später wählbar)'        => 'Gift Card (Selection later)',
             ];
 
             if (isset($values[$term_name])) {
