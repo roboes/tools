@@ -17,7 +17,7 @@ Notes:
 - Native compatibility: Supports multiple gift cards per order and "split payments" (e.g. gift card + credit card) natively through WooCommerce's standard coupon and payment flow.
 - Coupon usage tracking: Each coupon stores metadata including:
   (1) "_coupon_purchased_on_order_id": The order ID that generated the coupon.
-  (2) "_coupon_remaining_balance": Current balance after each use (updated with every redemption).
+  (2) Coupon amount is updated directly via set_amount() after each redemption to reflect current balance.
   (3) "_coupon_redeemed_in_order_ids": Array of all order IDs where the coupon has been applied.
 - Each order related to creation or redemption of a coupon stores metadata including:
   (1) "_coupon_code_{meta_suffix}": The generated coupon code.
@@ -183,6 +183,7 @@ if (function_exists('WC')) {
                     $coupon->set_amount($coupon_amount);
                     $coupon->set_discount_type('fixed_cart');
                     $coupon->set_usage_limit(0); // Unlimited
+                    $coupon->set_individual_use(is_individual_use: false);
                     if ($order_language == 'de') {
                         $product_display_name = $product_parent_name . ' im Wert von ' . $coupon_amount_formatted;
                     } else {
@@ -193,6 +194,7 @@ if (function_exists('WC')) {
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
                     $coupon->set_usage_limit(usage_limit: 1);
+                    $coupon->set_individual_use(is_individual_use: true);
                     if ($order_language == 'de') {
                         $product_display_name = 'Gutschein ' . $product_parent_name;
                     } else {
@@ -203,7 +205,6 @@ if (function_exists('WC')) {
                 $coupon->update_meta_data('_coupon_purchased_on_order_id', $order_id);
                 $coupon->set_product_ids(product_ids: $config['redeemable_product_ids'] ?? []);
                 $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_product_ids'] ?? []);
-                $coupon->set_individual_use(is_individual_use: true);
 
                 $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format('Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
 
@@ -492,7 +493,7 @@ if (function_exists('WC')) {
 
                 // If the balance is now zero, set the limit to the current usage so it officially "expires" and can't be added to future carts
                 if ($coupon_new_balance <= 0.01) {
-                    $coupon->set_usage_limit($coupon->get_usage_count());
+                    $coupon->set_usage_limit($coupon->get_usage_count() + 1);
                 }
 
                 $coupon->save();
@@ -532,17 +533,17 @@ if (function_exists('WC')) {
 
             $coupon_balance_remaining_after_purchase = $coupon_balance_current - $coupon_balance_deduction;
 
-            // Threshold check to avoid showing €0,00
-            if ($coupon_balance_remaining_after_purchase <= 0.01) {
-                continue;
+            // Add the coupon code to the label for clarity
+            if ($browsing_language === 'de') {
+                $label = 'Gutschein-Restguthaben nach Kauf (' . $coupon_code . ')';
+            } else {
+                $label = 'Gift Card balance after purchase (' . $coupon_code . ')';
             }
 
-            $label = ($browsing_language === 'de') ? 'Gutschein-Restguthaben nach Kauf' : 'Gift Card balance after purchase';
-
             echo '<tr class="gift-card-balance-info">
-				<th>' . esc_html($label) . '</th>
-				<td data-title="' . esc_attr($label) . '"><strong>' . wc_price($coupon_balance_remaining_after_purchase) . '</strong></td>
-			</tr>';
+                <th>' . esc_html($label) . '</th>
+                <td data-title="' . esc_attr($label) . '"><strong>' . wc_price($coupon_balance_remaining_after_purchase) . '</strong></td>
+            </tr>';
         }
     }
 
@@ -719,19 +720,20 @@ if (function_exists('WC')) {
 
         // Settings
         static $product_ids = [44185, 44187];
-        $messages = [
-            'en' => [
-                'error_empty' => 'Please enter a gift card amount between €15 and €250.',
-                'error_range' => 'The gift card amount must be between €15 and €250.'
-            ],
-            'de' => [
-                'error_empty' => 'Bitte gib einen Gutscheinbetrag zwischen €15 und €250 ein.',
-                'error_range' => 'Der Gutscheinbetrag muss zwischen €15 und €250 liegen.'
-            ]
-        ];
 
         if (in_array($product_id, $product_ids)) {
             $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
+
+            $messages = [
+                'en' => [
+                    'error_empty' => 'Please enter a gift card amount between €15 and €250.',
+                    'error_range' => 'The gift card amount must be between €15 and €250.'
+                ],
+                'de' => [
+                    'error_empty' => 'Bitte gib einen Gutscheinbetrag zwischen €15 und €250 ein.',
+                    'error_range' => 'Der Gutscheinbetrag muss zwischen €15 und €250 liegen.'
+                ]
+            ];
 
             $text = $messages[$browsing_language] ?? $messages['en'];
 
