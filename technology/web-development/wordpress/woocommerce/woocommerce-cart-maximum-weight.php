@@ -1,107 +1,67 @@
 <?php
 
 // WooCommerce - Set a maximum weight per cart
-// Last update: 2024-10-10
+// Last update: 2026-01-16
 
-// Calculate whether an item being added to the cart passes the weight criteria - triggered on add to cart action
+if (function_exists('WC') && !is_admin()) {
 
-if (class_exists('WooCommerce') && WC()) {
+    // Settings
+    $weight_limit = 30000;
 
-    add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'woocommerce_cart_maximum_weight_add_to_cart_validation', $priority = 10, $accepted_args = 5);
+    // Get current language (Polylang/WPML)
+    $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-    function woocommerce_cart_maximum_weight_add_to_cart_validation($passed, $product_id, $quantity, $variation_id = '', $variations = '')
+    function get_weight_error_message(int $weight_limit, string $language): string
     {
-
-        // Setup (weight limit dependent on products' Unit - in this case, grams)
-        $weight_limit = 30000;
-
-        // Check cart items
-        $total_cart_weight = 0;
-
-        // Get current language
-        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
-
-        // Calculate the weight of the current cart items
-        foreach (WC()->cart->get_cart() as $cart_item) {
-            $item_weight = $cart_item['data']->get_weight();
-            $total_cart_weight += is_numeric($item_weight) ? $item_weight * $cart_item['quantity'] : 0;
+        if ($language === 'de') {
+            return sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.', 'woocommerce'), $weight_limit / 1000);
         }
 
-        // Get an instance of the WC_Product object for the new item
-        $product = wc_get_product($variation_id ? $variation_id : $product_id);
+        return sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.', 'woocommerce'), $weight_limit / 1000);
+    }
 
-        // Get the weight of the new item being added
-        $new_item_weight = $product->get_weight();
-        $new_item_total_weight = is_numeric($new_item_weight) ? $new_item_weight * $quantity : 0;
+    // Validate on "Add to Cart"
+    add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function (bool $passed, int $product_id, int $quantity, $variation_id = '', $variations = '') use ($weight_limit, $browsing_language): bool {
+        if (!WC()->cart) {
+            return $passed;
+        }
 
-        // Add the weight of the new item to the total cart weight
-        $total_cart_weight += $new_item_total_weight;
+        $product = wc_get_product($variation_id ?: $product_id);
+        if (!$product instanceof WC_Product) {
+            return $passed;
+        }
 
-        // If the total cart weight exceeds the weight limit
-        if ($total_cart_weight > $weight_limit) {
-            $passed = false;
+        $total_weight = (float) WC()->cart->get_cart_contents_weight() + ((float) $product->get_weight() * $quantity);
 
-            // Custom notice
-            if ($current_language === 'de') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $weight_limit / 1000);
-            } elseif ($current_language === 'en') {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
-            } else {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
-            }
-
-            wc_add_notice($message = $message, $notice_type = 'error');
+        if ($total_weight > $weight_limit) {
+            wc_add_notice(get_weight_error_message($weight_limit, $browsing_language), 'error');
+            return false;
         }
 
         return $passed;
+    }, priority: 10, accepted_args: 5);
 
-    }
-
-
-    // Calculate whether an item quantity change passes the weight criteria - triggered on cart item quantity change
-    add_filter($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = 'woocommerce_cart_maximum_weight_cart_item_quantity_change_validation', $priority = 10, $accepted_args = 4);
-
-    function woocommerce_cart_maximum_weight_cart_item_quantity_change_validation($cart_item_key, $new_quantity, $old_quantity, $cart)
-    {
-
-        // Setup (weight limit dependent on products' Unit - in this case, grams)
-        $weight_limit = 30000;
-
-        // Get current language
-        $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
-
-        // Calculate the total weight of the cart before the quantity change
-        $total_cart_weight = 0;
-        foreach ($cart->get_cart() as $item_key => $cart_item) {
-            $item_weight = $cart_item['data']->get_weight();
-            $total_cart_weight += is_numeric($item_weight) ? $item_weight * $cart_item['quantity'] : 0;
+    // Validate on Cart Update
+    add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function (bool $passed, string $cart_item_key, array $values, int $quantity) use ($weight_limit, $browsing_language): bool {
+        $product = $values['data'];
+        if (!$product instanceof WC_Product) {
+            return $passed;
         }
 
-        // Subtract the old quantity weight of the item being changed
-        $product_weight = $cart->cart_contents[ $cart_item_key ]['data']->get_weight();
-        $product_weight = is_numeric($product_weight) ? $product_weight : 0;
-        $total_cart_weight -= $product_weight * $old_quantity;
+        $current_quantity = (int) $values['quantity'];
+        $quantity_diff = $quantity - $current_quantity;
 
-        // Add the new quantity weight of the item being changed
-        $total_cart_weight += $product_weight * $new_quantity;
-
-        // If the total cart weight exceeds the weight limit
-        if ($total_cart_weight > $weight_limit) {
-            // Set the quantity back to the old quantity
-            $cart->cart_contents[ $cart_item_key ]['quantity'] = $old_quantity;
-
-            // Custom notice
-            if ($current_language === 'de') {
-                $message = sprintf(__('Ein Warenkorb kann maximal %d kg wiegen. Bei besonderen Anfragen, die in unserem Online-Shop nicht aufgeführt sind, kannst du uns gerne kontaktieren.'), $weight_limit / 1000);
-            } elseif ($current_language === 'en') {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
-            } else {
-                $message = sprintf(__('A cart can weigh a maximum of %d kg. If you have any special requests that are not listed in our online shop, please feel free to contact us.'), $weight_limit / 1000);
-            }
-
-            wc_add_notice($message = $message, $notice_type = 'error');
+        if ($quantity_diff <= 0) {
+            return $passed;
         }
 
-    }
+        $total_weight = (float) WC()->cart->get_cart_contents_weight() + ((float) $product->get_weight() * $quantity_diff);
 
+        if ($total_weight > $weight_limit) {
+            wc_add_notice(get_weight_error_message($weight_limit, $browsing_language), 'error');
+            return false;
+        }
+
+        return $passed;
+    }, priority: 10, accepted_args: 4);
 }

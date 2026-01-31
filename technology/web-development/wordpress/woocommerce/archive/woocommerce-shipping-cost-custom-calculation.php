@@ -4,16 +4,16 @@
 // Last update: 2025-07-14
 
 
-// add_filter($hook_name = 'woocommerce_add_to_cart_validation', $callback = 'validate_package_fit_on_add_to_cart', $priority = 10, $accepted_args = 4);
-// add_action($hook_name = 'woocommerce_before_cart_totals', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_after_cart_item_quantity_update', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_cart_item_removed', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
-// add_action($hook_name = 'woocommerce_cart_item_restored', $callback = 'check_cart_for_packages', $priority = 10, $accepted_args = 2);
+// add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: 'validate_package_fit_on_add_to_cart', priority: 10, accepted_args: 4);
+// add_action(hook_name: 'woocommerce_before_cart_totals', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_after_cart_item_quantity_update', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_cart_item_removed', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
+// add_action(hook_name: 'woocommerce_cart_item_restored', callback: 'check_cart_for_packages', priority: 10, accepted_args: 2);
 
 
 // Modify shipping package
-// add_filter($hook_name = 'woocommerce_cart_shipping_packages', $callback = 'modify_shipping_package', $priority = 10, $accepted_args = 1);
-// add_filter($hook_name = 'woocommerce_get_cart_item_from_session', $callback = 'override_cart_item_dimensions', $priority = 10, $accepted_args = 3);
+// add_filter(hook_name: 'woocommerce_cart_shipping_packages', callback: 'modify_shipping_package', priority: 10, accepted_args: 1);
+// add_filter(hook_name: 'woocommerce_get_cart_item_from_session', callback: 'override_cart_item_dimensions', priority: 10, accepted_args: 3);
 
 
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
@@ -24,15 +24,15 @@
 
 
 // Test
-// calculate_package_best_fit(array(array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518), array('quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518)));
+// calculate_package_best_fit([['quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518],['quantity' => 1, 'length' => 8, 'width' => 11, 'height' => 23, 'weight' => 518]]);
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     // Add best package fit inside WooCommerce orders using a custom field
-    // add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_payment_complete', $callback = 'calculate_and_store_package_best_fit_recent_orders', $priority = 10, $accepted_args = 1);
-    add_action($hook_name = 'woocommerce_admin_order_data_after_order_details', $callback = 'display_custom_order_meta', $priority = 10, $accepted_args = 1);
+    // add_action(hook_name: 'woocommerce_payment_complete', callback: 'calculate_and_store_package_best_fit', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_payment_complete', callback: 'calculate_and_store_package_best_fit_recent_orders', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
 
 
     function get_cart_items()
@@ -95,7 +95,7 @@ if (class_exists('WooCommerce') && WC()) {
                     'height' => $new_height,
                 ];
                 if (calculate_package_best_fit_helper_try_fit($all_orientations, $index + 1, $new_dimensions, $package_dimensions)) {
-                    return true;
+                    return;
                 }
             }
         }
@@ -294,8 +294,8 @@ if (class_exists('WooCommerce') && WC()) {
             $cart_item = isset($cart->cart_contents[$cart_item_key]) ? $cart->cart_contents[$cart_item_key] : null;
             $product_cart_quantity = $cart_item ? $cart_item['quantity'] : null;
 
-            // Get current language
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
             if ($cart_item_key && $new_quantity !== null) {
                 if ($product_cart_quantity !== null) {
@@ -304,14 +304,14 @@ if (class_exists('WooCommerce') && WC()) {
 
                     if ($adjusted_quantity > 0) {
                         $cart->cart_contents[$cart_item_key]['quantity'] = $adjusted_quantity;
-                        if ($current_language === 'pt') {
+                        if ($browsing_language === 'pt') {
                             $message = __('A quantidade do item foi ajustada para caber num pacote de envio. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
                         } else {
                             $message = __('The item quantity has been adjusted to fit in a shipping package. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');
                         }
                     } else {
                         $cart->remove_cart_item($cart_item_key);
-                        if ($current_language === 'pt') {
+                        if ($browsing_language === 'pt') {
                             $message = __('O produto foi removido do seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
                         } else {
                             $message = __('The product was removed from your cart because the total cart items cannot be accommodated in any available shipping boxes. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');
@@ -357,10 +357,11 @@ if (class_exists('WooCommerce') && WC()) {
         error_log('Best package fit: ' . json_encode($package_best_fit));
 
         if (!$package_best_fit) {
-            // No suitable package found, display an error message
-            $current_language = (function_exists('pll_current_language') && in_array(pll_current_language('slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_current_language('slug') : 'en';
+            // Get current language (Polylang/WPML)
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-            if ($current_language === 'pt') {
+            // No suitable package found, display an error message
+            if ($browsing_language === 'pt') {
                 $message = __('O produto selecionado não pôde ser adicionado ao seu carrinho porque o total de itens do carrinho não pode ser acomodado em nenhuma das caixas de envio disponíveis. Ajuste seu carrinho removendo alguns itens ou alterando as quantidades e tente novamente. Se você tiver algum pedido especial que não esteja listado em nossa loja online, entre em contato conosco.');
             } else {
                 $message = __('The selected product could not be added to your cart because it does not fit in any available shipping boxes. Please adjust your cart by removing some items or changing the quantities and try again. If you have any special requests that are not listed in our online shop, please feel free to contact us.');

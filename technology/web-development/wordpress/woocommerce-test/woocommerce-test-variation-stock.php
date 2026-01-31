@@ -5,7 +5,7 @@
 
 function get_all_variation_stock($product_ids)
 {
-    $variation_stock_data = array();
+    $variation_stock_data = [];
 
     foreach ($product_ids as $product_id) {
         // Get the product object
@@ -25,7 +25,7 @@ function get_all_variation_stock($product_ids)
                 }
 
                 // Prepare the variation name
-                $attribute_names = array();
+                $attribute_names = [];
                 $attributes = $variation_product->get_attributes();
 
                 foreach ($attributes as $attribute => $value) {
@@ -44,10 +44,10 @@ function get_all_variation_stock($product_ids)
                 $stock_quantity = $variation_product->get_stock_quantity();
 
                 // Save the variation stock data
-                $variation_stock_data[$product_id][$variation_id] = array(
+                $variation_stock_data[$product_id][$variation_id] = [
                     'name' => $variation_name,
                     'stock' => $stock_quantity
-                );
+                ];
             }
         }
     }
@@ -56,7 +56,7 @@ function get_all_variation_stock($product_ids)
 }
 
 
-$variation_stock = get_all_variation_stock($product_ids = array(22204, 31437));
+$variation_stock = get_all_variation_stock(product_ids: [22204, 31437]);
 
 // Output the variation stock data
 echo '<pre>';

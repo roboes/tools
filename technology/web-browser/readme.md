@@ -2,7 +2,11 @@
 
 ## General
 
-- [Disable Firefox Telemetry and Data Collection](https://github.com/K3V1991/Disable-Firefox-Telemetry-and-Data-Collection)
+### Betterfox Installation
+
+Hardening Mozilla Firefox (Performance, Privacy, & AI Disable)
+
+- In Mozilla Firefox: `about:support` → `Application Basics` → `Profile Folder` → `Open Folder` → Close Firefox → Paste Betterfox's [user.js](https://github.com/yokoffing/Betterfox/blob/main/user.js) (replace existing) → Restart Mozilla Firefox → Check if it worked (`about:support` → `Important Modified Preferences`).
 
 ## Extensions
 

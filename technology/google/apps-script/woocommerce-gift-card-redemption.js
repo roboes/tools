@@ -1,5 +1,54 @@
 // WooCommerce - Gift Card Redemption Google Apps Script
-// Last update: 2025-01-22
+// Last update: 2026-01-27
+
+function doGet(e) {
+  var action = e.parameter.action;
+
+  // Return all order numbers from multiple sheets as JSON array
+  if (action === 'getAllOrderNumbers') {
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetNames = ['Trainings', 'Open', 'Deleted'];
+    var allOrderNumbers = [];
+
+    for (var i = 0; i < sheetNames.length; i++) {
+      var sheet = spreadsheet.getSheetByName(sheetNames[i]);
+
+      if (!sheet) {
+        Logger.log('Sheet "' + sheetNames[i] + '" not found - skipping');
+        continue;
+      }
+
+      var lastRow = sheet.getLastRow();
+      if (lastRow < 2) {
+        continue; // No data in this sheet
+      }
+
+      // Get order numbers from column 7 (G)
+      var columnValues = sheet.getRange(2, 7, lastRow - 1).getValues();
+      var orderNumbers = columnValues
+        .flat()
+        .filter(function (val) {
+          return val !== '';
+        })
+        .map(function (val) {
+          return val.toString();
+        });
+
+      allOrderNumbers = allOrderNumbers.concat(orderNumbers);
+    }
+
+    // Remove duplicates
+    var uniqueOrderNumbers = allOrderNumbers.filter(function (value, index, self) {
+      return self.indexOf(value) === index;
+    });
+
+    Logger.log('Found ' + uniqueOrderNumbers.length + ' unique order numbers across all sheets');
+
+    return ContentService.createTextOutput(JSON.stringify(uniqueOrderNumbers)).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput('Invalid_Action').setMimeType(ContentService.MimeType.TEXT);
+}
 
 function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Trainings');
@@ -40,9 +89,9 @@ function doPost(e) {
 
     Logger.log('Data appended to sheet');
 
-    return ContentService.createTextOutput(JSON.stringify({ result: 'Success' })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput('Success').setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     Logger.log('Error: ' + error.toString());
-    return ContentService.createTextOutput(JSON.stringify({ result: 'Error', message: error.toString() })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput('Error: ' + error.toString()).setMimeType(ContentService.MimeType.JSON);
   }
 }

@@ -1,89 +1,89 @@
 <?php
 // WooCommerce - Product stock status
-// Last update: 2024-11-26
+// Last update: 2026-01-15
 
 // Notes: Elementor's "Product Stock" widget only works with "Stock management" (i.e. for products where "Track stock quantity for this product" is activated)
+// Usage: [woocommerce_product_stock_status language="en"]
 
-if (class_exists('WooCommerce') && WC()) {
 
-    add_shortcode($tag = 'woocommerce_product_stock_status', $callback = 'product_stock_status');
+if (function_exists('WC') && !is_admin()) {
 
-    function product_stock_status()
+    add_shortcode(tag: 'woocommerce_product_stock_status', callback: 'woocommerce_product_stock_status');
+
+    function woocommerce_product_stock_status(array|string $atts = []): string
     {
-        global $product;
 
-        // Ensure $product is set
-        if (!$product) {
-            $product = wc_get_product(get_the_ID());
-        }
+        $atts = shortcode_atts(pairs: ['language' => null], atts: $atts, shortcode: 'woocommerce_product_stock_status');
 
-        if (!$product) {
+        $product = wc_get_product(get_the_ID());
+
+        if (!$product instanceof WC_Product) {
             return '';
         }
 
-        // Check if the product is a variable product
-        if ($product->is_type('variable')) {
-            $all_out_of_stock = true;
-
-            // Loop through variations to check stock status
+        // For variable products, check if all variations are out of stock
+        if ($product->is_type('variable') && $product instanceof WC_Product_Variable) {
             $available_variations = $product->get_children();
-            foreach ($available_variations as $variation_id) {
-                $variation_obj = wc_get_product($variation_id);
-                if ($variation_obj && $variation_obj->is_in_stock()) {
-                    $all_out_of_stock = false;
-                    break; // No need to check further if any variation is in stock
-                }
-            }
+            $all_out_of_stock = !array_any(
+                $available_variations,
+                static fn (int $variation_id): bool =>
+                    ($variation = wc_get_product($variation_id)) instanceof WC_Product && $variation->is_in_stock()
+            );
 
-            // If all variations are out of stock
             if ($all_out_of_stock) {
                 $product->set_stock_status('outofstock');
             }
         }
 
-        // Load the translation files
-        // load_plugin_textdomain($domain='woocommerce', $deprecated=false, $plugin_rel_path=(dirname(plugin_basename(__FILE__)) . '/languages'));
+        $is_in_stock = $product->is_in_stock();
+        $icon_color = $is_in_stock ? '#50C878' : '#b20000';
 
-        // Initial availability
-        if ($product->is_in_stock()) {
-            $availability = '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>';
-            $availability .= __($text = 'In stock', $domain = 'woocommerce');
-            // $availability .= 'Vorrätig';
+        // Check for specific overrides, otherwise use WP translation
+        if ($atts['language'] === 'de') {
+            $status_text = $is_in_stock ? 'Vorrätig' : 'Nicht vorrätig';
+        } elseif ($atts['language'] === 'pt') {
+            $status_text = $is_in_stock ? 'Em estoque' : 'Fora de estoque';
         } else {
-            $availability = '<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>';
-            $availability .= __($text = 'Out of stock', $domain = 'woocommerce');
-            // $availability .= 'Nicht vorrätig';
+            // This case handles 'en', null, or any other unspecified language via WooCommerce translations
+            $status_text = $is_in_stock ? __('In stock', 'woocommerce') : __('Out of stock', 'woocommerce');
         }
 
-        return '<div id="product-stock-status">' . $availability . '</div>';
+        return '<div id="product-stock-status"><span class="product-stock-status-icon" style="margin-right:6px"><i class="fa-solid fa-circle" style="color:' . esc_attr($icon_color) . '"></i></span>' . esc_html($status_text) . '</div>';
+
     }
 
-    // Dynamically update the product stock status for variable products based on the selected product variation
-    add_action($hook_name = 'wp_footer', $callback = 'product_stock_status_script', $priority = 10, $accepted_args = 1);
+    add_action(hook_name: 'wp_footer', callback: 'woocommerce_product_stock_status_script', priority: 10, accepted_args: 0);
 
-    function product_stock_status_script()
+    function woocommerce_product_stock_status_script(): void
     {
-        if (is_product()) {
-            ?>
-            <script type="text/javascript">
-                jQuery(document).ready(function($) {
-                    $('form.variations_form').on('found_variation', function(event, variation) {
-                        const availability = $('#product-stock-status');
-                        if (variation.is_in_stock) {
-                            availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #50C878;"></i></span>' + '<?php echo __($text = 'In stock', $domain = 'woocommerce'); ?>');
-                        } else {
-                            availability.html('<span class="product-stock-status-icon" style="margin-right: 6px"><i class="fa-solid fa-circle" style="color: #b20000;"></i></span>' + '<?php echo __($text = 'Out of stock', $domain = 'woocommerce'); ?>');
-                        }
-                    });
-
-                    $('form.variations_form').on('reset_data', function() {
-                        const availability = $('#product-stock-status');
-                        availability.html('<?php echo product_stock_status(); ?>');
-                    });
-                });
-            </script>
-            <?php
+        if (!is_product()) {
+            return;
         }
+
+        $in_stock_text = esc_js(__('In stock', 'woocommerce'));
+        $out_of_stock_text = esc_js(__('Out of stock', 'woocommerce'));
+
+        ?>
+        <script>
+        jQuery(($) => {
+            const $form = $('form.variations_form');
+            const $availability = $('#product-stock-status');
+            const originalHTML = $availability.html();
+            const icon = (color, text) => 
+                `<span class="product-stock-status-icon" style="margin-right:6px"><i class="fa-solid fa-circle" style="color:${color}"></i></span>${text}`;
+            
+            $form.on('show_variation', (e, variation) => {
+                if (variation.is_in_stock) {
+                    $availability.html(icon('#50C878', '<?php echo $in_stock_text; ?>'));
+                } else {
+                    $availability.html(icon('#b20000', '<?php echo $out_of_stock_text; ?>'));
+                }
+            }).on('reset_data', () => {
+                $availability.html(originalHTML);
+            });
+        });
+        </script>
+        <?php
     }
 
 }

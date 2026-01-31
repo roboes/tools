@@ -44,13 +44,6 @@ countries_alpha_3_to_2 = geocoder_tools.countries_alpha_3_to_2
 del spec_from_file_location, geocoder_tools
 
 
-# Settings
-
-## Copy-on-Write (will be enabled by default in version 3.0)
-if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
-    pd.options.mode.copy_on_write = True
-
-
 #######################
 # Geocoder Country Code
 #######################

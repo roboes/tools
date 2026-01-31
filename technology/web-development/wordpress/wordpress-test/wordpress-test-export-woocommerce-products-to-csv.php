@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Test - Export WooCommerce products to .csv (run it on WP Console)
-// Last update: 2024-06-13
+// Last update: 2026-01-02
 
 function export_woocommerce_products_to_csv()
 {
@@ -25,14 +25,14 @@ function export_woocommerce_products_to_csv()
     fwrite($output, "\xEF\xBB\xBF");
 
     // Query WooCommerce products to get all attributes
-    $args = array(
+    $args = [
         'post_type' => 'product',
         'posts_per_page' => -1,
-    );
+    ];
     $loop = new WP_Query($args);
 
     // Collect all unique attribute names
-    $attribute_names = array();
+    $attribute_names = [];
     while ($loop->have_posts()) {
         $loop->the_post();
         $product = wc_get_product(get_the_ID());
@@ -56,10 +56,10 @@ function export_woocommerce_products_to_csv()
 
     // Output the column headings
     $headers = array_merge(
-        array('Category', 'Type', 'ID', 'SKU', 'Name', 'Price', 'Stock'),
+        ['Category', 'Type', 'ID', 'SKU', 'Name', 'Price', 'Stock'],
         $attribute_names
     );
-    fputcsv($output, $headers);
+    fputcsv($output, $headers, ",", '"', "");
 
     // Query WooCommerce products again to output data
     $loop = new WP_Query($args);
@@ -79,10 +79,10 @@ function export_woocommerce_products_to_csv()
         $product_type = $product->get_type();
 
         // Initialize row data
-        $row = array(
+        $row = [
             $product_categories, $product_type, $product_id, $product_sku,
             $product_name, $product_price, $product_stock
-        );
+        ];
 
         // Fill attributes columns with empty values initially
         $attribute_values = array_fill(0, count($attribute_names), '');
@@ -90,11 +90,11 @@ function export_woocommerce_products_to_csv()
         // Handle simple products
         if ($product_type == 'simple') {
             $row = array_merge($row, $attribute_values);
-            fputcsv($output, $row);
+            fputcsv($output, $row, ",", '"', "");
         } elseif ($product_type == 'variable') {
             // Output variable product data
             $row = array_merge($row, $attribute_values);
-            fputcsv($output, $row);
+            fputcsv($output, $row, ",", '"', "");
 
             // Get product variations
             $variations = $product->get_available_variations();
@@ -107,11 +107,11 @@ function export_woocommerce_products_to_csv()
                 $variation_attributes = $variation_obj->get_attributes();
 
                 // Initialize variation row
-                $variation_row = array(
+                $variation_row = [
                     $product_categories, 'variation', $variation_id, $variation_sku,
                     $product_name . ' - ' . wc_get_formatted_variation($variation_obj, true),
                     $variation_price, $variation_stock
-                );
+                ];
 
                 // Fill variation attributes
                 $variation_attribute_values = array_fill(0, count($attribute_names), '');
@@ -124,7 +124,7 @@ function export_woocommerce_products_to_csv()
                 }
 
                 $variation_row = array_merge($variation_row, $variation_attribute_values);
-                fputcsv($output, $variation_row);
+                fputcsv($output, $variation_row, ",", '"', "");
             }
         }
     }

@@ -22,16 +22,6 @@ import numpy as np
 import pandas as pd
 
 
-# Settings
-
-## Set working directory
-os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads'))
-
-## Copy-on-Write (will be enabled by default in version 3.0)
-if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
-    pd.options.mode.copy_on_write = True
-
-
 ###########
 # Functions
 ###########
@@ -427,7 +417,7 @@ def activities_apple_health_to_strava(
 
 # Import Apple Health workouts/activities to DataFrame
 activities_apple_health = activities_apple_health_import(
-    file=os.path.join('Export', 'apple_health_export', 'Export.xml'),
+    file=os.path.join(os.path.expanduser('~'), 'Downloads', 'Export', 'apple_health_export', 'Export.xml'),
     remove_duplicates=False,
 )
 
@@ -437,12 +427,12 @@ activities_apple_health[activities_apple_health.duplicated(subset=['activity_dat
 
 
 # Create 'Activities Output' folder
-os.makedirs(name='Activities Output', exist_ok=True)
+os.makedirs(name=os.path.join(os.path.expanduser('~'), 'Downloads', 'Activities Output'), exist_ok=True)
 
 # Create .tcx files from activities
 activities_apple_health_import = activities_apple_health_to_strava(
     activities_apple_health=activities_apple_health.query(
         expr='source_name.isin(["Daily Yoga", "Nike Run Club"])',
     ),
-    output_directory='Activities Output',
+    output_directory=os.path.join(os.path.expanduser('~'), 'Downloads', 'Activities Output'),
 )

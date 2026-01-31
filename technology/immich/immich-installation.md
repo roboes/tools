@@ -1,7 +1,7 @@
 # Immich Installation
 
 > [!NOTE]  
-> Last update: 2025-12-29
+> Last update: 2026-01-03
 
 ```.sh
 # Settings
@@ -40,8 +40,6 @@ services:
   immich-upload-optimizer:
     container_name: "immich_upload_optimizer_${system_user}"
     image: ghcr.io/miguelangel-nubla/immich-upload-optimizer:latest
-    ports:
-      - "2283:2283"
     environment:
       - IUO_UPSTREAM=http://immich-server:2283
       - IUO_TASKS_FILE=/app/config/tasks.yaml
@@ -57,6 +55,8 @@ services:
     # extends:
     #   file: hwaccel.transcoding.yml
     #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    ports:
+      - "2283:2283"
     volumes:
       # Do not edit the next line. If you want to change the media storage location on your system, edit the value of UPLOAD_LOCATION in the .env file
       - \${UPLOAD_LOCATION}:/data
@@ -235,6 +235,9 @@ sudo -u $system_user docker compose up -d
 ```.sh
 # Confirm docker is running
 docker ps
+
+# Logs
+# docker compose logs -f --tail 100
 ```
 
 Storage Template:
@@ -327,8 +330,10 @@ server {
         deny all;
     }
 
+    client_max_body_size 50000M;
+
     location / {
-        proxy_pass http://127.0.0.1:8123;
+        proxy_pass http://127.0.0.1:2283;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
