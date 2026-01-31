@@ -4,12 +4,12 @@
 // Last update: 2025-03-21
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     function batch_update_variation_dimensions($category_slug)
     {
         // Settings
-        $products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private', 'draft', 'pending', 'future'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $category_slug))));
+        $products = get_posts(['post_type' => 'product', 'posts_per_page' => -1, 'post_status' => ['publish', 'private', 'draft', 'pending', 'future'], 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $category_slug]]]);
 
 
         foreach ($products as $product) {
@@ -36,6 +36,6 @@ if (class_exists('WooCommerce') && WC()) {
     }
 
     // Execute the function
-    batch_update_variation_dimensions('specialty-coffees-en');
+    batch_update_variation_dimensions(category_slug: 'specialty-coffees-en');
 
 }

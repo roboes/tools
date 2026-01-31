@@ -37,7 +37,7 @@ function woocommerce_order_payment_method_update($order_id, $payment_method_id_n
 
 woocommerce_payment_methods_get();
 
-// woocommerce_order_payment_method_update($order_id = 10000, $payment_method_id_new = 'bacs');
+// woocommerce_order_payment_method_update(order_id: 10000, payment_method_id_new: 'bacs');
 
 // Tests
 $order_id = 10000;

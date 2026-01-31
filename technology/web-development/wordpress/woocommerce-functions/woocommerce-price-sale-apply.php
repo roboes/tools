@@ -1,19 +1,16 @@
 <?php
 
 // WooCommerce - Apply sales price to multiple products
-// Last update: 2025-07-14
+// Last update: 2026-01-15
 
 
-if (class_exists('WooCommerce') && WC()) {
+if (function_exists('WC')) {
 
     function woocommerce_sale_price_update($product_id, $start_date, $end_date, $discount_percentage, $round_precision)
     {
-        // Get the site's time zone
-        $timezone = new DateTimeZone(get_option('timezone_string'));
-
         // Start and end dates
-        $start_date = (new DateTime($start_date, $timezone));
-        $end_date = (new DateTime($end_date, $timezone))->modify('+1 day');
+        $start_date = (new DateTimeImmutable(datetime: $start_date, timezone: wp_timezone()));
+        $end_date = (new DateTimeImmutable(datetime: $end_date, timezone: wp_timezone()))->modify('+1 day');
 
         // Set sale start and end dates with time zone consideration
         update_post_meta($product_id, '_sale_price_dates_from', $start_date->getTimestamp());
@@ -30,7 +27,7 @@ if (class_exists('WooCommerce') && WC()) {
         update_post_meta($product_id, '_sale_price', $sale_price);
 
         $product = get_post($product_id);
-        echo 'Product price updated: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
+        echo 'Product price updated: ' . $product->get_id() . ' - ' . $product->get_name() . ' (' . $product->get_slug() . ')<br>';
         echo 'Regular Price: ' . $regular_price . '<br>';
         echo 'Sale Price: ' . $sale_price . '<br>';
         echo 'Sale Start Date: ' . $start_date->format('Y-m-d') . '<br>';
@@ -42,15 +39,15 @@ if (class_exists('WooCommerce') && WC()) {
     {
 
         // Settings
-        $category_slugs = array('specialty-coffees-de');
-        $product_ids_except = array();
+        $category_slugs = ['specialty-coffees-de'];
+        $product_ids_except = [];
         $start_date = '2024-07-19';
         $end_date = '2024-07-22';
         $discount_percentage = 0.2;
         $round_precision = 1;
 
         // Convert $category_slugs to IDs
-        $category_ids = array();
+        $category_ids = [];
         foreach ($category_slugs as $slug) {
             $term = get_term_by('slug', $slug, 'product_cat');
             if ($term) {
@@ -58,14 +55,14 @@ if (class_exists('WooCommerce') && WC()) {
             }
         }
 
-        $products = get_posts(array('post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $category_ids, 'operator' => 'IN'))));
+        $products = get_posts(['post_type' => 'product', 'posts_per_page' => -1, 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $category_ids, 'operator' => 'IN']]]);
 
         foreach ($products as $product) {
-            $product_id = $product->ID;
+            $product_id = $product->get_id();
 
             // Skip if product ID is in the exclusion list
             if (in_array($product_id, $product_ids_except)) {
-                echo 'Product skipped: ' . $product->ID . ' - ' . $product->post_title . ' (' . $product->post_name . ')<br>';
+                echo 'Product skipped: ' . $product->get_id() . ' - ' . $product->get_name() . ' (' . $product->get_slug() . ')<br>';
                 continue;
             }
 

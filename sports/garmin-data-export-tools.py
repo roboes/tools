@@ -39,27 +39,9 @@ with ZipFile(
 # Delete objects
 del zip_file
 
-os.chdir(
-    path=os.path.join(
-        os.path.expanduser('~'),
-        'Downloads',
-        'fit2gpx',
-        'fit2gpx-main',
-        'src',
-    ),
-)
+os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx', 'fit2gpx-main', 'src'))
 
 from fit2gpx import Converter
-
-
-# Settings
-
-## Set working directory
-os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export'))
-
-## Copy-on-Write (will be enabled by default in version 3.0)
-if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
-    pd.options.mode.copy_on_write = True
 
 
 ###########
@@ -507,16 +489,16 @@ def activities_garmin_compare_not_matched(*, activities_garmin_compare):
 ##########################
 
 # Extract .zip files
-zip_extract(directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'))
+zip_extract(directory=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export', 'DI_CONNECT', 'DI-Connect-Uploaded-Files'))
 
 
 # Change filetype from .txt to .tcx
-change_filetype(directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'))
+change_filetype(directory=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export', 'DI_CONNECT', 'DI-Connect-Uploaded-Files'))
 
 
 # Empty .fit activities files: move to 'ACTIVITIES_EMPTY' folder or delete
 activities_empty(
-    directory=os.path.join('DI_CONNECT', 'DI-Connect-Uploaded-Files'),
+    directory=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export', 'DI_CONNECT', 'DI-Connect-Uploaded-Files'),
     action='delete',
 )
 
@@ -527,11 +509,7 @@ activities_empty(
 
 # Import Garmin Connect activities to DataFrame
 activities_garmin = activities_garmin_import(
-    directory=os.path.join(
-        'DI_CONNECT',
-        'DI-Connect-Fitness',
-        'summarizedActivities.json',
-    ),
+    directory=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export', 'DI_CONNECT', 'DI-Connect-Fitness', 'summarizedActivities.json'),
 )
 
 
@@ -539,7 +517,7 @@ activities_garmin = activities_garmin_import(
 # 'distance_difference' of up to 20 meters is acceptable
 activities_garmin_test = activities_garmin_compare(
     activities_garmin=activities_garmin,
-    activities_strava='activities_strava.xlsx',
+    activities_strava=os.path.join(os.path.expanduser('~'), 'Downloads', 'Garmin Export', 'activities_strava.xlsx'),
 )
 # activities_garmin_test.to_clipboard(excel=True, sep=None, index=False)
 

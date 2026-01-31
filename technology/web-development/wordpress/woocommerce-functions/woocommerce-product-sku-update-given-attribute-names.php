@@ -3,6 +3,7 @@
 // WooCommerce Function - Update SKUs given product attribute names
 // Last update: 2025-11-26
 
+
 function slug_rename($string, $date_rearrange = false)
 {
     // Settings
@@ -53,7 +54,7 @@ function slug_rename($string, $date_rearrange = false)
 function woocommerce_product_sku_update_given_attribute_names()
 {
     // Query to get all products in "Trainings" category
-    $args = array('post_type' => 'product', 'posts_per_page' => -1, 'post_status' => array('publish', 'private'), 'tax_query' => array(array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => array('trainings-en'))));
+    $args = ['post_type' => 'product', 'posts_per_page' => -1, 'post_status' => ['publish', 'private'], 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => ['trainings-en']]]];
     $products = get_posts($args);
 
     foreach ($products as $product_post) {
@@ -66,16 +67,16 @@ function woocommerce_product_sku_update_given_attribute_names()
             foreach ($variations as $variation_id) {
                 $variation = wc_get_product($variation_id);
                 $attributes = $variation->get_attributes();
-                $variation_sku_parts = array($parent_sku);
+                $variation_sku_parts = [$parent_sku];
 
                 // Build the SKU from the attributes, ensuring safe names
                 foreach ($attributes as $attribute_name => $attribute_value) {
                     // Get the term name for the attribute
                     $term = get_term_by('slug', $attribute_value, $attribute_name);
                     if ($term) {
-                        $safe_value = slug_rename($term->name, $date_rearrange = true);
+                        $safe_value = slug_rename(string: $term->name, date_rearrange: true);
                     } else {
-                        $safe_value = slug_rename($attribute_value, $date_rearrange = true);
+                        $safe_value = slug_rename(string: $attribute_value, date_rearrange: true);
                     }
                     $variation_sku_parts[] = $safe_value;
                 }

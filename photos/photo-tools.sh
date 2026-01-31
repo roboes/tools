@@ -10,7 +10,7 @@
 
 
 # Start Bash (Unix Shell)
-bash
+[ -z "$BASH" ] && exec bash
 
 
 # Install ExifTool

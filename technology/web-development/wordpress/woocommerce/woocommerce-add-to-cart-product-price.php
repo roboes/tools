@@ -1,23 +1,27 @@
 <?php
 // WooCommerce - Display product currency and price inside "Add to Cart" button
-// Last update: 2025-10-08
+// Last update: 2026-01-15
 
-if (class_exists('WooCommerce') && WC()) {
 
-    add_filter($hook_name = 'woocommerce_product_single_add_to_cart_text', $callback = 'woocommerce_add_to_cart_product_price', $priority = 10, $accepted_args = 2);
+if (function_exists('WC') && !is_admin()) {
 
-    function woocommerce_add_to_cart_product_price($button_text, $product)
+    add_filter(hook_name: 'woocommerce_product_single_add_to_cart_text', callback: 'woocommerce_add_to_cart_product_price', priority: 10, accepted_args: 2);
+
+    function woocommerce_add_to_cart_product_price(string $button_text, WC_Product $product): string
     {
         if (!is_product()) {
             return $button_text;
         }
+
+        // Get current language (Polylang/WPML)
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
         // Common configuration for both product types
         $currency_config = sprintf(
             'const currencySymbol = %s;
             const currencyPosition = %s;
             const currencyDecimals = %s;
-            const locale = "de-DE";
+            const locale = %s;
             
             const formatter = new Intl.NumberFormat(locale, {
                 minimumFractionDigits: parseInt(currencyDecimals),
@@ -34,9 +38,10 @@ if (class_exists('WooCommerce') && WC()) {
                     default: return currencySymbol + formattedPrice;
                 }
             }',
-            wp_json_encode(get_woocommerce_currency_symbol()),
-            wp_json_encode(get_option('woocommerce_currency_pos')),
-            wp_json_encode(wc_get_price_decimals())
+            get_woocommerce_currency_symbol() |> wp_json_encode(...),
+            get_option(option: 'woocommerce_currency_pos') |> wp_json_encode(...),
+            wc_get_price_decimals() |> wp_json_encode(...),
+            ($browsing_language === 'de' ? 'de-DE' : 'en-US') |> wp_json_encode(...)
         );
 
         if ($product->is_type('variable')) {
@@ -53,7 +58,7 @@ if (class_exists('WooCommerce') && WC()) {
                 
                 function updatePrice() {
                     const vid = $varInput.val();
-                    const quantity = parseInt($qtyInput.val()) || 1;
+                    const quantity = parseInt($qtyInput.val(), 10) || 1;
                     
                     $button.find('span[data-price]').remove();
                     
@@ -74,14 +79,14 @@ if (class_exists('WooCommerce') && WC()) {
             ?>
             <script>
             jQuery(function($) {
-                const basePrice = <?php echo $product_price; ?>;
+                const basePrice = <?php echo (float) $product_price; ?>;
                 const $button = $(".single_add_to_cart_button");
                 const $qtyInput = $('input[name="quantity"]');
                 
                 <?php echo $currency_config; ?>
                 
                 function updatePrice() {
-                    const quantity = parseInt($qtyInput.val()) || 1;
+                    const quantity = parseInt($qtyInput.val(), 10) || 1;
                     const priceHtml = formatPrice(basePrice * quantity);
                     
                     $button.find('span[data-price]').remove();

@@ -20,13 +20,6 @@ import pandas as pd
 import numpy as np
 
 
-# Settings
-
-## Copy-on-Write (will be enabled by default in version 3.0)
-if pd.__version__ >= '1.5.0' and pd.__version__ < '3.0.0':
-    pd.options.mode.copy_on_write = True
-
-
 ##############
 # Transactions
 ##############

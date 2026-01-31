@@ -3,20 +3,21 @@
 // WordPress Admin - Remove media attributes: alternative text, caption and description
 // Last update: 2024-06-14
 
+
 function remove_media_attributes()
 {
 
     // Settings
-    $media_id_exceptions = array();
+    $media_id_exceptions = [];
 
     // List of meta keys to clear
-    $meta_keys_to_clear = array(
+    $meta_keys_to_clear = [
         '_wp_attachment_image_alt' => 'image_alt',
         '_wp_attachment_caption' => 'caption',
         '_wp_attachment_description' => 'description',
-    );
+    ];
 
-    $attachments = get_posts(array('post_type' => 'attachment', 'posts_per_page' => -1, 'post_status' => 'inherit'));
+    $attachments = get_posts(['post_type' => 'attachment', 'posts_per_page' => -1, 'post_status' => 'inherit']);
 
     foreach ($attachments as $attachment) {
         // Check if the current attachment ID is in the exclusion list
@@ -34,10 +35,10 @@ function remove_media_attributes()
         }
 
         // Remove caption (post excerpt)
-        $caption_removed = wp_update_post(array(
+        $caption_removed = wp_update_post([
             'ID'           => $attachment->ID,
             'post_excerpt' => '',
-        ));
+        ]);
 
         if (is_wp_error($caption_removed)) {
             echo 'Failed to clear caption (post excerpt) for attachment ' . $attachment->ID . ': ' . $caption_removed->get_error_message() . '<br>';
@@ -46,10 +47,10 @@ function remove_media_attributes()
         }
 
         // Remove description (post content)
-        $description_removed = wp_update_post(array(
+        $description_removed = wp_update_post([
             'ID'           => $attachment->ID,
             'post_content' => '',
-        ));
+        ]);
 
         if (is_wp_error($description_removed)) {
             echo 'Failed to clear description (post content) for attachment ' . $attachment->ID . ': ' . $description_removed->get_error_message() . '<br>';

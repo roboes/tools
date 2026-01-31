@@ -1,9 +1,10 @@
 <?php
 
 // WordPress Test - Search for terms
-// Last update: 2024-10-13
+// Last update: 2026-01-15
 
-function search_pages_for_terms($search_terms, $languages = array())
+
+function search_pages_for_terms($search_terms, $languages = [])
 {
     global $wpdb;
 
@@ -11,7 +12,7 @@ function search_pages_for_terms($search_terms, $languages = array())
     $allowed_languages = array_map('sanitize_text_field', $languages);
 
     // Initialize an empty array to store results
-    $results = array();
+    $results = [];
 
     // Loop through each search term
     foreach ($search_terms as $search_term) {
@@ -19,7 +20,7 @@ function search_pages_for_terms($search_terms, $languages = array())
         $query = $wpdb->prepare("
             SELECT p.ID, p.post_title, p.post_content
             FROM {$wpdb->posts} p
-            WHERE p.post_type = 'page'
+            WHERE p.post_type IN ('page', 'post', 'product')
             AND (p.post_title LIKE %s OR p.post_content LIKE %s)
             ORDER BY p.ID
         ", '%' . $wpdb->esc_like($search_term) . '%', '%' . $wpdb->esc_like($search_term) . '%');
@@ -49,15 +50,16 @@ function search_pages_for_terms($search_terms, $languages = array())
         });
 
         // Initialize an array to store filtered results
-        $filtered_results = array();
+        $filtered_results = [];
 
         // Loop through each result to apply language filtering
         foreach ($results as $page) {
             // Get page ID
             $page_id = $page->ID;
 
-            // Get language of the page using Polylang function
-            $page_language = (function_exists('pll_get_post_language') && in_array(pll_get_post_language($page_id, 'slug'), pll_languages_list(array('fields' => 'slug')))) ? pll_get_post_language($page_id, 'slug') : '';
+            // Get page language (Polylang/WPML)
+            $page_language = apply_filters('wpml_element_language_code', null, ['element_id' => $page_id, 'element_type' => 'post']) ?: '';
+
 
             // Check if page language is in allowed languages or if no languages are specified
             if (empty($allowed_languages) || in_array($page_language, $allowed_languages)) {
@@ -79,7 +81,7 @@ function search_pages_for_terms($search_terms, $languages = array())
                     $page_content = strip_tags($page_content);
 
                     // Find occurrences of the search term in the stripped content
-                    $matches = array();
+                    $matches = [];
                     preg_match_all("/$search_term/", $page_content, $matches, PREG_OFFSET_CAPTURE);
 
                     // Check if there are any matches
@@ -90,7 +92,7 @@ function search_pages_for_terms($search_terms, $languages = array())
                             $offset = $match[1];
                             // Adjust snippet length as needed
                             $snippet = trim(substr($page_content, max(0, $offset - 30), 60));
-                            echo "Text Snippet: ... " . str_replace(array("\r", "\n"), '', htmlspecialchars($snippet)) . " ... <br>";
+                            echo "Text Snippet: ... " . str_replace(["\r", "\n"], '', htmlspecialchars($snippet)) . " ... <br>";
                         }
                         echo "<br>";
                         // Break out of the loop once a match is found for any search term
@@ -109,13 +111,13 @@ function search_pages_for_terms($search_terms, $languages = array())
 }
 
 // Search for curly quotation marks style
-// search_pages_for_terms($search_terms = array('“', '”', '„'), $languages = array());
+// search_pages_for_terms(search_terms: ['“', '”', '„'], languages: []);
 
 // Search for straight quotation marks
-// search_pages_for_terms($search_terms = array("'", '"'), $languages = array());
+// search_pages_for_terms(search_terms: ["'", '"'], languages: []);
 
 // Search for straight quotation marks
-// search_pages_for_terms($search_terms = array(" ,", ' ;'), $languages = array());
+// search_pages_for_terms(search_terms: [" ,", ' ;'], languages: []);
 
 // For German pages, check whether the English curly quotation marks style (“ and ”) was applied
-search_pages_for_terms($search_terms = array('”'), $languages = array('de'));
+search_pages_for_terms(search_terms: ['”'], languages: ['de']);

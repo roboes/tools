@@ -1,23 +1,28 @@
 <?php
 
+
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2025-12-27
+// Last update: 2026-01-15
 
 
+/*
 // Add best package fit inside WooCommerce orders using a custom field - run action once (run on WP Console)
-// $orders = wc_get_orders(['limit' => -1]);
-// foreach ($orders as $order) {
-// calculate_and_store_package_best_fit($order->get_id());
-// }
+$orders = wc_get_orders(['limit' => -1]);
+foreach ($orders as $order) {
+    calculate_and_store_package_best_fit($order->get_id());
+}
+*/
 
+/*
 // Delete best package fit meta data
-// $orders = wc_get_orders(['limit' => -1]);
-// foreach ($orders as $order) {
-// if (!empty($order->get_meta('order_package_best_fit', true))) {
-// $order->delete_meta_data('order_package_best_fit');
-// $order->save();
-// }
-// }
+$orders = wc_get_orders(['limit' => -1]);
+foreach ($orders as $order) {
+    if (!empty($order->get_meta('order_package_best_fit', true))) {
+        $order->delete_meta_data('order_package_best_fit');
+        $order->save();
+    }
+}
+*/
 
 
 // Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) installed via Composer:
@@ -26,21 +31,17 @@
 require_once WP_CONTENT_DIR . '/vendor/autoload.php';
 
 use DVDoug\BoxPacker\Box;
-use DVDoug\BoxPacker\DefaultItemSorter;
 use DVDoug\BoxPacker\Item;
-use DVDoug\BoxPacker\ItemSorter;
 use DVDoug\BoxPacker\Packer;
 use DVDoug\BoxPacker\Rotation;
 use DVDoug\BoxPacker\Exception\NoBoxesAvailableException;
 
-// use DVDoug\BoxPacker\Test\TestBox;
-// use DVDoug\BoxPacker\Test\TestItem;
+if (function_exists('WC') && is_admin()) {
+    add_action(hook_name: 'woocommerce_checkout_order_processed', callback: 'calculate_and_store_package_best_fit', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
+}
 
-add_action($hook_name = 'woocommerce_checkout_order_processed', $callback = 'calculate_and_store_package_best_fit', $priority = 10, $accepted_args = 1);
-add_action($hook_name = 'woocommerce_admin_order_data_after_order_details', $callback = 'display_custom_order_meta', $priority = 10, $accepted_args = 1);
-
-
-class CustomBox implements DVDoug\BoxPacker\Box
+readonly class CustomBox implements Box
 {
     public function __construct(
         private string $reference,
@@ -101,8 +102,7 @@ class CustomBox implements DVDoug\BoxPacker\Box
     }
 }
 
-
-class CustomItem implements DVDoug\BoxPacker\Item
+readonly class CustomItem implements Item
 {
     public function __construct(
         private string $description,
@@ -144,15 +144,14 @@ class CustomItem implements DVDoug\BoxPacker\Item
     }
 }
 
-
-function calculate_and_store_package_best_fit($order_id)
+function calculate_and_store_package_best_fit(int|string $order_id): void
 {
     if (!$order_id) {
         return;
     }
 
     $order = wc_get_order($order_id);
-    if (!$order) {
+    if (!$order instanceof WC_Order) {
         return;
     }
 
@@ -168,13 +167,12 @@ function calculate_and_store_package_best_fit($order_id)
 
     // Add order items to the packer
     foreach ($order->get_items() as $item) {
-
         $product = $item->get_product();
-        if (!$product) {
+        if (!$product instanceof WC_Product) {
             continue;
         }
 
-        $quantity = $item->get_quantity();
+        $quantity = (int) $item->get_quantity();
         $length = $product->get_length();
         $width = $product->get_width();
         $height = $product->get_height();
@@ -187,12 +185,13 @@ function calculate_and_store_package_best_fit($order_id)
                     width: (int) ($width * 10),   // Convert cm to mm
                     length: (int) ($length * 10), // Convert cm to mm
                     depth: (int) ($height * 10),  // Convert cm to mm
-                    weight: (int) ($weight)       // Weight in grams
+                    weight: (int) $weight         // Weight in grams
                 ));
             }
         }
     }
 
+    // Flatten the array so that keys match the display function
     $package_details = [];
 
     try {
@@ -207,41 +206,38 @@ function calculate_and_store_package_best_fit($order_id)
 
         if (!empty($packedBoxes)) {
             foreach ($packedBoxes as $packedBox) {
-
                 $boxType = $packedBox->box;
-
-                // Flatten the array so that keys match the display function
                 $package_details[] = [
-                    'name'   => $boxType->getReference(),
-                    'width'  => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
-                    'length' => $boxType->getOuterLength() / 10, // Convert mm back to cm
-                    'height' => $boxType->getOuterDepth() / 10, // Convert mm back to cm
-                    'weight' => $packedBox->getWeight(),
+                    'name'        => $boxType->getReference(),
+                    'width'       => $boxType->getOuterWidth() / 10,  // Convert mm back to cm
+                    'length'      => $boxType->getOuterLength() / 10, // Convert mm back to cm
+                    'height'      => $boxType->getOuterDepth() / 10, // Convert mm back to cm
+                    'weight'      => $packedBox->getWeight(),
                     'items_count' => count($packedBox->items)
                 ];
             }
         } else {
             $package_details[] = ['name' => 'No box fits', 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
         }
-
     } catch (NoBoxesAvailableException $error) {
         $package_details[] = ['name' => 'Error: ' . $error->getMessage(), 'width' => 0, 'length' => 0, 'height' => 0, 'weight' => 0, 'items_count' => 0];
-
     } catch (Throwable $error) {
         error_log("BoxPacker: Throwable caught in pack block: " . $error->getMessage());
         error_log("BoxPacker: Stack trace:\n" . $error->getTraceAsString());
         return;
     }
 
-    // Update the order meta with the best fit package;
+    // Update the order meta with the best fit package
     $order->update_meta_data('order_package_best_fit', wp_json_encode($package_details));
     $order->save();
-
 }
 
-
-function display_custom_order_meta($order)
+function display_custom_order_meta(WC_Order $order): void
 {
+    if (!is_admin()) {
+        return;
+    }
+
     $package_details = $order->get_meta('order_package_best_fit', true);
     $package_details = $package_details ? json_decode($package_details, true) : [];
 
@@ -251,17 +247,9 @@ function display_custom_order_meta($order)
         echo '<p>No package fit information available or no box fits the items.</p>';
     } else {
         foreach ($package_details as $index => $box) {
-            $i = $index + 1;
-            $package_best_fit_name = esc_html($box['name']);
-            $package_best_fit_length = esc_html($box['length']);
-            $package_best_fit_width = esc_html($box['width']);
-            $package_best_fit_height = esc_html($box['height']);
-            $package_best_fit_weight = esc_html($box['weight']);
-            $package_best_fit_items_count = esc_html($box['items_count']);
-            echo "<p><strong>Box {$i}:</strong> {$package_best_fit_name} - {$package_best_fit_length}×{$package_best_fit_width}×{$package_best_fit_height} cm, {$package_best_fit_weight} g ({$package_best_fit_items_count} items)</p>";
+            echo "<p><strong>Box " . ($index + 1) . ":</strong> " . esc_html($box['name']) . " - " . esc_html($box['length']) . "×" . esc_html($box['width']) . "×" . esc_html($box['height']) . " cm, " . esc_html($box['weight']) . " g (" . esc_html($box['items_count']) . " items)</p>";
         }
     }
 
     echo '</div>';
-
 }
