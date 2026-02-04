@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Product attribute names and attribute term names translate
-// Last update: 2026-01-18
+// Last update: 2026-01-31
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -56,6 +56,30 @@ if (function_exists('WC') && !is_admin()) {
             }
         }
         return $term_name;
+    }
+
+    add_filter(hook_name: 'gettext', callback: 'translate_woocommerce_text', priority: 10, accepted_args: 3);
+
+    function translate_woocommerce_text($translated_text, $text, $domain)
+    {
+
+        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'de';
+
+        if ($browsing_language !== 'de') {
+            return $translated_text;
+        }
+
+        $translations = [
+            'Coupon code' => 'Gutscheincode',
+            'Apply coupon' => 'Gutschein anwenden',
+            'Have a coupon?' => 'Gutschein vorhanden?',
+            'Click here to enter your coupon code' => 'Hier klicken, um einen Gutscheincode einzugeben.',
+            'If you have a coupon code, please apply it below.' => 'Falls ein Gutscheincode vorhanden ist, bitte unten eingeben.',
+            'Apply' => 'Anwenden',
+        ];
+
+        return isset($translations[$text]) ? $translations[$text] : $translated_text;
+
     }
 
 }

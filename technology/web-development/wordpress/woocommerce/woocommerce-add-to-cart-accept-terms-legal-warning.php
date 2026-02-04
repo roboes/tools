@@ -46,44 +46,44 @@ if (function_exists('WC') && !is_admin()) {
                 ?? array_first($messages['legal-warning-error']);
 
             $html = '<div class="product-terms-checkbox" style="margin-bottom: 20px;">
-					<label>
-						<input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
-						<span style="line-height: 20px;">' . esc_html($checkbox_text) . '</span>
-					</label>
-				</div>';
+                    <label>
+                        <input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
+                        <span style="line-height: 20px;">' . esc_html($checkbox_text) . '</span>
+                    </label>
+                </div>';
 
             $html .= '<style>
-					form.cart { display: flex !important; flex-wrap: wrap !important; }
+                    form.cart { display: flex !important; flex-wrap: wrap !important; }
 
-					.checkbox-highlight {
-						border: 2px solid red;
-						background-color: #ffe6e6;
-						padding: 5px;
-					}
-				</style>';
+                    .checkbox-highlight {
+                        border: 2px solid red;
+                        background-color: #ffe6e6;
+                        padding: 5px;
+                    }
+                </style>';
 
             $html .= '<script>
-					jQuery(document).ready(function($) {
-						const $checkbox = $(".product-terms-checkbox");
-						const $singleVariation = $(".woocommerce-variation.single_variation");
+                    jQuery(document).ready(function($) {
+                        const $checkbox = $(".product-terms-checkbox");
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
 
-						if ($checkbox.length && $singleVariation.length) {
-							$singleVariation.after($checkbox);
-						}
+                        if ($checkbox.length && $singleVariation.length) {
+                            $singleVariation.after($checkbox);
+                        }
 
-						$("form.cart").on("submit", function(event) {
-							if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
-								event.preventDefault();
-								const message = "' . esc_js($error_text) . '";
-								if (!$(".woocommerce-error").length) {
-									$(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
-								}
-								$("html, body").animate({ scrollTop: 0 }, "slow");
-								$("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
-							}
-						});
-					});
-				</script>';
+                        $("form.cart").on("submit", function(event) {
+                            if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
+                                event.preventDefault();
+                                const message = "' . esc_js($error_text) . '";
+                                if (!$(".woocommerce-error").length) {
+                                    $(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
+                                }
+                                $("html, body").animate({ scrollTop: 0 }, "slow");
+                                $("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
+                            }
+                        });
+                    });
+                </script>';
 
             echo $html;
         }

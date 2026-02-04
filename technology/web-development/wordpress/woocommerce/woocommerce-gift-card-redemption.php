@@ -468,7 +468,7 @@ if (function_exists('WC')) {
             ],
             'body' => [
                 'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'de' => sprintf('Hallo %s,<br><br>du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
 
@@ -591,14 +591,14 @@ if (function_exists('WC')) {
         // Get all completed orders from the last 3 months using wpdb (HPOS compatible)
         $order_ids = $wpdb->get_col($wpdb->prepare(
             "SELECT DISTINCT o.id 
-			FROM {$wpdb->prefix}wc_orders o
-			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
-			INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
-			WHERE o.status = 'wc-completed'
-			AND o.date_created_gmt >= %s
-			AND oim.meta_key = '_product_id'
-			AND oim.meta_value IN (" . implode(',', array_fill(0, count($product_ids), '%d')) . ")
-			ORDER BY o.id ASC",
+            FROM {$wpdb->prefix}wc_orders o
+            INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
+            INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
+            WHERE o.status = 'wc-completed'
+            AND o.date_created_gmt >= %s
+            AND oim.meta_key = '_product_id'
+            AND oim.meta_value IN (" . implode(',', array_fill(0, count($product_ids), '%d')) . ")
+            ORDER BY o.id ASC",
             array_merge([date('Y-m-d H:i:s', strtotime('-3 months'))], $product_ids)
         ));
 
