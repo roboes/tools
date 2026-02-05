@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - WooCommerce Coupons Export
-// Last update: 2026-02-04
+// Last update: 2026-02-05
 
 
 if (function_exists('WC') && is_admin()) {
@@ -179,6 +179,11 @@ if (function_exists('WC') && is_admin()) {
                 'coupon_amount_current'      => number_format($coupon_amount_current, 2, '.', ''),
             ];
         }
+
+        // Rearrange rows
+        usort($coupon_report_df, function ($a, $b) {
+            return [$a['coupon_type'], $a['coupon_sold_at']] <=> [$b['coupon_type'], $b['coupon_sold_at']];
+        });
 
         return $coupon_report_df;
     }

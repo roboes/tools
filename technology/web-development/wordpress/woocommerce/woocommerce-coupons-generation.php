@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-02-04
+// Last update: 2026-02-05
 
 
 /*
@@ -58,17 +58,17 @@ if (function_exists('WC')) {
             [
                 'coupon_prefix'          => 'KA-TRAINING-',
                 'meta_key_suffix'        => 'training_home_barista',
-                'purchasable_ids'        => [44043, 44044], // The product or product variation IDs that, when purchased, trigger the generation of a coupon
-                'redeemable_product_ids' => [22204, 31437], // Specific products to which the these coupons can be applied to
-                'excluded_redeemable_product_ids' => [44043, 44044],
+                'purchasable_ids'        => [44043, 44044], // Product IDs or product variation IDs that, when purchased, trigger the generation of a coupon
+                'redeemable_ids' => [22204, 31437], // Product IDs or product variation IDs to which the these coupons can be applied to
+                'excluded_redeemable_ids' => [44043, 44044], // Product IDs or product variation IDs to which the these coupons can not be applied to
                 'coupon_is_fixed_amount' => false,
             ],
             [
                 'coupon_prefix'          => 'KA-GIFT-',
                 'meta_key_suffix'        => 'gift_card',
                 'purchasable_ids'        => [44185, 44187],
-                'redeemable_product_ids' => [],
-                'excluded_redeemable_product_ids' => [44185, 44187],
+                'redeemable_ids' => [],
+                'excluded_redeemable_ids' => [44185, 44187],
                 'coupon_is_fixed_amount' => true,
             ],
         ];
@@ -227,7 +227,7 @@ if (function_exists('WC')) {
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
                     $coupon->set_usage_limit(usage_limit: 1);
-                    $coupon->set_individual_use(is_individual_use: true);
+                    $coupon->set_individual_use(is_individual_use: false);
                     // if (class_exists('WooCommerce_Germanized')) {
                     //     $coupon->update_meta_data('is_voucher', 'no');
                     // }
@@ -246,8 +246,8 @@ if (function_exists('WC')) {
                     $coupon->update_meta_data('_coupon_generated_manually', 'yes');
                     $coupon->update_meta_data('_coupon_generated_for_email', $customer_email);
                 }
-                $coupon->set_product_ids(product_ids: $config['redeemable_product_ids'] ?? []);
-                $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_product_ids'] ?? []);
+                $coupon->set_product_ids(product_ids: $config['redeemable_ids'] ?? []);
+                $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_ids'] ?? []);
 
                 $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format(format: 'Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
                 $coupon->set_date_expires(date: $coupon_expiry_date->getTimestamp());
