@@ -6,6 +6,19 @@
 // Add this line to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
 
+/*
+// Manually send training confirmation email
+send_training_confirmation_email(
+    product_id: 22204,
+    customer_email: 'email@website.com',
+    customer_name: 'Customer Name',
+    product_variation_own_portafilter_machine: 'Mit',
+    product_variation_appointment_date: '2026-05-09',
+    product_variation_appointment_time: '14:30',
+    product_quantity: 1,
+    language: 'de'
+);
+*/
 
 if (function_exists('WC')) {
 
@@ -681,7 +694,3 @@ if (function_exists('WC')) {
     }
 
 }
-
-
-// Test
-// send_training_confirmation_email(product_id: 22204, customer_email: 'email@website.com', customer_name: 'Customer Name', product_variation_own_portafilter_machine: 'Mit', product_variation_appointment_date: '2026-05-09', product_variation_appointment_time: '14:30', product_quantity: 1, language: 'de');

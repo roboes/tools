@@ -55,7 +55,7 @@ repos:
       - id: taplo-lint
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 4.0.0
+    rev: 4.0.1.post1
     hooks:
       - id: sqlfluff-fix
         args: ['--dialect=mysql', '--exclude-rules=ambiguous.column_count, layout.long_lines, references.keywords']

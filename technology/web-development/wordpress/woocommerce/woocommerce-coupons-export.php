@@ -147,11 +147,19 @@ if (function_exists('WC') && is_admin()) {
                 $order = wc_get_order($coupon_purchased_on_order_id);
                 if ($order) {
                     foreach ($order->get_items() as $item) {
-                        $taxes = $item->get_taxes();
-                        if (!empty($taxes['total'])) {
-                            $tax_ids = array_keys($taxes['total']);
-                            $coupon_tax_rate = WC_Tax::get_rate_percent_value($tax_ids[0]) . '%';
-                            break;
+                        // Check if this specific item is the one that created the coupon
+                        // We match by the coupon code being in the item metadata
+                        $item_coupon_code = $item->get_meta('_coupon_code');
+
+                        if ($item_coupon_code === $coupon->get_code()) {
+                            $taxes = $item->get_taxes();
+                            if (!empty($taxes['total'])) {
+                                $tax_ids = array_keys($taxes['total']);
+                                $coupon_tax_rate = WC_Tax::get_rate_percent_value($tax_ids[0]) . '%';
+                            } else {
+                                $coupon_tax_rate = '0%';
+                            }
+                            break; // Found the correct item, stop looking
                         }
                     }
                 }

@@ -1141,6 +1141,10 @@ sudo systemctl reload nginx
 
 Obtain core DNS records (`A` and `AAAA` records) from Virtualmin (`Virtualmin` → Choose Virtual Server → `DNS Settings` → `Suggested DNS Records`). Then, add these records to Cloudflare DNS.
 
+##### DNSSEC
+
+Cloudflare → Website → `DNS` → `Settings` → Enable `DNSSEC`.
+
 #### Security
 
 Cloudflare → Website → `Security` → `Security rules`.
