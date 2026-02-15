@@ -16,6 +16,11 @@
 
 After removing all unused media sizes, regenerate thumbnails using [Force Regenerate Thumbnails](https://wordpress.org/plugins/force-regenerate-thumbnails/) and clean up the orphaned media entries.
 
+```.php
+# See defined functions
+get_defined_functions()['user'];
+```
+
 ## Plugins
 
 ### Content

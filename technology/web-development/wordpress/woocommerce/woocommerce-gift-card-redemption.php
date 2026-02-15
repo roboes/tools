@@ -1,11 +1,24 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-10-27
+// Last update: 2026-02-15
 
 
 // Add this line to wp-config.php file
 // define('GOOGLE_APPS_SCRIPT_GIFT_CARD', 'https://script.google.com/macros/s/');
 
+/*
+// Manually send training confirmation email
+send_training_confirmation_email(
+    product_id: 22204,
+    customer_email: 'email@website.com',
+    customer_name: 'Customer Name',
+    product_variation_own_portafilter_machine: 'Mit',
+    product_variation_appointment_date: '2026-05-09',
+    product_variation_appointment_time: '14:30',
+    product_quantity: 1,
+    language: 'de'
+);
+*/
 
 if (function_exists('WC')) {
 
@@ -34,7 +47,11 @@ if (function_exists('WC')) {
             if (in_array($product->get_id(), $product_ids, strict: true)) {
 
                 $messages = [
-                    'gift-card' => [
+                    'gift-card-online' => [
+                        'en' => 'I would like to redeem an online gift card.',
+                        'de' => 'Ich möchte einen Online-Gutschein einlösen.',
+                    ],
+                    'gift-card-on-site' => [
                         'en' => 'I would like to redeem a gift card (purchased on-site).',
                         'de' => 'Ich möchte eine Gutschein-Karte (vor Ort gekauft) einlösen.',
                     ],
@@ -51,52 +68,79 @@ if (function_exists('WC')) {
                     $cf7_url = site_url('/en/gift-card-redemption/');
                 }
 
-                $html = '<div class="gift-card-checkbox" style="margin-bottom: 20px; display: block;">
-                            <label>
+                $html = '<style>
+                            .woocommerce div.product form.cart .single_variation_wrap .woocommerce-variation-add-to-cart { margin-top: 30px; }
+                        </style>';
+
+                // "Gift Card Online" checkbox
+                $html .= '<div class="gift-card-online-checkbox" style="margin-bottom: 10px;">
+                            <label style="cursor: pointer;">
+                                <input type="checkbox" name="checkbox_online_gift_card" id="checkbox_online_gift_card" />
+                                <span style="line-height: 20px;">' . ($messages['gift-card-online'][$browsing_language] ?? $messages['gift-card-online']['en']) . '</span>
+                            </label>
+                        </div>';
+
+                // "Gift Card On-site" checkbox
+                $html .= '<div class="gift-card-on-site-checkbox" style="margin-bottom: 10px;">
+                            <label style="cursor: pointer;">
                                 <input type="checkbox" name="checkbox_gift_card" id="checkbox_gift_card" />
-                                <span style="line-height: 20px;">' . ($messages['gift-card'][$browsing_language] ?? $messages['gift-card']['en']) . '</span>
+                                <span style="line-height: 20px;">' . ($messages['gift-card-on-site'][$browsing_language] ?? $messages['gift-card-on-site']['en']) . '</span>
                             </label>
                         </div>';
 
                 $html .= '<script>
                     jQuery(document).ready(function($) {
-                        // Find the gift card checkbox
-                        const $giftCardCheckbox = $(".gift-card-checkbox");
+                        const $onlineContainer = $(".gift-card-online-checkbox");
+                        const $giftCardContainer = $(".gift-card-on-site-checkbox");
+                        const $giftCardInput = $("#checkbox_gift_card");
+                        const $onlineInput = $("#checkbox_online_gift_card");
                         const productVariationIdsException = ' . json_encode($product_variation_ids_exception) . ';
 
-                        // Listen for WooCommerce Variation Change
+                        // Hide/Show both for training variations
                         $(document).on("found_variation", "form.cart", function(event, variation) {
                             if (productVariationIdsException.includes(variation.variation_id)) {
-                                $giftCardCheckbox.hide();
-                                $("#checkbox_gift_card").prop("checked", false);
+                                $giftCardContainer.hide();
+                                $onlineContainer.hide();
+                                $giftCardInput.prop("checked", false);
+                                $onlineInput.prop("checked", false);
                             } else {
-                                $giftCardCheckbox.show();
+                                $giftCardContainer.show();
+                                $onlineContainer.show();
                             }
                         });
                         
                         $(document).on("reset_data", "form.cart", function() {
-                            $giftCardCheckbox.show();
+                            $giftCardContainer.show();
+                            $onlineContainer.show();
                         });
- 
-                        // Find the single variation element
-                        const $singleVariation = $(".woocommerce-variation.single_variation");
 
-                        // Check if the single variation element exists
+                        // Position checkboxes after variation info
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
                         if ($singleVariation.length) {
-                            // Place the gift card checkbox after the single variation element
-                            $singleVariation.after($giftCardCheckbox);
+                            $singleVariation.after($giftCardContainer);
+                            $singleVariation.after($onlineContainer);
                         }
 
-                        // Handle form submit
+                        // Mutual exclusion (select only one)
+                        $giftCardInput.on("change", function() {
+                            if ($(this).prop("checked")) $onlineInput.prop("checked", false);
+                        });
+
+                        $onlineInput.on("change", function() {
+                            if ($(this).prop("checked")) $giftCardInput.prop("checked", false);
+                        });
+
+                        // Form submission logic
                         $("form.cart").on("submit", function(event) {
-                            // Check if checkbox_legal_warning is present and not checked
+                            // Legal check
                             if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
-                                event.preventDefault(); // Prevent default action
+                                event.preventDefault();
                                 return;
                             }
 
-                            if ($("#checkbox_gift_card").is(":visible") && $("#checkbox_gift_card").prop("checked")) {
-                                event.preventDefault(); // Prevent default action
+                            // If "Gift Card On-site" is checked, redirect to CF7
+                            if ($giftCardInput.is(":visible") && $giftCardInput.prop("checked")) {
+                                event.preventDefault();
 
                                 const productId = ' . (int) $product->get_id() . ';
                                 const productVariationId = $("input[name=\'variation_id\']").val();
@@ -108,6 +152,7 @@ if (function_exists('WC')) {
 
                                 window.location.href = cf7Url;
                             }
+                            
                         });
                     });
                 </script>';
@@ -115,6 +160,7 @@ if (function_exists('WC')) {
                 echo $html;
             }
         }
+
     }
 
 
@@ -468,7 +514,7 @@ if (function_exists('WC')) {
             ],
             'body' => [
                 'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'de' => sprintf('Hallo %s,<br><br>du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
             ],
         ];
 
@@ -591,14 +637,14 @@ if (function_exists('WC')) {
         // Get all completed orders from the last 3 months using wpdb (HPOS compatible)
         $order_ids = $wpdb->get_col($wpdb->prepare(
             "SELECT DISTINCT o.id 
-			FROM {$wpdb->prefix}wc_orders o
-			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
-			INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
-			WHERE o.status = 'wc-completed'
-			AND o.date_created_gmt >= %s
-			AND oim.meta_key = '_product_id'
-			AND oim.meta_value IN (" . implode(',', array_fill(0, count($product_ids), '%d')) . ")
-			ORDER BY o.id ASC",
+            FROM {$wpdb->prefix}wc_orders o
+            INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
+            INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
+            WHERE o.status = 'wc-completed'
+            AND o.date_created_gmt >= %s
+            AND oim.meta_key = '_product_id'
+            AND oim.meta_value IN (" . implode(',', array_fill(0, count($product_ids), '%d')) . ")
+            ORDER BY o.id ASC",
             array_merge([date('Y-m-d H:i:s', strtotime('-3 months'))], $product_ids)
         ));
 
@@ -681,7 +727,3 @@ if (function_exists('WC')) {
     }
 
 }
-
-
-// Test
-// send_training_confirmation_email(product_id: 22204, customer_email: 'email@website.com', customer_name: 'Customer Name', product_variation_own_portafilter_machine: 'Mit', product_variation_appointment_date: '2026-05-09', product_variation_appointment_time: '14:30', product_quantity: 1, language: 'de');

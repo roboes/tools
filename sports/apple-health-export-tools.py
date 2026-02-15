@@ -100,17 +100,9 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
     )
 
     # Merge distance columns into one
-    activities_apple_health['distance'] = activities_apple_health['distance_cycling'].fillna(
-        value=activities_apple_health['distance_walking_running'],
-        method=None,
-        axis=0,
-    )
+    activities_apple_health['distance'] = activities_apple_health['distance_cycling'].fillna(value=activities_apple_health['distance_walking_running'], axis=0)
 
-    activities_apple_health['distance_unit'] = activities_apple_health['distance_cycling_unit'].fillna(
-        value=activities_apple_health['distance_walking_running_unit'],
-        method=None,
-        axis=0,
-    )
+    activities_apple_health['distance_unit'] = activities_apple_health['distance_cycling_unit'].fillna(value=activities_apple_health['distance_walking_running_unit'], axis=0)
 
     # Create 'max_speed_unit' column
     activities_apple_health['max_speed_unit'] = activities_apple_health['max_speed'].str.extract(pat=r'(m/s)$', flags=0, expand=True)
@@ -154,24 +146,9 @@ def activities_apple_health_import(*, file, remove_duplicates=True):
         )
         ## Transform columns
         # activity_type
-        .assign(
-            activity_type=lambda row: row['activity_type'].replace(
-                to_replace=r'^HKWorkoutActivityType',
-                value='',
-                regex=True,
-            ),
-        )
+        .assign(activity_type=lambda row: row['activity_type'].replace(to_replace=r'^HKWorkoutActivityType', value='', regex=True))
         # Remove columns
-        .drop(
-            columns=[
-                'distance_cycling',
-                'distance_cycling_unit',
-                'distance_walking_running',
-                'distance_walking_running_unit',
-            ],
-            axis=1,
-            errors='ignore',
-        )
+        .drop(columns=['distance_cycling', 'distance_cycling_unit', 'distance_walking_running', 'distance_walking_running_unit'], errors='ignore')
         # Rearrange rows
         .sort_values(by=['activity_date', 'activity_creation_date'], ignore_index=True)
     )
@@ -275,11 +252,7 @@ def activities_apple_health_to_strava(
     )
 
     # Change dtypes
-    activities_apple_health = activities_apple_health.fillna(
-        value='',
-        method=None,
-        axis=0,
-    )
+    activities_apple_health = activities_apple_health.fillna(value='', axis=0)
 
     for index, row in activities_apple_health.iterrows():
         # Create .tcx file content (https://developers.strava.com/docs/uploads/)

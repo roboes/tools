@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - "Add to Cart" accept product warning terms
-// Last update: 2026-01-15
+// Last update: 2026-02-15
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -54,62 +54,69 @@ if (function_exists('WC') && !is_admin()) {
 
         if ($has_allowed_attribute) {
             ?>
-			<style>
-				form.cart { display: flex !important; flex-wrap: wrap !important; }
-				
-				.checkbox-highlight {
-					border: 2px solid red;
-					background-color: #ffe6e6;
-					padding: 5px;
-				}
-			</style>
+            <style>
+                form.cart { display: flex !important; flex-wrap: wrap !important; }
+                
+                .checkbox-highlight {
+                    border: 2px solid red;
+                    background-color: #ffe6e6;
+                    padding: 5px;
+                }
+            </style>
 
-			<script type="text/javascript">
-				jQuery(document).ready(function($) {
-					function handleVariation(event, variation) {
-						const allowedValues = ["coffee-processing-green-coffee-de", "coffee-processing-green-coffee-en"];
-						const attributeValue = variation.attributes["attribute_pa_coffee-processing"];
-						const checkboxHtml = `
-							<div class="product-terms-checkbox" style="margin-bottom: 20px;">
-								<label>
-									<input type="checkbox" name="checkbox_product_warning" id="checkbox_product_warning" />
-									<span style="line-height: 20px;"><?php echo esc_js($messages['product-warning-checkbox'][$browsing_language] ?? ''); ?></span>
-								</label>
-							</div>
-						`;
-						const $checkbox = $(checkboxHtml);
-						const $singleVariation = $(".woocommerce-variation.single_variation");
+            <script type="text/javascript">
+                jQuery(document).ready(function($) {
+                    if (!$('#checkbox-spacing-style').length) {
+                        $('head').append(`
+                            <style id="checkbox-spacing-style">
+                                .woocommerce div.product form.cart .single_variation_wrap .woocommerce-variation-add-to-cart { margin-top: 30px; }
+                            </style>
+                        `);
+                    }
+                    function handleVariation(event, variation) {
+                        const allowedValues = ["coffee-processing-green-coffee-de", "coffee-processing-green-coffee-en"];
+                        const attributeValue = variation.attributes["attribute_pa_coffee-processing"];
+                        const checkboxHtml = `
+                            <div class="product-terms-checkbox">
+                                <label>
+                                    <input type="checkbox" name="checkbox_product_warning" id="checkbox_product_warning" />
+                                    <span style="line-height: 20px;"><?php echo esc_js($messages['product-warning-checkbox'][$browsing_language] ?? ''); ?></span>
+                                </label>
+                            </div>
+                        `;
+                        const $checkbox = $(checkboxHtml);
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
 
-						if (allowedValues.includes(attributeValue)) {
-							if (!$('#checkbox_product_warning').length) {
-								$singleVariation.after($checkbox);
-							}
-							$checkbox.show();
-						} else {
-							$('#checkbox_product_warning').closest('.product-terms-checkbox').remove();
-						}
-					}
+                        if (allowedValues.includes(attributeValue)) {
+                            if (!$('#checkbox_product_warning').length) {
+                                $singleVariation.after($checkbox);
+                            }
+                            $checkbox.show();
+                        } else {
+                            $('#checkbox_product_warning').closest('.product-terms-checkbox').remove();
+                        }
+                    }
 
-					$("form.variations_form").on("found_variation", handleVariation);
+                    $("form.variations_form").on("found_variation", handleVariation);
 
-					$("form.variations_form").on("reset_data", function() {
-						$('#checkbox_product_warning').closest('.product-terms-checkbox').remove();
-					});
+                    $("form.variations_form").on("reset_data", function() {
+                        $('#checkbox_product_warning').closest('.product-terms-checkbox').remove();
+                    });
 
-					$("form.variations_form").on("submit", function(event) {
-						if ($('#checkbox_product_warning').length && !$('#checkbox_product_warning').prop('checked')) {
-							event.preventDefault();
-							const message = '<?php echo esc_js($messages['product-warning-error'][$browsing_language] ?? ''); ?>';
-							if (!$('.woocommerce-error').length) {
-								$('.woocommerce-notices-wrapper').first().append('<ul class="woocommerce-error" role="alert"><li>' + message + '</li></ul>');
-							}
-							$('html, body').animate({ scrollTop: 0 }, 'slow');
-							$('#checkbox_product_warning').closest('label').addClass('checkbox-highlight');
-						}
-					});
-				});
-			</script>
-			<?php
+                    $("form.variations_form").on("submit", function(event) {
+                        if ($('#checkbox_product_warning').length && !$('#checkbox_product_warning').prop('checked')) {
+                            event.preventDefault();
+                            const message = '<?php echo esc_js($messages['product-warning-error'][$browsing_language] ?? ''); ?>';
+                            if (!$('.woocommerce-error').length) {
+                                $('.woocommerce-notices-wrapper').first().append('<ul class="woocommerce-error" role="alert"><li>' + message + '</li></ul>');
+                            }
+                            $('html, body').animate({ scrollTop: 0 }, 'slow');
+                            $('#checkbox_product_warning').closest('label').addClass('checkbox-highlight');
+                        }
+                    });
+                });
+            </script>
+            <?php
         }
     }
 }

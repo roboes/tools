@@ -269,7 +269,7 @@ def activities_garmin_import(*, directory):
             ],
         )
         # Remove columns
-        .drop(columns=['activity_date_gmt'], axis=1, errors='ignore')
+        .drop(columns=['activity_date_gmt'], errors='ignore')
         # Rearrange rows
         .sort_values(by=['activity_date'], ignore_index=True)
     )
@@ -349,11 +349,7 @@ def activities_garmin_compare(
     activities_garmin_compare_1 = activities_garmin.query(
         expr='activity_type != "Other"',
     ).merge(
-        right=activities_strava.drop(
-            columns=['activity_date'],
-            axis=1,
-            errors='ignore',
-        ),
+        right=activities_strava.drop(columns=['activity_date'], errors='ignore'),
         how='left',
         on=['activity_date_cleaned', 'activity_type'],
         indicator=True,
@@ -362,11 +358,7 @@ def activities_garmin_compare(
     activities_garmin_compare_2 = activities_garmin.query(
         expr='activity_type == "Other"',
     ).merge(
-        right=activities_strava.drop(
-            columns=['activity_date', 'activity_type'],
-            axis=1,
-            errors='ignore',
-        ),
+        right=activities_strava.drop(columns=['activity_date', 'activity_type'], errors='ignore'),
         how='left',
         on=['activity_date_cleaned'],
         indicator=True,

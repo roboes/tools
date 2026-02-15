@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-01-30
+// Last update: 2026-02-15
 
 
 /*
@@ -18,14 +18,24 @@ Notes:
 - Coupon usage tracking: Each coupon stores metadata including:
   (1) "_coupon_purchased_on_order_id": The order ID that generated the coupon.
   (2) Coupon amount is updated directly via set_amount() after each redemption to reflect current balance.
-  (3) "_coupon_redeemed_in_order_ids": Array of all order IDs where the coupon has been applied.
 - Each order related to creation or redemption of a coupon stores metadata including:
   (1) "_coupon_code_{meta_suffix}": The generated coupon code.
-  (2) "_coupon_expiry_{meta_suffix}": Unix timestamp of coupon expiration date.
+  (2) "_coupon_expiry_timestamp_{meta_suffix}": Unix timestamp of coupon expiration date.
   (3) "_coupon_balance_processed": Flag indicating balance deduction was completed.
 - PDF generation & emailing: Creates a custom PDF gift card using the Dompdf library and emails it to the customer automatically upon payment.
 - Multilingual support: Uses Polylang/WPML to detect the order language and provides all notifications, emails, and PDF text in either German or English.
 */
+
+/*
+// Manually generate training coupon (100%)
+generate_coupon_on_purchase(input: [
+    'name'       => 'Firstname Lastname',
+    'email'      => 'email@website.com',
+    'item_id' => 44043, // Product variation ID
+    'language'   => 'de'
+]);
+*/
+
 
 
 // Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
@@ -41,44 +51,30 @@ if (function_exists('WC')) {
 
     function get_coupon_variation_validation(int $item_id): object|bool
     {
-
         // Settings
         $settings_coupon = [
             [
-                'coupon_prefix'          => 'KA-TRAINING-',
-                'meta_key_suffix'        => 'training_home_barista',
-                'purchasable_ids'        => [44043, 44044], // The product or product variation IDs that, when purchased, trigger the generation of a coupon
-                'redeemable_product_ids' => [22204, 31437], // Specific products to which the these coupons can be applied to
-                'excluded_redeemable_product_ids' => [],
-                'coupon_is_fixed_amount' => false,
+                'coupon_prefix'           => 'KA-TRAINING-',
+                'meta_key_suffix'         => 'training_home_barista',
+                'purchasable_ids'         => [44043, 44044], // Product IDs or product variation IDs that, when purchased, trigger the generation of a coupon
+                'redeemable_ids'          => [22204, 31437], // Product IDs or product variation IDs to which the these coupons can be applied to
+                'excluded_redeemable_ids' => [44043, 44044], // Product IDs or product variation IDs to which the these coupons can not be applied to
+                'coupon_is_fixed_amount'  => false,
             ],
             [
-                'coupon_prefix'          => 'KA-GIFT-',
-                'meta_key_suffix'        => 'gift_card',
-                'purchasable_ids'        => [44185, 44187],
-                'redeemable_product_ids' => [],
-                'excluded_redeemable_product_ids' => [44185, 44187],
-                'coupon_is_fixed_amount' => true,
+                'coupon_prefix'           => 'KA-GIFT-',
+                'meta_key_suffix'         => 'gift_card',
+                'purchasable_ids'         => [44185, 44187],
+                'redeemable_ids'          => [],
+                'excluded_redeemable_ids' => [44185, 44187],
+                'coupon_is_fixed_amount'  => true,
             ],
         ];
 
         foreach ($settings_coupon as $group) {
             if (in_array(needle: $item_id, haystack: $group['purchasable_ids'], strict: true)) {
-
-                // Get product language (Polylang/WPML)
-                $product_language = apply_filters('wpml_element_language_code', null, ['element_id' => $item_id, 'element_type' => 'post']) ?: 'en';
-
-                $messages = [
-                    'en' => 'Only one coupon allowed per order.',
-                    'de' => 'Nur ein Gutschein pro Bestellung erlaubt.',
-                ];
-
                 return (object) [
-                    'is_coupon'     => true,
-                    'error_message' => $messages[$product_language] ?? $messages['en'],
-                    'language'      => $product_language,
-                    'config'        => $group,
-                    'meta_suffix'   => $group['meta_key_suffix'],
+                    'config' => $group,
                 ];
             }
         }
@@ -86,46 +82,21 @@ if (function_exists('WC')) {
         return false;
     }
 
+
     if (!is_admin()) {
 
-        // Cart validation: Force quantity to 1 on product page
-        add_filter(hook_name: 'woocommerce_quantity_input_args', callback: function ($args, $product) {
-            if (get_coupon_variation_validation(item_id: $product->get_id())) {
-                return array_merge($args, ['min_value' => 1, 'max_value' => 1, 'input_value' => 1]);
+        // Force "Sold Individually" for coupon variations
+        add_filter(hook_name: 'woocommerce_is_sold_individually', callback: function ($individually, $product) {
+
+            $coupon_product = get_coupon_variation_validation(item_id: $product->get_id());
+
+            if ($coupon_product) {
+                return true;
             }
-            return $args;
+
+            return $individually;
+
         }, priority: 10, accepted_args: 2);
-
-
-        // Cart validation: Block adding more than one to cart
-        add_filter(hook_name: 'woocommerce_add_to_cart_validation', callback: function ($passed, $product_id, $quantity, $variation_id = 0) {
-            $target_id   = $variation_id ?: $product_id;
-            $coupon_data = get_coupon_variation_validation(item_id: $target_id);
-
-            if ($passed && $coupon_data) {
-                foreach (WC()->cart->get_cart() as $cart_item) {
-                    $item_id = $cart_item['variation_id'] ?: $cart_item['product_id'];
-                    $existing_coupon_data = get_coupon_variation_validation($item_id);
-                    if ($existing_coupon_data && $existing_coupon_data->meta_suffix === $coupon_data->meta_suffix) {
-                        wc_add_notice(message: $coupon_data->error_message, notice_type: 'error');
-                        return false;
-                    }
-                }
-            }
-            return $passed;
-        }, priority: 10, accepted_args: 4);
-
-        // Cart validation: Block quantity updates in the Cart page
-        add_filter(hook_name: 'woocommerce_update_cart_validation', callback: function ($passed, $cart_item_key, $values, $quantity) {
-            $target_id   = $values['variation_id'] ?: $values['product_id'];
-            $coupon_data = get_coupon_variation_validation(item_id: $target_id);
-
-            if ($passed && $quantity > 1 && $coupon_data) {
-                wc_add_notice(message: $coupon_data->error_message, notice_type: 'error');
-                return false;
-            }
-            return $passed;
-        }, priority: 10, accepted_args: 4);
 
     }
 
@@ -134,45 +105,65 @@ if (function_exists('WC')) {
     add_action(hook_name: 'woocommerce_order_status_paid', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
     add_action(hook_name: 'woocommerce_order_status_completed', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
 
-    function generate_coupon_on_purchase(int $order_id): void
+    function generate_coupon_on_purchase(int|array $input): void
     {
-        if (!$order_id) {
-            return;
+        $is_manual = is_array($input);
+        $order = null;
+        $order_id = 0;
+
+        if (!$is_manual) {
+            $order_id = $input;
+            $order = wc_get_order($order_id);
+            if (!$order instanceof WC_Order) {
+                return;
+            }
+
+            // Get order language (Polylang/WPML)
+            $order_language = apply_filters('wpml_element_language_code', null, ['element_id' => $order->get_id(), 'element_type' => 'post']) ?: 'en';
+            $customer_name  = "{$order->get_billing_first_name()} {$order->get_billing_last_name()}";
+            $customer_email = $order->get_billing_email();
+            $purchase_date  = $order->get_date_created();
+
+            $items_to_process = [];
+            foreach ($order->get_items() as $line_item) {
+                $items_to_process[] = [
+                    'id'     => $line_item->get_variation_id() ?: $line_item->get_product_id(),
+                    'amount' => $line_item->get_total()
+                ];
+            }
+        } else {
+            // Manual Input logic
+            $customer_name  = $input['name'] ?? 'Valued Customer';
+            $customer_email = $input['email'] ?? '';
+            $order_language = $input['language'] ?? 'en';
+            $purchase_date  = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
+            $items_to_process = [[
+                'id'     => $input['item_id'],
+                'amount' => $input['amount'] ?? 0
+            ]];
         }
 
-        $order = wc_get_order(the_order: $order_id);
-        if (!$order instanceof WC_Order) {
-            return;
-        }
-
-        // Get order language (Polylang/WPML)
-        $order_language = apply_filters('wpml_element_language_code', null, ['element_id' => $order->get_id(), 'element_type' => 'post']) ?: 'en';
-
-        $customer_name = "{$order->get_billing_first_name()} {$order->get_billing_last_name()}";
-        $customer_email = $order->get_billing_email();
-
-        $purchase_date = $order->get_date_created();
-
-        foreach ($order->get_items() as $line_item) {
-            $item_id = $line_item->get_variation_id() ?: $line_item->get_product_id();
-            $coupon_data = get_coupon_variation_validation(item_id: $item_id);
+        foreach ($items_to_process as $item) {
+            $coupon_data = get_coupon_variation_validation(item_id: $item['id']);
 
             if ($coupon_data) {
-                if ($order->get_meta('_coupon_code_' . $coupon_data->meta_suffix)) {
+                // Skip if order already has this coupon generated (only for real orders)
+                if ($order && $order->get_meta('_coupon_code_' . $coupon_data->config['meta_key_suffix'])) {
                     continue;
                 }
 
                 $config = $coupon_data->config;
 
                 // Setup Data
-                $random_part    = strtoupper(string: wp_generate_password(length: 10, special_chars: false));
-                $coupon_code    = "{$config['coupon_prefix']}{$random_part}";
+                $random_part = strtoupper(string: wp_generate_password(length: 10, special_chars: false));
+                $coupon_code = "{$config['coupon_prefix']}{$random_part}";
                 $coupon_is_fixed_amount = (isset($config['coupon_is_fixed_amount']) && $config['coupon_is_fixed_amount'] === true);
-                $coupon_amount = $line_item->get_total();
+                $coupon_amount = $item['amount'];
                 $coupon_amount_formatted = html_entity_decode(wp_strip_all_tags(wc_price($coupon_amount)));
-                $product_parent_id = wp_get_post_parent_id($item_id) ?: $item_id;
-                $product_parent_name   = get_the_title($product_parent_id);
-                $description    = "{$product_parent_name} - Purchased on {$purchase_date->date(format: 'Y-m-d H:i:s')}";
+                $product_parent_id = wp_get_post_parent_id($item['id']) ?: $item['id'];
+                $product_parent_name = get_the_title($product_parent_id);
+                $product_url = get_permalink($product_parent_id);
+                $description = "{$product_parent_name} - " . ($is_manual ? "Manually created" : "Purchased") . " on {$purchase_date->format('Y-m-d H:i:s')}" . ($order ? " (Order #{$order_id})" : " for {$customer_name}");
 
                 // Create coupon
                 $coupon = new WC_Coupon();
@@ -180,10 +171,13 @@ if (function_exists('WC')) {
 
                 if ($coupon_is_fixed_amount) {
                     // Fixed amount
-                    $coupon->set_amount($coupon_amount);
-                    $coupon->set_discount_type('fixed_cart');
-                    $coupon->set_usage_limit(0); // Unlimited
+                    $coupon->set_amount(amount: $coupon_amount);
+                    $coupon->set_discount_type(discount_type: 'fixed_cart');
+                    $coupon->set_usage_limit(usage_limit: 0); // Unlimited
                     $coupon->set_individual_use(is_individual_use: false);
+                    if (class_exists('WooCommerce_Germanized')) {
+                        $coupon->update_meta_data('is_voucher', 'yes');
+                    }
                     if ($order_language == 'de') {
                         $product_display_name = $product_parent_name . ' im Wert von ' . $coupon_amount_formatted;
                     } else {
@@ -194,45 +188,55 @@ if (function_exists('WC')) {
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
                     $coupon->set_usage_limit(usage_limit: 1);
-                    $coupon->set_individual_use(is_individual_use: true);
+                    $coupon->set_individual_use(is_individual_use: false);
+                    // if (class_exists('WooCommerce_Germanized')) {
+                    //     $coupon->update_meta_data('is_voucher', 'no');
+                    // }
                     if ($order_language == 'de') {
                         $product_display_name = 'Gutschein ' . $product_parent_name;
                     } else {
                         $product_display_name = 'Gift card ' . $product_parent_name;
                     }
                 }
+
+                $coupon->update_meta_data('_coupon_value_initial', (float)$coupon->get_amount());
                 $coupon->set_description(description: $description);
-                $coupon->update_meta_data('_coupon_purchased_on_order_id', $order_id);
-                $coupon->set_product_ids(product_ids: $config['redeemable_product_ids'] ?? []);
-                $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_product_ids'] ?? []);
+                if ($order) {
+                    $coupon->update_meta_data('_coupon_purchased_on_order_id', $order_id);
+                } else {
+                    $coupon->update_meta_data('_coupon_generated_manually', 'yes');
+                    $coupon->update_meta_data('_coupon_generated_for_email', $customer_email);
+                }
+                $coupon->set_product_ids(product_ids: $config['redeemable_ids'] ?? []);
+                $coupon->set_excluded_product_ids(excluded_product_ids: $config['excluded_redeemable_ids'] ?? []);
 
-                $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format('Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
-
+                $coupon_expiry_date = new DateTimeImmutable(datetime: ($purchase_date->format(format: 'Y') + 3) . '-12-31 23:59:59', timezone: wp_timezone());
                 $coupon->set_date_expires(date: $coupon_expiry_date->getTimestamp());
                 $coupon->save();
 
-                $order->update_meta_data('_coupon_code_' . $coupon_data->meta_suffix, $coupon_code);
-                $order->update_meta_data('_coupon_expiry_' . $coupon_data->meta_suffix, $coupon_expiry_date->getTimestamp());
-                $order->save();
-
-                // Log to order
-                $order->add_order_note(note: "Coupon created: {$coupon_code}. Valid for: {$product_parent_name}. Expires: {$coupon_expiry_date->format(format: 'Y-m-d')}");
+                if ($order) {
+                    // Log to order
+                    $order->update_meta_data('_coupon_code_' . $coupon_data->config['meta_key_suffix'], $coupon_code);
+                    $order->update_meta_data('_coupon_expiry_timestamp_' . $coupon_data->config['meta_key_suffix'], $coupon_expiry_date->getTimestamp());
+                    $order->save();
+                    $order->add_order_note("Coupon created: {$coupon_code}. Valid for: {$product_parent_name}.");
+                }
 
                 // Send email
-                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, meta_suffix: $coupon_data->meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $order_language);
-
+                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, product_url: $product_url, meta_suffix: $coupon_data->config['meta_key_suffix'], coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $order_language, manual_data: ['name' => $customer_name, 'email' => $customer_email, 'expiry' => $coupon_expiry_date->getTimestamp()]);
             }
         }
     }
 
     // Send coupon per email
-    function send_coupon_email(WC_Order $order, string $product_parent_name, string $product_display_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $coupon_code, string $language): void
+    function send_coupon_email(?WC_Order $order, string $product_parent_name, string $product_display_name, string $product_url, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $coupon_code, string $language, array $manual_data = []): void
     {
 
         // Setup
-        $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        $customer_email = $order->get_billing_email();
-        $coupon_expiry_date = DateTimeImmutable::createFromFormat(format: 'U', datetime: $order->get_meta('_coupon_expiry_' . $meta_suffix));
+        $customer_name  = $order ? $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() : $manual_data['name'];
+        $customer_email = $order ? $order->get_billing_email() : $manual_data['email'];
+        $expiry_ts      = $order ? $order->get_meta('_coupon_expiry_timestamp_' . $meta_suffix) : $manual_data['expiry'];
+        $coupon_expiry_date = DateTimeImmutable::createFromFormat(format: 'U', datetime: (string)$expiry_ts, timezone: wp_timezone());
 
         $email_coupon_code_style = 'font-family: "Courier New", Courier, monospace;';
 
@@ -240,43 +244,39 @@ if (function_exists('WC')) {
             'en' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_display_name}",
                 'heading' => "{$product_display_name}",
-                'body' => "Hello {$customer_name},<br><br>Thank you for your order! Your <strong>{$product_display_name}</strong> is now active.<br><br>Gift card code: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
+                'body' => "Hello {$customer_name},<br><br>" . ($order ? "Thank you for your order! Your" : "Your") . " <strong>{$product_display_name}</strong> is now active.<br><br>Gift card code: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Amount: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
-                    "<br>Valid until: <strong>{$coupon_expiry_date->format(get_option('date_format'))}</strong><br><br>Simply use this coupon at checkout for your next booking."
+                    "<br>Valid until: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Product information and legal notices</a><br><br>Simply use this coupon at checkout for your next booking." . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Multi-purpose voucher according to Section 3 (15) of the German VAT Act (UStG). VAT is only due upon redemption.</small>" : "")
             ],
             'de' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_display_name}",
                 'heading' => "{$product_display_name}",
-                'body' => "Hallo {$customer_name},<br><br>vielen Dank für deine Bestellung! Dein <strong>{$product_display_name}</strong> ist jetzt aktiv.<br><br>Gutscheincode: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
+                'body' => "Hallo {$customer_name},<br><br>" . ($order ? "Vielen Dank für deine Bestellung! Dein" : "Dein") . " <strong>{$product_display_name}</strong> ist jetzt aktiv.<br><br>Gutscheincode: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Wert: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
-                    "<br>Gültig bis: <strong>{$coupon_expiry_date->format(get_option('date_format'))}</strong><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb."
+                    "<br>Gültig bis: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Produktinformationen und rechtliche Hinweise</a><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb." . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Mehrzweckgutschein gemäß § 3 Abs. 15 UStG. Die Umsatzsteuer fällt erst bei Einlösung an.</small>" : "")
             ],
         ];
 
         $content = $email_data[$language] ?? $email_data['en'];
-
-        $attachment_pdf_path = generate_gift_card_pdf(order: $order, product_parent_name: $product_parent_name, meta_suffix: $meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, language: $language);
+        $attachment_pdf_path = generate_gift_card_pdf(order: $order, product_parent_name: $product_parent_name, meta_suffix: $meta_suffix, coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, language: $language, manual_data: $manual_data + ['code' => $coupon_code]);
 
         // Send email
-        $mailer  = WC()->mailer();
-        $mailer->send(to: $customer_email, subject: $content['subject'], message: $mailer->wrap_message(email_heading: $content['heading'], message: $content['body']), headers: ["Content-Type: text/html; charset=UTF-8"], attachments: array($attachment_pdf_path));
+        $mailer = WC()->mailer();
+        $mailer->send(to: $customer_email, subject: $content['subject'], message: $mailer->wrap_message(email_heading: $content['heading'], message: $content['body']), headers: ["Content-Type: text/html; charset=UTF-8"], attachments: [$attachment_pdf_path]);
 
         if (file_exists($attachment_pdf_path)) {
             unlink($attachment_pdf_path);
         }
-
-
     }
 
-    function generate_gift_card_pdf(WC_Order $order, string $product_parent_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $language): string
+    function generate_gift_card_pdf(?WC_Order $order, string $product_parent_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $language, array $manual_data = []): string
     {
         // Setup
-        $customer_email = $order->get_billing_email();
-        $purchase_date  = $order->get_date_created();
+        $purchase_date  = $order ? $order->get_date_created() : new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
         $site_url       = get_option(option: 'siteurl');
         $blog_name      = get_option(option: 'blogname');
-        $coupon_code    = $order->get_meta('_coupon_code_' . $meta_suffix);
-        $coupon_expiry_date_timestamp      = $order->get_meta('_coupon_expiry_' . $meta_suffix);
+        $coupon_code    = $order ? $order->get_meta('_coupon_code_' . $meta_suffix) : $manual_data['code'];
+        $coupon_expiry_timestamp   = $order ? $order->get_meta('_coupon_expiry_timestamp_' . $meta_suffix) : $manual_data['expiry'];
 
         // Translations
         if ($language === 'de') {
@@ -285,18 +285,20 @@ if (function_exists('WC')) {
             $text_title    = $coupon_is_fixed_amount ? "Online-Shop im Wert von " . $coupon_amount_formatted : $product_parent_name;
             $text_valid    = $coupon_is_fixed_amount ? "Dieser Gutschein hat einen Wert von <strong>{$coupon_amount_formatted}</strong> und ist im Online-Shop einlösbar" : "Dieser Gutschein ist gültig für ein <strong>{$product_parent_name}</strong>";
             $text_at       = $coupon_is_fixed_amount ? "von" : "bei";
-            $text_bought   = "Gekauft am";
+            $text_bought   = $order ? "Gekauft am" : "Erstellt am";
             $text_until    = "Gültig bis";
             $text_redeem   = "Einlösbar unter";
+            $text_tax      = "Mehrzweckgutschein gemäß § 3 Abs. 15 UStG. Die Umsatzsteuer fällt erst bei Einlösung an.";
         } else {
             $text_for      = "Gift card for the";
             $text_code     = "Gift card code";
             $text_title = $coupon_is_fixed_amount ? "online shop with a value of " . $coupon_amount_formatted : $product_parent_name;
             $text_valid    = $coupon_is_fixed_amount ? "This gift card has a value of <strong>{$coupon_amount_formatted}</strong> and is redeemable at the online shop" : "This gift card is valid for a <strong>{$product_parent_name}</strong>";
             $text_at       = "at";
-            $text_bought   = "Purchased on";
+            $text_bought   = $order ? "Purchased on" : "Created on";
             $text_until    = "Valid until";
             $text_redeem   = "Redeemable at";
+            $text_tax      = "Multi-purpose voucher according to Section 3 (15) of the German VAT Act (UStG). VAT is only due upon redemption.";
         }
 
         // Setup Dompdf
@@ -305,8 +307,8 @@ if (function_exists('WC')) {
         $options->set('defaultFont', 'Helvetica');
         $dompdf = new Dompdf($options);
 
-        $image_url = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-roastery-1.jpg');
-        $logo_url  = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-logo.svg');
+        $image_url = esc_url(wp_upload_dir()['baseurl'] . '/' . 'header.jpg');
+        $logo_url  = esc_url(wp_upload_dir()['baseurl'] . '/' . 'logo.svg');
 
         ob_start();
         ?>
@@ -315,10 +317,10 @@ if (function_exists('WC')) {
         <head>
             <style>
                 @page { margin: 0; }
-                body { 
-                    margin: 0; padding: 0; 
-                    font-family: 'Helvetica', sans-serif; 
-                    background-color: #8a694e; 
+                body {
+                    margin: 0; padding: 0;
+                    font-family: 'Helvetica', sans-serif;
+                    background-color: #8a694e;
                     color: #ffffff;
                     line-height: 1.4;
                 }
@@ -369,6 +371,7 @@ if (function_exists('WC')) {
                 }
                 .coupon-code { font-family: 'Courier', 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
                 .meta-info { margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.8); }
+                .tax-info { margin-top: 20px; font-size: 10px; color: rgba(255, 255, 255, 0.6); font-style: italic; padding: 0 30px; }
                 .footer-branding {
                     position: absolute;
                     bottom: 30px;
@@ -385,12 +388,12 @@ if (function_exists('WC')) {
             <div class="fold-mark right top-fold"></div>
             <div class="fold-mark left bottom-fold"></div>
             <div class="fold-mark right bottom-fold"></div>
-            
+
             <div class="header-image"></div>
 
             <div class="content">
                 <img src="<?php echo $logo_url; ?>" class="logo">
-                
+
                 <div class="label"><?php echo $text_for; ?></div>
                 <div class="gift-card-title"><?php echo $text_title; ?></div>
 
@@ -405,9 +408,16 @@ if (function_exists('WC')) {
                 </div>
 
                 <div class="meta-info">
-                    <?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format('d.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', (int)$coupon_expiry_date_timestamp); ?><br>
+                    <?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format(format: 'd.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', (int)$coupon_expiry_timestamp); ?><br>
                     <?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html($site_url); ?></a>
                 </div>
+
+                <?php if ($coupon_is_fixed_amount) : ?>
+                    <div class="tax-info">
+                        <?php echo esc_html($text_tax); ?>
+                    </div>
+                <?php endif; ?>
+
             </div>
 
             <div class="footer-branding">
@@ -451,39 +461,42 @@ if (function_exists('WC')) {
         }
 
         $coupons_applied = $order->get_coupon_codes();
+
         if (empty($coupons_applied)) {
             return;
         }
 
         foreach ($coupons_applied as $coupon_code) {
             $coupon = new WC_Coupon($coupon_code);
-
             // Target all fixed_cart coupons
             if ($coupon->get_id() !== 0 && $coupon->get_discount_type() === 'fixed_cart') {
-
                 // Get the specific discount this coupon provided in this order
                 $discount_applied = 0;
-                foreach ($order->get_coupons() as $order_coupon) {
-                    if (strcasecmp($order_coupon->get_code(), $coupon_code) === 0) {
-                        // Use gross for gift cards if shop includes tax; otherwise use net
-                        if (wc_prices_include_tax()) {
-                            $discount_applied = (float) $order_coupon->get_discount() + (float) $order_coupon->get_discount_tax();
-                        } else {
-                            $discount_applied = (float) $order_coupon->get_discount();
+
+                // Check if this is a Germanized voucher (stored as fee)
+                if (class_exists('WooCommerce_Germanized') && $coupon->get_meta('is_voucher') === 'yes') {
+                    // Germanized vouchers are stored as fees in the order
+                    foreach ($order->get_fees() as $fee) {
+                        // Match fee to coupon by checking the _code meta
+                        if ($fee->get_meta('_is_voucher') === 'yes' && $fee->get_meta('_code') === $coupon_code) {
+                            // Fee total is negative, so we need to make it positive
+                            $discount_applied = abs((float) $fee->get_total());
+                            break;
                         }
-                        break;
                     }
-                }
-
-                // Update redemption history
-                $history = $coupon->get_meta('_coupon_redeemed_in_order_ids');
-                if (!is_array($history)) {
-                    $history = [];
-                }
-
-                if (!in_array($order_id, $history)) {
-                    $history[] = $order_id;
-                    $coupon->update_meta_data('_coupon_redeemed_in_order_ids', $history);
+                } else {
+                    // Standard WooCommerce coupon handling
+                    foreach ($order->get_coupons() as $order_coupon) {
+                        if (strcasecmp($order_coupon->get_code(), $coupon_code) === 0) {
+                            // Use gross for gift cards if shop includes tax; otherwise use net
+                            if (wc_prices_include_tax()) {
+                                $discount_applied = (float) $order_coupon->get_discount() + (float) $order_coupon->get_discount_tax();
+                            } else {
+                                $discount_applied = (float) $order_coupon->get_discount();
+                            }
+                            break;
+                        }
+                    }
                 }
 
                 // Subtract balance
@@ -503,6 +516,7 @@ if (function_exists('WC')) {
         // Lock the order so the balance is not subtracted again
         $order->update_meta_data('_coupon_balance_processed', 'yes');
         $order->save();
+
     }
 
 
@@ -523,12 +537,25 @@ if (function_exists('WC')) {
             }
 
             $coupon_balance_current = (float) $coupon->get_amount();
+            $coupon_balance_deduction = 0;
 
-            // Calculate deduction based on Mehrzweckgutschein (Gross) vs standard (Net)
-            if (wc_prices_include_tax()) {
-                $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code) + (float) WC()->cart->get_coupon_discount_tax_amount($coupon_code);
+            // Check if this is a Germanized voucher (stored as fee)
+            if (class_exists('WooCommerce_Germanized') && $coupon->get_meta('is_voucher') === 'yes') {
+                // Germanized vouchers are stored as fees, not as coupon discounts
+                foreach (WC()->cart->get_fees() as $fee) {
+                    if ($fee->id === 'voucher_' . $coupon_code) {
+                        // Fee total is negative, so we need to make it positive
+                        $coupon_balance_deduction = abs((float) $fee->total);
+                        break;
+                    }
+                }
             } else {
-                $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code);
+                // Standard WooCommerce coupon handling
+                if (wc_prices_include_tax()) {
+                    $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code) + (float) WC()->cart->get_coupon_discount_tax_amount($coupon_code);
+                } else {
+                    $coupon_balance_deduction = (float) WC()->cart->get_coupon_discount_amount($coupon_code);
+                }
             }
 
             $coupon_balance_remaining_after_purchase = $coupon_balance_current - $coupon_balance_deduction;
@@ -606,14 +633,14 @@ if (function_exists('WC')) {
                 font-family: 'Inter', sans-serif;
                 font-size: 15px;
                 box-sizing: border-box;
-                text-align: center; 
+                text-align: center;
             }
             #coupon_amount:focus {
                 outline: none;
                 border-color: #262626;
             }
         </style>
-        
+
         <!-- UI Styling: Mimics the "Variations Form" layout for single products to ensure design consistency with the theme's standard variable products -->
         <form class="variations_form cart" method="post" enctype="multipart/form-data">
             <table class="variations coupon-amount-table">
@@ -626,14 +653,14 @@ if (function_exists('WC')) {
                     </tr>
                 </tbody>
             </table>
-        </form> 
+        </form>
 
         <script type="text/javascript">
         jQuery(function($) {
             const params = <?php echo wp_json_encode($currency_params); ?>;
             const $input = $('#coupon_amount');
             const $button = $(".single_add_to_cart_button");
-            const $wcForm = $('form.cart').not($input.closest('form')); 
+            const $wcForm = $('form.cart').not($input.closest('form'));
 
             // Add hidden field to the real WooCommerce form
             $wcForm.append('<input type="hidden" name="coupon_amount" id="coupon_amount_hidden" value="">');
@@ -687,7 +714,7 @@ if (function_exists('WC')) {
                 const qty = parseInt($('input[name="quantity"]').val(), 10) || 1;
                 const totalPrice = val * qty;
                 const formattedPrice = formatPrice(totalPrice)
-                
+
                 // Update the "Add to Cart" button
                 $button.find('span[data-price]').remove();
                 if (val > 0) {
@@ -696,7 +723,7 @@ if (function_exists('WC')) {
 
                 // Update the Elementor "Price" widget
                 const $priceDisplay = $('.elementor-widget-woocommerce-product-price .price .woocommerce-Price-amount bdi');
-                
+
                 if ($priceDisplay.length && val > 0) {
                     $priceDisplay.html(formattedPrice);
                 } else if ($priceDisplay.length) {
@@ -704,7 +731,7 @@ if (function_exists('WC')) {
                     $priceDisplay.html(formatPrice(0));
                 }
             }
-            
+
             $input.on('input change', updateDisplay);
             updateDisplay();
         });

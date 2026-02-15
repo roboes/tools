@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - "Add to Cart" accept legal warning terms
-// Last update: 2026-01-15
+// Last update: 2026-02-15
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -45,47 +45,65 @@ if (function_exists('WC') && !is_admin()) {
             $error_text = $messages['legal-warning-error'][$browsing_language]
                 ?? array_first($messages['legal-warning-error']);
 
-            $html = '<div class="product-terms-checkbox" style="margin-bottom: 20px;">
-					<label>
-						<input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
-						<span style="line-height: 20px;">' . esc_html($checkbox_text) . '</span>
-					</label>
-				</div>';
+            $html = '<style>
+                    .woocommerce div.product form.cart .single_variation_wrap .woocommerce-variation-add-to-cart { margin-top: 30px; }
+                    
+                    form.cart { display: flex !important; flex-wrap: wrap !important; }
 
-            $html .= '<style>
-					form.cart { display: flex !important; flex-wrap: wrap !important; }
+                    .checkbox-highlight {
+                        border: 2px solid red;
+                        background-color: #ffe6e6;
+                        padding: 5px;
+                    }
+                </style>';
 
-					.checkbox-highlight {
-						border: 2px solid red;
-						background-color: #ffe6e6;
-						padding: 5px;
-					}
-				</style>';
+            $html .= '<div class="product-terms-checkbox" style="margin-bottom: 10px;">
+                    <label>
+                        <input type="checkbox" name="checkbox_legal_warning" id="checkbox_legal_warning" />
+                        <span style="line-height: 20px;">' . esc_html($checkbox_text) . '</span>
+                    </label>
+                </div>';
 
             $html .= '<script>
-					jQuery(document).ready(function($) {
-						const $checkbox = $(".product-terms-checkbox");
-						const $singleVariation = $(".woocommerce-variation.single_variation");
+                    jQuery(document).ready(function($) {
+                        const $checkbox = $(".product-terms-checkbox");
+                        const $singleVariation = $(".woocommerce-variation.single_variation");
 
-						if ($checkbox.length && $singleVariation.length) {
-							$singleVariation.after($checkbox);
-						}
+                        if ($checkbox.length && $singleVariation.length) {
+                            $singleVariation.after($checkbox);
+                        }
 
-						$("form.cart").on("submit", function(event) {
-							if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
-								event.preventDefault();
-								const message = "' . esc_js($error_text) . '";
-								if (!$(".woocommerce-error").length) {
-									$(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
-								}
-								$("html, body").animate({ scrollTop: 0 }, "slow");
-								$("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
-							}
-						});
-					});
-				</script>';
+                        // Handle form submit (for regular Add to Cart)
+                        $("form.cart").on("submit", function(event) {
+                            if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
+                                event.preventDefault();
+                                const message = "' . esc_js($error_text) . '";
+                                if (!$(".woocommerce-error").length) {
+                                    $(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
+                                }
+                                $("html, body").animate({ scrollTop: 0 }, "slow");
+                                $("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
+                            }
+                        });
+                        
+                        // Handle external product link click (for View product)
+                        $(document).on("click", "a.product_type_external", function(event) {
+                            if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {
+                                event.preventDefault();
+                                const message = "' . esc_js($error_text) . '";
+                                if (!$(".woocommerce-error").length) {
+                                    $(".woocommerce-notices-wrapper").append("<ul class=\"woocommerce-error\" role=\"alert\"><li>" + message + "</li></ul>");
+                                }
+                                $("html, body").animate({ scrollTop: 0 }, "slow");
+                                $("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
+                            }
+                        });
+                    });
+                </script>';
 
             echo $html;
         }
+
     }
+
 }
