@@ -419,9 +419,47 @@ Public hostnames:
 sudo systemctl status cloudflared
 ```
 
+##### Second cloudflared
+
+Optional second Cloudflared Zero Trust.
+
+```.sh
+cat <<EOF > /etc/systemd/system/cloudflared-website2.service
+[Unit]
+Description=cloudflared website2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+TimeoutStartSec=0
+Type=notify
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run --token 12345
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+```.sh
+# Reload the system manager
+sudo systemctl daemon-reload
+```
+
+```.sh
+# Start the new service
+sudo systemctl enable cloudflared-website2
+sudo systemctl start cloudflared-website2
+```
+
+```.sh
+sudo systemctl status cloudflared-website2
+```
+
 ##### Policies
 
-`Access` → `Policies` → `Add a policy`.
+`Access controls` → `Policies` → `Add a policy`.
 
 `Policy name`: `ACME Challenge Passthrough`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
 
@@ -429,7 +467,7 @@ sudo systemctl status cloudflared
 
 ##### Applications
 
-`Access` → `Applications` → `Add an application` → `Self-hosted`
+`Access controls` → `Applications` → `Add an application` → `Self-hosted`
 
 1. SSH Access `Application name`: `SSH Access`. `Session Duration`: `24 hours`. `Public hostname`: `ssh.website.com`. `Access policies`: `Select existing policies` or `Create new policy`.
 

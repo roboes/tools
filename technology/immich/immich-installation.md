@@ -51,14 +51,10 @@ services:
 
   immich-server:
     container_name: "immich_server_${system_user}"
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    # extends:
-    #   file: hwaccel.transcoding.yml
-    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    image: ghcr.io/immich-app/immich-server:\${IMMICH_VERSION:-release}
     ports:
       - "2283:2283"
     volumes:
-      # Do not edit the next line. If you want to change the media storage location on your system, edit the value of UPLOAD_LOCATION in the .env file
       - \${UPLOAD_LOCATION}:/data
       - /etc/localtime:/etc/localtime:ro
     env_file:
@@ -66,8 +62,6 @@ services:
     environment:
       - IMMICH_HOST=0.0.0.0
       - IMMICH_PORT=2283
-    # ports:
-      # - '127.0.0.1:2283:2283'
     depends_on:
       - redis
       - database
@@ -77,12 +71,7 @@ services:
 
   immich-machine-learning:
     container_name: "immich_machine_learning_${system_user}"
-    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
-    # Example tag: \${IMMICH_VERSION:-release}-cuda
     image: ghcr.io/immich-app/immich-machine-learning:\${IMMICH_VERSION:-release}
-    # extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
     volumes:
       - model-cache:/cache
     env_file:
@@ -93,23 +82,21 @@ services:
 
   redis:
     container_name: "immich_redis_${system_user}"
-    image: docker.io/valkey/valkey:8-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571
+    image: docker.io/valkey/valkey:8-bookworm
     healthcheck:
       test: redis-cli ping || exit 1
     restart: always
 
   database:
     container_name: "immich_postgres_${system_user}"
-    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
     environment:
       POSTGRES_PASSWORD: \${DB_PASSWORD}
       POSTGRES_USER: \${DB_USERNAME}
       POSTGRES_DB: \${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
-      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
-      # DB_STORAGE_TYPE: 'HDD'
+      DB_STORAGE_TYPE: 'SSD'
     volumes:
-      # Do not edit the next line. If you want to change the database storage location on your system, edit the value of DB_DATA_LOCATION in the .env file
       - \${DB_DATA_LOCATION}:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
@@ -132,11 +119,11 @@ DB_DATA_LOCATION=$domain_root_path/domains/$subdomain.$domain/immich/postgres
 # To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 # TZ=Etc/UTC
 
-# The Immich version to use. You can pin this to a specific version like "v1.71.0"
+# Immich version
 IMMICH_VERSION=release
 
 # Connection secret for postgres. You should change it to a random password
-# Please use only the characters `A-Za-z0-9`, without special characters or spaces
+# Please use only the characters A-Za-z0-9, without special characters or spaces
 DB_PASSWORD=$postgres_password
 
 # The values below this line do not need to be changed
@@ -252,7 +239,10 @@ Cloudflare → `Zero Trust`.
 
 #### Service Token
 
-`Access` → `Service auth` → `Create Service Token`. `Service token name`: `Immich Mobile Access`. `Service Token Duration`: `Non-expiring`.
+`Access controls` → `Service credentials` → `Service Tokens` → `Add a service token`:
+
+- `Service token name`: `Immich Mobile Access`.
+- `Service Token Duration`: `Non-expiring`.
 
 #### Policy
 
