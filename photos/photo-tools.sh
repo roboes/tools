@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2025-09-21
+# Last update: 2026-02-17
 
 
 # Rename: ExifTool
@@ -338,3 +338,9 @@ magick -monitor "./input.png" -auto-gamma "./output.png"
 
 # Download image using curl
 curl "https://www.python.org/static/apple-touch-icon-144x144-precomposed.png" > "./precomposed.png"
+
+# Organize files into year-based folders by extracting the first 4 characters
+shopt -s nullglob
+for f in [0-9][0-9][0-9][0-9]-*; do
+  [ -f "$f" ] && d="${f:0:4}" && mkdir -p "$d" && mv "$f" "$d/"
+done

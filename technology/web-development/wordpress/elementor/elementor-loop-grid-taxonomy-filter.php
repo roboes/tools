@@ -73,16 +73,16 @@ if (is_plugin_active('elementor/elementor.php')) {
         window.addEventListener('load', () => { // Changed from DOMContentLoaded to load
             const ANCHOR_ID = 'products';
             const SCROLL_OFFSET = 100;
-            
+
             // Simplified parsing: Look for everything after "?filter="
             const urlParts = window.location.hash.split('?filter=');
             const filterValue = urlParts.length > 1 ? urlParts[1] : null;
-            
+
             if (!filterValue) return;
-            
+
             const section = document.getElementById(ANCHOR_ID);
             if (!section) return;
-            
+
             // Wrapped in a slight timeout to ensure Elementor is ready
             setTimeout(() => {
                 window.scrollTo({

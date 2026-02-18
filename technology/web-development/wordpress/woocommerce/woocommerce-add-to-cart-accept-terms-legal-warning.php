@@ -47,7 +47,7 @@ if (function_exists('WC') && !is_admin()) {
 
             $html = '<style>
                     .woocommerce div.product form.cart .single_variation_wrap .woocommerce-variation-add-to-cart { margin-top: 30px; }
-                    
+
                     form.cart { display: flex !important; flex-wrap: wrap !important; }
 
                     .checkbox-highlight {
@@ -85,7 +85,7 @@ if (function_exists('WC') && !is_admin()) {
                                 $("#checkbox_legal_warning").closest("label").addClass("checkbox-highlight");
                             }
                         });
-                        
+
                         // Handle external product link click (for View product)
                         $(document).on("click", "a.product_type_external", function(event) {
                             if ($("#checkbox_legal_warning").length && !$("#checkbox_legal_warning").prop("checked")) {

@@ -134,24 +134,26 @@ DB_DATABASE_NAME=immich
 EOF
 ```
 
+Original (Lossless/Preservation):
+
 ```.sh
 cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
 tasks:
   # JPEG → JXL (lossless JPEG preservation)
-  - name: jpeg2jxl-lossless
+  - name: images-jpeg-to-jxl
     command: cjxl --lossless_jpeg=1 {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - jpg
       - jpeg
 
   # PNG → JXL (lossless with distance 0)
-  - name: png2jxl-lossless
+  - name: images-png-to-jxl
     command: convert {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-clean.png && cjxl -d 0 {{.folder}}/{{.name}}-clean.png {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-clean.png
     extensions:
       - png
 
   # Other image formats → JXL (lossless)
-  - name: image2jxl-lossless
+  - name: images-misc-to-jxl
     command: cjxl {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - pgx
@@ -164,7 +166,7 @@ tasks:
       - exr
 
   # Lossless optimization for other formats
-  - name: caesium-lossless
+  - name: images-misc-to-caesium
     command: caesiumclt --keep-dates --exif --quality=0 --output={{.folder}} {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - tiff
@@ -172,7 +174,7 @@ tasks:
       - webp
 
   # Video compression with HandBrake
-  - name: handbrake-video
+  - name: video-compress-h264-1080p
     command: HandBrakeCLI --preset "Fast 1080p30" --encoder x264 --keep-display-aspect -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
@@ -201,6 +203,70 @@ tasks:
       - bmp
       - heic
       - heif
+      - insp
+      - jxl
+      - psd
+      - raw
+      - rw2
+      - svg
+
+EOF
+```
+
+Alternative (Aggressive Storage Saving):
+
+```.sh
+cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
+tasks:
+  # Aggressive Image Reduction: Resize to 1000px + Lossy JXL (-d 2.5)
+  - name: images-resize-to-jxl
+    command: convert {{.folder}}/{{.name}}.{{.extension}} -resize 1000x1000\> /tmp/{{.name}}-tmp.png && cjxl /tmp/{{.name}}-tmp.png {{.folder}}/{{.name}}-new.jxl -d 2.5 --effort 7 && rm {{.folder}}/{{.name}}.{{.extension}} /tmp/{{.name}}-tmp.png
+    extensions:
+      - jpg
+      - jpeg
+      - png
+      - tiff
+      - tif
+      - webp
+      - bmp
+      - gif
+      - heic
+      - heif
+      - pgx
+      - pam
+      - pnm
+      - pgm
+      - ppm
+      - pfm
+      - exr
+
+  # Aggressive Video Reduction: 720p + x265 + Original Audio (with fallback)
+  - name: video-compress-hevc-720p
+    command: HandBrakeCLI --preset "General/720p30" --encoder x265 --quality 26 --aencoder copy --audio-fallback av_aac --all-subtitles -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    extensions:
+      - 3gp
+      - 3gpp
+      - avi
+      - flv
+      - insv
+      - m2t
+      - m2ts
+      - m4v
+      - mkv
+      - mov
+      - mp4
+      - mpe
+      - mpeg
+      - mpg
+      - mts
+      - webm
+      - wmv
+
+  # Passthrough formats
+  - name: passthrough-formats
+    command: ""
+    extensions:
+      - avif
       - insp
       - jxl
       - psd

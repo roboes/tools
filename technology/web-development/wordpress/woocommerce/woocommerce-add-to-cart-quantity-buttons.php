@@ -64,18 +64,18 @@ if (function_exists('WC') && !is_admin()) {
             ?>
             <script type="text/javascript">
             jQuery(document).ready(function($) {
-                
+
                 // Manage plus/minus click functionality
                 $('body').on('click', 'button.plus, button.minus', function(e) {
                     e.preventDefault();
                     let $quantity = $(this).siblings('.qty').add($(this).parent().find('input.qty')).first();
-                    
+
                     if ($quantity.length) {
                         const val = parseFloat($quantity.val()) || 1;
                         const max = parseFloat($quantity.attr('max')) || 999;
                         const min = parseFloat($quantity.attr('min')) || 1;
                         const step = parseFloat($quantity.attr('step')) || 1;
-                        
+
                         let newVal = $(this).hasClass('plus') ? Math.min(val + step, max) : Math.max(val - step, min);
                         $quantity.val(newVal).trigger('change');
                     }
@@ -98,7 +98,7 @@ if (function_exists('WC') && !is_admin()) {
                     $thisForm.find('button.plus, button.minus').show();
                     $thisForm.find('.quantity').show(); 
                 });
-                
+
                 $('.qty').prop('disabled', false);
             });
             </script>

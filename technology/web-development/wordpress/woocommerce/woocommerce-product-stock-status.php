@@ -71,7 +71,7 @@ if (function_exists('WC') && !is_admin()) {
             const originalHTML = $availability.html();
             const icon = (color, text) => 
                 `<span class="product-stock-status-icon" style="margin-right:6px"><i class="fa-solid fa-circle" style="color:${color}"></i></span>${text}`;
-            
+
             $form.on('show_variation', (e, variation) => {
                 if (variation.is_in_stock) {
                     $availability.html(icon('#50C878', '<?php echo $in_stock_text; ?>'));

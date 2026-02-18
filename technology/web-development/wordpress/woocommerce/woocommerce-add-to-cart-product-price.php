@@ -23,12 +23,12 @@ if (function_exists('WC') && !is_admin()) {
             const currencyPosition = %s;
             const currencyDecimals = %s;
             const locale = %s;
-            
+
             const formatter = new Intl.NumberFormat(locale, {
                 minimumFractionDigits: parseInt(currencyDecimals),
                 maximumFractionDigits: parseInt(currencyDecimals)
             });
-            
+
             function formatPrice(price) {
                 const formattedPrice = formatter.format(price);
                 switch(currencyPosition) {
@@ -58,21 +58,21 @@ if (function_exists('WC') && !is_admin()) {
                 const $button = $(".single_add_to_cart_button");
                 const $varInput = $("input.variation_id");
                 const $qtyInput = $('input[name="quantity"]');
-                
+
                 <?php echo $currency_config; ?>
-                
+
                 function updatePrice() {
                     const vid = $varInput.val();
                     const quantity = parseInt($qtyInput.val(), 10) || 1;
-                    
+
                     $button.find('span[data-price]').remove();
-                    
+
                     if (vid && jsonData[vid] !== undefined) {
                         const priceHtml = formatPrice(jsonData[vid] * quantity);
                         $button.append('<span data-price> - ' + priceHtml + '</span>');
                     }
                 }
-                
+
                 updatePrice();
                 $varInput.add($qtyInput).on('change', updatePrice);
                 $('button.plus, button.minus').on('click', () => setTimeout(updatePrice, 0));
@@ -87,17 +87,17 @@ if (function_exists('WC') && !is_admin()) {
                 const basePrice = <?php echo (float) $product_price; ?>;
                 const $button = $(".single_add_to_cart_button");
                 const $qtyInput = $('input[name="quantity"]');
-                
+
                 <?php echo $currency_config; ?>
-                
+
                 function updatePrice() {
                     const quantity = parseInt($qtyInput.val(), 10) || 1;
                     const priceHtml = formatPrice(basePrice * quantity);
-                    
+
                     $button.find('span[data-price]').remove();
                     $button.append('<span data-price> - ' + priceHtml + '</span>');
                 }
-                
+
                 updatePrice();
                 $qtyInput.on('change', updatePrice);
                 $('button.plus, button.minus').on('click', () => setTimeout(updatePrice, 0));

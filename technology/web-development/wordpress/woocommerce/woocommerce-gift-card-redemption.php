@@ -108,7 +108,7 @@ if (function_exists('WC')) {
                                 $onlineContainer.show();
                             }
                         });
-                        
+
                         $(document).on("reset_data", "form.cart", function() {
                             $giftCardContainer.show();
                             $onlineContainer.show();
@@ -152,7 +152,7 @@ if (function_exists('WC')) {
 
                                 window.location.href = cf7Url;
                             }
-                            
+
                         });
                     });
                 </script>';

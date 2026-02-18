@@ -6,7 +6,7 @@ gpxpy==1.6.2
 numpy==2.4.2
 openpyxl==3.1.5
 overpy==0.7
-pandas==3.0.0
+pandas==3.0.1
 pydub==0.25.1
 python_dateutil==2.9.0.post0
 Requests==2.32.5

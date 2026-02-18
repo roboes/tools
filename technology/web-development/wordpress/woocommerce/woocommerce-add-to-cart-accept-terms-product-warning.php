@@ -56,7 +56,7 @@ if (function_exists('WC') && !is_admin()) {
             ?>
             <style>
                 form.cart { display: flex !important; flex-wrap: wrap !important; }
-                
+
                 .checkbox-highlight {
                     border: 2px solid red;
                     background-color: #ffe6e6;

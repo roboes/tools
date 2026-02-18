@@ -46,7 +46,7 @@ if (function_exists('WC') && is_admin()) {
                         </td>
                     </tr>
                 </table>
-                
+
                 <?php submit_button('Download', 'primary'); ?>
             </form>
         </div>

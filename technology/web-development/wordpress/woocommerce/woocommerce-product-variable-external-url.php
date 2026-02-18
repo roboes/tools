@@ -102,7 +102,7 @@ if (function_exists('WC')) {
                 <script>
                 jQuery(function($) {
                     var originalButtonHtml = '';
-                    
+
                     // Re-use your format logic
                     function formatPriceInternal(price) {
                         const formatter = new Intl.NumberFormat(<?php echo wp_json_encode($locale); ?>, {
@@ -111,7 +111,7 @@ if (function_exists('WC')) {
                         });
                         const formattedPrice = formatter.format(price);
                         const symbol = <?php echo wp_json_encode($currency_symbol); ?>;
-                        
+
                         switch(<?php echo wp_json_encode($currency_pos); ?>) {
                             case "left": return symbol + formattedPrice;
                             case "right": return formattedPrice + symbol;
@@ -124,14 +124,14 @@ if (function_exists('WC')) {
                     $('form.variations_form')
                         .on('found_variation', function(e, variation) {
                             var $button = $('.single_add_to_cart_button, a.product_type_external');
-                            
+
                             if (!originalButtonHtml && $button.hasClass('single_add_to_cart_button')) {
                                 originalButtonHtml = $button.prop('outerHTML');
                             }
 
                             if (variation.external_url) {
                                 var buttonText = '<?php echo esc_js(get_option('woocommerce_external_products_button_text') ?: __('View product', 'woocommerce')); ?>';
-                                
+
                                 // Calculate price for the external link
                                 var quantity = parseInt($('input[name="quantity"]').val(), 10) || 1;
                                 var priceHtml = ' - ' + formatPriceInternal(variation.display_price * quantity);
