@@ -1,5 +1,5 @@
 ## Windows Subsystem for Linux Packages
-# Last update: 2025-11-04
+# Last update: 2026-02-22
 
 
 # Start Windows Subsystem for Linux (WSL)
@@ -11,7 +11,8 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt cle
 
 
 # Install packages
-sudo apt install curl \
+sudo apt install composer \
+  curl \
   git \
   nodejs \
   npm \
@@ -21,6 +22,18 @@ sudo apt install curl \
   python3-virtualenv \
   wget
 
+# pre-commit
+sudo apt install pre-commit
+
+# codespell
+sudo apt install codespell
+
+# php-cs-fixer
+composer global require friendsofphp/php-cs-fixer
+export PATH="$PATH:$HOME/.config/composer/vendor/bin"
+
+# xmllint
+sudo apt install libxml2-utils
 
 # Node.js
 nvm install node
@@ -30,9 +43,6 @@ nvm alias default 25
 # Prettier
 sudo npm install -g prettier
 sudo npm install -g glob
-
-# codespell
-sudo apt install codespell
 
 
 # Homebrew install

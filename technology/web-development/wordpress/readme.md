@@ -21,6 +21,27 @@ After removing all unused media sizes, regenerate thumbnails using [Force Regene
 get_defined_functions()['user'];
 ```
 
+```.php
+# List all registered hooks
+global $wp_filter;
+print_r(array_keys($wp_filter));
+
+// List all functions currently attached to a specific hook
+global $wp_filter;
+$hook_name = 'woocommerce_payment_complete';
+
+if (isset($wp_filter[$hook_name])) {
+    echo "# Callbacks for {$hook_name}\n";
+    foreach ($wp_filter[$hook_name]->callbacks as $priority => $callbacks) {
+        foreach ($callbacks as $id => $details) {
+            echo "Priority {$priority}: " . $id . "\n";
+        }
+    }
+} else {
+    echo "Hook not found.";
+}
+```
+
 ## Plugins
 
 ### Content

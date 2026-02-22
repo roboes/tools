@@ -40,6 +40,8 @@ services:
   immich-upload-optimizer:
     container_name: "immich_upload_optimizer_${system_user}"
     image: ghcr.io/miguelangel-nubla/immich-upload-optimizer:latest
+    ports:
+      - "2283:2283"
     environment:
       - IUO_UPSTREAM=http://immich-server:2283
       - IUO_TASKS_FILE=/app/config/tasks.yaml
@@ -48,12 +50,11 @@ services:
       - ./tasks.yaml:/app/config/tasks.yaml:ro
     depends_on:
       - immich-server
+    restart: always
 
   immich-server:
     container_name: "immich_server_${system_user}"
     image: ghcr.io/immich-app/immich-server:\${IMMICH_VERSION:-release}
-    ports:
-      - "2283:2283"
     volumes:
       - \${UPLOAD_LOCATION}:/data
       - /etc/localtime:/etc/localtime:ro
@@ -242,7 +243,7 @@ tasks:
 
   # Aggressive Video Reduction: 720p + x265 + Original Audio (with fallback)
   - name: video-compress-hevc-720p
-    command: HandBrakeCLI --preset "General/720p30" --encoder x265 --quality 26 --aencoder copy --audio-fallback av_aac --all-subtitles -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    command: HandBrakeCLI --preset "H.265 MKV 720p30" --quality 26 --aencoder copy --audio-fallback av_aac --all-subtitles -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
       - 3gpp

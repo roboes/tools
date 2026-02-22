@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-02-15
+// Last update: 2026-02-22
 
 
 /*
@@ -34,6 +34,65 @@ generate_coupon_on_purchase(input: [
     'item_id' => 44043, // Product variation ID
     'language'   => 'de'
 ]);
+*/
+
+/*
+// Manually resend the coupon email and PDF to the customer for a given coupon ID
+$coupon_id = 44534;
+$coupon    = new WC_Coupon($coupon_id);
+$coupon_code = $coupon->get_code();
+
+// Get the order the coupon was generated from
+$order_id = $coupon->get_meta('_coupon_purchased_on_order_id');
+$order    = $order_id ? wc_get_order($order_id) : null;
+
+if (!$order) {
+    echo "Error: Could not find order linked to coupon #{$coupon_id}.";
+    return;
+}
+
+// Find the matching order item and config
+$found = false;
+foreach ($order->get_items() as $item) {
+    $product_id  = $item->get_variation_id() ?: $item->get_product_id();
+    $coupon_data = get_coupon_variation_validation($product_id);
+
+    if (!$coupon_data) continue;
+
+    $suffix = $coupon_data->config['meta_key_suffix'];
+
+    // Confirm this is the right coupon type for this item (case-insensitive)
+    if (strtoupper($order->get_meta('_coupon_code_' . $suffix)) !== strtoupper($coupon_code)) continue;
+
+    $found = true;
+    $product_parent_id      = wp_get_post_parent_id($product_id) ?: $product_id;
+    $product_parent_name    = get_the_title($product_parent_id);
+    $product_url            = get_permalink($product_parent_id);
+    $language               = apply_filters('wpml_element_language_code', null, ['element_id' => $order_id, 'element_type' => 'post']) ?: 'de';
+    $coupon_is_fixed_amount = $coupon_data->config['coupon_is_fixed_amount'];
+    $coupon_amount_formatted = html_entity_decode(wp_strip_all_tags(wc_price($item->get_total())));
+
+    $product_display_name = $coupon_is_fixed_amount
+        ? ($language === 'de' ? $product_parent_name . ' im Wert von ' . $coupon_amount_formatted : $product_parent_name . ' with a value of ' . $coupon_amount_formatted)
+        : ($language === 'de' ? 'Gutschein ' . $product_parent_name : 'Gift card ' . $product_parent_name);
+
+    send_coupon_email(
+        order: $order,
+        product_parent_name: $product_parent_name,
+        product_display_name: $product_display_name,
+        product_url: $product_url,
+        meta_suffix: $suffix,
+        coupon_is_fixed_amount: $coupon_is_fixed_amount,
+        coupon_amount_formatted: $coupon_amount_formatted,
+        coupon_code: strtoupper($coupon_code),
+        language: $language
+    );
+
+    echo "Success: Email with PDF resent for coupon " . strtoupper($coupon_code) . " (Order #{$order_id})";
+    break;
+}
+
+if (!$found) echo "Error: Could not match coupon #{$coupon_id} to any item in Order #{$order_id}.";
 */
 
 
@@ -102,7 +161,7 @@ if (function_exists('WC')) {
 
 
     // Generate Coupon on Purchase
-    add_action(hook_name: 'woocommerce_order_status_paid', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
+    add_action(hook_name: 'woocommerce_payment_complete', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
     add_action(hook_name: 'woocommerce_order_status_completed', callback: 'generate_coupon_on_purchase', priority: 10, accepted_args: 1);
 
     function generate_coupon_on_purchase(int|array $input): void
@@ -307,8 +366,8 @@ if (function_exists('WC')) {
         $options->set('defaultFont', 'Helvetica');
         $dompdf = new Dompdf($options);
 
-        $image_url = esc_url(wp_upload_dir()['baseurl'] . '/' . 'header.jpg');
-        $logo_url  = esc_url(wp_upload_dir()['baseurl'] . '/' . 'logo.svg');
+        $image_url = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-roastery-1.jpg');
+        $logo_url  = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-logo.svg');
 
         ob_start();
         ?>
