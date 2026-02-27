@@ -29,22 +29,21 @@ if (function_exists('WC')) {
 
     // Save cancellation date in order meta
     add_action(hook_name: 'woocommerce_order_status_cancelled', callback: function (int $order_id, WC_Order $order): void {
+
         if (!$order instanceof WC_Order) {
             return;
         }
-        try {
-            // Get timezone from order creation date
-            $timezone = $order->get_date_created() |> $this->getTimezone();
 
-            // Get current datetime with the timezone from order creation date
-            $date_cancelled = new WC_DateTime('now', $timezone);
+        // Get timezone from order creation date
+        $timezone = $order->get_date_created()->getTimezone();
 
-            // Add date cancelled as custom metadata and save
-            $order->update_meta_data('date_cancelled', $date_cancelled->format(DateTime::ATOM));
-            $order->save();
-        } catch (Throwable $error) {
-            // Error handled via catch block as per requirements
-        }
+        // Get current datetime with the timezone from order creation date
+        $date_cancelled = new WC_DateTime('now', $timezone);
+
+        // Add date cancelled as custom metadata and save
+        $order->update_meta_data('date_cancelled', $date_cancelled->format(DateTime::ATOM));
+        $order->save();
+
     }, priority: 10, accepted_args: 2);
 
     // PhastPress - Disable PhastPress on WooCommerce checkout and cart pages

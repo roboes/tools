@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2025-09-21
+# Last update: 2026-02-17
 
 
 # Rename: ExifTool
@@ -29,9 +29,9 @@
 
 # Settings
 if grep -qi microsoft /proc/version; then
-	cd "/mnt/c/Users/${USER}/Pictures/Import"
+    cd "/mnt/c/Users/${USER}/Pictures/Import"
 else
-	cd "${HOME}/Pictures/Import"
+    cd "${HOME}/Pictures/Import"
 fi
 
 
@@ -48,50 +48,50 @@ exiftool -ver
 
 # Photos rename - Rename only photos and videos which contain DateTimeOriginal metadata
 exiftool \
-	'-FileName<${DateTimeOriginal}%+.nc.%e' \
-	'-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
-	-dateFormat '%Y-%m-%d, %H.%M.%S' \
-	-recurse \
-	.
+    '-FileName<${DateTimeOriginal}%+.nc.%e' \
+    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
+    -dateFormat '%Y-%m-%d, %H.%M.%S' \
+    -recurse \
+    .
 
 
 # Photos rename - Rename all photos and videos given available metadata (where FileModifyDate metadata is the least relevant parameter for the file name and DateTimeOriginal the most relevant)
 exiftool \
-	-if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
-	'-FileName<Apple Live Photo ${CreationDate}%+.nc.%e' \
-	'-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+.nc.%e' \
-	-execute \
-	-if '($FileTypeExtension eq "mov" and not defined $ContentIdentifier)' \
-	'-FileName<${MediaCreateDate}%+.nc.%e' \
-	'-FileName<${CreationDate}%+.nc.%e' \
-	'-FileName<${CreationDate}.${SubSecTime}%+.nc.%e' \
-	-execute \
-	-if '($FileTypeExtension ne "mov")' \
-	'-FileName<${FileModifyDate}%+.nc.%e' \
-	'-FileName<${ModifyDate}%+.nc.%e' \
-	'-FileName<${ModifyDate}.${SubSecTime}%+.nc.%e' \
-	'-FileName<${CreateDate}%+.nc.%e' \
-	'-FileName<${CreateDate}.${SubSecTime}%+.nc.%e' \
-	'-FileName<${FileCreateDate}%+.nc.%e' \
-	'-FileName<${FileCreateDate}.${SubSecTime}%+.nc.%e' \
-	'-FileName<${MediaCreateDate}%+.nc.%e' \
-	'-FileName<${DateTimeOriginal}%+.nc.%e' \
-	'-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
-	-common_args \
-	-dateFormat '%Y-%m-%d, %H.%M.%S' \
-	-recurse \
-	.
+    -if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
+    '-FileName<Apple Live Photo ${CreationDate}%+.nc.%e' \
+    '-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+.nc.%e' \
+    -execute \
+    -if '($FileTypeExtension eq "mov" and not defined $ContentIdentifier)' \
+    '-FileName<${MediaCreateDate}%+.nc.%e' \
+    '-FileName<${CreationDate}%+.nc.%e' \
+    '-FileName<${CreationDate}.${SubSecTime}%+.nc.%e' \
+    -execute \
+    -if '($FileTypeExtension ne "mov")' \
+    '-FileName<${FileModifyDate}%+.nc.%e' \
+    '-FileName<${ModifyDate}%+.nc.%e' \
+    '-FileName<${ModifyDate}.${SubSecTime}%+.nc.%e' \
+    '-FileName<${CreateDate}%+.nc.%e' \
+    '-FileName<${CreateDate}.${SubSecTime}%+.nc.%e' \
+    '-FileName<${FileCreateDate}%+.nc.%e' \
+    '-FileName<${FileCreateDate}.${SubSecTime}%+.nc.%e' \
+    '-FileName<${MediaCreateDate}%+.nc.%e' \
+    '-FileName<${DateTimeOriginal}%+.nc.%e' \
+    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
+    -common_args \
+    -dateFormat '%Y-%m-%d, %H.%M.%S' \
+    -recurse \
+    .
 
 
 
 # Photo metadata tool - ModifyDate to DateTimeOriginal if Model = 'Redmi Note 8 Pro'
 exiftool \
-	# -if '$Model eq "Redmi Note 8 Pro"'
-	-if 'not defined $DateTimeOriginal' \
-	-overwrite_original \
-	'-DateTimeOriginal<FileCreateDate' \
-	# '-SubSecTimeOriginal<SubSecModifyDate'
-	.
+    # -if '$Model eq "Redmi Note 8 Pro"'
+    -if 'not defined $DateTimeOriginal' \
+    -overwrite_original \
+    '-DateTimeOriginal<FileCreateDate' \
+    # '-SubSecTimeOriginal<SubSecModifyDate'
+    .
 
 
 
@@ -132,18 +132,18 @@ exiftool -overwrite_original '-DateTimeOriginal<FileModifyDate' .
 
 # FileName to DateTimeOriginal (including regular expression to remove SubSecTimeOriginal and n incremental FileName)
 exiftool \
-	-if 'not defined $DateTimeOriginal' \
-	-overwrite_original \
-	'-DateTimeOriginal<${FileName; s/([0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}\.[0-9]{2})\.([0-9]+)(_[0-9]+)?(\.[^.]*)$/$1$4/}' \
-	'-SubSecTimeOriginal<${FileName; s/([0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}\.[0-9]{2})\.([0-9]+)(_[0-9]+)?(\.[^.]*)$/$2/}' \
-	.
+    -if 'not defined $DateTimeOriginal' \
+    -overwrite_original \
+    '-DateTimeOriginal<${FileName; s/([0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}\.[0-9]{2})\.([0-9]+)(_[0-9]+)?(\.[^.]*)$/$1$4/}' \
+    '-SubSecTimeOriginal<${FileName; s/([0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}\.[0-9]{2})\.([0-9]+)(_[0-9]+)?(\.[^.]*)$/$2/}' \
+    .
 
 # Delete RAW if .jpg exists
 exiftool \
-	-directory=trash \
-	-srcfile %d%f.cr2 \
-	-ext jpg \
-	.
+    -directory=trash \
+    -srcfile %d%f.cr2 \
+    -ext jpg \
+    .
 
 
 
@@ -171,10 +171,10 @@ exiftool '-FileName<${FileName; s/\.[0-9]{1,5}_[0-9]{1,5}(\.[^.]*)$/$1/}' .
 
 # Move photos without DateTimeOriginal
 exiftool \
-	'-directory=./New Folder' \
-	-if '(not $DateTimeOriginal)' \
-	-recurse \
-	.
+    '-directory=./New Folder' \
+    -if '(not $DateTimeOriginal)' \
+    -recurse \
+    .
 
 # Move photos to Make Model folder
 exiftool '-directory<./${Make} ${Model}' .
@@ -231,6 +231,11 @@ for file in *.ai; do
     inkscape "$file" --export-filename="${file%.ai}.svg";
 done
 
+# Convert .cdr to .svg
+for file in *.cdr; do
+    inkscape "$file" --export-filename="${file%.eps}.svg";
+done
+
 # Convert .eps to .svg
 for file in *.eps; do
     inkscape "$file" --export-filename="${file%.eps}.svg";
@@ -238,13 +243,13 @@ done
 
 # Convert .pdf to .svg
 for file in *.pdf; do
-	inkscape "$file" --export-filename="${file%.pdf}.svg";
+    inkscape "$file" --export-filename="${file%.pdf}.svg";
 done
 
 # Convert .svg to .png
 for file in *.svg; do
-	# inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
-	inkscape "$file" --export-type=png --export-filename="${file%.svg}.png";
+    # inkscape "$file" --export-type=png --export-width=512 --export-filename="${file%.svg}.png";
+    inkscape "$file" --export-type=png --export-filename="${file%.svg}.png";
 done
 
 
@@ -326,7 +331,7 @@ magick mogrify -monitor -trim +repage "./*.png"
 
 # Crop .svg keeping only the shapes
 for file in ./*.svg; do
-    inkscape "$file" --export-plain-svg="${file%.svg}_cropped.svg" --export-area-drawing
+    inkscape "$file" --export-area-drawing --export-plain-svg --export-filename="${file%.svg}_cropped.svg"
 done
 
 # Enhance image
@@ -338,3 +343,9 @@ magick -monitor "./input.png" -auto-gamma "./output.png"
 
 # Download image using curl
 curl "https://www.python.org/static/apple-touch-icon-144x144-precomposed.png" > "./precomposed.png"
+
+# Organize files into year-based folders by extracting the first 4 characters
+shopt -s nullglob
+for f in [0-9][0-9][0-9][0-9]-*; do
+  [ -f "$f" ] && d="${f:0:4}" && mkdir -p "$d" && mv "$f" "$d/"
+done

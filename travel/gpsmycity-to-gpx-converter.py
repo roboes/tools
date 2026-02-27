@@ -95,7 +95,7 @@ def gpsmycity_tour_import(*, urls, output_folder):
                 pat="', '",
                 expand=True,
             )
-            df_segments = df_segments.drop(columns=['path'], axis=1, errors='ignore')
+            df_segments = df_segments.drop(columns=['path'], errors='ignore')
 
             # Change dtypes
             df_segments = df_segments.astype(
@@ -108,7 +108,7 @@ def gpsmycity_tour_import(*, urls, output_folder):
         df_waypoints['pins'] = df_waypoints['pins'].str.strip("[']")
 
         # df_waypoints[['latitude', 'longitude', 'name', 'number', 'id']] = df_waypoints['pins'].str.split(pat='\', "|\', \'|", \'', expand=True)
-        # df_waypoints = df_waypoints.drop(columns=['pins', 'number', 'id'], axis=1, errors='ignore')
+        # df_waypoints = df_waypoints.drop(columns=['pins', 'number', 'id'], errors='ignore')
         df_waypoints[['latitude', 'longitude', 'name']] = df_waypoints['pins'].str.split(pat="', \"|', '|\", '", expand=True).iloc[:, 0:3]
 
         # Change dtypes

@@ -54,12 +54,15 @@ nano "$domain_root_path/domains/$subdomain.$domain/homeassistant/config/configur
 ```
 
 ```.txt
+default_config:
+
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
     - ::1
-    - 172.19.0.0/16
+    - 172.16.0.0/12
+    - 172.23.0.1
 ```
 
 ```.sh
@@ -85,6 +88,32 @@ docker ps
 # Logs
 # sudo docker logs "homeassistant_${system_user}"
 # sudo docker compose logs --tail 50
+```
+
+### Nginx
+
+/etc/nginx/sites-available/subdomain.domain.com.conf
+
+```.nginx
+server {
+    location / {
+        proxy_pass http://127.0.0.1:8123;
+        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Add this for large backups/updates
+        client_max_body_size 0;
+    }
+}
+```
+
+```.sh
+# Restart Nginx
+sudo systemctl reload nginx
 ```
 
 ## WireGuard VPN

@@ -29,6 +29,7 @@ console.log(document.querySelectorAll('.css-class'));
 
 ### Media
 
+[Name that Color](https://chir.ag/projects/name-that-color/)\
 [Noun Project](https://thenounproject.com): Collection of free icons and stock photos.\
 [MapChart](https://www.mapchart.net): Create your own custom map.\
 [StockCake](https://stockcake.com): Free image library that offers captivating images for various occasions.\
