@@ -40,6 +40,8 @@ services:
   immich-upload-optimizer:
     container_name: "immich_upload_optimizer_${system_user}"
     image: ghcr.io/miguelangel-nubla/immich-upload-optimizer:latest
+    ports:
+      - "2283:2283"
     environment:
       - IUO_UPSTREAM=http://immich-server:2283
       - IUO_TASKS_FILE=/app/config/tasks.yaml
@@ -48,17 +50,12 @@ services:
       - ./tasks.yaml:/app/config/tasks.yaml:ro
     depends_on:
       - immich-server
+    restart: always
 
   immich-server:
     container_name: "immich_server_${system_user}"
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    # extends:
-    #   file: hwaccel.transcoding.yml
-    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
-    ports:
-      - "2283:2283"
+    image: ghcr.io/immich-app/immich-server:\${IMMICH_VERSION:-release}
     volumes:
-      # Do not edit the next line. If you want to change the media storage location on your system, edit the value of UPLOAD_LOCATION in the .env file
       - \${UPLOAD_LOCATION}:/data
       - /etc/localtime:/etc/localtime:ro
     env_file:
@@ -66,8 +63,6 @@ services:
     environment:
       - IMMICH_HOST=0.0.0.0
       - IMMICH_PORT=2283
-    # ports:
-      # - '127.0.0.1:2283:2283'
     depends_on:
       - redis
       - database
@@ -77,12 +72,7 @@ services:
 
   immich-machine-learning:
     container_name: "immich_machine_learning_${system_user}"
-    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
-    # Example tag: \${IMMICH_VERSION:-release}-cuda
     image: ghcr.io/immich-app/immich-machine-learning:\${IMMICH_VERSION:-release}
-    # extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
     volumes:
       - model-cache:/cache
     env_file:
@@ -93,23 +83,21 @@ services:
 
   redis:
     container_name: "immich_redis_${system_user}"
-    image: docker.io/valkey/valkey:8-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571
+    image: docker.io/valkey/valkey:8-bookworm
     healthcheck:
       test: redis-cli ping || exit 1
     restart: always
 
   database:
     container_name: "immich_postgres_${system_user}"
-    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
     environment:
       POSTGRES_PASSWORD: \${DB_PASSWORD}
       POSTGRES_USER: \${DB_USERNAME}
       POSTGRES_DB: \${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
-      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
-      # DB_STORAGE_TYPE: 'HDD'
+      DB_STORAGE_TYPE: 'SSD'
     volumes:
-      # Do not edit the next line. If you want to change the database storage location on your system, edit the value of DB_DATA_LOCATION in the .env file
       - \${DB_DATA_LOCATION}:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
@@ -132,11 +120,11 @@ DB_DATA_LOCATION=$domain_root_path/domains/$subdomain.$domain/immich/postgres
 # To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 # TZ=Etc/UTC
 
-# The Immich version to use. You can pin this to a specific version like "v1.71.0"
+# Immich version
 IMMICH_VERSION=release
 
 # Connection secret for postgres. You should change it to a random password
-# Please use only the characters `A-Za-z0-9`, without special characters or spaces
+# Please use only the characters A-Za-z0-9, without special characters or spaces
 DB_PASSWORD=$postgres_password
 
 # The values below this line do not need to be changed
@@ -147,24 +135,26 @@ DB_DATABASE_NAME=immich
 EOF
 ```
 
+Original (Lossless/Preservation):
+
 ```.sh
 cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
 tasks:
   # JPEG → JXL (lossless JPEG preservation)
-  - name: jpeg2jxl-lossless
+  - name: images-jpeg-to-jxl
     command: cjxl --lossless_jpeg=1 {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - jpg
       - jpeg
 
   # PNG → JXL (lossless with distance 0)
-  - name: png2jxl-lossless
+  - name: images-png-to-jxl
     command: convert {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-clean.png && cjxl -d 0 {{.folder}}/{{.name}}-clean.png {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-clean.png
     extensions:
       - png
 
   # Other image formats → JXL (lossless)
-  - name: image2jxl-lossless
+  - name: images-misc-to-jxl
     command: cjxl {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-new.jxl && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - pgx
@@ -177,7 +167,7 @@ tasks:
       - exr
 
   # Lossless optimization for other formats
-  - name: caesium-lossless
+  - name: images-misc-to-caesium
     command: caesiumclt --keep-dates --exif --quality=0 --output={{.folder}} {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - tiff
@@ -185,7 +175,7 @@ tasks:
       - webp
 
   # Video compression with HandBrake
-  - name: handbrake-video
+  - name: video-compress-h264-1080p
     command: HandBrakeCLI --preset "Fast 1080p30" --encoder x264 --keep-display-aspect -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
@@ -224,6 +214,70 @@ tasks:
 EOF
 ```
 
+Alternative (Aggressive Storage Saving):
+
+```.sh
+cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
+tasks:
+  # Aggressive Image Reduction: Resize to 1000px + Lossy JXL (-d 2.5)
+  - name: images-resize-to-jxl
+    command: convert {{.folder}}/{{.name}}.{{.extension}} -resize 1000x1000\> /tmp/{{.name}}-tmp.png && cjxl /tmp/{{.name}}-tmp.png {{.folder}}/{{.name}}-new.jxl -d 2.5 --effort 7 && rm {{.folder}}/{{.name}}.{{.extension}} /tmp/{{.name}}-tmp.png
+    extensions:
+      - jpg
+      - jpeg
+      - png
+      - tiff
+      - tif
+      - webp
+      - bmp
+      - gif
+      - heic
+      - heif
+      - pgx
+      - pam
+      - pnm
+      - pgm
+      - ppm
+      - pfm
+      - exr
+
+  # Aggressive Video Reduction: 720p + x265 + Original Audio (with fallback)
+  - name: video-compress-hevc-720p
+    command: HandBrakeCLI --preset "H.265 MKV 720p30" --encoder-preset faster --quality 26 --aencoder copy --audio-fallback av_aac --all-subtitles -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    extensions:
+      - 3gp
+      - 3gpp
+      - avi
+      - flv
+      - insv
+      - m2t
+      - m2ts
+      - m4v
+      - mkv
+      - mov
+      - mp4
+      - mpe
+      - mpeg
+      - mpg
+      - mts
+      - webm
+      - wmv
+
+  # Passthrough formats
+  - name: passthrough-formats
+    command: ""
+    extensions:
+      - avif
+      - insp
+      - jxl
+      - psd
+      - raw
+      - rw2
+      - svg
+
+EOF
+```
+
 ```.sh
 cd $domain_root_path/domains/$subdomain.$domain/immich
 sudo -u $system_user docker compose up -d
@@ -252,13 +306,16 @@ Cloudflare → `Zero Trust`.
 
 #### Service Token
 
-`Access` → `Service auth` → `Create Service Token`. `Service token name`: `Immich Mobile Access`. `Service Token Duration`: `Non-expiring`.
+`Access controls` → `Service credentials` → `Service Tokens` → `Add a service token`:
+
+- `Service token name`: `Immich Access`.
+- `Service Token Duration`: `Non-expiring`.
 
 #### Policy
 
 `Access` → `Policies` → `Add a policy`.
 
-`Policy name`: `Immich Mobile App`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
+`Policy name`: `Immich Access`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
 
 `Add rules` → `Include`. `Selector`: `Service Token`. `Value`: `Immich Mobile Access`.
 
@@ -345,9 +402,14 @@ server {
         proxy_set_header Connection "upgrade";
 
         # Timeouts
-        proxy_connect_timeout 300s;
-        proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        client_body_timeout 1200s;
+        proxy_connect_timeout 1200s;
+        proxy_read_timeout 1200s;
+        proxy_send_timeout 1200s;
+
+        # Disable buffering so the client stays "connected"
+        proxy_request_buffering off;
+        proxy_buffering off;
     }
 
 }
@@ -356,4 +418,20 @@ server {
 ```.sh
 # Restart Nginx
 sudo systemctl reload nginx
+```
+
+## Bulk Upload
+
+```.sh
+# (Server) Install Immich CLI
+sudo npm i -g @immich/cli
+
+# (Local machine, Terminal 1) Open SSH tunnel
+sshpass -P "passphrase" -p "passphrase" -v ssh -i "~/.ssh/id_ed25519" -o ProxyCommand="cloudflared access ssh --hostname ssh.website.com" "sysadmin@ssh.website.com" -L 2283:localhost:2283 -N
+
+# (Local machine, Terminal 2) Login
+immich login http://localhost:2283/api API_KEY
+
+# (Local machine, Terminal 2) Bulk Upload
+npx @immich/cli@latest upload --recursive "./"
 ```

@@ -92,7 +92,7 @@ def geocoder_country_code(*, df, shapefile_path):
                 predicate='within',
             )
             # Remove columns
-            .drop(columns=['index_right', 'geometry'], axis=1, errors='ignore')
+            .drop(columns=['index_right', 'geometry'], errors='ignore')
         )
 
         # Execution time

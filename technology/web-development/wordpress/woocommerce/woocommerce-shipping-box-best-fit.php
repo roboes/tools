@@ -2,7 +2,7 @@
 
 
 // WooCommerce - Selects the best-fitting shipping box using BoxPacker (https://github.com/dvdoug/BoxPacker) for a WooCommerce order based on item dimensions and weight, and displays this information in the order details
-// Last update: 2026-01-15
+// Last update: 2026-02-04
 
 
 /*
@@ -36,9 +36,12 @@ use DVDoug\BoxPacker\Packer;
 use DVDoug\BoxPacker\Rotation;
 use DVDoug\BoxPacker\Exception\NoBoxesAvailableException;
 
-if (function_exists('WC') && is_admin()) {
+if (function_exists('WC')) {
     add_action(hook_name: 'woocommerce_checkout_order_processed', callback: 'calculate_and_store_package_best_fit', priority: 10, accepted_args: 1);
-    add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
+
+    if (is_admin()) {
+        add_action(hook_name: 'woocommerce_admin_order_data_after_order_details', callback: 'display_custom_order_meta', priority: 10, accepted_args: 1);
+    }
 }
 
 readonly class CustomBox implements Box
@@ -234,9 +237,6 @@ function calculate_and_store_package_best_fit(int|string $order_id): void
 
 function display_custom_order_meta(WC_Order $order): void
 {
-    if (!is_admin()) {
-        return;
-    }
 
     $package_details = $order->get_meta('order_package_best_fit', true);
     $package_details = $package_details ? json_decode($package_details, true) : [];

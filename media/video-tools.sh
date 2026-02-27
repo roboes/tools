@@ -1,5 +1,5 @@
 ## Video Tools
-# Last update: 2025-07-08
+# Last update: 2026-02-25
 
 
 # Start Bash (Unix Shell)
@@ -12,9 +12,9 @@
 
 # Settings
 if grep -qi microsoft /proc/version; then
-	cd "/mnt/c/Users/${USER}/Videos"
+    cd "/mnt/c/Users/${USER}/Videos"
 else
-	cd "${HOME}/Videos"
+    cd "${HOME}/Videos"
 fi
 
 
@@ -36,3 +36,6 @@ done
 find . -maxdepth 1 -type f -name "*.avi" | while IFS= read -r file; do
   ffmpeg -nostdin -i "$file" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k "${file%.*}.mp4"
 done
+
+# Reduce video size (web)
+ffmpeg -i "./input.mp4" -vcodec libx264 -crf 33 -preset slow -vf "scale=1920:-2" -an -movflags +faststart "./output_compressed.mp4"

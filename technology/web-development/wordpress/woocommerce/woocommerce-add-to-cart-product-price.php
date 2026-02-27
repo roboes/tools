@@ -14,7 +14,8 @@ if (function_exists('WC') && !is_admin()) {
         }
 
         // Get current language (Polylang/WPML)
-        $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
+        // $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
+        $browsing_language = 'de';
 
         // Common configuration for both product types
         $currency_config = sprintf(
@@ -22,12 +23,12 @@ if (function_exists('WC') && !is_admin()) {
             const currencyPosition = %s;
             const currencyDecimals = %s;
             const locale = %s;
-            
+
             const formatter = new Intl.NumberFormat(locale, {
                 minimumFractionDigits: parseInt(currencyDecimals),
                 maximumFractionDigits: parseInt(currencyDecimals)
             });
-            
+
             function formatPrice(price) {
                 const formattedPrice = formatter.format(price);
                 switch(currencyPosition) {
@@ -41,7 +42,11 @@ if (function_exists('WC') && !is_admin()) {
             get_woocommerce_currency_symbol() |> wp_json_encode(...),
             get_option(option: 'woocommerce_currency_pos') |> wp_json_encode(...),
             wc_get_price_decimals() |> wp_json_encode(...),
-            ($browsing_language === 'de' ? 'de-DE' : 'en-US') |> wp_json_encode(...)
+            match($browsing_language) {
+                'pt'    => 'pt-BR',
+                'de'    => 'de-DE',
+                default => 'en-US'
+            } |> wp_json_encode(...)
         );
 
         if ($product->is_type('variable')) {
@@ -53,21 +58,21 @@ if (function_exists('WC') && !is_admin()) {
                 const $button = $(".single_add_to_cart_button");
                 const $varInput = $("input.variation_id");
                 const $qtyInput = $('input[name="quantity"]');
-                
+
                 <?php echo $currency_config; ?>
-                
+
                 function updatePrice() {
                     const vid = $varInput.val();
                     const quantity = parseInt($qtyInput.val(), 10) || 1;
-                    
+
                     $button.find('span[data-price]').remove();
-                    
+
                     if (vid && jsonData[vid] !== undefined) {
                         const priceHtml = formatPrice(jsonData[vid] * quantity);
                         $button.append('<span data-price> - ' + priceHtml + '</span>');
                     }
                 }
-                
+
                 updatePrice();
                 $varInput.add($qtyInput).on('change', updatePrice);
                 $('button.plus, button.minus').on('click', () => setTimeout(updatePrice, 0));
@@ -82,17 +87,17 @@ if (function_exists('WC') && !is_admin()) {
                 const basePrice = <?php echo (float) $product_price; ?>;
                 const $button = $(".single_add_to_cart_button");
                 const $qtyInput = $('input[name="quantity"]');
-                
+
                 <?php echo $currency_config; ?>
-                
+
                 function updatePrice() {
                     const quantity = parseInt($qtyInput.val(), 10) || 1;
                     const priceHtml = formatPrice(basePrice * quantity);
-                    
+
                     $button.find('span[data-price]').remove();
                     $button.append('<span data-price> - ' + priceHtml + '</span>');
                 }
-                
+
                 updatePrice();
                 $qtyInput.on('change', updatePrice);
                 $('button.plus, button.minus').on('click', () => setTimeout(updatePrice, 0));

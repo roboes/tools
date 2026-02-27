@@ -21,6 +21,7 @@ Strava add-ons:\
 
 ##### Munich, Germany
 
+[MunichWays - RadlVorrang-Netz](https://umap.openstreetmap.de/de/map/radlvorrang-netz_112134)\
 [Great Rides München Nord](https://ridewithgps.com/clubs/4756-great-rides-munchen-nord/routes)
 
 ### Hiking

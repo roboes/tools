@@ -129,7 +129,7 @@ df_geo = geocoder(
 print(df_geo)
 
 # Run geocoder (free-form query)
-# df = df.assign(address_location=lambda row: row['address_country'].fillna(value='', method=None,  axis=0) + ' ' + row['address_state'].fillna(value='', method=None,  axis=0) + ' ' + row['address_city'].fillna(value='', method=None,  axis=0) + ' ' + row['address_postal_code'].fillna(value='', method=None,  axis=0) + ' ' + row['address_street'].fillna(value='', method=None,  axis=0))
+# df = df.assign(address_location=lambda row: row['address_country'].fillna(value='', axis=0) + ' ' + row['address_state'].fillna(value='', axis=0) + ' ' + row['address_city'].fillna(value='', axis=0) + ' ' + row['address_postal_code'].fillna(value='', axis=0) + ' ' + row['address_street'].fillna(value='', axis=0))
 
 # df_geo = geocoder(df=df, query_type='free', chunk_size=50, filepath='df_geolocation_slice.pkl', fillna='#')
 # print(df_geo)

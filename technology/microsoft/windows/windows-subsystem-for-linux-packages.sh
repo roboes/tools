@@ -1,5 +1,5 @@
 ## Windows Subsystem for Linux Packages
-# Last update: 2025-11-04
+# Last update: 2026-02-22
 
 
 # Start Windows Subsystem for Linux (WSL)
@@ -11,7 +11,8 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt cle
 
 
 # Install packages
-sudo apt install curl \
+sudo apt install composer \
+  curl \
   git \
   nodejs \
   npm \
@@ -21,6 +22,23 @@ sudo apt install curl \
   python3-virtualenv \
   wget
 
+# PHP
+sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
+sudo apt-get install php8.5
+
+# pre-commit
+sudo apt install pre-commit
+
+# codespell
+sudo apt install codespell
+
+# php-cs-fixer
+composer global require friendsofphp/php-cs-fixer
+nano ~/.bashrc
+# Then add to the bottom: export PATH="$PATH:$HOME/.config/composer/vendor/bin"
+
+# xmllint
+sudo apt install libxml2-utils
 
 # Node.js
 nvm install node
@@ -30,9 +48,6 @@ nvm alias default 25
 # Prettier
 sudo npm install -g prettier
 sudo npm install -g glob
-
-# codespell
-sudo apt install codespell
 
 
 # Homebrew install

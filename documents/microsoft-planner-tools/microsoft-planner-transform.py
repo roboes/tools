@@ -83,7 +83,7 @@ def microsoft_planner_importer(
         # .astype(dtype={'run_date': 'datetime64[ns]'})
         .assign(run_month=lambda row: row['run_date'].dt.strftime(date_format='%Y-%m'))
         .assign(
-            id=lambda row: row['task_id'].astype(str) + '_' + row['checklist_id'].fillna(value='', method=None, axis=0).astype(str),
+            id=lambda row: row['task_id'].astype(str) + '_' + row['checklist_id'].fillna(value='', axis=0).astype(str),
         )
         # Reorder columns
         .filter(
@@ -279,16 +279,9 @@ def microsoft_planner_transform(
             ),
         )
         # Remove columns
-        .drop(
-            columns=['id', 'assigned_to_ids', 'previous_value'],
-            axis=1,
-            errors='ignore',
-        )
+        .drop(columns=['id', 'assigned_to_ids', 'previous_value'], errors='ignore')
         # Reorder rows
-        .sort_values(
-            by=['run_date', 'labels', 'task_id', 'checklist_id'],
-            ignore_index=True,
-        )
+        .sort_values(by=['run_date', 'labels', 'task_id', 'checklist_id'], ignore_index=True)
     )
 
     if len(microsoft_planner_checklists_df) > 0 or len(microsoft_planner_tasks_summary_df) > 0:
