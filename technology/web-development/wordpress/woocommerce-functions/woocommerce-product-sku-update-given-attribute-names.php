@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce Function - Update SKUs given product attribute names
-// Last update: 2025-11-26
+// Last update: 2026-03-14
 
 
 function slug_rename($string, $date_rearrange = false)
@@ -53,11 +53,19 @@ function slug_rename($string, $date_rearrange = false)
 // Requires slug_rename()
 function woocommerce_product_sku_update_given_attribute_names()
 {
+    // IDs to exclude
+    $excluded_product_ids = [];
+    $excluded_variation_ids = [44043, 44044];
+
     // Query to get all products in "Trainings" category
     $args = ['post_type' => 'product', 'posts_per_page' => -1, 'post_status' => ['publish', 'private'], 'tax_query' => [['taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => ['trainings-en']]]];
     $products = get_posts($args);
 
     foreach ($products as $product_post) {
+        if (in_array($product_post->ID, $excluded_product_ids)) {
+            continue;
+        }
+
         $product = wc_get_product($product_post->ID);
         $parent_sku = $product->get_sku();
 
@@ -65,6 +73,10 @@ function woocommerce_product_sku_update_given_attribute_names()
             // For variable products, update each variation
             $variations = $product->get_children();
             foreach ($variations as $variation_id) {
+                if (in_array($variation_id, $excluded_variation_ids)) {
+                    continue;
+                }
+
                 $variation = wc_get_product($variation_id);
                 $attributes = $variation->get_attributes();
                 $variation_sku_parts = [$parent_sku];
