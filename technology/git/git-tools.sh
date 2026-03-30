@@ -53,7 +53,7 @@ fi
 
 
 ## Prettier
-prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml}'
+prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml,yml}'
 
 ## PHP
 find . -type f -name "*.php" | grep -q . && php-cs-fixer fix . --rules=@PSR12 --using-cache=no --no-interaction
@@ -81,7 +81,7 @@ if [ $(basename "$PWD") != "odoo-woocommerce-sync" ]; then
 
         # Check if "janitor" is in requirements.txt and replace it with pyjanitor
         if grep -q "janitor" "requirements.txt"; then
-            sed -i '/janitor/c\pyjanitor==0.32.20' requirements.txt
+            sed -i '/janitor/c\pyjanitor==0.32.22' requirements.txt
             pre-commit run --files "./requirements.txt"
         fi
 

@@ -321,6 +321,16 @@ Cloudflare → `Zero Trust`.
 
 Then, add the newly created policy to your Immich Cloudflare Zero Trust application.
 
+#### Security
+
+Cloudflare → Website → `Security` → `Security rules`.
+
+1. Immich Passthrough
+
+- `Rule name`: `Immich Passthrough`.
+- `Expression`: `(http.request.headers["cf-access-client-id"][0] eq "CF-ACCESS-CLIENT-ID")`.
+- `Choose action`: `Skip` (select all `WAF components to skip`).
+
 #### Immich Mobile App
 
 Add both `CF-Access-Client-Id` and `CF-Access-Client-Secret` to the Immich mobile app.

@@ -1,7 +1,7 @@
-# Odoo Installation (Docker)
+# Odoo Installation
 
 > [!NOTE]  
-> Last update: 2026-01-22
+> Last update: 2026-03-10
 
 ```.sh
 # Settings
@@ -47,14 +47,15 @@ git init
 
 # Create the addons directory
 mkdir -p "addons"
-cd "addons"
 
 # Add OCA repositories as submodules
-git submodule add --branch $odoo_version https://github.com/OCA/brand.git oca/brand
-git submodule add --branch $odoo_version https://github.com/OCA/product-attribute.git oca/product-attribute
-git submodule add --branch $odoo_version https://github.com/OCA/queue.git oca/queue
-git submodule add --branch $odoo_version https://github.com/OCA/server-tools.git oca/server-tools
-git submodule add --branch $odoo_version https://github.com/roboes/odoo-woocommerce-sync.git custom/odoo-woocommerce-sync
+git submodule add --branch $odoo_version https://github.com/OCA/brand.git addons/oca/brand
+git submodule add --branch $odoo_version https://github.com/OCA/product-attribute.git addons/oca/product-attribute
+git submodule add --branch $odoo_version https://github.com/OCA/queue.git addons/oca/queue
+git submodule add --branch $odoo_version https://github.com/OCA/server-tools.git addons/oca/server-tools
+git submodule add --branch $odoo_version https://github.com/roboes/odoo-woocommerce-sync.git addons/custom/odoo-woocommerce-sync
+# git submodule add --branch $odoo_version https://github.com/roboes/odoo-shorepos-sync.git addons/custom/odoo-shorepos-sync
+# git submodule add --branch $odoo_version https://github.com/OCA/l10n-brazil.git addons/oca/l10n-brazil
 
 git commit -m "Add OCA submodules for Odoo $odoo_version"
 ```
@@ -62,16 +63,16 @@ git commit -m "Add OCA submodules for Odoo $odoo_version"
 ### Dockerfile & Docker Compose
 
 ```.sh
-# Create Dockerfile for custom Odoo image with Python dependencies
 cat <<'EOF' > "$domain_root_path/domains/$subdomain.$domain/odoo/Dockerfile"
 ARG ODOO_VERSION
 FROM odoo:${ODOO_VERSION}
 
 USER root
 
-# Mount addons folder during build to install requirements (requires BuildKit)
-RUN --mount=type=bind,target=/tmp/addons,source=addons \
-	find /tmp/addons -name "requirements.txt" -exec pip3 install --no-cache-dir --break-system-packages -r {} \;
+RUN --mount=type=bind,source=addons,target=/tmp/addons \
+    find /tmp/addons -name "requirements.txt" \
+        ! -path "*/oca/server-tools/*" \
+        -exec pip3 install --no-cache-dir --break-system-packages -r {} \; ; true
 
 USER odoo
 EOF
@@ -191,7 +192,9 @@ limit_time_real = 1200
 max_cron_threads = 1
 without_demo = all
 server_wide_modules = base,web,queue_job
-queue_job.channels = root:1
+
+[queue_job]
+channels = root:2
 
 EOF
 ```
@@ -223,7 +226,7 @@ sudo chown -R $postgres_uid:$postgres_gid "$domain_root_path/domains/$subdomain.
 ```.sh
 # Build custom Odoo image
 cd $domain_root_path/domains/$subdomain.$domain/odoo
-docker compose build
+docker compose build --no-cache # --progress=plain
 ```
 
 ```.sh
@@ -243,6 +246,45 @@ docker compose up -d
 ```
 
 ```.sh
+# Define modules to install
+modules=(
+    base_multi_image
+    l10n_br_base
+    l10n_br_sale
+    module_auto_update
+    product_brand
+    product_dimension
+    product_multi_category
+    queue_job
+    queue_job_cron
+)
+
+# Check which are available
+modules_available=()
+modules_unavailable=()
+for module in "${modules[@]}"; do
+    if docker exec odoo_server_${system_user} find /mnt/extra-addons -type d -name "$module" | grep -q .; then
+        modules_available+=("$module")
+    else
+        modules_unavailable+=("$module")
+    fi
+done
+
+echo "Modules available: ${modules_available[*]}"
+echo "Modules unavailable: ${modules_unavailable[*]}"
+
+# Install only available modules
+if [ ${#modules_available[@]} -gt 0 ]; then
+    modules_available_csv=$(IFS=,; echo "${modules_available[*]}")
+    docker exec -it odoo_server_${system_user} odoo \
+        --database $database_name \
+        --init $modules_available_csv \
+        --no-http \
+        --stop-after-init
+fi
+```
+
+```.sh
 # Confirm docker is running
 docker ps
 ```
@@ -251,6 +293,9 @@ docker ps
 # View logs
 # docker logs odoo_server_${system_user}
 # docker logs odoo_postgres_${system_user}
+
+# Clean logs
+# truncate -s 0 $(docker inspect --format='{{.LogPath}}' odoo_server_${system_user})
 ```
 
 ### Nginx directives
@@ -321,13 +366,17 @@ docker compose restart odoo
 
 # Backup database
 # docker exec odoo_postgres_${system_user} pg_dump -U $database_username $database_name > backup.sql
+
+# Install Python packages
+# docker exec -u 0 -it odoo_server_${system_user} pip3 install --no-cache-dir --break-system-packages --ignore-installed packaging brazilcep email-validator erpbrasil.assinatura erpbrasil.base erpbrasil.edoc erpbrasil.transmissao nfelib num2words phonenumbers
+# docker restart odoo_server_${system_user}
 ```
 
 ### Update OCA Submodules
 
 ```.sh
 # Update all OCA submodules to latest
-cd $domain_root_path/domains/$subdomain.$domain/odoo/addons
+cd $domain_root_path/domains/$subdomain.$domain/odoo
 git submodule update --remote --merge
 git add .
 git commit -m "Update OCA submodules"
@@ -348,6 +397,14 @@ git commit -m "Add OCA account-financial-tools"
 
 # Update odoo.conf to include new path
 # Add: /mnt/extra-addons/oca/account-financial-tools
+
+# Get Odoo container UID/GID
+odoo_uid=$(docker run --rm odoo:$odoo_version id -u)
+odoo_gid=$(docker run --rm odoo:$odoo_version id -g)
+echo "Odoo UID: $odoo_uid, GID: $odoo_gid"
+
+# Change ownership (after git operations are complete)
+sudo chown -R $odoo_uid:$odoo_gid "$domain_root_path/domains/$subdomain.$domain/odoo/addons"
 
 # Rebuild and restart
 cd $domain_root_path/domains/$subdomain.$domain/odoo
