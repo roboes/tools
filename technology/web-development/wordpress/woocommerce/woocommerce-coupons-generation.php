@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-02-22
+// Last update: 2026-03-05
 
 
 /*
@@ -880,5 +880,47 @@ if (function_exists('WC')) {
             }
         }
     }
+
+    // Gift card product: Disable the Ajax "Add to cart" behavior for gift card products in loop grids (e.g. Elementor)
+    add_filter(hook_name: 'woocommerce_loop_add_to_cart_args', callback: function (array $args, WC_Product $product): array {
+
+        static $product_ids = [44185, 44187];
+
+        if (in_array($product->get_id(), $product_ids, strict: true)) {
+            // Remove the ajax_add_to_cart class so WooCommerce doesn't fire the Ajax handler
+            $args['class'] = str_replace('ajax_add_to_cart', '', $args['class'] ?? '');
+        }
+
+        return $args;
+
+    }, priority: 10, accepted_args: 2);
+
+
+    // Gift card product: Change the button label from "Add to cart" to "Select options" for gift card products in loop grids
+    add_filter(hook_name: 'woocommerce_product_add_to_cart_text', callback: function (string $text, WC_Product $product): string {
+
+        static $product_ids = [44185, 44187];
+
+        if (in_array($product->get_id(), $product_ids, strict: true) && !is_product()) {
+            $text = __('Select options', 'woocommerce');
+        }
+
+        return $text;
+
+    }, priority: 10, accepted_args: 2);
+
+
+    // Gift card product: Redirect the button link to the product page for gift card products in loop grids
+    add_filter(hook_name: 'woocommerce_product_add_to_cart_url', callback: function (string $url, WC_Product $product): string {
+
+        static $product_ids = [44185, 44187];
+
+        if (in_array($product->get_id(), $product_ids, strict: true) && !is_product()) {
+            $url = get_permalink($product->get_id());
+        }
+
+        return $url;
+
+    }, priority: 10, accepted_args: 2);
 
 }

@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-02-15
+// Last update: 2026-03-28
 
 
 // Add this line to wp-config.php file
@@ -16,7 +16,8 @@ send_training_confirmation_email(
     product_variation_appointment_date: '2026-05-09',
     product_variation_appointment_time: '14:30',
     product_quantity: 1,
-    language: 'de'
+    language: 'de',
+    order_notes: ''
 );
 */
 
@@ -486,7 +487,7 @@ if (function_exists('WC')) {
     }
 
 
-    function send_training_confirmation_email(int $product_id, string $customer_email, string $customer_name, string $product_variation_own_portafilter_machine, string $product_variation_appointment_date, string $product_variation_appointment_time, int $product_quantity, string $language = 'en'): void
+    function send_training_confirmation_email(int $product_id, string $customer_email, string $customer_name, string $product_variation_own_portafilter_machine, string $product_variation_appointment_date, string $product_variation_appointment_time, int $product_quantity, string $language = 'en', string $order_notes = ''): void
     {
 
         // Retrieve custom meta for training location
@@ -513,8 +514,8 @@ if (function_exists('WC')) {
                 'de' => 'Vielen Dank für deine Buchung',
             ],
             'body' => [
-                'en' => sprintf('Hello %s,<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> %s<br><strong>Date:</strong> %s<br><strong>Time:</strong> %s<br><strong>Quantity:</strong> %s<br><strong>Location:</strong> %s<br><br><a href="%s">Product information and legal notice</a><br><br>Thank you for registering!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
-                'de' => sprintf('Hallo %s,<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> %s<br><strong>Datum:</strong> %s<br><strong>Uhrzeit:</strong> %s<br><strong>Menge:</strong> %s<br><strong>Ort:</strong> %s<br><br><a href="%s">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!', $customer_name, !empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name, DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')), $product_variation_appointment_time, $product_quantity, $product_training_location, get_permalink($product_id)),
+                'en' => 'Hello ' . $customer_name . ',<br><br>You have successfully registered for the following training:<br><br><strong>Training:</strong> ' . (!empty($product_variation_own_portafilter_machine) ? $product_name . ' (Own portafilter machine: ' . $product_variation_own_portafilter_machine . ')' : $product_name) . '<br>' . '<strong>Date:</strong> ' . DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')) . '<br><strong>Time:</strong> ' . $product_variation_appointment_time . '<br><strong>Quantity:</strong> ' . $product_quantity . '<br><strong>Location:</strong> ' . $product_training_location . (!empty($order_notes) ? '<br><strong>Notes:</strong> ' . esc_html($order_notes) : '') . ($product_variation_own_portafilter_machine === 'Mit' ? '<br><br><strong>Important:</strong> Please remember to bring your grinder and tamper!<br>' : '') . '<br><br><a href="' . get_permalink($product_id) . '">Product information and legal notice</a><br><br>Thank you for registering!',
+                'de' => 'Hallo ' . $customer_name . ',<br><br>Du hast dich erfolgreich für das folgende Training angemeldet:<br><br><strong>Training:</strong> ' . (!empty($product_variation_own_portafilter_machine) ? $product_name . ' (Eigene Siebträgermaschine: ' . $product_variation_own_portafilter_machine . ')' : $product_name) . '<br>' . '<strong>Datum:</strong> ' . DateTimeImmutable::createFromFormat(format: 'Y-m-d', datetime: $product_variation_appointment_date, timezone: wp_timezone())->format(get_option(option: 'date_format')) . '<br><strong>Uhrzeit:</strong> ' . $product_variation_appointment_time . '<br><strong>Menge:</strong> ' . $product_quantity . '<br><strong>Ort:</strong> ' . $product_training_location . (!empty($order_notes) ? '<br><strong>Hinweise:</strong> ' . esc_html($order_notes) : '') . ($product_variation_own_portafilter_machine === 'Mit' ? '<br><br><strong>Wichtig:</strong> Bitte bringe unbedingt deine Mühle und deinen Tamper mit!<br>' : '') . '<br><br><a href="' . get_permalink($product_id) . '">Produktinformationen und rechtliche Hinweise</a><br><br>Vielen Dank für deine Anmeldung!',
             ],
         ];
 

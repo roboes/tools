@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-01-17
+> Last update: 2026-03-27
 
 ```.sh
 # Settings
@@ -945,7 +945,7 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com;
+    server_name website.com www.website.com mail.website.com webmail.website.com; # Listen for www to redirect
     listen 100.00.000.01;
     listen 100.00.000.01:443 ssl;
     listen [1000:0000:0000:0000:0000:0000:0000:0000];
@@ -1019,6 +1019,10 @@ server {
     }
     if ($host = admin.${domain}) {
         rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
+    }
+    ## Redirect www to non-www
+    if ($host = www.${domain}) {
+        return 301 https://${domain}$request_uri;
     }
 
     ## AWStats CGI rewrite
@@ -1258,6 +1262,15 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 - If incoming requests match...: `All incoming requests`.
 - Then... `Eligible for cache`.
 
+#### Rules
+
+Cloudflare → Website → `Rules` → `Page Rules` → `Create Page Rule`.
+
+- URL: `www.website.com/*`.
+- Pick a Setting: `Forwarding URL`.
+- Select status code: `301 - Permanent Redirect`.
+- Enter destination URL: `https://website.com/$1`.
+
 ### PHP-FPM Configuration
 
 ```.sh
@@ -1398,27 +1411,7 @@ sudo systemctl restart mariadb
 
 ### SSL Certificate
 
-```.sh
-mkdir -p $domain_root_path/public_html/.well-known/acme-challenge
-chmod -R 755 $domain_root_path/public_html/.well-known
-```
-
-```.sh
-sudo certbot certonly --manual --preferred-challenges dns -d autodiscover.$domain
-```
-
-Copy the generated TXT for `_acme-challenge.autodiscover.$domain` value and add it as a DNS `TXT` record with the name `_acme-challenge` in Cloudflare.
-
-```.sh
-# Verify the TXT Record
-dig TXT _acme-challenge.autodiscover.$domain +short
-```
-
 `Virtualmin` → Choose Virtual Server → `Manage Virtual Server` → `Setup SSL Certificate` → `SSL Providers`.
-
-```.sh
-# virtualmin generate-letsencrypt-cert --domain $domain --renew --email-error
-```
 
 - Enable `Automatically renew certificate`.
 - `Send email on renewal` → `Only on failure`.
@@ -1427,8 +1420,8 @@ dig TXT _acme-challenge.autodiscover.$domain +short
 If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (orange cloud) to "DNS only" (gray cloud) for the domain.
 
 ```.sh
-# Remove .htaccess
-rm $domain_root_path/public_html/.well-known/acme-challenge/.htaccess
+# Forces Let's Encrypt renewal via CLI (alternative to Virtualmin UI)
+# virtualmin generate-letsencrypt-cert --domain $domain --renew --email-error
 ```
 
 ```.sh
