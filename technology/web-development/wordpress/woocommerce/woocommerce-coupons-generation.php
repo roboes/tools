@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-03-05
+// Last update: 2026-04-21
 
 
 /*
@@ -31,8 +31,21 @@ Notes:
 generate_coupon_on_purchase(input: [
     'name'       => 'Firstname Lastname',
     'email'      => 'email@website.com',
-    'item_id' => 44043, // Product variation ID
-    'language'   => 'de'
+    'item_id'    => 44043, // Product variation ID
+    'language'   => 'de',
+    'note'       => '',
+]);
+*/
+
+/*
+// Manually generate a fixed cart discount (gift card) coupon
+generate_coupon_on_purchase(input: [
+    'name'     => 'Firstname Lastname',
+    'email'    => 'email@website.com',
+    'item_id'  => 44185, // Product variation ID
+    'amount'   => 0,
+    'language' => 'de',
+    'note'     => '',
 ]);
 */
 
@@ -198,7 +211,8 @@ if (function_exists('WC')) {
             $purchase_date  = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
             $items_to_process = [[
                 'id'     => $input['item_id'],
-                'amount' => $input['amount'] ?? 0
+                'amount' => $input['amount'] ?? 0,
+                'note'   => $input['note'] ?? '',
             ]];
         }
 
@@ -282,7 +296,7 @@ if (function_exists('WC')) {
                 }
 
                 // Send email
-                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, product_url: $product_url, meta_suffix: $coupon_data->config['meta_key_suffix'], coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $order_language, manual_data: ['name' => $customer_name, 'email' => $customer_email, 'expiry' => $coupon_expiry_date->getTimestamp()]);
+                send_coupon_email(order: $order, product_parent_name: $product_parent_name, product_display_name: $product_display_name, product_url: $product_url, meta_suffix: $coupon_data->config['meta_key_suffix'], coupon_is_fixed_amount: $coupon_is_fixed_amount, coupon_amount_formatted: $coupon_amount_formatted, coupon_code: $coupon_code, language: $order_language, manual_data: ['name' => $customer_name, 'email' => $customer_email, 'expiry' => $coupon_expiry_date->getTimestamp(), 'note' => $item['note'] ?? '']);
             }
         }
     }
@@ -305,14 +319,14 @@ if (function_exists('WC')) {
                 'heading' => "{$product_display_name}",
                 'body' => "Hello {$customer_name},<br><br>" . ($order ? "Thank you for your order! Your" : "Your") . " <strong>{$product_display_name}</strong> is now active.<br><br>Gift card code: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Amount: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
-                    "<br>Valid until: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Product information and legal notices</a><br><br>Simply use this coupon at checkout for your next booking." . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Multi-purpose voucher according to Section 3 (15) of the German VAT Act (UStG). VAT is only due upon redemption.</small>" : "")
+                    "<br>Valid until: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Product information and legal notices</a><br><br>Simply use this coupon at checkout for your next booking." . (!empty($manual_data['note'] ?? '') ? "<br><br><small style='color: #666666;'>" . esc_html($manual_data['note']) . "</small>" : "") . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Multi-purpose voucher according to Section 3 (15) of the German VAT Act (UStG). VAT is only due upon redemption.</small>" : "")
             ],
             'de' => [
                 'subject' => get_option(option: 'blogname') . " - {$product_display_name}",
                 'heading' => "{$product_display_name}",
                 'body' => "Hallo {$customer_name},<br><br>" . ($order ? "Vielen Dank für deine Bestellung! Dein" : "Dein") . " <strong>{$product_display_name}</strong> ist jetzt aktiv.<br><br>Gutscheincode: <strong style='{$email_coupon_code_style}'>{$coupon_code}</strong>" .
                     ($coupon_is_fixed_amount ? "<br>Wert: <strong>" . $coupon_amount_formatted . "</strong>" : "") .
-                    "<br>Gültig bis: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Produktinformationen und rechtliche Hinweise</a><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb." . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Mehrzweckgutschein gemäß § 3 Abs. 15 UStG. Die Umsatzsteuer fällt erst bei Einlösung an.</small>" : "")
+                    "<br>Gültig bis: <strong>{$coupon_expiry_date->format(format: get_option('date_format'))}</strong><br><br><a href='" . esc_url($product_url) . "'>Produktinformationen und rechtliche Hinweise</a><br><br>Nutze diesen Gutschein einfach bei deiner nächsten Buchung im Warenkorb." . (!empty($manual_data['note'] ?? '') ? "<br><br><small style='color: #666666;'>" . esc_html($manual_data['note']) . "</small>" : "") . ($coupon_is_fixed_amount ? "<br><br><br><small style='color: #666666;'>Mehrzweckgutschein gemäß § 3 Abs. 15 UStG. Die Umsatzsteuer fällt erst bei Einlösung an.</small>" : "")
             ],
         ];
 

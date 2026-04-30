@@ -9,9 +9,11 @@
 
 Disable Fast Startup: `Control Panel` → `Power Options` → `Choose what the power buttons do` → Disable `Turn on fast startup`.
 
+Shrink Windows partition first: `Win + R` → `diskmgmt.msc` → Right-click on the C: drive → Shrink Volume.
+
 ## Debian
 
-[Download Debian](https://www.debian.org/distrib/) "iso-cd" "netinst.iso".
+[Download Debian](https://www.debian.org/distrib/) → "iso-cd" → "netinst.iso".
 
 Rufus:
 
