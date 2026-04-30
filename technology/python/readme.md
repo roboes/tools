@@ -1,5 +1,15 @@
 # Python
 
+## pip cache
+
+```.sh
+# Check cache size
+python -m pip cache info
+
+# Clear entire pip cache (safe - won't affect installed packages)
+python -m pip cache purge
+```
+
 ## PyInstaller
 
 ```.sh
