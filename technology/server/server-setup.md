@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-03-27
+> Last update: 2026-05-27
 
 ```.sh
 # Settings
@@ -35,13 +35,13 @@ sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt a
 ## Check Current Locale Settings
 locale
 
-## Reconfigure Locales
+## Reconfigure Locales (en_US.UTF-8)
 sudo dpkg-reconfigure locales
 
 ## Update the Environment Variables
 nano ~/.bashrc
 
-# Add or update the following line
+## Add or update the following line
 # export LANG=en_US.UTF-8
 ```
 
@@ -318,7 +318,18 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 #### Webmin Configuration
 
-- IP Access Control: `Webmin` → `Webmin` → `Webmin Configuration` → `IP Access Control`
+- Temporary Files Directory: `Webmin` → `Webmin` → `Webmin Configuration` → `Advanced Options`:
+
+  ```.sh
+  mkdir -p /var/tmp-webmin
+  chmod 700 /var/tmp-webmin
+  ```
+
+  - `Temporary files directory`: `/var/tmp-webmin`.
+  - Enable `Clear temp files in non-standard directory?`.
+  - Apply changes via terminal: `sudo systemctl restart webmin`.
+
+- IP Access Control: `Webmin` → `Webmin` → `Webmin Configuration` → `IP Access Control`:
   - `Allowed IP addresses` → `Only allow from listed addresses` → [IP Access Control](https://www.ipdeny.com/ipblocks/) (download aggregated IP blocks).
   - Enable `Include local network in list`.
 
@@ -607,6 +618,9 @@ sudo firewall-cmd --list-interfaces
 # Show services
 sudo firewall-cmd --list-services
 
+# Show zones
+sudo firewall-cmd --list-all-zones
+
 # Show active rules
 sudo firewall-cmd --list-all
 ```
@@ -828,6 +842,10 @@ http {
     server_names_hash_bucket_size 128;
     # server_name_in_redirect off;
 
+    # Map and Variable Optimization
+    variables_hash_max_size 2048;
+    variables_hash_bucket_size 128;
+
     # Keep-Alive Settings
     keepalive_timeout 30s;
     keepalive_requests 500;
@@ -851,7 +869,6 @@ http {
 
     # Security Headers & Settings
     server_tokens off;
-    add_header Vary "Accept-Encoding";
     add_header X-Cache-Status $upstream_cache_status;
 
 
@@ -936,6 +953,21 @@ http {
 }
 ```
 
+##### /etc/nginx/snippets/security-headers.conf
+
+```.sh
+sudo mkdir -p /etc/nginx/snippets
+sudo nano /etc/nginx/snippets/security-headers.conf
+```
+
+```.nginx
+add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
+```
+
 ##### /etc/nginx/sites-available/domain.com.conf
 
 ```.nginx
@@ -945,49 +977,14 @@ server {
     set $domain_root_path /home/${domain}/public_html;
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name website.com www.website.com mail.website.com webmail.website.com; # Listen for www to redirect
-    listen 100.00.000.01;
+    server_name website.com www.website.com;
+    listen 100.00.000.01:80; # HTTP IPv4 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
+    listen [1000:0000:0000:0000:0000:0000:0000:0000]:80; # HTTP IPv6 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
     listen 100.00.000.01:443 ssl;
-    listen [1000:0000:0000:0000:0000:0000:0000:0000];
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
-    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
+    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
     set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
-
-    # PHP Processing
-    fastcgi_split_path_info "^(.+\\.php)(/.+)$";
-
-    location ~ "\.php(/|$)" {
-        try_files $uri $fastcgi_script_name =404;
-
-        # FastCGI core settings
-        include fastcgi_params;
-        fastcgi_pass ${php_socket_path};
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_param PATH_INFO $fastcgi_path_info;
-        fastcgi_intercept_errors on;
-
-        # Security and header handling
-        fastcgi_hide_header 'X-Powered-By';
-        fastcgi_param HTTP_PROXY "";
-
-        # Caching controls
-        set $skip_cache 0;
-        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
-        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
-        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
-        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
-        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
-
-        fastcgi_cache MYCACHE;
-        fastcgi_cache_valid 200 301 302 1h;
-        fastcgi_cache_valid 404 1m;
-        fastcgi_cache_use_stale error timeout updating;
-        fastcgi_cache_bypass $skip_cache;
-        fastcgi_no_cache $skip_cache;
-        add_header X-Nginx-Cache-Status $upstream_cache_status always;
-    }
 
 
     # Main Web Root Setup
@@ -1001,13 +998,8 @@ server {
     # Enable HTTP/2 protocol support
     http2 on;
 
-
     # Security Headers
-    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
+    include /etc/nginx/snippets/security-headers.conf;
     add_header Content-Security-Policy $content_security_policy always;
 
 
@@ -1030,11 +1022,6 @@ server {
 
 
     # Location Blocks - General & Security
-
-    ## Main application entry point
-    location / {
-        try_files $uri $uri/ /index.php?$args;
-    }
 
     ## Block access to sensitive files
     location ~ ^/\.user\.ini {
@@ -1069,20 +1056,81 @@ server {
     }
 
     # Static Asset Caching
-    location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|css|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|js|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
+    location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
+        etag on;
+        if_modified_since exact;
+        expires 1y;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~* ^(?!.*phast\\.php).*\.(css|js)$ {
         etag on;
         if_modified_since exact;
         expires 30d;
-        add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
+        add_header Cache-Control "public";
     }
 
     location ~* \.(csv|json|rss|txt|xls|xlsx|xml)$ {
         expires 5m;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
         add_header Cache-Control "public";
+    }
+
+    location ~ "\.php(/|$)" {
+        try_files $uri $fastcgi_script_name =404;
+
+        # PHP Processing
+        fastcgi_split_path_info "^(.+\\.php)(/.+)$";
+
+        # FastCGI core settings
+        include fastcgi_params;
+        fastcgi_pass ${php_socket_path};
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_intercept_errors on;
+
+        # Security and header handling
+        fastcgi_hide_header 'X-Powered-By';
+        fastcgi_param HTTP_PROXY "";
+
+        # Caching controls
+        set $skip_cache 0;
+        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
+        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
+
+        fastcgi_cache MYCACHE;
+        fastcgi_cache_valid 200 301 302 1h;
+        fastcgi_cache_valid 404 1m;
+        fastcgi_cache_use_stale error timeout updating;
+        fastcgi_cache_bypass $skip_cache;
+        fastcgi_no_cache $skip_cache;
+
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
+        add_header X-Nginx-Cache-Status $upstream_cache_status always;
     }
 
     location ^~ /wp-content/uploads/ {
         autoindex off;
+        etag on;
+        if_modified_since exact;
+        expires 1y;
+
+        # Force Nginx to look for the double-extension file first (.jpg.avif)
+        try_files $uri.avif $uri =404;
+
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
+        add_header Cache-Control "public, no-transform, immutable";
     }
 
     # Error Handling
@@ -1091,6 +1139,13 @@ server {
         internal;
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
         return 500 "Internal Server Error";
+    }
+
+    ## Main application entry point
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
     }
 
 }
@@ -1109,11 +1164,11 @@ server {
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
     server_name subdomain.website.com;
-    listen 100.00.000.01;
+    listen 100.00.000.01:80; # HTTP IPv4 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
+    listen [1000:0000:0000:0000:0000:0000:0000:0000]:80; # HTTP IPv6 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
     listen 100.00.000.01:443 ssl;
-    listen [1000:0000:0000:0000:0000:0000:0000:0000];
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
-    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
+    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
 
 
@@ -1124,6 +1179,13 @@ server {
     # Logging
     access_log /var/log/virtualmin/${domain}_access_log;
     error_log /var/log/virtualmin/${domain}_error_log warn;
+
+    # Enable HTTP/2 protocol support
+    http2 on;
+
+    # Security Headers
+    include /etc/nginx/snippets/security-headers.conf;
+    add_header Content-Security-Policy $content_security_policy always;
 
 
     # Rewrites and Redirects
@@ -1139,9 +1201,25 @@ server {
     ## AWStats CGI rewrite
     rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
 
+
+    # Location Blocks - General & Security
+
+    ## Block access to sensitive files
+    location ~ ^/\.user\.ini {
+        deny all;
+    }
+
+    ## Block access to .yml files
+    location ~* \.(yml)$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
     ## Well-known and ACME challenges for SSL certificate renewal
     location ^~ /.well-known/acme-challenge/ {
         allow all;
+        auth_basic off;
         default_type "text/plain";
         add_header Content-Type text/plain;
         try_files $uri =404;
@@ -1151,30 +1229,25 @@ server {
         try_files $uri /;
     }
 
-    # Location Blocks - General & Security
-
-    ## Block access to sensitive files
-    location ~ ^/\.user\.ini {
-        deny all;
+    ## Main application entry point
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Content-Security-Policy $content_security_policy always;
     }
-
-    #location / {
-    #    return 301 https://website.com/$request_uri;
-    #}
 
 }
 ```
 
 ```.sh
 # Restart Nginx
-sudo systemctl reload nginx
+nginx -t && systemctl reload nginx
 ```
 
 #### Clear cache
 
 ```.sh
-sudo rm -rf /var/cache/nginx/*
-sudo systemctl reload nginx
+sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
 ```
 
 ### Cloudflare
@@ -1219,18 +1292,11 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 Cloudflare → Website → `Caching` → `Cache Rules`.
 
-1. Cache Bypass
+1. Cache Everything
 
-- Rule name: `Cache Bypass - Virtualmin`.
-- If incoming requests match...: `Custom filter expression`:
-
-```.txt
-(starts_with(http.host, "virtualmin."))
-```
-
-- Then... `Bypass cache`.
-
-- Browser TTL: `Respect origin TTL`.
+- Rule name: `Cache Everything`.
+- If incoming requests match...: `All incoming requests`.
+- Then... `Eligible for cache`.
 
 2. Cache Bypass
 
@@ -1256,11 +1322,18 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 - Then... `Bypass cache`.
 
-3. Cache Everything
+3. Cache Bypass
 
-- Rule name: `Cache Everything`.
-- If incoming requests match...: `All incoming requests`.
-- Then... `Eligible for cache`.
+- Rule name: `Cache Bypass - Virtualmin`.
+- If incoming requests match...: `Custom filter expression`:
+
+```.txt
+(starts_with(http.host, "virtualmin."))
+```
+
+- Then... `Bypass cache`.
+
+- Browser TTL: `Respect origin TTL`.
 
 #### Rules
 

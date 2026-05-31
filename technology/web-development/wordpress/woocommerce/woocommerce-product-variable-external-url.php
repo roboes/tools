@@ -103,7 +103,7 @@ if (function_exists('WC')) {
                 jQuery(function($) {
                     var originalButtonHtml = '';
 
-                    // Re-use your format logic
+                    // Reuse your format logic
                     function formatPriceInternal(price) {
                         const formatter = new Intl.NumberFormat(<?php echo wp_json_encode($locale); ?>, {
                             minimumFractionDigits: <?php echo $decimals; ?>,

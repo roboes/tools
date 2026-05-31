@@ -1,5 +1,5 @@
 ## GitHub Actions Workflow
-# Last update: 2025-09-10
+# Last update: 2026-05-22
 
 # Save this file to '.github/workflows/github-actions-workflow.yaml'
 
@@ -20,12 +20,12 @@ jobs:
   # Job name
   build:
     # Type of machine to run the job on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     # Sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout repository content - https://github.com/actions/checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Google Chrome - https://github.com/browser-actions/setup-chrome
         uses: browser-actions/setup-chrome@v2

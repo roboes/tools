@@ -1,6 +1,8 @@
-# Windows Dual-boot Debian
+# Debian
 
-## On Windows 11
+## Windows Dual-boot Debian
+
+### On Windows 11
 
 `Win + R` → `msinfo32`. Look for:
 
@@ -11,7 +13,7 @@ Disable Fast Startup: `Control Panel` → `Power Options` → `Choose what the p
 
 Shrink Windows partition first: `Win + R` → `diskmgmt.msc` → Right-click on the C: drive → Shrink Volume.
 
-## Debian
+### Debian
 
 [Download Debian](https://www.debian.org/distrib/) → "iso-cd" → "netinst.iso".
 
@@ -20,3 +22,7 @@ Rufus:
 - Partition scheme: `GPT`.
 - Target system: `UEFI`
 - File system: `FAT32`.
+
+## Settings
+
+[Plymouth](https://wiki.debian.org/plymouth)

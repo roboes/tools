@@ -30,9 +30,9 @@
 
 # Settings
 if grep -qi microsoft /proc/version; then
-	cd "/mnt/c/Users/${USER}/Downloads"
+    cd "/mnt/c/Users/${USER}/Downloads"
 else
-	cd "${HOME}/Downloads"
+    cd "${HOME}/Downloads"
 fi
 
 
@@ -41,7 +41,7 @@ file_type="jpg"
 
 files=""
 for file in ./*."$file_type"; do
-	files="$files $file"
+    files="$files $file"
 done
 
 convert $files -quality 100 -density 150 -define pdf:author="" -define pdf:creator="" -define pdf:producer="" -define pdf:title="" images_combined.pdf
@@ -53,6 +53,7 @@ pdfinfo images_combined.pdf
 
 # Optical Character Recognition (OCR) PDF document
 ocrmypdf -l por "file_A.pdf" "file_B.pdf"
+# for file in *.pdf; do ocrmypdf -l por "$file" "${file%.pdf}_ocr.pdf"; done
 
 
 # Decrypt PDF password

@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup - Applications
 
 > [!NOTE]  
-> Last update: 2025-11-30
+> Last update: 2026-05-28
 
 ```.sh
 # Settings
@@ -10,10 +10,17 @@ domain_root_path="/home/$domain"
 subdomain="subdomain"
 system_user="system_user"
 # system_user="www-data:www-data"
-postgres_password=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9')
 ```
 
 ## [Home Assistant](https://home-assistant.io)
+
+```.sh
+# Create subdomain
+virtualmin create-domain --domain $subdomain.$domain --parent $domain --dir --logrotate --virtualmin-nginx --virtualmin-awstats
+
+# List domains
+virtualmin list-domains --name-only
+```
 
 ```.sh
 # Create directories
@@ -39,6 +46,7 @@ services:
     volumes:
       - "${domain_root_path}/domains/${subdomain}.${domain}/homeassistant/config:/config"
       - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
     restart: unless-stopped
     ports:
       - "127.0.0.1:8123:8123"
@@ -62,7 +70,6 @@ http:
     - 127.0.0.1
     - ::1
     - 172.16.0.0/12
-    - 172.23.0.1
 ```
 
 ```.sh
@@ -71,6 +78,14 @@ sudo -u $system_user docker compose up -d
 
 # Restart docker
 # sudo docker compose restart
+```
+
+```.sh
+# Install HACS (Home Assistant Community Store) directly into the running container
+docker exec -it "homeassistant_${system_user}" bash -c "wget -O - https://get.hacs.xyz | bash -"
+
+# Restart the compose stack to load HACS components into memory
+sudo -u $system_user docker compose restart
 ```
 
 ```.sh
@@ -96,6 +111,8 @@ docker ps
 
 ```.nginx
 server {
+    # ...
+
     location / {
         proxy_pass http://127.0.0.1:8123;
         proxy_set_header Host $host;
@@ -105,16 +122,22 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # Add this for large backups/updates
         client_max_body_size 0;
+
+        add_header Content-Security-Policy "";
     }
+
 }
 ```
 
 ```.sh
 # Restart Nginx
-sudo systemctl reload nginx
+nginx -t && systemctl reload nginx
 ```
+
+### Settings
+
+To add a Matter device: `ws://172.17.0.1:5580/ws`.
 
 ## WireGuard VPN
 
@@ -180,18 +203,18 @@ sudo firewall-cmd --zone=public --add-masquerade --permanent
 # Reload firewall to apply changes
 sudo firewall-cmd --reload
 
-# Check open ports
-sudo firewall-cmd --list-ports
+# Show active rules
+sudo firewall-cmd --list-all
 ```
 
 ### Generate client keys
 
 ```.sh
 # Generate client private key
-CLIENT_PRIVATE_KEY=$(wg genkey | tee client1_private.key)
+CLIENT_PRIVATE_KEY=$(wg genkey | tee /etc/wireguard/client1_private.key)
 
 # Generate client public key
-CLIENT_PUBLIC_KEY=$(echo $CLIENT_PRIVATE_KEY | wg pubkey | tee client1_public.key)
+CLIENT_PUBLIC_KEY=$(echo $CLIENT_PRIVATE_KEY | wg pubkey | tee /etc/wireguard/client1_public.key)
 ```
 
 > Keys are stored in `client1_private.key` and `client1_public.key`
@@ -206,7 +229,8 @@ cat <<EOF >> /etc/wireguard/wg0.conf
 # Public key of client device
 PublicKey = $CLIENT_PUBLIC_KEY
 # IP assigned to client inside VPN
-AllowedIPs = 10.6.0.2/32
+AllowedIPs = 10.6.0.2/32, 192.168.178.0/24
+PersistentKeepAline = 25
 EOF
 ```
 
@@ -241,19 +265,28 @@ Create a DNS record in Cloudflare:
 [Interface]
 PrivateKey = $CLIENT_PRIVATE_KEY
 Address = 10.6.0.2/32
-DNS = 1.1.1.1
+# DNS = 1.1.1.1
 MTU = 1420
 
 [Peer]
 PublicKey = $SERVER_PUBLIC_KEY
 Endpoint = vpn.website.com:51820
-AllowedIPs = 0.0.0.0/0
-PersistentKeepAlive = 25
+# Routes all traffic through VPN
+# AllowedIPs = 0.0.0.0/0
+# Routes only home network traffic
+AllowedIPs = 10.6.0.0/24
+PersistentKeepalive = 25
 ```
 
 ### Test
 
 ```.sh
+# Find interface name
+ip link show
+
+# Test handshake
+sudo wg show
+
 # Monitor ICMP traffic on the physical interface
 tcpdump -i eth0 icmp
 ```
