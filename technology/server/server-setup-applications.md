@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup - Applications
 
 > [!NOTE]  
-> Last update: 2026-05-28
+> Last update: 2026-06-01
 
 ```.sh
 # Settings
@@ -9,56 +9,128 @@ domain="website.com"
 domain_root_path="/home/$domain"
 subdomain="subdomain"
 system_user="system_user"
-# system_user="www-data:www-data"
+installation_target="vps"
+```
+
+```
+if [ "${installation_target}" = "pi" ]; then
+  installation_path="/home/${system_user}"
+else
+  installation_path="${domain_root_path}/domains/${subdomain}.${domain}"
+fi
 ```
 
 ## [Home Assistant](https://home-assistant.io)
 
 ```.sh
-# Create subdomain
-virtualmin create-domain --domain $subdomain.$domain --parent $domain --dir --logrotate --virtualmin-nginx --virtualmin-awstats
+if [ "${installation_target}" = "vps" ]; then
+    # Create subdomain
+    virtualmin create-domain --domain $subdomain.$domain --parent $domain --dir --logrotate --virtualmin-nginx --virtualmin-awstats
 
-# List domains
-virtualmin list-domains --name-only
+    # List domains
+    virtualmin list-domains --name-only
+fi
 ```
 
 ```.sh
 # Create directories
-sudo mkdir -p $domain_root_path/domains/$subdomain.$domain/homeassistant/config
-sudo chown -R $system_user:$system_user $domain_root_path/domains/$subdomain.$domain/homeassistant
+if [ "${installation_target}" = "pi" ]; then
+    sudo mkdir -p ${installation_path}/homeassistant
+    sudo mkdir -p ${installation_path}/homeassistant/matter-server
+fi
+
+sudo mkdir -p ${installation_path}/homeassistant/config
+sudo chown -R $system_user:$system_user ${installation_path}/homeassistant
 ```
 
 ```.sh
 # Add the system user to the docker group
-sudo usermod -aG docker $system_user
+sudo usermod -aG docker ${system_user}
 
 # Verify the user is in the docker group
-groups $system_user
+groups ${system_user}
 ```
 
 ```.sh
 # Create docker-compose.yml - https://www.home-assistant.io/installation/alternative/#docker-compose
-cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/homeassistant/docker-compose.yml"
+if [ "${installation_target}" = "vps" ]; then
+cat <<EOF > "${installation_path}/homeassistant/docker-compose.yml"
 services:
   homeassistant:
     container_name: "homeassistant_${system_user}"
     image: "ghcr.io/home-assistant/home-assistant:stable"
     volumes:
-      - "${domain_root_path}/domains/${subdomain}.${domain}/homeassistant/config:/config"
+      - "${installation_path}/homeassistant/config:/config"
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped
     ports:
       - "127.0.0.1:8123:8123"
 EOF
+
+else
+cat <<EOF > "${installation_path}/homeassistant/docker-compose.yml"
+services:
+  homeassistant:
+    container_name: "homeassistant_${system_user}"
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - "${installation_path}/homeassistant/config:/config"
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - matter-server
+
+  matter-server:
+    container_name: "matter_server_${system_user}"
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    volumes:
+      - "${installation_path}/homeassistant/matter-server:/data"
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    network_mode: host
+
+  frigate:
+    container_name: "frigate_${system_user}"
+    image: ghcr.io/blakeblackshear/frigate:stable
+    privileged: true
+    restart: unless-stopped
+    shm_size: "64mb"
+    volumes:
+      - "${installation_path}/homeassistant/config:/frigate"
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/usb_1/recordings:/media/frigate
+    devices:
+      - /dev/video10
+      - /dev/video11
+      - /dev/video12
+    ports:
+      - "8971:8971"
+      - "8554:8554"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
+    tmpfs:
+      - /tmp/cache:size=500000000
+    environment:
+      - CAMERA_1_NAME=camera_name
+      - CAMERA_1_IP=192.168.178.02
+      - CAMERA_1_USERNAME=camera_username
+      - CAMERA_1_PASSWORD=camera_password
+
+EOF
+fi
 ```
 
 ```.sh
-# Find Docker network details
-docker network inspect bridge | grep Gateway
-docker network inspect bridge | grep Subnet
+if [ "${installation_target}" = "vps" ]; then
+    # Find Docker network details
+    docker network inspect bridge | grep Gateway
+    docker network inspect bridge | grep Subnet
 
-nano "$domain_root_path/domains/$subdomain.$domain/homeassistant/config/configuration.yaml"
+    nano "${installation_path}/homeassistant/config/configuration.yaml"
+fi
 ```
 
 ```.txt
@@ -73,11 +145,11 @@ http:
 ```
 
 ```.sh
-cd $domain_root_path/domains/$subdomain.$domain/homeassistant
-sudo -u $system_user docker compose up -d
+cd ${installation_path}/homeassistant
+sudo -u ${system_user} docker compose up -d
 
 # Restart docker
-# sudo docker compose restart
+# docker compose down && docker compose up -d
 ```
 
 ```.sh
@@ -85,7 +157,7 @@ sudo -u $system_user docker compose up -d
 docker exec -it "homeassistant_${system_user}" bash -c "wget -O - https://get.hacs.xyz | bash -"
 
 # Restart the compose stack to load HACS components into memory
-sudo -u $system_user docker compose restart
+sudo -u ${system_user} docker compose restart
 ```
 
 ```.sh
@@ -103,6 +175,110 @@ docker ps
 # Logs
 # sudo docker logs "homeassistant_${system_user}"
 # sudo docker compose logs --tail 50
+```
+
+#### Recordings
+
+```.sh
+if [ "${installation_target}" = "pi" ]; then
+    nano "${installation_path}/homeassistant/config/frigate.yaml"
+fi
+```
+
+```.yaml
+mqtt:
+  enabled: false
+
+ffmpeg:
+  hwaccel_args: preset-rpi-64-h264
+
+detectors:
+  cpu:
+    type: cpu
+    num_threads: 3
+
+objects:
+  track:
+    - person
+
+record:
+  enabled: true
+  retain:
+    days: 7
+    mode: all
+  events:
+    retain:
+      default: 14
+  detections:
+    retain:
+      days: 10
+
+snapshots:
+  enabled: true
+  retain:
+    default: 14
+
+detect:
+  width: 640
+  height: 360
+  fps: 5
+
+cameras:
+  camera1:
+    enabled: True
+    ffmpeg:
+      inputs:
+        - path: rtsp://{CAMERA_1_USERNAME}:{CAMERA_1_PASSWORD}@{CAMERA_1_IP}/stream1
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+        # Low-res substream → detect (less CPU)
+        - path: rtsp://user:pass@192.168.1.x:554/stream2  # substream if cam has one
+          roles:
+            - detect
+
+
+```
+
+```.sh
+# Create folder for camera stream recordings
+mkdir -p /mnt/usb_1/recordings
+mkdir -p /mnt/usb_1/recordings/tapo_c200_m0123
+```
+
+```.sh
+if [ "${installation_target}" = "pi" ]; then
+    nano "${installation_path}/homeassistant/recordings_cleanup.sh"
+fi
+```
+
+```.txt
+#!/bin/bash
+RECORDINGS_DIR="/mnt/usb_1/recordings"
+THRESHOLD=90  # Delete oldest files when disk is 90% full
+
+while [ $(df "$RECORDINGS_DIR" | awk 'NR==2 {print $5}' | tr -d '%') -ge $THRESHOLD ]; do
+    oldest=$(find "$RECORDINGS_DIR" -name "*.mp4" -printf "%T+ %p\n" | sort | head -1 | awk '{print $2}')
+    [ -z "$oldest" ] && break
+    rm "$oldest"
+    echo "Deleted: $oldest"
+done
+```
+
+```.sh
+if [ "${installation_target}" = "pi" ]; then
+    chmod +x "${installation_path}/homeassistant/recordings_cleanup.sh"
+fi
+```
+
+```.sh
+crontab -e
+```
+
+Add:
+
+```.txt
+0 * * * * installation_path/homeassistant/recordings_cleanup.sh
 ```
 
 ### Nginx
