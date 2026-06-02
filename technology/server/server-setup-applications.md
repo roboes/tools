@@ -153,9 +153,6 @@ http:
 ```.sh
 cd ${installation_path}/homeassistant
 sudo -u ${system_user} docker compose up -d
-
-# Restart docker
-# docker compose down && docker compose up -d
 ```
 
 ```.sh
@@ -163,7 +160,7 @@ sudo -u ${system_user} docker compose up -d
 docker exec -it "homeassistant_${system_user}" bash -c "wget -O - https://get.hacs.xyz | bash -"
 
 # Restart the compose stack to load HACS components into memory
-sudo -u ${system_user} docker compose restart
+docker compose down && docker compose up -d --remove-orphans
 ```
 
 ```.sh
@@ -177,6 +174,9 @@ docker ps
 
 # Stop docker
 # sudo docker stop "homeassistant_${system_user}"
+
+# Restart docker
+# docker compose down && docker compose up -d --remove-orphans
 
 # Logs
 # sudo docker logs "homeassistant_${system_user}"
@@ -197,11 +197,11 @@ mqtt:
 
 go2rtc:
   rtsp:
-    listen: ":8556"
+    listen: "localhost:8556"
   api:
-    listen: ":1985"
+    listen: "localhost:1985"
   webrtc:
-    listen: ":8557"
+    listen: "localhost:8557"
 
 detectors:
   cpu:
@@ -269,6 +269,11 @@ cameras:
           roles:
             - detect
 ```
+
+### Home Assistant Community Store (HACS)
+
+- [Tapo: Cameras Control](https://github.com/jurajnyiri/homeassistant-tapo-control).
+- [Frigate](https://github.com/blakeblackshear/frigate-hass-integration).
 
 ### Nginx
 
