@@ -37,6 +37,8 @@ fi
 if [ "${installation_target}" = "pi" ]; then
     sudo mkdir -p ${installation_path}/homeassistant
     sudo mkdir -p ${installation_path}/homeassistant/matter-server
+    sudo mkdir -p ${installation_path}/homeassistant/frigate
+    sudo mkdir -p /mnt/usb_1/frigate
 fi
 
 sudo mkdir -p ${installation_path}/homeassistant/config
@@ -74,6 +76,9 @@ services:
   homeassistant:
     container_name: "homeassistant_${system_user}"
     image: "ghcr.io/home-assistant/home-assistant:stable"
+    privileged: true
+    security_opt:
+      - apparmor:unconfined
     volumes:
       - "${installation_path}/homeassistant/config:/config"
       - /etc/localtime:/etc/localtime:ro
@@ -82,6 +87,9 @@ services:
     network_mode: host
     depends_on:
       - matter-server
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
 
   matter-server:
     container_name: "matter_server_${system_user}"
@@ -97,27 +105,25 @@ services:
     image: ghcr.io/blakeblackshear/frigate:stable
     privileged: true
     restart: unless-stopped
-    shm_size: "64mb"
+    shm_size: "128mb"
     volumes:
-      - "${installation_path}/homeassistant/config:/frigate"
+      - "${installation_path}/homeassistant/frigate:/config"
       - /etc/localtime:/etc/localtime:ro
-      - /mnt/usb_1/recordings:/media/frigate
+      - /mnt/usb_1/frigate:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 500000000
     devices:
       - /dev/video10
       - /dev/video11
       - /dev/video12
-    ports:
-      - "8971:8971"
-      - "8554:8554"
-      - "8555:8555/tcp"
-      - "8555:8555/udp"
-    tmpfs:
-      - /tmp/cache:size=500000000
+    network_mode: host
     environment:
-      - CAMERA_1_NAME=camera_name
-      - CAMERA_1_IP=192.168.178.02
-      - CAMERA_1_USERNAME=camera_username
-      - CAMERA_1_PASSWORD=camera_password
+      - FRIGATE_CAMERA_1_NAME=camera_name
+      - FRIGATE_CAMERA_1_IP=192.168.178.02
+      - FRIGATE_CAMERA_1_USERNAME=camera_username
+      - FRIGATE_CAMERA_1_PASSWORD=camera_password
 
 EOF
 fi
@@ -177,11 +183,11 @@ docker ps
 # sudo docker compose logs --tail 50
 ```
 
-#### Recordings
+### Recordings
 
 ```.sh
 if [ "${installation_target}" = "pi" ]; then
-    nano "${installation_path}/homeassistant/config/frigate.yaml"
+    nano "${installation_path}/homeassistant/frigate/config.yml"
 fi
 ```
 
@@ -189,96 +195,79 @@ fi
 mqtt:
   enabled: false
 
-ffmpeg:
-  hwaccel_args: preset-rpi-64-h264
+go2rtc:
+  rtsp:
+    listen: ":8556"
+  api:
+    listen: ":1985"
+  webrtc:
+    listen: ":8557"
 
 detectors:
   cpu:
     type: cpu
     num_threads: 3
 
-objects:
-  track:
-    - person
-
-record:
-  enabled: true
-  retain:
-    days: 7
-    mode: all
-  events:
-    retain:
-      default: 14
-  detections:
-    retain:
-      days: 10
-
-snapshots:
-  enabled: true
-  retain:
-    default: 14
+ffmpeg:
+  hwaccel_args: preset-rpi-64-h264
 
 detect:
   width: 640
   height: 360
   fps: 5
 
+objects:
+  track:
+    - person
+    - bird
+    - cat
+    - dog
+    - bicycle
+    - car
+    - motorcycle
+  filters:
+    person:
+      min_score: 0.65
+      threshold: 0.75
+    dog:
+      min_score: 0.5
+    bird:
+      min_score: 0.5
+
+record:
+  enabled: true
+  continuous:
+    days: 7
+  motion:
+    days: 7
+  alerts:
+    retain:
+      days: 14
+      mode: all
+  detections:
+    retain:
+      days: 10
+      mode: all
+
+snapshots:
+  enabled: true
+  bounding_box: true
+  retain:
+    default: 14
+
 cameras:
-  camera1:
+  camera_1:
     enabled: True
+    record:
+      enabled: true
     ffmpeg:
       inputs:
-        - path: rtsp://{CAMERA_1_USERNAME}:{CAMERA_1_PASSWORD}@{CAMERA_1_IP}/stream1
-          input_args: preset-rtsp-restream
+        - path: rtsp://{FRIGATE_CAMERA_1_USERNAME}:{FRIGATE_CAMERA_1_PASSWORD}@{FRIGATE_CAMERA_1_IP}/stream1
           roles:
             - record
-        # Low-res substream → detect (less CPU)
-        - path: rtsp://user:pass@192.168.1.x:554/stream2  # substream if cam has one
+        - path: rtsp://{FRIGATE_CAMERA_1_USERNAME}:{FRIGATE_CAMERA_1_PASSWORD}@{FRIGATE_CAMERA_1_IP}/stream2
           roles:
             - detect
-
-
-```
-
-```.sh
-# Create folder for camera stream recordings
-mkdir -p /mnt/usb_1/recordings
-mkdir -p /mnt/usb_1/recordings/tapo_c200_m0123
-```
-
-```.sh
-if [ "${installation_target}" = "pi" ]; then
-    nano "${installation_path}/homeassistant/recordings_cleanup.sh"
-fi
-```
-
-```.txt
-#!/bin/bash
-RECORDINGS_DIR="/mnt/usb_1/recordings"
-THRESHOLD=90  # Delete oldest files when disk is 90% full
-
-while [ $(df "$RECORDINGS_DIR" | awk 'NR==2 {print $5}' | tr -d '%') -ge $THRESHOLD ]; do
-    oldest=$(find "$RECORDINGS_DIR" -name "*.mp4" -printf "%T+ %p\n" | sort | head -1 | awk '{print $2}')
-    [ -z "$oldest" ] && break
-    rm "$oldest"
-    echo "Deleted: $oldest"
-done
-```
-
-```.sh
-if [ "${installation_target}" = "pi" ]; then
-    chmod +x "${installation_path}/homeassistant/recordings_cleanup.sh"
-fi
-```
-
-```.sh
-crontab -e
-```
-
-Add:
-
-```.txt
-0 * * * * installation_path/homeassistant/recordings_cleanup.sh
 ```
 
 ### Nginx
@@ -310,10 +299,6 @@ server {
 # Restart Nginx
 nginx -t && systemctl reload nginx
 ```
-
-### Settings
-
-To add a Matter device: `ws://172.17.0.1:5580/ws`.
 
 ## WireGuard VPN
 
