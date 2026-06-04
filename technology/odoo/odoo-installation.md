@@ -351,7 +351,7 @@ docker compose build
 docker compose up -d
 
 # Restart containers
-docker compose restart odoo
+docker compose down && docker compose up -d --remove-orphans
 
 # Stop containers
 # docker compose down -v
