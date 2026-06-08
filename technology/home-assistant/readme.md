@@ -1,7 +1,9 @@
-# Home Assistant Installation
+# Home Assistant
 
 > [!NOTE]  
 > Last update: 2026-06-01
+
+## Installation
 
 ```.sh
 # Settings
@@ -19,8 +21,6 @@ else
   installation_path="${domain_root_path}/domains/${subdomain}.${domain}"
 fi
 ```
-
-## [Home Assistant](https://home-assistant.io)
 
 ```.sh
 if [ "${installation_target}" = "vps" ]; then
@@ -301,7 +301,7 @@ server {
     # ...
 
     location / {
-        proxy_pass http://127.0.0.1:8123;
+        proxy_pass http://10.0.0.2:8123;
         proxy_set_header Host $host;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

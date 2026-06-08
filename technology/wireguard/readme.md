@@ -1,11 +1,9 @@
-# Debian and Virtualmin Server Setup - Applications
+# WireGuard
 
 > [!NOTE]  
 > Last update: 2026-06-01
 
-## WireGuard VPN
-
-### Installation
+## Installation
 
 > Notes: No need to create a sub-server (e.g. `vpn.website.com`) in Virtualmin. The VPN runs independently on a DNS-only Cloudflare record.
 
@@ -13,7 +11,7 @@
 sudo apt install -y wireguard
 ```
 
-#### Generate server keys
+### Generate server keys
 
 ```.sh
 # Generate server private key and save it
@@ -25,7 +23,7 @@ SERVER_PUBLIC_KEY=$(echo $SERVER_PRIVATE_KEY | wg pubkey | tee /etc/wireguard/se
 
 > Keys are now stored in `/etc/wireguard/server_private.key` and `/etc/wireguard/server_public.key`
 
-#### Create WireGuard server config
+### Create WireGuard server config
 
 ```.sh
 # Create wg0.conf with server interface and listen port
@@ -38,7 +36,7 @@ MTU = 1420
 EOF
 ```
 
-#### Enable IP forwarding
+### Enable IP forwarding
 
 ```.sh
 # Create a dedicated configuration file for WireGuard forwarding
@@ -52,7 +50,7 @@ sysctl net.ipv4.ip_forward
 # Output should be: net.ipv4.ip_forward = 1
 ```
 
-#### Configure firewall
+### Configure firewall
 
 ```.sh
 # Open UDP port 51820 in the "public" zone permanently
@@ -83,7 +81,7 @@ CLIENT_PUBLIC_KEY=$(echo $CLIENT_PRIVATE_KEY | wg pubkey | tee /etc/wireguard/cl
 
 > Keys are stored in `client1_private.key` and `client1_public.key`
 
-#### Add Client Peer to server config
+### Add Client Peer to server config
 
 ```.sh
 # Append client peer block to server configuration
@@ -98,7 +96,7 @@ PersistentKeepAline = 25
 EOF
 ```
 
-#### Start WireGuard
+### Start WireGuard
 
 ```.sh
 # Enable WireGuard to start on boot and start now
@@ -113,7 +111,7 @@ echo "Client private key: $CLIENT_PRIVATE_KEY"
 echo "Server public key: $SERVER_PUBLIC_KEY"
 ```
 
-#### DNS
+### DNS
 
 Create a DNS record in Cloudflare:
 
