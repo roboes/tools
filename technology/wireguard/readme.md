@@ -32,7 +32,7 @@ cat <<EOF > "/etc/wireguard/wg0.conf"
 Address = 10.6.0.1/24
 ListenPort = 51820
 PrivateKey = $SERVER_PRIVATE_KEY
-MTU = 1420
+MTU = 1280
 EOF
 ```
 
@@ -91,8 +91,8 @@ cat <<EOF >> /etc/wireguard/wg0.conf
 # Public key of client device
 PublicKey = $CLIENT_PUBLIC_KEY
 # IP assigned to client inside VPN
-AllowedIPs = 10.6.0.2/32, 192.168.178.0/24
-PersistentKeepAline = 25
+AllowedIPs = 10.6.0.2/32
+PersistentKeepalive = 25
 EOF
 ```
 
@@ -102,7 +102,10 @@ EOF
 # Enable WireGuard to start on boot and start now
 sudo systemctl enable --now wg-quick@wg0
 
-# Verify server status
+# Restart WireGuard
+sudo systemctl restart wg-quick@wg0
+
+# WireGuard status
 sudo wg show
 ```
 
@@ -123,12 +126,22 @@ Create a DNS record in Cloudflare:
 
 ### Client configuration
 
+On the Raspberry Pi:
+
+```.sh
+sudo apt install -y wireguard
+```
+
+```.sh
+# Paste the client configuration
+sudo nano /etc/wireguard/wg0.conf
+```
+
 ```.conf
 [Interface]
 PrivateKey = $CLIENT_PRIVATE_KEY
 Address = 10.6.0.2/32
-# DNS = 1.1.1.1
-MTU = 1420
+MTU = 1280
 
 [Peer]
 PublicKey = $SERVER_PUBLIC_KEY
@@ -140,6 +153,17 @@ AllowedIPs = 10.6.0.0/24
 PersistentKeepalive = 25
 ```
 
+```.sh
+# Enable WireGuard to start on boot and start now
+sudo systemctl enable --now wg-quick@wg0
+
+# Restart WireGuard
+sudo systemctl restart wg-quick@wg0
+
+# WireGuard status
+sudo wg show
+```
+
 ### Test
 
 ```.sh
@@ -148,7 +172,4 @@ ip link show
 
 # Test handshake
 sudo wg show
-
-# Monitor ICMP traffic on the physical interface
-tcpdump -i eth0 icmp
 ```

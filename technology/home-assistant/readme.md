@@ -287,10 +287,187 @@ EOF
 fi
 ```
 
+### Backups
+
+Backup to the VPS.
+
+In Raspberry Pi:
+
+```.sh
+# Settings
+settings_pi_system_user="system_user"
+settings_vps_user="${settings_pi_system_user}_homeassistant"
+settings_vps_ip="10.6.0.1"
+settings_vps_backup_path="/backups/homeassistant/${settings_pi_system_user}"
+```
+
+```.sh
+# Create backup script
+cat <<EOF > /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh
+#!/bin/bash
+
+# Settings
+SETTINGS_SSH_KEY="/home/${settings_pi_system_user}/.ssh/id_backup"
+SETTINGS_SSH_COMMAND="ssh -i \${SETTINGS_SSH_KEY} -o StrictHostKeyChecking=no"
+SETTINGS_REMOTE="${settings_vps_user}@${settings_vps_ip}"
+SETTINGS_BASE_DESTINY="${settings_vps_backup_path}"
+
+# Define your source/destination pairs
+# Format: "local_source:remote_subfolder"
+SYNC_PAIRS=(
+  "/home/${settings_pi_system_user}/homeassistant/config/backups/:config"
+  "/mnt/usb_1/frigate/exports/:frigate/exports"
+  "/mnt/usb_1/frigate/clips/:frigate/clips"
+)
+
+# Iterate through pairs
+for pair in "\${SYNC_PAIRS[@]}"; do
+  SOURCE="\${pair%%:*}"
+  DESTINY_FOLDER="\${pair#*:}"
+
+  # Create remote directory if it doesn't exist
+  \${SETTINGS_SSH_COMMAND} \${SETTINGS_REMOTE} "mkdir -p \${SETTINGS_BASE_DESTINY}/\${DESTINY_FOLDER}"
+
+  # Run rsync
+  rsync -az --partial --delete -e "\${SETTINGS_SSH_COMMAND}" \
+    --filter="- *.tmp" \
+    "\${SOURCE}" \
+    "\${SETTINGS_REMOTE}:\${SETTINGS_BASE_DESTINY}/\${DESTINY_FOLDER}/"
+done
+EOF
+
+# Ensure permissions are correct
+chmod +x /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh
+
+# Add to crontab — runs daily at 3am
+(crontab -u ${settings_pi_system_user} -l 2>/dev/null; echo "0 */12 * * * /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh >> /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.log 2>&1") | crontab -u ${settings_pi_system_user} -
+
+# Verify
+crontab -u ${settings_pi_system_user} -e
+```
+
+```.sh
+# Generate SSH key pair
+ssh-keygen -t ed25519 \
+  -C "pi-backup" \
+  -f /home/${settings_pi_system_user}/.ssh/id_backup \
+  -N ""
+```
+
+```.sh
+# Copy the SSH public key
+cat /home/${settings_pi_system_user}/.ssh/id_backup.pub
+```
+
+In the VPS:
+
+```.sh
+# Settings
+domain="website.com"
+subdomain="subdomain"
+settings_pi_system_user="system_user"
+settings_vps_backup_path="/backups/homeassistant/${settings_pi_system_user}"
+```
+
+```.sh
+# Create the user with a home directory and bash shell
+useradd -m -s /bin/bash ${settings_pi_system_user}_homeassistant
+```
+
+```.sh
+# Create .ssh directory
+mkdir -p /home/${settings_pi_system_user}_homeassistant/.ssh
+nano /home/${settings_pi_system_user}_homeassistant/.ssh/authorized_keys
+# Paste the public key here
+```
+
+Configure SSH to use key-based authentication by adding "${settings_pi_system_user}\_homeassistant" to the `AllowUsers` directive.
+
+```.sh
+sudo nano /etc/ssh/sshd_config
+```
+
+```.txt
+PubkeyAuthentication yes
+AllowUsers ${settings_pi_system_user}_homeassistant
+```
+
+```.sh
+chmod 700 /home/${settings_pi_system_user}_homeassistant/.ssh
+chmod 600 /home/${settings_pi_system_user}_homeassistant/.ssh/authorized_keys
+chown -R ${settings_pi_system_user}_homeassistant:${settings_pi_system_user}_homeassistant /home/${settings_pi_system_user}_homeassistant/.ssh
+```
+
+```.sh
+# Create backup directory
+mkdir -p ${settings_vps_backup_path}
+chown -R ${settings_pi_system_user}_homeassistant:${settings_pi_system_user}_homeassistant ${settings_vps_backup_path}
+```
+
+```.sh
+# Restart SSH
+sudo systemctl restart ssh
+```
+
 ### Home Assistant Community Store (HACS)
 
 - [Tapo: Cameras Control](https://github.com/jurajnyiri/homeassistant-tapo-control).
 - [Frigate](https://github.com/blakeblackshear/frigate-hass-integration).
+
+## Home Assistant remote access
+
+Expose local Home Assistant instance using Nginx and WireGuard.
+
+```.sh
+# Settings
+settings_pi_system_user="system_user"
+```
+
+```.sh
+nano "/home/${settings_pi_system_user}/homeassistant/config/configuration.yaml"
+```
+
+Add:
+
+```.yaml
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 10.6.0.1
+```
+
+```.sh
+# Restart Docker
+cd /home/${settings_pi_system_user}/homeassistant
+docker compose down && docker compose up -d --remove-orphans
+```
+
+### Cloudflare Zero Trust
+
+Cloudflare → `Zero Trust`.
+
+#### Service Token
+
+`Access controls` → `Applications` → `Create new application` → `Self-hosted and private` → `Continue with Self-hosted and private`.
+
+### Cloudflare Caching
+
+Cloudflare → Website → `Caching` → `Cache Rules`.
+
+1. Cache Bypass
+
+- Rule name: `Cache Bypass - Home Assistant`.
+- If incoming requests match...: `Custom filter expression`:
+
+```.txt
+(starts_with(http.host, "homeassistant."))
+```
+
+- Then... `Bypass cache`.
+
+- Browser TTL: `Respect origin TTL`.
+
+- Place at: `Last`.
 
 ### Nginx
 
@@ -300,18 +477,31 @@ fi
 server {
     # ...
 
+    # Security Headers
+    set $content_security_policy "";
+    add_header Content-Security-Policy $content_security_policy always;
+
+    # ...
+
+    ## Main application entry point
     location / {
-        proxy_pass http://10.0.0.2:8123;
-        proxy_set_header Host $host;
+        proxy_pass http://10.6.0.2:8123;
+
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        client_max_body_size 0;
+        # Increase these values to handle VPN latency
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
 
-        add_header Content-Security-Policy "";
+        proxy_buffering off;
+        proxy_request_buffering off;
+        proxy_max_temp_file_size 0;
     }
 
 }
@@ -321,3 +511,8 @@ server {
 # Restart Nginx
 nginx -t && systemctl reload nginx
 ```
+
+In Home Assistant: `Settings` → `System` → `Network` → `Home Assistant URL`.
+
+- Internal URL: `http://192.168.x.x:8123`.
+- External URL: `https://homeassistant.website.com`.
