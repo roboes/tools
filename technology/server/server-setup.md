@@ -637,7 +637,7 @@ Now "Create Virtual Server".
 
 ```.sh
 php_version_current="8.5"
-sudo apt install php${php_version_current}-sqlite3
+sudo apt install php${php_version_current}-sqlite3 php${php_version_current}-igbinary php${php_version_current}-redis
 ```
 
 Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
@@ -908,10 +908,10 @@ http {
     fastcgi_send_timeout 30s;
 
     ## FastCGI buffers
-    fastcgi_buffer_size 16k;
-    fastcgi_buffers 4 16k;
-    fastcgi_busy_buffers_size 48k;
-    fastcgi_temp_file_write_size 64k;
+    fastcgi_buffer_size 32k;
+    fastcgi_buffers 8 32k;
+    fastcgi_busy_buffers_size 64k;
+    fastcgi_temp_file_write_size 128k;
 
     ## FastCGI cache lock settings
     fastcgi_cache_lock on;
@@ -1101,11 +1101,21 @@ server {
 
         # Caching controls
         set $skip_cache 0;
-        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
-        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
-        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
-        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
-        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
+        if ($request_method ~* "DELETE|POST|PUT") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "PHPSESSID") {
+            set $skip_cache 1;
+        }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") {
+            set $skip_cache 1;
+        }
 
         fastcgi_cache MYCACHE;
         fastcgi_cache_valid 200 301 302 1h;
@@ -1399,17 +1409,22 @@ php_value[max_execution_time] = 60
 
 ; Process Management (medium-traffic)
 pm = dynamic
-pm.max_children = 30
-pm.start_servers = 8
-pm.min_spare_servers = 6
-pm.max_spare_servers = 12
+pm.max_children = 20
+pm.start_servers = 6
+pm.min_spare_servers = 4
+pm.max_spare_servers = 10
 pm.max_requests = 500
 pm.process_idle_timeout = 30s
 
+; Process Management (medium-traffic)
+; pm = static
+; pm.max_children = 16
+; pm.max_requests = 1000
+
 ; Per-Domain OPcache Logic
 php_admin_flag[opcache.enable] = on
-php_admin_value[opcache.revalidate_freq] = 2
-php_admin_value[opcache.validate_timestamps] = 1
+php_admin_value[opcache.validate_timestamps] = 0
+php_admin_value[opcache.revalidate_freq] = 0
 
 ; PHP slow log
 request_slowlog_timeout = 5s
