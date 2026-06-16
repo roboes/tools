@@ -984,7 +984,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://*.google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://*.google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; script-src-elem 'self' 'unsafe-inline' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -1295,7 +1295,7 @@ Cloudflare → Website → `Security` → `Security rules`.
 4. WordPress
 
 - `Rule name`: `WordPress`.
-- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/")`
+- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/") and not (http.request.uri.path contains "/wp-admin/admin-ajax.php" or http.request.uri.path contains "/wp-admin/css/" or http.request.uri.path contains "/wp-admin/js/")`
 - `Choose action`: `Managed Challenge`.
 
 #### Caching
@@ -1345,9 +1345,21 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 - Browser TTL: `Respect origin TTL`.
 
-#### Rules
+#### Configuration Rules
+
+Cloudflare → Website → `Rules` → `Overview` → `Create rule` → `Configuration Rules`.
+
+1. Rocket Loader Disable
+
+- Rule name: `Rocket Loader Disable`.
+- When incoming requests match...: `(http.request.uri.path contains "/checkout/") or (http.request.uri.path contains "/kasse/") or (http.request.uri.path contains "/finalizacao-de-compra/")`.
+- hen the settings are...: `Rocket Loader`: `Off`.
+
+#### Page Rules
 
 Cloudflare → Website → `Rules` → `Page Rules` → `Create Page Rule`.
+
+1. Forwarding URL
 
 - URL: `www.website.com/*`.
 - Pick a Setting: `Forwarding URL`.
