@@ -65,6 +65,7 @@ find . -type f -name "*.xml" -exec xmllint --format --output {} {} \;
 codespell . --ignore-words-list=alle,als,bootup,datas,deine,dokument,doubleclick,fo,ges,ist,itens,nax,oder,produkt,referers,ressource,ser,sie,tage,termine # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
 
 ## pre-commit
+git add -N .
 pre-commit run --all-files
 
 

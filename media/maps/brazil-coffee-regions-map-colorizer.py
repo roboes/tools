@@ -5,7 +5,7 @@
 Notes:
 Download the Brazil municipalities .svg file from: https://upload.wikimedia.org/wikipedia/commons/d/d1/Brazil_Municipalities.svg
 
-To remove borders from the outputed .svg file
+To remove borders from the outputted .svg file
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="680" height="680" viewBox="0 0 680 680">
 <style>

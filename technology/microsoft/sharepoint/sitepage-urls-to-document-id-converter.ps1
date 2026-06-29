@@ -88,12 +88,12 @@ foreach ($file in $sitePagesFiles) {
             Set-PnPFile -Url $filePath -Content $fileContent -Force
         }
         else {
-			$localFilePath = Join-Path ([Environment]::GetFolderPath("UserProfile") + "\Downloads") $fileName
+            $localFilePath = Join-Path ([Environment]::GetFolderPath("UserProfile") + "\Downloads") $fileName
 
-			Write-Host "Saving modified content locally to $localFilePath"
+            Write-Host "Saving modified content locally to $localFilePath"
 
-			# Save the content with UTF8 encoding
-			[System.IO.File]::WriteAllText($localFilePath, $fileContent, [System.Text.Encoding]::UTF8)
+            # Save the content with UTF8 encoding
+            [System.IO.File]::WriteAllText($localFilePath, $fileContent, [System.Text.Encoding]::UTF8)
         }
     }
 

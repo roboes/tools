@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-04-21
+// Last update: 2026-06-15
 
 
 /*
@@ -344,6 +344,10 @@ if (function_exists('WC')) {
 
     function generate_gift_card_pdf(?WC_Order $order, string $product_parent_name, string $meta_suffix, bool $coupon_is_fixed_amount, string $coupon_amount_formatted, string $language, array $manual_data = []): string
     {
+        // Settings
+        $background_path = wp_upload_dir()['basedir'] . '/background-1.jpg';
+        $logo_path  = wp_upload_dir()['basedir'] . '/logo.svg';
+
         // Setup
         $purchase_date  = $order ? $order->get_date_created() : new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
         $site_url       = get_option(option: 'siteurl');
@@ -376,84 +380,161 @@ if (function_exists('WC')) {
 
         // Setup Dompdf
         $options = new Options();
-        $options->set('isRemoteEnabled', true);
+        $options->set('isRemoteEnabled', false);
         $options->set('defaultFont', 'Helvetica');
         $dompdf = new Dompdf($options);
 
-        $image_url = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-roastery-1.jpg');
-        $logo_url  = esc_url(wp_upload_dir()['baseurl'] . '/' . 'kaffeeart-logo.svg');
+        // Convert background image to Base64
+        $background_base64 = '';
+        if (file_exists($background_path)) {
+            $background_data = file_get_contents($background_path);
+            $background_base64 = 'data:image/jpeg;base64,' . base64_encode($background_data);
+        }
+
+        // Convert logo image to Base64
+        $logo_base64 = '';
+        if (file_exists($logo_path)) {
+            $logo_data = file_get_contents($logo_path);
+            $logo_base64 = 'data:image/svg+xml;base64,' . base64_encode($logo_data);
+        }
 
         ob_start();
         ?>
         <!DOCTYPE html>
         <html>
         <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
             <style>
-                @page { margin: 0; }
-                body {
-                    margin: 0; padding: 0;
-                    font-family: 'Helvetica', sans-serif;
-                    background-color: #8a694e;
-                    color: #ffffff;
-                    line-height: 1.4;
-                }
+            @page {
+                margin: 0;
+            }
 
-                /* Fold Mark Styling using CSS calc for A4 (297mm height) */
-                .fold-mark {
-                    position: absolute;
-                    width: 12px;
-                    height: 1px;
-                    background-color: rgba(255, 255, 255, 0.25);
-                    z-index: 10;
-                }
-                .fold-mark.left { left: 0; }
-                .fold-mark.right { right: 0; }
-                .fold-mark.top-fold { top: calc(297mm / 3); }
-                .fold-mark.bottom-fold { top: calc(297mm * 2 / 3); }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Helvetica', sans-serif;
+                background-color: #8a694e;
+                color: #ffffff;
+                line-height: 1.4;
+            }
 
-                .header-image {
-                    width: 100%;
-                    height: 440px;
-                    background: url('<?php echo $image_url; ?>') no-repeat center center;
-                    background-size: cover;
-                    display: block;
-                }
-                .content {
-                    text-align: center;
-                    padding: 60px 60px 0 60px;
-                    position: relative;
-                }
-                .logo { width: 220px; margin-bottom: 50px; }
-                .label { text-transform: uppercase; letter-spacing: 2px; font-size: 13px; opacity: 0.8; margin-bottom: 8px; }
-                .gift-card-title { font-size: 34px; font-weight: bold; text-transform: uppercase; line-height: 1.1; margin-bottom: 30px; }
-                .product-highlight {
-                    font-size: 20px;
-                    margin: 40px 0;
-                    border-top: 1px solid rgba(255,255,255,0.3);
-                    border-bottom: 1px solid rgba(255,255,255,0.3);
-                    padding: 12px 0;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                }
-                .coupon-container {
-                    background: rgba(0, 0, 0, 0.1);
-                    border: 2px dashed #ffffff;
-                    padding: 20px;
-                    margin: 20px auto;
-                    width: 80%;
-                }
-                .coupon-code { font-family: 'Courier', 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
-                .meta-info { margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.8); }
-                .tax-info { margin-top: 20px; font-size: 10px; color: rgba(255, 255, 255, 0.6); font-style: italic; padding: 0 30px; }
-                .footer-branding {
-                    position: absolute;
-                    bottom: 30px;
-                    width: 100%;
-                    text-align: center;
-                    font-size: 11px;
-                    opacity: 0.7;
-                }
-                a { color: #ffffff; text-decoration: none; }
+            /* Fold Mark Styling using CSS calc for A4 (297mm height) */
+            .fold-mark {
+                position: absolute;
+                width: 12px;
+                height: 1px;
+                background-color: rgba(255, 255, 255, 0.25);
+                z-index: 10;
+            }
+
+            .fold-mark.left {
+                left: 0;
+            }
+
+            .fold-mark.right {
+                right: 0;
+            }
+
+            .fold-mark.top-fold {
+                top: calc(297mm / 3);
+            }
+
+            .fold-mark.bottom-fold {
+                top: calc(297mm * 2 / 3);
+            }
+
+            .header-image-container {
+                width: 100%;
+                height: 440px;
+                overflow: hidden;
+                display: block;
+            }
+
+            .header-image {
+                width: 100%;
+                height: 440px;
+            }
+
+            .content {
+                text-align: center;
+                padding: 60px 60px 0 60px;
+                position: relative;
+            }
+
+            .logo {
+                width: 220px;
+                margin-bottom: 50px;
+            }
+
+            .label {
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                font-size: 13px;
+                opacity: 0.8;
+                margin-bottom: 8px;
+            }
+
+            .gift-card-title {
+                font-size: 34px;
+                font-weight: bold;
+                text-transform: uppercase;
+                line-height: 1.1;
+                margin-bottom: 30px;
+            }
+
+            .product-highlight {
+                font-size: 20px;
+                margin: 40px 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.3);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                padding: 12px 0;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+
+            .coupon-container {
+                background: rgba(0, 0, 0, 0.1);
+                border: 2px dashed #ffffff;
+                padding: 20px;
+                margin: 20px auto;
+                width: 80%;
+            }
+
+            .coupon-code {
+                font-family: 'Courier', 'Courier New', monospace;
+                font-size: 20px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                white-space: nowrap;
+            }
+
+            .meta-info {
+                margin-top: 25px;
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            .tax-info {
+                margin-top: 20px;
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.6);
+                font-style: italic;
+                padding: 0 30px;
+            }
+
+            .footer-branding {
+                position: absolute;
+                bottom: 30px;
+                width: 100%;
+                text-align: center;
+                font-size: 11px;
+                opacity: 0.7;
+            }
+
+            a {
+                color: #ffffff;
+                text-decoration: none;
+            }
             </style>
         </head>
         <body>
@@ -461,41 +542,40 @@ if (function_exists('WC')) {
             <div class="fold-mark right top-fold"></div>
             <div class="fold-mark left bottom-fold"></div>
             <div class="fold-mark right bottom-fold"></div>
-
-            <div class="header-image"></div>
-
-            <div class="content">
-                <img src="<?php echo $logo_url; ?>" class="logo">
-
-                <div class="label"><?php echo $text_for; ?></div>
-                <div class="gift-card-title"><?php echo $text_title; ?></div>
-
-                <div class="product-highlight"><?php echo esc_html($text_code); ?></div>
-
-                <div style="font-size: 15px; margin-bottom: 20px;">
-                    <?php echo $text_valid; ?> <?php echo $text_at; ?> <?php echo esc_html($blog_name); ?>.
-                </div>
-
-                <div class="coupon-container">
-                    <span class="coupon-code"><?php echo esc_html($coupon_code); ?></span>
-                </div>
-
-                <div class="meta-info">
-                    <?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format(format: 'd.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', (int)$coupon_expiry_timestamp); ?><br>
-                    <?php echo esc_html($text_redeem); ?> <a href="<?php echo esc_url($site_url); ?>"><?php echo esc_html($site_url); ?></a>
-                </div>
-
-                <?php if ($coupon_is_fixed_amount) : ?>
-                    <div class="tax-info">
-                        <?php echo esc_html($text_tax); ?>
-                    </div>
-                <?php endif; ?>
-
+            <div class="header-image-container">
+            <?php if (!empty($background_base64)): ?>
+            <img src="<?php echo $background_base64; ?>" class="header-image"/>
+            <?php endif; ?>
             </div>
-
-            <div class="footer-branding">
-                <?php echo esc_html($blog_name); ?><br>
+            <div class="content">
+            <?php if (!empty($logo_base64)): ?>
+            <img src="<?php echo $logo_base64; ?>" class="logo"/>
+            <?php endif; ?>
+            <div class="label"><?php echo $text_for; ?></div>
+            <div class="gift-card-title"><?php echo $text_title; ?></div>
+            <div class="product-highlight"><?php echo esc_html($text_code); ?></div>
+            <div style="font-size: 15px; margin-bottom: 20px"><?php echo $text_valid; ?> <?php echo $text_at; ?> <?php echo esc_html($blog_name); ?>.</div>
+            <div class="coupon-container">
+                <span class="coupon-code"> <?php echo esc_html($coupon_code); ?> </span>
+            </div>
+            <div class="meta-info">
+                <?php echo esc_html($text_bought); ?>: <?php echo $purchase_date->format(format: 'd.m.Y'); ?> &nbsp; | &nbsp; <?php echo esc_html($text_until); ?>: <?php echo date('d.m.Y', (int)$coupon_expiry_timestamp); ?>
+                <br />
+                <?php echo esc_html($text_redeem); ?>
+                <a
+                href="
+        <?php echo esc_url($site_url); ?>"
+                >
                 <?php echo esc_html($site_url); ?>
+                </a>
+            </div>
+            <?php if ($coupon_is_fixed_amount) : ?>
+            <div class="tax-info"><?php echo esc_html($text_tax); ?></div>
+            <?php endif; ?>
+            </div>
+            <div class="footer-branding">
+            <?php echo esc_html($blog_name); ?> <br />
+            <?php echo esc_html($site_url); ?>
             </div>
         </body>
         </html>

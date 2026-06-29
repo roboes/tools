@@ -1,8 +1,8 @@
-## Windows Subsystem for Linux Packages
-# Last update: 2026-02-22
+## Debian Setup
+# Last update: 2026-05-22
 
 
-# Start Windows Subsystem for Linux (WSL)
+# Start Bash (Unix shell)
 [ -z "$BASH" ] && exec bash
 
 
@@ -10,8 +10,8 @@
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
 
 
-# Install packages
-sudo apt install composer \
+# Install core tools and programming languages
+sudo apt install -y composer \
   curl \
   git \
   nodejs \
@@ -19,26 +19,26 @@ sudo apt install composer \
   python3 \
   python-is-python3 \
   python3-pip \
-  python3-virtualenv \
+  python3-venv \
   wget
+
 
 # PHP
 sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
 sudo apt-get install php8.5
 
-# pre-commit
-sudo apt install pre-commit
+# Install GitHub CLI
+sudo apt install -y gh
 
-# codespell
-sudo apt install codespell
+# pre-commit
+sudo apt install -y codespell \
+  libxml2-utils \
+  pre-commit
 
 # php-cs-fixer
 composer global require friendsofphp/php-cs-fixer
 nano ~/.bashrc
 # Then add to the bottom: export PATH="$PATH:$HOME/.config/composer/vendor/bin"
-
-# xmllint
-sudo apt install libxml2-utils
 
 # Node.js
 nvm install node
@@ -63,25 +63,29 @@ ulimit -n 8192
 brew update && brew upgrade && brew cleanup
 
 
-# Install GitHub CLI
-# sudo apt install -y gh
+# Install apps
+sudo apt install -y dolphin \
+  konsole \
+  plasma-desktop \
+  sddm
 
+# Install tools for SSH and remote server connectivity - for Cloudflared: https://pkg.cloudflare.com/index.html
+sudo apt install -y cloudflared \
+  sshpass
 
-# GitHub login
-# gh auth login
+# Wine - https://wiki.debian.org/Wine
 
-# Display git custom settings
-# git config --list
+## Check architecture
+dpkg --print-architecture
 
-# Remove git custom settings
-# rm ~/.gitconfig
+## Enable 32-bit architecture
+sudo dpkg --add-architecture i386 && sudo apt update
 
-
-# Git settings
-# git config --global user.email "email@example.com"
-# git config --global user.name "username"
-# git config --global --list
-
-
-# Git ignore
-# https://github.com/github/gitignore/blob/main/Python.gitignore
+## Install Wine
+sudo apt install \
+  wine \
+  wine32 \
+  wine64 \
+  libwine \
+  libwine:i386 \
+  fonts-wine

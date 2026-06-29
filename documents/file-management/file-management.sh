@@ -12,9 +12,9 @@
 
 # Settings
 if grep -qi microsoft /proc/version; then
-	cd "/mnt/c/Users/${USER}/Downloads"
+    cd "/mnt/c/Users/${USER}/Downloads"
 else
-	cd "${HOME}/Downloads"
+    cd "${HOME}/Downloads"
 fi
 
 
@@ -41,11 +41,11 @@ find . -type d -empty -print # -delete
 patterns=(
     '\xA0' ' ' # Remove non-breaking space
     '^ ' '' # Remove leading spaces
-	' $' '' # Remove trailing space
-	'\.$' '' # Remove trailing dots
+    ' $' '' # Remove trailing space
+    '\.$' '' # Remove trailing dots
     ' (\..*$)' '${1}' # Remove spaces before file extension
     '\s{2,}' ' ' # Replace multiple spaces with a single space
-	'[\\/*?"<>|]' ' ' # Remove Windows-forbidden characters
+    '[\\/*?"<>|]' ' ' # Remove Windows-forbidden characters
 )
 
 # patterns=(

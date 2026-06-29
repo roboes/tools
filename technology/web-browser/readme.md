@@ -18,12 +18,16 @@ Hardening Mozilla Firefox (Performance, Privacy, & AI Disable)
 ## uBlock Origin Filters
 
 - Privacy
-  - AdGuard URL Tracking Protection
+  - AdGuard/uBO – URL Tracking Protection
 - Cookie notices
-  - AdGuard/uBO – Cookie Notices
+  - uBlock filters – Cookie Notices
 - Annoyances
   - AdGuard – Annoyances
   - uBlock filters – Annoyances
+
+Import:
+
+- [Hide YouTube Shorts List](https://github.com/gijsdev/ublock-hide-yt-shorts): https://raw.githubusercontent.com/gijsdev/ublock-hide-yt-shorts/master/list.txt
 
 ## Tampermonkey Scripts
 

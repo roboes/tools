@@ -1,7 +1,9 @@
-# Immich Installation
+# Immich
 
 > [!NOTE]  
 > Last update: 2026-01-03
+
+## Installation
 
 ```.sh
 # Settings
@@ -12,8 +14,6 @@ system_user="website"
 # system_user="www-data:www-data"
 postgres_password=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9')
 ```
-
-## [Immich](https://immich.app)
 
 ```.sh
 # Create directories
@@ -335,7 +335,7 @@ Cloudflare → Website → `Security` → `Security rules`.
 
 Add both `CF-Access-Client-Id` and `CF-Access-Client-Secret` to the Immich mobile app.
 
-## Nginx
+### Nginx
 
 /etc/nginx/sites-available/subdomain.domain.com.conf
 
@@ -430,7 +430,7 @@ server {
 sudo systemctl reload nginx
 ```
 
-## Bulk Upload
+### Bulk Upload
 
 ```.sh
 # (Server) Install Immich CLI
@@ -444,4 +444,26 @@ immich login http://localhost:2283/api API_KEY
 
 # (Local machine, Terminal 2) Bulk Upload
 npx @immich/cli@latest upload --recursive "./"
+```
+
+## Update
+
+```.sh
+cd $domain_root_path/domains/$subdomain.$domain/immich
+```
+
+```.sh
+# Stop Immich
+docker compose down
+
+# Pull the latest Immich images
+docker compose pull
+
+# Restart with the new version
+docker compose up -d
+```
+
+```.sh
+# Clean up old images
+docker image prune -f
 ```
