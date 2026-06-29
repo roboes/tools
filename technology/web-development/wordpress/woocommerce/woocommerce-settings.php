@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Settings
-// Last update: 2026-01-15
+// Last update: 2026-06-29
 
 
 if (function_exists('WC')) {
@@ -14,6 +14,11 @@ if (function_exists('WC')) {
 
     // Email - Disable password change notification email
     add_filter(hook_name: 'woocommerce_disable_password_change_notification', callback: '__return_true', priority: 10, accepted_args: 1);
+
+    // Email - Disable the "Password Changed" notification sent to the site admin
+    add_action(hook_name: 'init', callback: function (): void {
+        remove_action(hook_name: 'after_password_reset', callback: 'wp_password_change_notification', priority: 10);
+    }, priority: 10, accepted_args: 0);
 
     // Email - Remove WooCommerce email footer ad ("Process your orders on the go. Get the app.")
     add_action(hook_name: 'woocommerce_email_footer', callback: function (): void {
