@@ -1,0 +1,31 @@
+alias: Roborock S6 Pure - Go to Specific Location After Cleaning
+description: Intercepts the Roborock S6 Pure when transitioning from a cleaning state to returning home, redirecting it to a specific location instead of the dock. Ignored if it is manually sent home.
+trigger:
+  - platform: state
+    entity_id: sensor.s6_pure_status
+    to: returning_home
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.from_state.state in [
+        'cleaning',
+        'zoned_cleaning',
+        'segment_cleaning',
+        'spot_cleaning',
+        'segment_mopping',
+        'zoned_mopping'
+      ] }}
+
+
+action:
+  - action: vacuum.stop
+    target:
+      entity_id: vacuum.s6_pure
+  - delay: '00:00:01'
+  - action: vacuum.send_command
+    target:
+      entity_id: vacuum.s6_pure
+    data:
+      command: app_goto_target
+      params: [22200, 22800]
+mode: single

@@ -70,6 +70,12 @@ systemctl reboot
 # rm /etc/apt/sources.list.bookworm-backup
 # rm -rf /etc/apt/sources.list.d.bookworm-backup
 
+# Scan repository source lists
+grep -rn "bookworm" /etc/apt/
+dpkg -l | grep -i "bookworm"
+
+# Delete the historical bookworm sources backup file
+# sudo rm -f /etc/apt/sources.list.bookworm-backup
 
 
 # Reset Dovecot to default settings

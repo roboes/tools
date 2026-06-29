@@ -637,7 +637,7 @@ Now "Create Virtual Server".
 
 ```.sh
 php_version_current="8.5"
-sudo apt install php${php_version_current}-sqlite3
+sudo apt install php${php_version_current}-sqlite3 php${php_version_current}-igbinary php${php_version_current}-redis
 ```
 
 Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
@@ -908,10 +908,10 @@ http {
     fastcgi_send_timeout 30s;
 
     ## FastCGI buffers
-    fastcgi_buffer_size 16k;
-    fastcgi_buffers 4 16k;
-    fastcgi_busy_buffers_size 48k;
-    fastcgi_temp_file_write_size 64k;
+    fastcgi_buffer_size 32k;
+    fastcgi_buffers 8 32k;
+    fastcgi_busy_buffers_size 64k;
+    fastcgi_temp_file_write_size 128k;
 
     ## FastCGI cache lock settings
     fastcgi_cache_lock on;
@@ -984,7 +984,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://www.paypal.com https://www.sandbox.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://api.mercadolibre.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://www.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://t.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://www.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://*.google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; script-src-elem 'self' 'unsafe-inline' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -1101,11 +1101,21 @@ server {
 
         # Caching controls
         set $skip_cache 0;
-        if ($request_method ~* "DELETE|POST|PUT") { set $skip_cache 1; }
-        if ($http_cookie ~* "PHPSESSID") { set $skip_cache 1; }
-        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") { set $skip_cache 1; }
-        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") { set $skip_cache 1; }
-        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") { set $skip_cache 1; }
+        if ($request_method ~* "DELETE|POST|PUT") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "PHPSESSID") {
+            set $skip_cache 1;
+        }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
+            set $skip_cache 1;
+        }
+        if ($http_cookie ~* "woocommerce_|wp_woocommerce_session_") {
+            set $skip_cache 1;
+        }
 
         fastcgi_cache MYCACHE;
         fastcgi_cache_valid 200 301 302 1h;
@@ -1285,7 +1295,7 @@ Cloudflare → Website → `Security` → `Security rules`.
 4. WordPress
 
 - `Rule name`: `WordPress`.
-- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/")`
+- `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/") and not (http.request.uri.path contains "/wp-admin/admin-ajax.php" or http.request.uri.path contains "/wp-admin/css/" or http.request.uri.path contains "/wp-admin/js/")`
 - `Choose action`: `Managed Challenge`.
 
 #### Caching
@@ -1335,9 +1345,21 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 - Browser TTL: `Respect origin TTL`.
 
-#### Rules
+#### Configuration Rules
+
+Cloudflare → Website → `Rules` → `Overview` → `Create rule` → `Configuration Rules`.
+
+1. Rocket Loader Disable
+
+- Rule name: `Rocket Loader Disable`.
+- When incoming requests match...: `(http.request.uri.path contains "/checkout/") or (http.request.uri.path contains "/kasse/") or (http.request.uri.path contains "/finalizacao-de-compra/")`.
+- hen the settings are...: `Rocket Loader`: `Off`.
+
+#### Page Rules
 
 Cloudflare → Website → `Rules` → `Page Rules` → `Create Page Rule`.
+
+1. Forwarding URL
 
 - URL: `www.website.com/*`.
 - Pick a Setting: `Forwarding URL`.
@@ -1399,17 +1421,22 @@ php_value[max_execution_time] = 60
 
 ; Process Management (medium-traffic)
 pm = dynamic
-pm.max_children = 30
-pm.start_servers = 8
-pm.min_spare_servers = 6
-pm.max_spare_servers = 12
+pm.max_children = 20
+pm.start_servers = 6
+pm.min_spare_servers = 4
+pm.max_spare_servers = 10
 pm.max_requests = 500
 pm.process_idle_timeout = 30s
 
+; Process Management (medium-traffic)
+; pm = static
+; pm.max_children = 16
+; pm.max_requests = 1000
+
 ; Per-Domain OPcache Logic
 php_admin_flag[opcache.enable] = on
-php_admin_value[opcache.revalidate_freq] = 2
-php_admin_value[opcache.validate_timestamps] = 1
+php_admin_value[opcache.validate_timestamps] = 0
+php_admin_value[opcache.revalidate_freq] = 0
 
 ; PHP slow log
 request_slowlog_timeout = 5s
