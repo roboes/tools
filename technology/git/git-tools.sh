@@ -53,7 +53,7 @@ fi
 
 
 ## Prettier
-prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml,yml}'
+# prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml,yml}'
 
 ## PHP
 find . -type f -name "*.php" | grep -q . && php-cs-fixer fix . --rules=@PSR12 --using-cache=no --no-interaction
@@ -76,20 +76,20 @@ pre-commit run --all-files
 
 ## Python requirements.txt file
 # python -m pip install pipreqs
-if [ $(basename "$PWD") != "odoo-woocommerce-sync" ]; then
-    if find . -type f -name "*.py" | grep -q .; then
-        pipreqs --encoding utf-8 --force "./"
-
-        # Check if "janitor" is in requirements.txt and replace it with pyjanitor
-        if grep -q "janitor" "requirements.txt"; then
-            sed -i '/janitor/c\pyjanitor==0.32.23' requirements.txt
-            pre-commit run --files "./requirements.txt"
-        fi
-
-    fi
-else
-    echo "Skipping requirements update"
-fi
+# if [ $(basename "$PWD") != "odoo-woocommerce-sync" ]; then
+#     if find . -type f -name "*.py" | grep -q .; then
+#         pipreqs --encoding utf-8 --force "./"
+#
+#         # Check if "janitor" is in requirements.txt and replace it with pyjanitor
+#         if grep -q "janitor" "requirements.txt"; then
+#             sed -i '/janitor/c\pyjanitor==0.32.23' requirements.txt
+#             pre-commit run --files "./requirements.txt"
+#         fi
+#
+#     fi
+# else
+#     echo "Skipping requirements update"
+# fi
 
 ## Update requirements.txt
 # pip-compile --no-header --output-file=requirements-updated.txt requirements.txt

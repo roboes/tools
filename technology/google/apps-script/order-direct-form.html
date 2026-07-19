@@ -1,0 +1,704 @@
+<div id="order-form-wrap">
+  <div id="form-body">
+    <p class="sec-title">Deine Details</p>
+
+    <div class="type-row">
+      <label class="radio-label">
+        <input type="radio" name="cust-type" value="individual" checked id="rad-individual" />
+        Privatperson
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="cust-type" value="company" id="rad-company" />
+        Firma
+      </label>
+    </div>
+
+    <div class="one-col" id="field-name">
+      <label>Vor- und Nachname <span class="req">*</span></label>
+      <input type="text" id="inp-name" />
+    </div>
+
+    <div class="one-col hidden" id="field-company-name">
+      <label>Firmenname <span class="req">*</span></label>
+      <input type="text" id="inp-company-name" />
+    </div>
+
+    <div class="one-col" id="field-email">
+      <label>E-Mail <span class="req">*</span></label>
+      <input type="email" id="inp-email" />
+    </div>
+
+    <div class="one-col" id="field-phone">
+      <label>Telefon <span class="req">*</span></label>
+      <input type="text" id="inp-phone" value="+49 " />
+    </div>
+
+    <p class="sec-title" style="margin-top: 48px">Deine Bestellung</p>
+
+    <div id="products-loading">
+      <div class="spinner"></div>
+      <span>Produkte werden geladen...</span>
+    </div>
+
+    <!-- Product rows are injected here by JS -->
+    <div id="order-rows"></div>
+
+    <button class="btn-add" id="btn-add" type="button">＋ Produkt hinzufügen</button>
+
+    <p class="sec-title" style="margin-top: 48px">Lieferung &amp; Abholung</p>
+
+    <div id="field-fulfillment">
+      <label>Versandart / Übergabe <span class="req">*</span></label>
+      <select id="inp-fulfillment">
+        <option value="" disabled selected>- Bitte wählen -</option>
+        <option value="pickup">Abholung vor Ort</option>
+        <option value="delivery">Lieferung</option>
+      </select>
+    </div>
+
+    <div class="two-col hidden" id="pickup-fields">
+      <div id="field-date">
+        <label>Abholdatum <span class="req">*</span></label>
+        <input type="date" id="inp-date" />
+      </div>
+      <div id="field-time">
+        <label>Abholzeit <span class="req">*</span></label>
+        <select id="inp-time">
+          <option value="">- Zeit wählen -</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="two-col hidden" id="delivery-fields">
+      <div id="field-address" style="grid-column: span 2">
+        <label>Adresse <span class="req">*</span></label>
+        <input type="text" id="inp-address" />
+      </div>
+      <div id="field-number">
+        <label>Hausnummer <span class="req">*</span></label>
+        <input type="text" id="inp-number" />
+      </div>
+      <div id="field-postcode">
+        <label>Postleitzahl <span class="req">*</span></label>
+        <input type="text" id="inp-postcode" />
+      </div>
+      <div id="field-city">
+        <label>Stadt <span class="req">*</span></label>
+        <input type="text" id="inp-city" />
+      </div>
+      <div id="field-country">
+        <label>Land <span class="req">*</span></label>
+        <select id="inp-country">
+          <option value="Deutschland">Deutschland</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="one-col" style="margin-top: 20px" id="field-notes">
+      <label>Anmerkungen / Sonderwünsche</label>
+      <span class="note-hint">Neukunde oder Adresse geändert? Bitte hier angeben.</span>
+      <textarea id="inp-notes"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-submit" id="btn-submit" type="button">Bestellung absenden</button>
+      <span class="form-status" id="form-status"></span>
+    </div>
+  </div>
+
+  <div id="success-screen">
+    <h2>Bestellung erhalten - Vielen Dank!</h2>
+    <p>Wir haben eine Bestätigung an deine E-Mail gesendet.</p>
+  </div>
+</div>
+
+<style>
+  #order-form-wrap {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #order-form-wrap *,
+  #order-form-wrap *::before,
+  #order-form-wrap *::after {
+    box-sizing: border-box;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Section headings */
+  .sec-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-sandal, #ab8c6c);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-cararra, #eceae3);
+  }
+
+  /* Layout helpers */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .one-col {
+    margin-bottom: 20px;
+  }
+  @media (max-width: 520px) {
+    .two-col {
+      grid-template-columns: 1fr;
+    }
+    #field-address {
+      grid-column: span 1 !important;
+    }
+  }
+
+  /* Customer type radio row */
+  .type-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+
+  /* Required star */
+  .req {
+    color: var(--color-sandal, #ab8c6c);
+    margin-left: 2px;
+  }
+
+  /* Note hint */
+  .note-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-bottom: 6px;
+  }
+
+  /* Inputs */
+  #order-form-wrap input[type='text'],
+  #order-form-wrap input[type='email'],
+  #order-form-wrap input[type='date'],
+  #order-form-wrap textarea,
+  #order-form-wrap select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--color-dove-gray-light, #ddd);
+    border-radius: 0;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #order-form-wrap input:focus,
+  #order-form-wrap textarea:focus,
+  #order-form-wrap select:focus {
+    border-color: var(--color-sandal, #ab8c6c);
+  }
+  #order-form-wrap textarea {
+    resize: vertical;
+    min-height: 85px;
+  }
+
+  /* Product rows (card stack, replaces table) */
+  #order-rows {
+    margin-bottom: 12px;
+  }
+
+  .order-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-cararra, #eceae3);
+  }
+  .order-row:first-child {
+    border-top: 1px solid var(--color-cararra, #eceae3);
+  }
+  .order-row select {
+    flex: 1;
+  } /* Product dropdown takes all spare space */
+  .order-row input[type='number'] {
+    width: 64px;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--color-dove-gray-light, #ddd);
+    border-radius: 0;
+    background: #fff;
+    outline: none;
+    flex-shrink: 0;
+  }
+  .order-row input[type='number']:focus {
+    border-color: var(--color-sandal, #ab8c6c);
+  }
+
+  /* Remove-row button */
+  .btn-remove {
+    background: none;
+    border: none;
+    color: var(--color-mongoose, #bca38a);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 6px;
+    flex-shrink: 0;
+  }
+  .btn-remove:hover {
+    color: #b94a2c;
+  }
+
+  /* Add-product button */
+  .btn-add {
+    background: none;
+    border: 1.5px dashed var(--color-sandal, #ab8c6c);
+    color: var(--color-sandal, #ab8c6c);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .btn-add:hover {
+    background: #fdf4e7;
+  }
+
+  /* Loading spinner */
+  #products-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--color-sandal, #ab8c6c);
+    padding: 8px 0;
+  }
+  #products-loading.visible {
+    display: flex;
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--color-cararra, #eceae3);
+    border-top-color: var(--color-sandal, #ab8c6c);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Submit row */
+  .submit-row {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    background: var(--color-mine-shaft, #262626);
+    color: var(--color-white, #fff);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 36px;
+    transition:
+      background 0.15s,
+      transform 0.1s;
+  }
+  .btn-submit:hover {
+    background: var(--color-saddle, #4b3228);
+  }
+  .btn-submit:active {
+    transform: scale(0.98);
+  }
+  .btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .form-status {
+    font-size: 0.85rem;
+    flex: 1;
+  }
+  .form-status.error {
+    color: #b94a2c;
+  }
+
+  /* Validation */
+  .field-error input,
+  .field-error select,
+  .field-error textarea {
+    border-color: #b94a2c !important;
+  }
+  .field-error .err-msg {
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-top: 4px;
+  }
+
+  /* Success screen */
+  #success-screen {
+    display: none;
+    text-align: center;
+    padding: 48px 16px;
+  }
+  #success-screen h2 {
+    font-size: 1.5rem;
+    color: var(--color-mine-shaft, #262626);
+    margin: 16px 0 10px;
+    font-weight: normal;
+  }
+  #success-screen p {
+    color: var(--color-sandal, #ab8c6c);
+    font-size: 0.95rem;
+  }
+</style>
+
+<script>
+  // =======
+  // Options
+  // =======
+  const options = {
+    scriptUrl: 'https://script.google.com/macros/s/1234/exec',
+    lang: 'de',
+
+    // Opening hours per weekday. Empty array = closed.
+    // Keys: Monday Tuesday Wednesday Thursday Friday Saturday Sunday
+    timeSlots: {
+      Monday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Tuesday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Wednesday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Thursday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Friday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Saturday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30'],
+      Sunday: [],
+    },
+
+    strings: {
+      prodChoose: '- Produkt wählen -',
+      prodUnavailable: '- Produktliste nicht verfügbar -',
+      prodError: '- Fehler beim Laden der Produkte -',
+      errFulfillment: 'Bitte wähle eine Versandart aus.',
+      btnSending: 'Wird gesendet...',
+      btnSubmit: 'Bestellung absenden',
+      errName: 'Bitte gib deinen Namen ein.',
+      errEmail: 'Bitte gib eine gültige E-Mail-Adresse ein.',
+      errCompany: 'Bitte gib den Firmennamen ein.',
+      errPhone: 'Bitte gib deine Telefonnummer ein.',
+      errNoItems: 'Bitte füge mindestens ein Produkt hinzu.',
+      errDate: 'Bitte wähle ein gültiges Datum.',
+      errTime: 'Bitte wähle eine Uhrzeit.',
+      errAddress: 'Bitte gib deine Adresse ein.',
+      errNumber: 'Bitte gib die Hausnummer ein.',
+      errPostcode: 'Bitte gib die Postleitzahl ein.',
+      errCity: 'Bitte gib die Stadt ein.',
+      errSunday: 'Sonntags haben wir geschlossen. Bitte wähle einen anderen Tag.',
+      errFatal: 'Etwas ist schief gelaufen - bitte versuche es erneut.',
+    },
+  };
+
+  // =====
+  // State
+  // =====
+  let products = [];
+  let rowCount = 0;
+
+  // ====
+  // Init
+  // ====
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('inp-date').min = new Date().toISOString().split('T')[0];
+
+    document.getElementById('btn-add').addEventListener('click', addRow);
+    document.getElementById('btn-submit').addEventListener('click', submitOrder);
+    document.getElementById('inp-fulfillment').addEventListener('change', handleFulfillmentChange);
+    document.getElementById('inp-date').addEventListener('change', handleDateChange);
+    document.getElementById('rad-individual').addEventListener('change', toggleCustomerType);
+    document.getElementById('rad-company').addEventListener('change', toggleCustomerType);
+
+    populateTimeSlots();
+    loadProducts();
+  });
+
+  // ==================
+  // Fulfillment toggle
+  // ==================
+  function handleFulfillmentChange() {
+    const isPickup = document.getElementById('inp-fulfillment').value === 'pickup';
+    document.getElementById('pickup-fields').classList.toggle('hidden', !isPickup);
+    document.getElementById('delivery-fields').classList.toggle('hidden', isPickup);
+  }
+
+  // ====================
+  // Customer type toggle
+  // ====================
+  function toggleCustomerType() {
+    const isCompany = document.getElementById('rad-company').checked;
+    document.getElementById('field-company-name').classList.toggle('hidden', !isCompany);
+    if (!isCompany) document.getElementById('inp-company-name').value = '';
+  }
+
+  // =================
+  // Date / time slots
+  // =================
+  const DAY_KEYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; // Matches getDay() 0–6
+
+  function handleDateChange() {
+    clearErrors();
+    const dateVal = document.getElementById('inp-date').value;
+    if (!dateVal) return;
+
+    const dayKey = DAY_KEYS[new Date(dateVal).getDay()];
+    if (options.timeSlots[dayKey].length === 0) {
+      // Closed that day
+      setError('field-date', options.strings.errSunday);
+      document.getElementById('inp-date').value = '';
+    }
+    populateTimeSlots();
+  }
+
+  function populateTimeSlots() {
+    const sel = document.getElementById('inp-time');
+    const dateVal = document.getElementById('inp-date').value;
+    const dayKey = dateVal ? DAY_KEYS[new Date(dateVal).getDay()] : 'Monday';
+    const slots = options.timeSlots[dayKey] || [];
+
+    sel.innerHTML = `<option value="">- Zeit wählen -</option>`;
+    slots.forEach((t) => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = t;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ===============
+  // Product loading
+  // ===============
+  async function loadProducts() {
+    const loader = document.getElementById('products-loading');
+    loader.classList.add('visible');
+    try {
+      const res = await fetch(`${options.scriptUrl}?action=getProducts`);
+      const data = await res.json();
+      products = data.success && data.products.length ? data.products : [{ id: 0, name: options.strings.prodUnavailable, price: '' }];
+    } catch {
+      products = [{ id: 0, name: options.strings.prodError, price: '' }];
+    } finally {
+      loader.classList.remove('visible');
+      addRow();
+    }
+  }
+
+  // ==========
+  // Order rows
+  // ==========
+  function buildProductSelect() {
+    const sel = document.createElement('select');
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = options.strings.prodChoose;
+    sel.appendChild(placeholder);
+
+    products.forEach((p) => {
+      const opt = document.createElement('option');
+      opt.value = p.name;
+      opt.textContent = p.price ? `${p.name} (€${p.price})` : p.name;
+      sel.appendChild(opt);
+    });
+    return sel;
+  }
+
+  function addRow() {
+    rowCount++;
+    const row = document.createElement('div');
+    row.classList.add('order-row');
+    row.id = `row-${rowCount}`;
+
+    const qtyInp = document.createElement('input');
+    qtyInp.type = 'number';
+    qtyInp.min = '1';
+    qtyInp.value = '1';
+
+    const btnRem = document.createElement('button');
+    btnRem.type = 'button';
+    btnRem.className = 'btn-remove';
+    btnRem.textContent = '✕';
+    btnRem.addEventListener('click', () => {
+      row.remove();
+      if (!document.querySelector('.order-row')) addRow();
+    });
+
+    row.append(buildProductSelect(), qtyInp, btnRem);
+    document.getElementById('order-rows').appendChild(row);
+  }
+
+  function collectItems() {
+    return [...document.querySelectorAll('.order-row')]
+      .map((row) => ({
+        name: row.querySelector('select').value,
+        quantity: parseInt(row.querySelector('input[type=number]').value, 10) || 1,
+      }))
+      .filter((item) => item.name);
+  }
+
+  // ==================
+  // Validation helpers
+  // ==================
+  function setError(fieldId, msg) {
+    const el = document.getElementById(fieldId);
+    el.classList.add('field-error');
+    let err = el.querySelector('.err-msg');
+    if (!err) {
+      err = document.createElement('p');
+      err.className = 'err-msg';
+      el.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.field-error').forEach((el) => {
+      el.classList.remove('field-error');
+      el.querySelector('.err-msg')?.remove();
+    });
+  }
+
+  // ======
+  // Submit
+  // ======
+  async function submitOrder() {
+    clearErrors();
+    const status = document.getElementById('form-status');
+    status.textContent = '';
+    status.className = 'form-status';
+    const S = options.strings;
+
+    const customerType = document.querySelector('input[name="cust-type"]:checked').value;
+    const name = document.getElementById('inp-name').value.trim();
+    const email = document.getElementById('inp-email').value.trim();
+    const companyName = document.getElementById('inp-company-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const notes = document.getElementById('inp-notes').value.trim();
+    const fulfillment = document.getElementById('inp-fulfillment').value;
+    const pickupDate = document.getElementById('inp-date').value;
+    const pickupTime = document.getElementById('inp-time').value;
+    const deliveryAddress = document.getElementById('inp-address').value.trim();
+    const deliveryNumber = document.getElementById('inp-number').value.trim();
+    const deliveryPostCode = document.getElementById('inp-postcode').value.trim();
+    const deliveryCity = document.getElementById('inp-city').value.trim();
+    const deliveryCountry = document.getElementById('inp-country').value;
+    const items = collectItems();
+
+    let valid = true;
+    if (!name) {
+      setError('field-name', S.errName);
+      valid = false;
+    }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError('field-email', S.errEmail);
+      valid = false;
+    }
+    if (customerType === 'company' && !companyName) {
+      setError('field-company-name', S.errCompany);
+      valid = false;
+    }
+    if (!phone) {
+      setError('field-phone', S.errPhone);
+      valid = false;
+    }
+    if (!items.length) {
+      status.textContent = S.errNoItems;
+      status.className = 'form-status error';
+      valid = false;
+    }
+
+    if (!fulfillment) {
+      setError('field-fulfillment', S.errFulfillment);
+      valid = false;
+    } else if (fulfillment === 'pickup') {
+      if (!pickupDate) {
+        setError('field-date', S.errDate);
+        valid = false;
+      }
+      if (!pickupTime) {
+        setError('field-time', S.errTime);
+        valid = false;
+      }
+    } else if (fulfillment === 'delivery') {
+      if (!deliveryAddress) {
+        setError('field-address', S.errAddress);
+        valid = false;
+      }
+      if (!deliveryNumber) {
+        setError('field-number', S.errNumber);
+        valid = false;
+      }
+      if (!deliveryPostCode) {
+        setError('field-postcode', S.errPostcode);
+        valid = false;
+      }
+      if (!deliveryCity) {
+        setError('field-city', S.errCity);
+        valid = false;
+      }
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = S.btnSending;
+
+    try {
+      const payload = {
+        customerType,
+        name,
+        email,
+        companyName,
+        phone,
+        notes,
+        items,
+        lang: options.lang,
+        pickup: fulfillment === 'pickup',
+        pickupDate,
+        pickupTime,
+        deliveryAddress,
+        deliveryNumber,
+        deliveryPostCode,
+        deliveryCity,
+        deliveryCountry,
+      };
+      const res = await fetch(options.scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('form-body').style.display = 'none';
+        document.getElementById('success-screen').style.display = 'block';
+      } else {
+        throw new Error(data.message || 'Unknown error');
+      }
+    } catch {
+      status.textContent = S.errFatal;
+      status.className = 'form-status error';
+      btn.disabled = false;
+      btn.textContent = S.btnSubmit;
+    }
+  }
+</script>

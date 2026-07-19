@@ -1,0 +1,20 @@
+alias: 'Tapo Camera Person Detection Notification'
+description: 'Send a mobile notification when any Tapo camera detects a person'
+trigger:
+  - trigger: state
+    entity_id:
+      - binary_sensor.terrace_1_tapo_c51a_person_detection
+      #- binary_sensor.camera_2_tapo_xxxx_person_detection
+      #- binary_sensor.camera_3_tapo_xxxx_person_detection
+    to: 'on'
+    for:
+      seconds: 2
+condition: []
+action:
+  - action: notify.notify
+    data:
+      title: "Person detected - {{ trigger.to_state.attributes.friendly_name | replace(' Tapo', '') | replace(' Person Detection', '') }}"
+      message: "A person was detected on the {{ trigger.to_state.attributes.friendly_name | replace(' Tapo', '') | replace(' Person Detection', '') }} camera"
+      data:
+        clickAction: '/lovelace/0'
+mode: queued

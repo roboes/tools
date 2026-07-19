@@ -1,5 +1,20 @@
 # Python
 
+## Positron
+
+```.sh
+# Create a virtual environment
+uv venv
+
+# Activate the virtual environment in the terminal (macOS/Linux)
+source .venv/bin/activate
+
+# Install packages
+uv pip install pandas
+```
+
+Select Session > New Console Session...
+
 ## pip cache
 
 ```.sh

@@ -27,7 +27,7 @@ Notes:
 */
 
 /*
-// Manually generate training coupon (100%)
+// Manually generate training coupon (100%) - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'       => 'Firstname Lastname',
     'email'      => 'email@website.com',
@@ -38,7 +38,7 @@ generate_coupon_on_purchase(input: [
 */
 
 /*
-// Manually generate a fixed cart discount (gift card) coupon
+// Manually generate a fixed cart discount (gift card) coupon - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'     => 'Firstname Lastname',
     'email'    => 'email@website.com',

@@ -69,6 +69,18 @@ FROM odoo:${ODOO_VERSION}
 
 USER root
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    libavif-dev \
+    libavif16 \
+    zlib1g-dev \
+    libjpeg-dev \
+    libwebp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir --break-system-packages --no-binary Pillow "Pillow>=11.3.0"
+
 RUN --mount=type=bind,source=addons,target=/tmp/addons \
     find /tmp/addons -name "requirements.txt" \
         ! -path "*/oca/server-tools/*" \
