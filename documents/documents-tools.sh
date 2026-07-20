@@ -27,6 +27,9 @@
 # Install DiffPDF
 # sudo apt install -y diffpdf
 
+# Install Pandoc
+# sudo apt install -y pandoc
+
 
 # Settings
 if grep -qi microsoft /proc/version; then
@@ -82,6 +85,10 @@ diff-pdf --output-diff=diff.pdf file_A.pdf file_B.pdf
 
 # Convert .pdf to .pptx
 soffice --infilter=impress_pdf_import --convert-to ppt "./input.pdf"
+
+
+# Convert .md to .docx
+pandoc "input.md" -o "output.docx"
 
 
 # Count the number of files categorized by their root-level directory and file type

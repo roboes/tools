@@ -45,6 +45,11 @@
 
     <button class="btn-add" id="btn-add" type="button">＋ Produkt hinzufügen</button>
 
+    <div id="order-total" class="order-total hidden"></div>
+
+    <!-- Unverpackt warning - shown/hidden by JS -->
+    <div id="unpacked-warning" class="unpacked-warning hidden"></div>
+
     <p class="sec-title" style="margin-top: 48px">Lieferung &amp; Abholung</p>
 
     <div id="field-fulfillment">
@@ -52,7 +57,7 @@
       <select id="inp-fulfillment">
         <option value="" disabled selected>- Bitte wählen -</option>
         <option value="pickup">Abholung vor Ort</option>
-        <option value="delivery">Lieferung</option>
+        <option value="delivery" id="opt-delivery">Lieferung</option>
       </select>
     </div>
 
@@ -211,26 +216,42 @@
     min-height: 85px;
   }
 
-  /* Product rows (card stack, replaces table) */
+  /* Product rows */
   #order-rows {
     margin-bottom: 12px;
   }
 
   .order-row {
+    border: 1.5px solid var(--color-cararra, #eceae3);
+    padding: 10px 14px 10px;
+    margin-bottom: 10px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--color-cararra, #eceae3);
+    flex-direction: column;
   }
-  .order-row:first-child {
-    border-top: 1px solid var(--color-cararra, #eceae3);
+
+  /* Attribute grid inside each row */
+  .order-row-grid {
+    display: grid;
+    grid-template-columns: 1.6fr repeat(5, 1fr) 80px 72px;
+    gap: 8px;
+    align-items: end;
   }
-  .order-row select {
-    flex: 1;
-  } /* Product dropdown takes all spare space */
-  .order-row input[type='number'] {
-    width: 64px;
+  @media (max-width: 700px) {
+    .order-row-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .order-row-grid label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-sandal, #ab8c6c);
+    margin-bottom: 4px;
+  }
+  .col-qty input[type='number'] {
+    width: 100%;
     padding: 10px 6px;
     text-align: center;
     font-size: 0.95rem;
@@ -238,24 +259,75 @@
     border-radius: 0;
     background: #fff;
     outline: none;
-    flex-shrink: 0;
   }
-  .order-row input[type='number']:focus {
+  .col-qty input[type='number']:focus {
     border-color: var(--color-sandal, #ab8c6c);
+  }
+  .order-row-grid select:disabled {
+    background: #f5f5f5;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+  .row-price-value {
+    font-size: 0.95rem;
+    padding: 10px 6px;
+    color: var(--color-mine-shaft, #262626);
+    min-height: 2.5em;
+    display: flex;
+    align-items: center;
+  }
+  .order-total {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--color-mine-shaft, #262626);
+    padding: 8px 0 4px;
+    border-top: 1.5px solid var(--color-cararra, #eceae3);
+    margin-top: 4px;
+  }
+  .row-product-name {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 8px;
+    min-height: 1.1em;
+    font-style: italic;
+  }
+  .row-error {
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-top: 6px;
   }
 
   /* Remove-row button */
+  .order-row-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+  }
   .btn-remove {
     background: none;
     border: none;
     color: var(--color-mongoose, #bca38a);
     cursor: pointer;
-    font-size: 1rem;
-    padding: 4px 6px;
-    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 0;
+    line-height: 1;
   }
   .btn-remove:hover {
     color: #b94a2c;
+  }
+
+  /* Unverpackt warning */
+  .unpacked-warning {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #fff8e1;
+    border: 1.5px solid #f0c040;
+    color: #7a5800;
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 
   /* Add-product button */
@@ -379,6 +451,10 @@
     scriptUrl: 'https://script.google.com/macros/s/1234/exec',
     lang: 'de',
 
+    // Weight labels to hide - display label WC returns in a.option.
+    // Must match woocommerce_exclude_weight_labels in Script Properties.
+    excludeWeightLabels: ['250 g'],
+
     // Opening hours per weekday. Empty array = closed.
     // Keys: Monday Tuesday Wednesday Thursday Friday Saturday Sunday
     timeSlots: {
@@ -391,11 +467,28 @@
       Sunday: [],
     },
 
+    // Attribute slug → display label
+    attrLabels: {
+      'coffee-processing-green-coffee-de': 'Rohkaffee',
+      'coffee-processing-roasted-coffee-de': 'Röstkaffee',
+      'coffee-type-ground-coffee-de': 'Gemahlen',
+      'coffee-type-whole-bean-de': 'Ganze Bohne',
+      'coffee-grinding-degree-chemex-frenchpress-de': 'Chemex / Frenchpress',
+      'coffee-grinding-degree-filter-bialetti-de': 'Filter / Bialetti',
+      'coffee-grinding-degree-mokka-de': 'Mokka',
+      'coffee-grinding-degree-whole-bean-de': 'Ganze Bohne',
+      'weight-500g-de': '500 g',
+      'weight-1kg-de': '1 kg',
+      'packaging-packed-de': 'Verpackt',
+      'packaging-unpacked-de': 'Unverpackt',
+    },
+
     strings: {
-      prodChoose: '- Produkt wählen -',
+      prodChoose: '- Bitte wählen -',
       prodUnavailable: '- Produktliste nicht verfügbar -',
       prodError: '- Fehler beim Laden der Produkte -',
       errFulfillment: 'Bitte wähle eine Versandart aus.',
+      errRowIncomplete: 'Bitte alle Felder ausfüllen.',
       btnSending: 'Wird gesendet...',
       btnSubmit: 'Bestellung absenden',
       errName: 'Bitte gib deinen Namen ein.',
@@ -411,6 +504,7 @@
       errCity: 'Bitte gib die Stadt ein.',
       errSunday: 'Sonntags haben wir geschlossen. Bitte wähle einen anderen Tag.',
       errFatal: 'Etwas ist schief gelaufen - bitte versuche es erneut.',
+      unpackedWarning: '⚠️ Du hast mindestens ein unverpacktes Produkt gewählt. Eine Lieferung ist daher nicht möglich. Bitte wähle <strong>Abholung vor Ort</strong>.',
     },
   };
 
@@ -419,6 +513,15 @@
   // =====
   let products = [];
   let rowCount = 0;
+
+  // Ordered attribute columns for the cascading dropdowns
+  const ATTR_COLUMNS = [
+    { key: 'attribute_pa_coffee-processing', label: 'Verarbeitung' },
+    { key: 'attribute_pa_coffee-type', label: 'Typ' },
+    { key: 'attribute_pa_coffee-grinding-degree', label: 'Mahlgrad' },
+    { key: 'attribute_pa_weight', label: 'Gewicht' },
+    { key: 'attribute_pa_packaging', label: 'Verpackung' },
+  ];
 
   // ====
   // Init
@@ -493,36 +596,70 @@
   // ===============
   async function loadProducts() {
     const loader = document.getElementById('products-loading');
+    const addButton = document.getElementById('btn-add');
     loader.classList.add('visible');
+    addButton.disabled = true;
+
     try {
       const res = await fetch(`${options.scriptUrl}?action=getProducts`);
-      const data = await res.json();
-      products = data.success && data.products.length ? data.products : [{ id: 0, name: options.strings.prodUnavailable, price: '' }];
-    } catch {
-      products = [{ id: 0, name: options.strings.prodError, price: '' }];
+      const rawText = await res.text();
+      // console.log('[order-form] raw script response:', rawText);
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error('[order-form] JSON parse failed:', parseError);
+        throw new Error('Produktliste konnte nicht gelesen werden (ungültiges Format).');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || data.error || 'Script meldete einen Fehler.');
+      }
+
+      products = Array.isArray(data.products) && data.products.length ? data.products : [];
+
+      if (!products.length) {
+        loader.querySelector('span').textContent = options.strings.prodUnavailable;
+        loader.classList.remove('visible'); // keep hidden; show the message via the status area instead
+        const status = document.getElementById('form-status');
+        status.textContent = options.strings.prodUnavailable;
+        status.className = 'form-status error';
+      }
+    } catch (err) {
+      console.error('[order-form] loadProducts error:', err);
+      products = [];
+      loader.querySelector('span').textContent = `${options.strings.prodError}: ${err.message}`;
+      // Leave loader visible so the error text stays on screen
     } finally {
-      loader.classList.remove('visible');
-      addRow();
+      if (products.length) {
+        loader.classList.remove('visible');
+        addButton.disabled = false;
+        addRow();
+      }
     }
   }
 
   // ==========
   // Order rows
   // ==========
-  function buildProductSelect() {
-    const sel = document.createElement('select');
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = options.strings.prodChoose;
-    sel.appendChild(placeholder);
 
-    products.forEach((p) => {
-      const opt = document.createElement('option');
-      opt.value = p.name;
-      opt.textContent = p.price ? `${p.name} (€${p.price})` : p.name;
-      sel.appendChild(opt);
-    });
-    return sel;
+  /** Returns unique attribute values available given upstream filter selections. */
+  function getAttrValues(attrKey, filters) {
+    return [
+      ...new Set(
+        products
+          .filter((p) => p.attributes != null)
+          .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
+          .map((p) => p.attributes[attrKey])
+          .filter(Boolean)
+          .filter((slug) => attrKey !== 'attribute_pa_weight' || !options.excludeWeightLabels.includes(slug))
+      ),
+    ];
+  }
+
+  function attrLabel(slug) {
+    return options.attrLabels[slug] || slug;
   }
 
   function addRow() {
@@ -531,11 +668,6 @@
     row.classList.add('order-row');
     row.id = `row-${rowCount}`;
 
-    const qtyInp = document.createElement('input');
-    qtyInp.type = 'number';
-    qtyInp.min = '1';
-    qtyInp.value = '1';
-
     const btnRem = document.createElement('button');
     btnRem.type = 'button';
     btnRem.className = 'btn-remove';
@@ -543,19 +675,329 @@
     btnRem.addEventListener('click', () => {
       row.remove();
       if (!document.querySelector('.order-row')) addRow();
+      checkUnpacked();
+      updateOrderTotal();
     });
 
-    row.append(buildProductSelect(), qtyInp, btnRem);
+    const grid = document.createElement('div');
+    grid.className = 'order-row-grid';
+
+    // Product name column - first in the grid; drives the cascading attr dropdowns
+    const nameCell = document.createElement('div');
+    const nameLbl = document.createElement('label');
+    nameLbl.textContent = 'Produkt';
+    nameCell.appendChild(nameLbl);
+
+    const nameSel = document.createElement('select');
+    nameSel.dataset.attr = 'product-name';
+    const namePh = document.createElement('option');
+    namePh.value = '';
+    namePh.textContent = options.strings.prodChoose;
+    nameSel.appendChild(namePh);
+    [...new Set(products.map((p) => p.name))]
+      .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }))
+      .forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        nameSel.appendChild(opt);
+      });
+    nameSel.addEventListener('change', () => onProductNameChange(row, grid));
+    nameCell.appendChild(nameSel);
+    grid.appendChild(nameCell);
+
+    ATTR_COLUMNS.forEach((col, idx) => {
+      const cell = document.createElement('div');
+      const lbl = document.createElement('label');
+      lbl.textContent = col.label;
+      cell.appendChild(lbl);
+
+      const sel = document.createElement('select');
+      sel.dataset.attr = col.key;
+
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = options.strings.prodChoose;
+      sel.appendChild(ph);
+
+      if (idx === 0) {
+        getAttrValues(col.key, {}).forEach((v) => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = attrLabel(v);
+          sel.appendChild(opt);
+        });
+      } else {
+        sel.disabled = true;
+      }
+
+      sel.addEventListener('change', () => onAttrChange(row, grid, col.key));
+      cell.appendChild(sel);
+      grid.appendChild(cell);
+    });
+
+    // Price cell - between the last attribute column and Menge
+    const priceCell = document.createElement('div');
+    const priceLbl = document.createElement('label');
+    priceLbl.textContent = 'Preis';
+    const priceVal = document.createElement('div');
+    priceVal.className = 'row-price-value';
+    priceVal.textContent = '-';
+    priceCell.append(priceLbl, priceVal);
+    grid.appendChild(priceCell);
+
+    // Quantity column
+    const qtyCell = document.createElement('div');
+    qtyCell.className = 'col-qty';
+    const qtyLbl = document.createElement('label');
+    qtyLbl.textContent = 'Menge';
+    const qtyInp = document.createElement('input');
+    qtyInp.type = 'number';
+    qtyInp.min = '1';
+    qtyInp.value = '1';
+    qtyInp.addEventListener('input', () => {
+      updateRowPrice(row);
+      updateOrderTotal();
+    });
+    qtyCell.append(qtyLbl, qtyInp);
+    grid.appendChild(qtyCell);
+
+    // Matched product name hint - full-width row below the grid
+    const nameLine = document.createElement('div');
+    nameLine.className = 'row-product-name';
+    nameLine.style.gridColumn = 'span 7';
+
+    const rowHeader = document.createElement('div');
+    rowHeader.className = 'order-row-header';
+    rowHeader.appendChild(btnRem);
+
+    row.append(rowHeader, grid, nameLine);
     document.getElementById('order-rows').appendChild(row);
   }
 
+  /** Updates the price cell for a single row based on unit price × qty. */
+  function updateRowPrice(row) {
+    const priceVal = row.querySelector('.row-price-value');
+    if (!priceVal) return;
+    const unitPrice = parseFloat(row.dataset.unitPrice);
+    const qty = parseInt(row.querySelector('input[type=number]')?.value, 10) || 1;
+    if (!unitPrice) {
+      priceVal.textContent = '-';
+    } else {
+      const total = (unitPrice * qty).toFixed(2).replace('.', ',');
+      priceVal.textContent = `€${total}`;
+    }
+  }
+
+  /** Recalculates and displays the order total across all rows. */
+  function updateOrderTotal() {
+    const totalEl = document.getElementById('order-total');
+    let sum = 0;
+    let anyPrice = false;
+    document.querySelectorAll('.order-row').forEach((row) => {
+      const unitPrice = parseFloat(row.dataset.unitPrice);
+      const qty = parseInt(row.querySelector('input[type=number]')?.value, 10) || 1;
+      if (unitPrice) {
+        sum += unitPrice * qty;
+        anyPrice = true;
+      }
+    });
+    if (anyPrice) {
+      totalEl.textContent = `Gesamt: €${sum.toFixed(2).replace('.', ',')}`;
+      totalEl.classList.remove('hidden');
+    } else {
+      totalEl.classList.add('hidden');
+    }
+  }
+
+  function onProductNameChange(row, grid) {
+    const selectedName = grid.querySelector('[data-attr="product-name"]').value;
+
+    // Reset and repopulate the first attr column filtered by the chosen product name
+    ATTR_COLUMNS.forEach((col, idx) => {
+      const sel = grid.querySelector(`[data-attr="${col.key}"]`);
+      if (!sel) return;
+      sel.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = options.strings.prodChoose;
+      sel.appendChild(ph);
+      sel.disabled = idx !== 0;
+      sel.value = '';
+    });
+
+    const priceVal = row.querySelector('.row-price-value');
+    if (priceVal) priceVal.textContent = '-';
+    row.querySelector('.row-product-name').textContent = '';
+
+    if (!selectedName) return;
+
+    // Populate the first attr column for this product name
+    const firstCol = ATTR_COLUMNS[0];
+    const firstSel = grid.querySelector(`[data-attr="${firstCol.key}"]`);
+    const nameFilter = { _productName: selectedName };
+    getAttrValuesForName(firstCol.key, {}, selectedName).forEach((v) => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = attrLabel(v);
+      firstSel.appendChild(opt);
+    });
+    firstSel.disabled = false;
+  }
+
+  /** Like getAttrValues but pre-filters to a specific product name. */
+  function getAttrValuesForName(attrKey, filters, productName) {
+    return [
+      ...new Set(
+        products
+          .filter((p) => p.attributes != null)
+          .filter((p) => !productName || p.name === productName)
+          .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
+          .map((p) => p.attributes[attrKey])
+          .filter(Boolean)
+          .filter((slug) => attrKey !== 'attribute_pa_weight' || !options.excludeWeightLabels.includes(slug))
+      ),
+    ];
+  }
+
+  function onAttrChange(row, grid, changedKey) {
+    const changedIdx = ATTR_COLUMNS.findIndex((c) => c.key === changedKey);
+    const isWholeBn = grid.querySelector('[data-attr="attribute_pa_coffee-type"]')?.value === 'Ganze Bohne';
+
+    // Build filters from all columns up to and including the changed one
+    const upstreamFilters = {};
+    ATTR_COLUMNS.forEach((col, idx) => {
+      if (idx <= changedIdx) {
+        const v = grid.querySelector(`[data-attr="${col.key}"]`)?.value;
+        if (v) upstreamFilters[col.key] = v;
+      }
+    });
+
+    // Repopulate downstream columns
+    ATTR_COLUMNS.forEach((col, idx) => {
+      if (idx <= changedIdx) return;
+      const sel = grid.querySelector(`[data-attr="${col.key}"]`);
+      if (!sel) return;
+
+      const isGrind = col.key === 'attribute_pa_coffee-grinding-degree';
+
+      if (isGrind && isWholeBn) {
+        // Lock grinding to whole-bean
+        sel.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.value = 'Ganze Bohne';
+        opt.textContent = 'Ganze Bohne';
+        sel.appendChild(opt);
+        sel.value = 'Ganze Bohne';
+        sel.disabled = true;
+        upstreamFilters[col.key] = sel.value;
+      } else {
+        sel.disabled = false;
+        const prev = sel.value;
+        const selectedName = grid.querySelector('[data-attr="product-name"]')?.value || '';
+        const vals = getAttrValuesForName(col.key, upstreamFilters, selectedName);
+        sel.innerHTML = '';
+        const ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = options.strings.prodChoose;
+        sel.appendChild(ph);
+        vals.forEach((v) => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = attrLabel(v);
+          sel.appendChild(opt);
+        });
+        sel.value = vals.includes(prev) ? prev : '';
+      }
+    });
+
+    // Update price cell and product-not-found hint
+    const nameLine = row.querySelector('.row-product-name');
+    const priceVal = row.querySelector('.row-price-value');
+    const filters = {};
+    let complete = true;
+    ATTR_COLUMNS.forEach((col) => {
+      const v = grid.querySelector(`[data-attr="${col.key}"]`)?.value;
+      if (v) filters[col.key] = v;
+      else complete = false;
+    });
+    if (complete) {
+      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+      if (match) {
+        row.dataset.unitPrice = match.price.replace(',', '.');
+        nameLine.textContent = '';
+      } else {
+        row.dataset.unitPrice = '';
+        nameLine.textContent = '⚠ Kein passendes Produkt gefunden';
+      }
+    } else {
+      row.dataset.unitPrice = '';
+      nameLine.textContent = '';
+    }
+
+    updateRowPrice(row);
+    updateOrderTotal();
+    checkUnpacked();
+  }
+
+  // =====================
+  // Unverpackt check
+  // =====================
+  function checkUnpacked() {
+    const hasUnpacked = [...document.querySelectorAll('[data-attr="attribute_pa_packaging"]')].some((sel) => sel.value === 'Unverpackt');
+
+    const banner = document.getElementById('unpacked-warning');
+    banner.innerHTML = hasUnpacked ? options.strings.unpackedWarning : '';
+    banner.classList.toggle('hidden', !hasUnpacked);
+
+    const deliveryOpt = document.getElementById('opt-delivery');
+    const fulfillSel = document.getElementById('inp-fulfillment');
+    deliveryOpt.disabled = hasUnpacked;
+    if (hasUnpacked && fulfillSel.value === 'delivery') {
+      fulfillSel.value = '';
+      document.getElementById('delivery-fields').classList.add('hidden');
+    }
+  }
+
   function collectItems() {
-    return [...document.querySelectorAll('.order-row')]
-      .map((row) => ({
-        name: row.querySelector('select').value,
-        quantity: parseInt(row.querySelector('input[type=number]').value, 10) || 1,
-      }))
-      .filter((item) => item.name);
+    const items = [];
+    let valid = true;
+
+    document.querySelectorAll('.order-row').forEach((row) => {
+      row.querySelectorAll('.row-error').forEach((e) => e.remove());
+
+      const filters = {};
+      let rowComplete = true;
+      ATTR_COLUMNS.forEach((col) => {
+        const v = row.querySelector(`[data-attr="${col.key}"]`)?.value;
+        if (v) filters[col.key] = v;
+        else rowComplete = false;
+      });
+
+      if (!rowComplete) {
+        const err = document.createElement('p');
+        err.className = 'row-error';
+        err.textContent = options.strings.errRowIncomplete;
+        row.appendChild(err);
+        valid = false;
+        return;
+      }
+
+      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+      if (!match) {
+        const err = document.createElement('p');
+        err.className = 'row-error';
+        err.textContent = 'Kein passendes Produkt gefunden.';
+        row.appendChild(err);
+        valid = false;
+        return;
+      }
+
+      const qty = parseInt(row.querySelector('input[type=number]').value, 10) || 1;
+      items.push({ id: match.id, name: match.name, sku: match.sku, price: match.price, quantity: qty, packaging: filters['attribute_pa_packaging'], attributes: match.attributes });
+    });
+
+    return valid ? items : null;
   }
 
   // ==================
@@ -623,7 +1065,9 @@
       setError('field-phone', S.errPhone);
       valid = false;
     }
-    if (!items.length) {
+    if (!items) {
+      valid = false;
+    } else if (!items.length) {
       status.textContent = S.errNoItems;
       status.className = 'form-status error';
       valid = false;
@@ -666,6 +1110,10 @@
     btn.disabled = true;
     btn.textContent = S.btnSending;
 
+    // Auto-append unverpackt note if applicable
+    const hasUnpacked = items && items.some((i) => i.packaging === 'packaging-unpacked-de');
+    const finalNotes = [notes, hasUnpacked ? 'Enthält unverpackte Produkte (nur Abholung möglich).' : ''].filter(Boolean).join(' | ');
+
     try {
       const payload = {
         customerType,
@@ -673,7 +1121,7 @@
         email,
         companyName,
         phone,
-        notes,
+        notes: finalNotes,
         items,
         lang: options.lang,
         pickup: fulfillment === 'pickup',

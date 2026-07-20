@@ -110,7 +110,7 @@ if (!$found) echo "Error: Could not match coupon #{$coupon_id} to any item in Or
 
 
 
-// Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
+// Requires Dompdf 3.1.6 (https://github.com/dompdf/dompdf) installed via Composer:
 // cd /home/website.com/public_html/wp-content/
 // composer require dompdf/dompdf
 use Dompdf\Dompdf;
