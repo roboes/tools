@@ -451,10 +451,6 @@
     scriptUrl: 'https://script.google.com/macros/s/1234/exec',
     lang: 'de',
 
-    // Weight labels to hide - display label WC returns in a.option.
-    // Must match woocommerce_exclude_weight_labels in Script Properties.
-    excludeWeightLabels: ['250 g'],
-
     // Opening hours per weekday. Empty array = closed.
     // Keys: Monday Tuesday Wednesday Thursday Friday Saturday Sunday
     timeSlots: {
@@ -653,7 +649,6 @@
           .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
           .map((p) => p.attributes[attrKey])
           .filter(Boolean)
-          .filter((slug) => attrKey !== 'attribute_pa_weight' || !options.excludeWeightLabels.includes(slug))
       ),
     ];
   }
@@ -855,7 +850,6 @@
           .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
           .map((p) => p.attributes[attrKey])
           .filter(Boolean)
-          .filter((slug) => attrKey !== 'attribute_pa_weight' || !options.excludeWeightLabels.includes(slug))
       ),
     ];
   }

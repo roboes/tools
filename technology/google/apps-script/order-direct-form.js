@@ -14,10 +14,9 @@ function setScriptProperties() {
     woocommerce_site_url:              'https://website.com',
     woocommerce_consumer_key:          'ck_xxxxxxxx',
     woocommerce_consumer_secret:       'cs_xxxxxxxx',
-    woocommerce_product_category_ids:  '1,2',
-    woocommerce_exclude_product_ids:   '1,2',
-    woocommerce_exclude_processing_labels: 'Rohkaffee',
-    woocommerce_exclude_weight_labels:      '250 g',
+    woocommerce_product_category_ids:  '1, 2',
+    woocommerce_exclude_product_ids:   '1, 2',
+    woocommerce_exclude_variation_ids: '1, 2',
     integration_header_value:          'google-apps-script-integration',
     google_sheets_id:                  '1ABC',
     google_sheets_tab_name:            'Orders',
@@ -139,14 +138,13 @@ function fetchWooCommerceProducts() {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  const excludeProcessingLabels = (config.woocommerce_exclude_processing_labels || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const excludeWeightLabels = (config.woocommerce_exclude_weight_labels || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const excludeVariationIds = new Set(
+    (config.woocommerce_exclude_variation_ids || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map(Number)
+  );
   const categoryIds = (config.woocommerce_product_category_ids || '')
     .split(',')
     .map((s) => s.trim())
@@ -193,16 +191,7 @@ function fetchWooCommerceProducts() {
 
       if (varRes.getResponseCode() === 200) {
         JSON.parse(varRes.getContentText())
-          .filter((v) => {
-            if (v.stock_status !== 'instock') return false;
-            // Filter out excluded weight labels
-            const weightAttr = (v.attributes || []).find((a) => a.slug === 'pa_weight');
-            if (weightAttr && excludeWeightLabels.includes(weightAttr.option)) return false;
-            // Filter out excluded processing labels
-            const processingAttr = (v.attributes || []).find((a) => a.slug === 'pa_coffee-processing');
-            if (processingAttr && excludeProcessingLabels.includes(processingAttr.option)) return false;
-            return true;
-          })
+          .filter((v) => v.stock_status === 'instock' && !excludeVariationIds.has(v.id))
           .forEach((v) => {
             // Build flat attributes map: "attribute_pa_xxx" → option value.
             // a.slug from the WC variations endpoint already carries the "pa_" prefix
@@ -291,6 +280,38 @@ function appendOrderToSheet(data) {
   ]);
 }
 
+// =============
+// Email helpers
+// =============
+
+/** Builds an HTML product list shared by both confirmation emails. */
+function buildProductListHtml(items) {
+  return items
+    .map((i) => {
+      const variant = buildVariantLabel(i.attributes);
+      return `- ${i.quantity}x ${i.name}${variant ? ` (${variant})` : ''}`;
+    })
+    .join('<br>');
+}
+
+/** Builds a logistics summary line for the shop manager email (always German). */
+function buildLogisticsManager(data) {
+  return data.pickup
+    ? `Abholung am ${formatDate(data.pickupDate, 'de')} um ${data.pickupTime} Uhr`
+    : `Lieferung an: ${data.deliveryAddress} ${data.deliveryNumber}, ${data.deliveryPostCode} ${data.deliveryCity}, ${data.deliveryCountry}`;
+}
+
+/** Builds a logistics summary for the customer email (language-aware). */
+function buildLogisticsCustomer(data, lang) {
+  const isEn = lang === 'en';
+  const formattedDate = formatDate(data.pickupDate, lang);
+  if (data.pickup) {
+    return isEn ? `Pickup scheduled: ${formattedDate} at ${data.pickupTime}` : `Vereinbarte Abholung: ${formattedDate} um ${data.pickupTime} Uhr`;
+  }
+  const addr = `${data.deliveryAddress} ${data.deliveryNumber}<br>${data.deliveryPostCode} ${data.deliveryCity}<br>${data.deliveryCountry}`;
+  return isEn ? `Delivery address:<br>${addr}` : `Lieferadresse:<br>${addr}`;
+}
+
 // =================
 // Email to customer
 // =================
@@ -299,24 +320,9 @@ function sendCustomerEmail(data) {
   const isEn = lang === 'en';
   const { name: senderName, signature } = getGmailIdentity();
 
-  const productList = data.items
-    .map((i) => {
-      const variant = buildVariantLabel(i.attributes);
-      return `- ${i.quantity}x ${i.name}${variant ? ` (${variant})` : ''}`;
-    })
-    .join('<br>');
-  const formattedDate = formatDate(data.pickupDate, lang);
-
-  const logistics = data.pickup
-    ? isEn
-      ? `Pickup scheduled: ${formattedDate} at ${data.pickupTime}`
-      : `Vereinbarte Abholung: ${formattedDate} um ${data.pickupTime} Uhr`
-    : isEn
-      ? `Delivery address:<br>${data.deliveryAddress} ${data.deliveryNumber}<br>${data.deliveryPostCode} ${data.deliveryCity}<br>${data.deliveryCountry}`
-      : `Lieferadresse:<br>${data.deliveryAddress} ${data.deliveryNumber}<br>${data.deliveryPostCode} ${data.deliveryCity}<br>${data.deliveryCountry}`;
-
+  const productList = buildProductListHtml(data.items);
+  const logistics = buildLogisticsCustomer(data, lang);
   const notesLine = data.notes ? (isEn ? `<br><br>Notes: ${data.notes}` : `<br><br>Anmerkungen: ${data.notes}`) : '';
-
   const fallbackSignature = `${isEn ? 'Best regards' : 'Viele Grüße'},<br>${config.store_shop_name}<br>${config.woocommerce_site_url}`;
 
   const body = isEn
@@ -332,15 +338,8 @@ function sendCustomerEmail(data) {
 function sendShopManagerEmail(data) {
   const { name: senderName } = getGmailIdentity();
 
-  const productList = data.items
-    .map((i) => {
-      const variant = buildVariantLabel(i.attributes);
-      return `- ${i.quantity}x ${i.name}${variant ? ` (${variant})` : ''}`;
-    })
-    .join('<br>');
-  const logistics = data.pickup
-    ? `Abholung am ${formatDate(data.pickupDate, 'de')} um ${data.pickupTime} Uhr`
-    : `Lieferung an: ${data.deliveryAddress} ${data.deliveryNumber}, ${data.deliveryPostCode} ${data.deliveryCity}, ${data.deliveryCountry}`;
+  const productList = buildProductListHtml(data.items);
+  const logistics = buildLogisticsManager(data);
   const customerId = data.customerType === 'company' && data.companyName ? `${data.name} (im Auftrag von ${data.companyName})` : data.name;
 
   const body = `
