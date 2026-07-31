@@ -27,7 +27,7 @@ Notes:
 */
 
 /*
-// Manually generate training coupon (100%)
+// Manually generate training coupon (100%) - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'       => 'Firstname Lastname',
     'email'      => 'email@website.com',
@@ -38,7 +38,7 @@ generate_coupon_on_purchase(input: [
 */
 
 /*
-// Manually generate a fixed cart discount (gift card) coupon
+// Manually generate a fixed cart discount (gift card) coupon - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'     => 'Firstname Lastname',
     'email'    => 'email@website.com',
@@ -110,7 +110,7 @@ if (!$found) echo "Error: Could not match coupon #{$coupon_id} to any item in Or
 
 
 
-// Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
+// Requires Dompdf 3.1.6 (https://github.com/dompdf/dompdf) installed via Composer:
 // cd /home/website.com/public_html/wp-content/
 // composer require dompdf/dompdf
 use Dompdf\Dompdf;

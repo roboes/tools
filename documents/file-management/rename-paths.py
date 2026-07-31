@@ -14,11 +14,10 @@ globals().clear()
 
 
 # Import packages
-import os
 import glob
-from pathlib import Path
+import os
 import re
-
+from pathlib import Path
 
 # Settings
 
@@ -41,11 +40,11 @@ def rename_paths(*, pattern, repl, preview=True):
     if len(files_rename) > 0:
         print('Files to be renamed:')
         print('\n'.join(files_rename))
-        print('')
+        print()
 
     else:
         print('No files to be renamed.')
-        print('')
+        print()
 
     # Filter for folders with specific regular expression pattern
     folders_rename = [path for path in paths if os.path.isdir(path) and re.search(pattern=pattern, string=Path(path).name, flags=0)]
@@ -53,11 +52,11 @@ def rename_paths(*, pattern, repl, preview=True):
     if len(folders_rename) > 0:
         print('Folders to be renamed:')
         print('\n'.join(folders_rename))
-        print('')
+        print()
 
     else:
         print('No folders to be renamed.')
-        print('')
+        print()
 
     # Rename files
     if len(files_rename) > 0:
@@ -85,7 +84,7 @@ def rename_paths(*, pattern, repl, preview=True):
             if preview is False:
                 path.rename(target=path_name_new)
 
-        print('')
+        print()
 
     # Rename folders
     if len(folders_rename) > 0:
@@ -107,7 +106,7 @@ def rename_paths(*, pattern, repl, preview=True):
             if preview is False:
                 path.rename(target=path_name_new)
 
-        print('')
+        print()
 
 
 ##############

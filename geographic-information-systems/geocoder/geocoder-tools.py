@@ -14,15 +14,14 @@ globals().clear()
 
 
 # Import packages
+import os
 from datetime import datetime
 from io import BytesIO
-import os
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import geopandas as gpd
 import pandas as pd
 import requests
-
 
 ###########
 # Functions
@@ -81,7 +80,7 @@ def geocoder_country_code(*, df, shapefile_path):
 
     if world_boundaries.crs == 'EPSG:4326':
         # Create variables
-        execution_start = datetime.now()
+        execution_start = datetime.now().astimezone()
         df_len = len(df)
 
         df = (
@@ -96,7 +95,7 @@ def geocoder_country_code(*, df, shapefile_path):
         )
 
         # Execution time
-        print(f'Execution time: {datetime.now() - execution_start}')
+        print(f'Execution time: {datetime.now().astimezone() - execution_start}')
 
         if len(df) == df_len:
             # Return objects

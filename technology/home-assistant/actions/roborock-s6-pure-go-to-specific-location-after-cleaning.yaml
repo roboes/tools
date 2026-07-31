@@ -16,7 +16,6 @@ condition:
         'zoned_mopping'
       ] }}
 
-
 action:
   - action: vacuum.stop
     target:

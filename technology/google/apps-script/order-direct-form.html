@@ -1,0 +1,1142 @@
+<div id="order-form-wrap">
+  <div id="form-body">
+    <p class="sec-title">Deine Details</p>
+
+    <div class="type-row">
+      <label class="radio-label">
+        <input type="radio" name="cust-type" value="individual" checked id="rad-individual" />
+        Privatperson
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="cust-type" value="company" id="rad-company" />
+        Firma
+      </label>
+    </div>
+
+    <div class="one-col" id="field-name">
+      <label>Vor- und Nachname <span class="req">*</span></label>
+      <input type="text" id="inp-name" />
+    </div>
+
+    <div class="one-col hidden" id="field-company-name">
+      <label>Firmenname <span class="req">*</span></label>
+      <input type="text" id="inp-company-name" />
+    </div>
+
+    <div class="one-col" id="field-email">
+      <label>E-Mail <span class="req">*</span></label>
+      <input type="email" id="inp-email" />
+    </div>
+
+    <div class="one-col" id="field-phone">
+      <label>Telefon</label>
+      <input type="text" id="inp-phone" placeholder="+49 123 456789" />
+    </div>
+
+    <p class="sec-title" style="margin-top: 48px">Deine Bestellung</p>
+
+    <div id="products-loading">
+      <div class="spinner"></div>
+      <span>Produkte werden geladen...</span>
+    </div>
+
+    <!-- Product rows are injected here by JS -->
+    <div id="order-rows"></div>
+
+    <button class="btn-add" id="btn-add" type="button">＋ Produkt hinzufügen</button>
+
+    <div id="order-total" class="order-total hidden"></div>
+
+    <!-- Unverpackt warning - shown/hidden by JS -->
+    <div id="unpacked-warning" class="unpacked-warning hidden"></div>
+
+    <p class="sec-title" style="margin-top: 48px">Lieferung &amp; Abholung</p>
+
+    <div id="field-fulfillment">
+      <label>Versandart / Übergabe <span class="req">*</span></label>
+      <select id="inp-fulfillment">
+        <option value="" disabled selected>- Bitte wählen -</option>
+        <option value="pickup">Abholung vor Ort</option>
+        <option value="delivery" id="opt-delivery">Lieferung</option>
+      </select>
+    </div>
+
+    <div class="two-col hidden" id="pickup-fields">
+      <div id="field-date">
+        <label>Abholdatum <span class="req">*</span></label>
+        <input type="date" id="inp-date" />
+      </div>
+      <div id="field-time">
+        <label>Abholzeit <span class="req">*</span></label>
+        <select id="inp-time">
+          <option value="">- Zeit wählen -</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="two-col hidden" id="delivery-fields">
+      <div id="field-address" style="grid-column: span 2">
+        <label>Adresse <span class="req">*</span></label>
+        <input type="text" id="inp-address" />
+      </div>
+      <div id="field-number">
+        <label>Hausnummer <span class="req">*</span></label>
+        <input type="text" id="inp-number" />
+      </div>
+      <div id="field-postcode">
+        <label>Postleitzahl <span class="req">*</span></label>
+        <input type="text" id="inp-postcode" />
+      </div>
+      <div id="field-city">
+        <label>Stadt <span class="req">*</span></label>
+        <input type="text" id="inp-city" />
+      </div>
+      <div id="field-country">
+        <label>Land <span class="req">*</span></label>
+        <select id="inp-country">
+          <option value="Deutschland">Deutschland</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="one-col" style="margin-top: 20px" id="field-notes">
+      <label>Anmerkungen / Sonderwünsche</label>
+      <span class="note-hint">Neukunde oder Adresse geändert? Bitte hier angeben.</span>
+      <textarea id="inp-notes"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-submit" id="btn-submit" type="button">Bestellung absenden</button>
+      <span class="form-status" id="form-status"></span>
+    </div>
+  </div>
+
+  <div id="success-screen">
+    <h2>Bestellung erhalten - Vielen Dank!</h2>
+    <p>Wir haben eine Bestätigung an deine E-Mail gesendet.</p>
+  </div>
+</div>
+
+<style>
+  #order-form-wrap {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #order-form-wrap *,
+  #order-form-wrap *::before,
+  #order-form-wrap *::after {
+    box-sizing: border-box;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Section headings */
+  .sec-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-sandal, #ab8c6c);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-cararra, #eceae3);
+  }
+
+  /* Layout helpers */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .one-col {
+    margin-bottom: 20px;
+  }
+  @media (max-width: 520px) {
+    .two-col {
+      grid-template-columns: 1fr;
+    }
+    #field-address {
+      grid-column: span 1 !important;
+    }
+  }
+
+  /* Customer type radio row */
+  .type-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+
+  /* Required star */
+  .req {
+    color: var(--color-sandal, #ab8c6c);
+    margin-left: 2px;
+  }
+
+  /* Note hint */
+  .note-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-bottom: 6px;
+  }
+
+  /* Inputs */
+  #order-form-wrap input[type='text'],
+  #order-form-wrap input[type='email'],
+  #order-form-wrap input[type='date'],
+  #order-form-wrap textarea,
+  #order-form-wrap select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--color-dove-gray-light, #ddd);
+    border-radius: 0;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #order-form-wrap input:focus,
+  #order-form-wrap textarea:focus,
+  #order-form-wrap select:focus {
+    border-color: var(--color-sandal, #ab8c6c);
+  }
+  #order-form-wrap textarea {
+    resize: vertical;
+    min-height: 85px;
+  }
+
+  /* Product rows */
+  #order-rows {
+    margin-bottom: 12px;
+  }
+
+  .order-row {
+    border: 1.5px solid var(--color-cararra, #eceae3);
+    padding: 10px 14px 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Attribute grid inside each row */
+  .order-row-grid {
+    display: grid;
+    grid-template-columns: 1.6fr repeat(5, 1fr) 80px 72px;
+    gap: 8px;
+    align-items: end;
+  }
+  @media (max-width: 700px) {
+    .order-row-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .order-row-grid label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-sandal, #ab8c6c);
+    margin-bottom: 4px;
+  }
+  .col-qty input[type='number'] {
+    width: 100%;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--color-dove-gray-light, #ddd);
+    border-radius: 0;
+    background: #fff;
+    outline: none;
+  }
+  .col-qty input[type='number']:focus {
+    border-color: var(--color-sandal, #ab8c6c);
+  }
+  .order-row-grid select:disabled {
+    background: #f5f5f5;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+  .row-price-value {
+    font-size: 0.95rem;
+    padding: 10px 6px;
+    color: var(--color-mine-shaft, #262626);
+    min-height: 2.5em;
+    display: flex;
+    align-items: center;
+  }
+  .order-total {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--color-mine-shaft, #262626);
+    padding: 8px 0 4px;
+    border-top: 1.5px solid var(--color-cararra, #eceae3);
+    margin-top: 4px;
+  }
+  .row-product-name {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 8px;
+    min-height: 1.1em;
+    font-style: italic;
+  }
+  .row-error {
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-top: 6px;
+  }
+
+  /* Remove-row button */
+  .order-row-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+  }
+  .btn-remove {
+    background: none;
+    border: none;
+    color: var(--color-mongoose, #bca38a);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 0;
+    line-height: 1;
+  }
+  .btn-remove:hover {
+    color: #b94a2c;
+  }
+
+  /* Unverpackt warning */
+  .unpacked-warning {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #fff8e1;
+    border: 1.5px solid #f0c040;
+    color: #7a5800;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  /* Add-product button */
+  .btn-add {
+    background: none;
+    border: 1.5px dashed var(--color-sandal, #ab8c6c);
+    color: var(--color-sandal, #ab8c6c);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .btn-add:hover {
+    background: #fdf4e7;
+  }
+
+  /* Loading spinner */
+  #products-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--color-sandal, #ab8c6c);
+    padding: 8px 0;
+  }
+  #products-loading.visible {
+    display: flex;
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--color-cararra, #eceae3);
+    border-top-color: var(--color-sandal, #ab8c6c);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Submit row */
+  .submit-row {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    background: var(--color-mine-shaft, #262626);
+    color: var(--color-white, #fff);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 36px;
+    transition:
+      background 0.15s,
+      transform 0.1s;
+  }
+  .btn-submit:hover {
+    background: var(--color-saddle, #4b3228);
+  }
+  .btn-submit:active {
+    transform: scale(0.98);
+  }
+  .btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .form-status {
+    font-size: 0.85rem;
+    flex: 1;
+  }
+  .form-status.error {
+    color: #b94a2c;
+  }
+
+  /* Validation */
+  .field-error input,
+  .field-error select,
+  .field-error textarea {
+    border-color: #b94a2c !important;
+  }
+  .field-error .err-msg {
+    font-size: 0.75rem;
+    color: #b94a2c;
+    margin-top: 4px;
+  }
+
+  /* Success screen */
+  #success-screen {
+    display: none;
+    text-align: center;
+    padding: 48px 16px;
+  }
+  #success-screen h2 {
+    font-size: 1.5rem;
+    color: var(--color-mine-shaft, #262626);
+    margin: 16px 0 10px;
+    font-weight: normal;
+  }
+  #success-screen p {
+    color: var(--color-sandal, #ab8c6c);
+    font-size: 0.95rem;
+  }
+</style>
+
+<script>
+  // =======
+  // Options
+  // =======
+  const options = {
+    scriptUrl: 'https://script.google.com/macros/s/1234/exec',
+    lang: 'de',
+
+    // Opening hours per weekday. Empty array = closed.
+    // Keys: Monday Tuesday Wednesday Thursday Friday Saturday Sunday
+    timeSlots: {
+      Monday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Tuesday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Wednesday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Thursday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Friday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+      Saturday: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30'],
+      Sunday: [],
+    },
+
+    // Attribute slug → display label
+    attrLabels: {
+      'coffee-processing-green-coffee-de': 'Rohkaffee',
+      'coffee-processing-roasted-coffee-de': 'Röstkaffee',
+      'coffee-type-ground-coffee-de': 'Gemahlen',
+      'coffee-type-whole-bean-de': 'Ganze Bohne',
+      'coffee-grinding-degree-chemex-frenchpress-de': 'Chemex / Frenchpress',
+      'coffee-grinding-degree-filter-bialetti-de': 'Filter / Bialetti',
+      'coffee-grinding-degree-mokka-de': 'Mokka',
+      'coffee-grinding-degree-whole-bean-de': 'Ganze Bohne',
+      'weight-500g-de': '500 g',
+      'weight-1kg-de': '1 kg',
+      'packaging-packed-de': 'Verpackt',
+      'packaging-unpacked-de': 'Unverpackt',
+    },
+
+    strings: {
+      prodChoose: '- Bitte wählen -',
+      prodUnavailable: '- Produktliste nicht verfügbar -',
+      prodError: '- Fehler beim Laden der Produkte -',
+      errFulfillment: 'Bitte wähle eine Versandart aus.',
+      errRowIncomplete: 'Bitte alle Felder ausfüllen.',
+      btnSending: 'Wird gesendet...',
+      btnSubmit: 'Bestellung absenden',
+      errName: 'Bitte gib deinen Namen ein.',
+      errEmail: 'Bitte gib eine gültige E-Mail-Adresse ein.',
+      errCompany: 'Bitte gib den Firmennamen ein.',
+      errPhone: 'Bitte gib deine Telefonnummer ein.',
+      errNoItems: 'Bitte füge mindestens ein Produkt hinzu.',
+      errDate: 'Bitte wähle ein gültiges Datum.',
+      errTime: 'Bitte wähle eine Uhrzeit.',
+      errAddress: 'Bitte gib deine Adresse ein.',
+      errNumber: 'Bitte gib die Hausnummer ein.',
+      errPostcode: 'Bitte gib die Postleitzahl ein.',
+      errCity: 'Bitte gib die Stadt ein.',
+      errSunday: 'Sonntags haben wir geschlossen. Bitte wähle einen anderen Tag.',
+      errFatal: 'Etwas ist schief gelaufen - bitte versuche es erneut.',
+      unpackedWarning: '⚠️ Du hast mindestens ein unverpacktes Produkt gewählt. Eine Lieferung ist daher nicht möglich. Bitte wähle <strong>Abholung vor Ort</strong>.',
+    },
+  };
+
+  // =====
+  // State
+  // =====
+  let products = [];
+  let rowCount = 0;
+
+  // Ordered attribute columns for the cascading dropdowns
+  const ATTR_COLUMNS = [
+    { key: 'attribute_pa_coffee-processing', label: 'Verarbeitung' },
+    { key: 'attribute_pa_coffee-type', label: 'Typ' },
+    { key: 'attribute_pa_coffee-grinding-degree', label: 'Mahlgrad' },
+    { key: 'attribute_pa_weight', label: 'Gewicht' },
+    { key: 'attribute_pa_packaging', label: 'Verpackung' },
+  ];
+
+  // ====
+  // Init
+  // ====
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('inp-date').min = new Date().toISOString().split('T')[0];
+
+    document.getElementById('btn-add').addEventListener('click', addRow);
+    document.getElementById('btn-submit').addEventListener('click', submitOrder);
+    document.getElementById('inp-fulfillment').addEventListener('change', handleFulfillmentChange);
+    document.getElementById('inp-date').addEventListener('change', handleDateChange);
+    document.getElementById('rad-individual').addEventListener('change', toggleCustomerType);
+    document.getElementById('rad-company').addEventListener('change', toggleCustomerType);
+
+    populateTimeSlots();
+    loadProducts();
+  });
+
+  // ==================
+  // Fulfillment toggle
+  // ==================
+  function handleFulfillmentChange() {
+    const isPickup = document.getElementById('inp-fulfillment').value === 'pickup';
+    document.getElementById('pickup-fields').classList.toggle('hidden', !isPickup);
+    document.getElementById('delivery-fields').classList.toggle('hidden', isPickup);
+  }
+
+  // ====================
+  // Customer type toggle
+  // ====================
+  function toggleCustomerType() {
+    const isCompany = document.getElementById('rad-company').checked;
+    document.getElementById('field-company-name').classList.toggle('hidden', !isCompany);
+    if (!isCompany) document.getElementById('inp-company-name').value = '';
+  }
+
+  // =================
+  // Date / time slots
+  // =================
+  const DAY_KEYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; // Matches getDay() 0–6
+
+  function handleDateChange() {
+    clearErrors();
+    const dateVal = document.getElementById('inp-date').value;
+    if (!dateVal) return;
+
+    const dayKey = DAY_KEYS[new Date(dateVal).getDay()];
+    if (options.timeSlots[dayKey].length === 0) {
+      // Closed that day
+      setError('field-date', options.strings.errSunday);
+      document.getElementById('inp-date').value = '';
+    }
+    populateTimeSlots();
+  }
+
+  function populateTimeSlots() {
+    const sel = document.getElementById('inp-time');
+    const dateVal = document.getElementById('inp-date').value;
+    const dayKey = dateVal ? DAY_KEYS[new Date(dateVal).getDay()] : 'Monday';
+    const slots = options.timeSlots[dayKey] || [];
+
+    sel.innerHTML = `<option value="">- Zeit wählen -</option>`;
+    slots.forEach((t) => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = t;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ===============
+  // Product loading
+  // ===============
+  async function loadProducts() {
+    const loader = document.getElementById('products-loading');
+    const addButton = document.getElementById('btn-add');
+    loader.classList.add('visible');
+    addButton.disabled = true;
+
+    try {
+      const res = await fetch(`${options.scriptUrl}?action=getProducts`);
+      const rawText = await res.text();
+      // console.log('[order-form] raw script response:', rawText);
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error('[order-form] JSON parse failed:', parseError);
+        throw new Error('Produktliste konnte nicht gelesen werden (ungültiges Format).');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || data.error || 'Script meldete einen Fehler.');
+      }
+
+      products = Array.isArray(data.products) && data.products.length ? data.products : [];
+
+      if (!products.length) {
+        loader.querySelector('span').textContent = options.strings.prodUnavailable;
+        loader.classList.remove('visible'); // keep hidden; show the message via the status area instead
+        const status = document.getElementById('form-status');
+        status.textContent = options.strings.prodUnavailable;
+        status.className = 'form-status error';
+      }
+    } catch (err) {
+      console.error('[order-form] loadProducts error:', err);
+      products = [];
+      loader.querySelector('span').textContent = `${options.strings.prodError}: ${err.message}`;
+      // Leave loader visible so the error text stays on screen
+    } finally {
+      if (products.length) {
+        loader.classList.remove('visible');
+        addButton.disabled = false;
+        addRow();
+      }
+    }
+  }
+
+  // ==========
+  // Order rows
+  // ==========
+
+  /** Returns unique attribute values available given upstream filter selections. */
+  function getAttrValues(attrKey, filters) {
+    return [
+      ...new Set(
+        products
+          .filter((p) => p.attributes != null)
+          .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
+          .map((p) => p.attributes[attrKey])
+          .filter(Boolean)
+      ),
+    ];
+  }
+
+  function attrLabel(slug) {
+    return options.attrLabels[slug] || slug;
+  }
+
+  function addRow() {
+    rowCount++;
+    const row = document.createElement('div');
+    row.classList.add('order-row');
+    row.id = `row-${rowCount}`;
+
+    const btnRem = document.createElement('button');
+    btnRem.type = 'button';
+    btnRem.className = 'btn-remove';
+    btnRem.textContent = '✕';
+    btnRem.addEventListener('click', () => {
+      row.remove();
+      if (!document.querySelector('.order-row')) addRow();
+      checkUnpacked();
+      updateOrderTotal();
+    });
+
+    const grid = document.createElement('div');
+    grid.className = 'order-row-grid';
+
+    // Product name column - first in the grid; drives the cascading attr dropdowns
+    const nameCell = document.createElement('div');
+    const nameLbl = document.createElement('label');
+    nameLbl.textContent = 'Produkt';
+    nameCell.appendChild(nameLbl);
+
+    const nameSel = document.createElement('select');
+    nameSel.dataset.attr = 'product-name';
+    const namePh = document.createElement('option');
+    namePh.value = '';
+    namePh.textContent = options.strings.prodChoose;
+    nameSel.appendChild(namePh);
+    [...new Set(products.map((p) => p.name))]
+      .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }))
+      .forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        nameSel.appendChild(opt);
+      });
+    nameSel.addEventListener('change', () => onProductNameChange(row, grid));
+    nameCell.appendChild(nameSel);
+    grid.appendChild(nameCell);
+
+    ATTR_COLUMNS.forEach((col, idx) => {
+      const cell = document.createElement('div');
+      const lbl = document.createElement('label');
+      lbl.textContent = col.label;
+      cell.appendChild(lbl);
+
+      const sel = document.createElement('select');
+      sel.dataset.attr = col.key;
+
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = options.strings.prodChoose;
+      sel.appendChild(ph);
+
+      if (idx === 0) {
+        getAttrValues(col.key, {}).forEach((v) => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = attrLabel(v);
+          sel.appendChild(opt);
+        });
+      } else {
+        sel.disabled = true;
+      }
+
+      sel.addEventListener('change', () => onAttrChange(row, grid, col.key));
+      cell.appendChild(sel);
+      grid.appendChild(cell);
+    });
+
+    // Price cell - between the last attribute column and Menge
+    const priceCell = document.createElement('div');
+    const priceLbl = document.createElement('label');
+    priceLbl.textContent = 'Preis';
+    const priceVal = document.createElement('div');
+    priceVal.className = 'row-price-value';
+    priceVal.textContent = '-';
+    priceCell.append(priceLbl, priceVal);
+    grid.appendChild(priceCell);
+
+    // Quantity column
+    const qtyCell = document.createElement('div');
+    qtyCell.className = 'col-qty';
+    const qtyLbl = document.createElement('label');
+    qtyLbl.textContent = 'Menge';
+    const qtyInp = document.createElement('input');
+    qtyInp.type = 'number';
+    qtyInp.min = '1';
+    qtyInp.value = '1';
+    qtyInp.addEventListener('input', () => {
+      updateRowPrice(row);
+      updateOrderTotal();
+    });
+    qtyCell.append(qtyLbl, qtyInp);
+    grid.appendChild(qtyCell);
+
+    // Matched product name hint - full-width row below the grid
+    const nameLine = document.createElement('div');
+    nameLine.className = 'row-product-name';
+    nameLine.style.gridColumn = 'span 7';
+
+    const rowHeader = document.createElement('div');
+    rowHeader.className = 'order-row-header';
+    rowHeader.appendChild(btnRem);
+
+    row.append(rowHeader, grid, nameLine);
+    document.getElementById('order-rows').appendChild(row);
+  }
+
+  /** Updates the price cell for a single row based on unit price × qty. */
+  function updateRowPrice(row) {
+    const priceVal = row.querySelector('.row-price-value');
+    if (!priceVal) return;
+    const unitPrice = parseFloat(row.dataset.unitPrice);
+    const qty = parseInt(row.querySelector('input[type=number]')?.value, 10) || 1;
+    if (!unitPrice) {
+      priceVal.textContent = '-';
+    } else {
+      const total = (unitPrice * qty).toFixed(2).replace('.', ',');
+      priceVal.textContent = `€${total}`;
+    }
+  }
+
+  /** Recalculates and displays the order total across all rows. */
+  function updateOrderTotal() {
+    const totalEl = document.getElementById('order-total');
+    let sum = 0;
+    let anyPrice = false;
+    document.querySelectorAll('.order-row').forEach((row) => {
+      const unitPrice = parseFloat(row.dataset.unitPrice);
+      const qty = parseInt(row.querySelector('input[type=number]')?.value, 10) || 1;
+      if (unitPrice) {
+        sum += unitPrice * qty;
+        anyPrice = true;
+      }
+    });
+    if (anyPrice) {
+      totalEl.textContent = `Gesamt: €${sum.toFixed(2).replace('.', ',')}`;
+      totalEl.classList.remove('hidden');
+    } else {
+      totalEl.classList.add('hidden');
+    }
+  }
+
+  function onProductNameChange(row, grid) {
+    const selectedName = grid.querySelector('[data-attr="product-name"]').value;
+
+    // Reset and repopulate the first attr column filtered by the chosen product name
+    ATTR_COLUMNS.forEach((col, idx) => {
+      const sel = grid.querySelector(`[data-attr="${col.key}"]`);
+      if (!sel) return;
+      sel.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = options.strings.prodChoose;
+      sel.appendChild(ph);
+      sel.disabled = idx !== 0;
+      sel.value = '';
+    });
+
+    const priceVal = row.querySelector('.row-price-value');
+    if (priceVal) priceVal.textContent = '-';
+    row.querySelector('.row-product-name').textContent = '';
+
+    if (!selectedName) return;
+
+    // Populate the first attr column for this product name
+    const firstCol = ATTR_COLUMNS[0];
+    const firstSel = grid.querySelector(`[data-attr="${firstCol.key}"]`);
+    const nameFilter = { _productName: selectedName };
+    getAttrValuesForName(firstCol.key, {}, selectedName).forEach((v) => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = attrLabel(v);
+      firstSel.appendChild(opt);
+    });
+    firstSel.disabled = false;
+  }
+
+  /** Like getAttrValues but pre-filters to a specific product name. */
+  function getAttrValuesForName(attrKey, filters, productName) {
+    return [
+      ...new Set(
+        products
+          .filter((p) => p.attributes != null)
+          .filter((p) => !productName || p.name === productName)
+          .filter((p) => Object.entries(filters).every(([k, v]) => !v || p.attributes[k] === v))
+          .map((p) => p.attributes[attrKey])
+          .filter(Boolean)
+      ),
+    ];
+  }
+
+  function onAttrChange(row, grid, changedKey) {
+    const changedIdx = ATTR_COLUMNS.findIndex((c) => c.key === changedKey);
+    const isWholeBn = grid.querySelector('[data-attr="attribute_pa_coffee-type"]')?.value === 'Ganze Bohne';
+
+    // Build filters from all columns up to and including the changed one
+    const upstreamFilters = {};
+    ATTR_COLUMNS.forEach((col, idx) => {
+      if (idx <= changedIdx) {
+        const v = grid.querySelector(`[data-attr="${col.key}"]`)?.value;
+        if (v) upstreamFilters[col.key] = v;
+      }
+    });
+
+    // Repopulate downstream columns
+    ATTR_COLUMNS.forEach((col, idx) => {
+      if (idx <= changedIdx) return;
+      const sel = grid.querySelector(`[data-attr="${col.key}"]`);
+      if (!sel) return;
+
+      const isGrind = col.key === 'attribute_pa_coffee-grinding-degree';
+
+      if (isGrind && isWholeBn) {
+        // Lock grinding to whole-bean
+        sel.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.value = 'Ganze Bohne';
+        opt.textContent = 'Ganze Bohne';
+        sel.appendChild(opt);
+        sel.value = 'Ganze Bohne';
+        sel.disabled = true;
+        upstreamFilters[col.key] = sel.value;
+      } else {
+        sel.disabled = false;
+        const prev = sel.value;
+        const selectedName = grid.querySelector('[data-attr="product-name"]')?.value || '';
+        const vals = getAttrValuesForName(col.key, upstreamFilters, selectedName);
+        sel.innerHTML = '';
+        const ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = options.strings.prodChoose;
+        sel.appendChild(ph);
+        vals.forEach((v) => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = attrLabel(v);
+          sel.appendChild(opt);
+        });
+        sel.value = vals.includes(prev) ? prev : '';
+      }
+    });
+
+    // Update price cell and product-not-found hint
+    const nameLine = row.querySelector('.row-product-name');
+    const priceVal = row.querySelector('.row-price-value');
+    const filters = {};
+    let complete = true;
+    ATTR_COLUMNS.forEach((col) => {
+      const v = grid.querySelector(`[data-attr="${col.key}"]`)?.value;
+      if (v) filters[col.key] = v;
+      else complete = false;
+    });
+    if (complete) {
+      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+      if (match) {
+        row.dataset.unitPrice = match.price.replace(',', '.');
+        nameLine.textContent = '';
+      } else {
+        row.dataset.unitPrice = '';
+        nameLine.textContent = '⚠ Kein passendes Produkt gefunden';
+      }
+    } else {
+      row.dataset.unitPrice = '';
+      nameLine.textContent = '';
+    }
+
+    updateRowPrice(row);
+    updateOrderTotal();
+    checkUnpacked();
+  }
+
+  // =====================
+  // Unverpackt check
+  // =====================
+  function checkUnpacked() {
+    const hasUnpacked = [...document.querySelectorAll('[data-attr="attribute_pa_packaging"]')].some((sel) => sel.value === 'Unverpackt');
+
+    const banner = document.getElementById('unpacked-warning');
+    banner.innerHTML = hasUnpacked ? options.strings.unpackedWarning : '';
+    banner.classList.toggle('hidden', !hasUnpacked);
+
+    const deliveryOpt = document.getElementById('opt-delivery');
+    const fulfillSel = document.getElementById('inp-fulfillment');
+    deliveryOpt.disabled = hasUnpacked;
+    if (hasUnpacked && fulfillSel.value === 'delivery') {
+      fulfillSel.value = '';
+      document.getElementById('delivery-fields').classList.add('hidden');
+    }
+  }
+
+  function collectItems() {
+    const items = [];
+    let valid = true;
+
+    document.querySelectorAll('.order-row').forEach((row) => {
+      row.querySelectorAll('.row-error').forEach((e) => e.remove());
+
+      const filters = {};
+      let rowComplete = true;
+      ATTR_COLUMNS.forEach((col) => {
+        const v = row.querySelector(`[data-attr="${col.key}"]`)?.value;
+        if (v) filters[col.key] = v;
+        else rowComplete = false;
+      });
+
+      if (!rowComplete) {
+        const err = document.createElement('p');
+        err.className = 'row-error';
+        err.textContent = options.strings.errRowIncomplete;
+        row.appendChild(err);
+        valid = false;
+        return;
+      }
+
+      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+      if (!match) {
+        const err = document.createElement('p');
+        err.className = 'row-error';
+        err.textContent = 'Kein passendes Produkt gefunden.';
+        row.appendChild(err);
+        valid = false;
+        return;
+      }
+
+      const qty = parseInt(row.querySelector('input[type=number]').value, 10) || 1;
+      items.push({ id: match.id, name: match.name, sku: match.sku, price: match.price, quantity: qty, packaging: filters['attribute_pa_packaging'], attributes: match.attributes });
+    });
+
+    return valid ? items : null;
+  }
+
+  // ==================
+  // Validation helpers
+  // ==================
+  function setError(fieldId, msg) {
+    const el = document.getElementById(fieldId);
+    el.classList.add('field-error');
+    let err = el.querySelector('.err-msg');
+    if (!err) {
+      err = document.createElement('p');
+      err.className = 'err-msg';
+      el.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.field-error').forEach((el) => {
+      el.classList.remove('field-error');
+      el.querySelector('.err-msg')?.remove();
+    });
+  }
+
+  // ======
+  // Submit
+  // ======
+  async function submitOrder() {
+    clearErrors();
+    const status = document.getElementById('form-status');
+    status.textContent = '';
+    status.className = 'form-status';
+    const S = options.strings;
+
+    const customerType = document.querySelector('input[name="cust-type"]:checked').value;
+    const name = document.getElementById('inp-name').value.trim();
+    const email = document.getElementById('inp-email').value.trim();
+    const companyName = document.getElementById('inp-company-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const notes = document.getElementById('inp-notes').value.trim();
+    const fulfillment = document.getElementById('inp-fulfillment').value;
+    const pickupDate = document.getElementById('inp-date').value;
+    const pickupTime = document.getElementById('inp-time').value;
+    const deliveryAddress = document.getElementById('inp-address').value.trim();
+    const deliveryNumber = document.getElementById('inp-number').value.trim();
+    const deliveryPostCode = document.getElementById('inp-postcode').value.trim();
+    const deliveryCity = document.getElementById('inp-city').value.trim();
+    const deliveryCountry = document.getElementById('inp-country').value;
+    const items = collectItems();
+
+    let valid = true;
+    if (!name) {
+      setError('field-name', S.errName);
+      valid = false;
+    }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError('field-email', S.errEmail);
+      valid = false;
+    }
+    if (customerType === 'company' && !companyName) {
+      setError('field-company-name', S.errCompany);
+      valid = false;
+    }
+    if (!items) {
+      valid = false;
+    } else if (!items.length) {
+      status.textContent = S.errNoItems;
+      status.className = 'form-status error';
+      valid = false;
+    }
+
+    if (!fulfillment) {
+      setError('field-fulfillment', S.errFulfillment);
+      valid = false;
+    } else if (fulfillment === 'pickup') {
+      if (!pickupDate) {
+        setError('field-date', S.errDate);
+        valid = false;
+      }
+      if (!pickupTime) {
+        setError('field-time', S.errTime);
+        valid = false;
+      }
+    } else if (fulfillment === 'delivery') {
+      if (!deliveryAddress) {
+        setError('field-address', S.errAddress);
+        valid = false;
+      }
+      if (!deliveryNumber) {
+        setError('field-number', S.errNumber);
+        valid = false;
+      }
+      if (!deliveryPostCode) {
+        setError('field-postcode', S.errPostcode);
+        valid = false;
+      }
+      if (!deliveryCity) {
+        setError('field-city', S.errCity);
+        valid = false;
+      }
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = S.btnSending;
+
+    // Auto-append unverpackt note if applicable
+    const hasUnpacked = items && items.some((i) => i.packaging === 'packaging-unpacked-de');
+    const finalNotes = [notes, hasUnpacked ? 'Enthält unverpackte Produkte (nur Abholung möglich).' : ''].filter(Boolean).join(' | ');
+
+    try {
+      const payload = {
+        customerType,
+        name,
+        email,
+        companyName,
+        phone,
+        notes: finalNotes,
+        items,
+        lang: options.lang,
+        pickup: fulfillment === 'pickup',
+        pickupDate,
+        pickupTime,
+        deliveryAddress,
+        deliveryNumber,
+        deliveryPostCode,
+        deliveryCity,
+        deliveryCountry,
+      };
+      const res = await fetch(options.scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('form-body').style.display = 'none';
+        document.getElementById('success-screen').style.display = 'block';
+      } else {
+        throw new Error(data.message || 'Unknown error');
+      }
+    } catch {
+      status.textContent = S.errFatal;
+      status.className = 'form-status error';
+      btn.disabled = false;
+      btn.textContent = S.btnSubmit;
+    }
+  }
+</script>

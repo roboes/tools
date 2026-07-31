@@ -1,9 +1,9 @@
 ## ePub Tools
-# Last update: 2026-06-29
+# Last update: 2026-07-06
 
 
-# Install ExifTool
-# sudo apt install -y libimage-exiftool-perl
+# Install packages
+# sudo apt install -y calibre-bin libimage-exiftool-perl
 
 
 # Settings
@@ -19,7 +19,10 @@ settings_book_filename="book.epub"
 exiftool "${settings_book_filename}"
 
 # Update metadata
-# exiftool -Title="New Title" -Creator="Author Name" "${settings_book_filename}"
+ebook-meta "${settings_book_filename}" \
+    --title="New Title" \
+    --authors="Author Name"
+    --author-sort="Author Name"
 
 # Print Author - Title
 exiftool -p '$Creator - $Title' "${settings_book_filename}"

@@ -11,10 +11,10 @@ domain="website.com"
 domain_root_path="/home/$domain"
 subdomain="subdomain"
 system_user="system_user"
-installation_target="vps"
+installation_target="pi"
 ```
 
-```
+```.sh
 if [ "${installation_target}" = "pi" ]; then
   installation_path="/home/${system_user}"
 else
@@ -119,7 +119,7 @@ services:
     image: ghcr.io/blakeblackshear/frigate:stable
     privileged: true
     restart: unless-stopped
-    shm_size: "128mb"
+    shm_size: "256mb"
     volumes:
       - "${installation_path}/homeassistant/frigate:/config"
       - /etc/localtime:/etc/localtime:ro
@@ -138,6 +138,14 @@ services:
       - FRIGATE_CAMERA_1_IP=192.168.178.02
       - FRIGATE_CAMERA_1_USERNAME=camera_username
       - FRIGATE_CAMERA_1_PASSWORD=camera_password
+      - FRIGATE_CAMERA_2_NAME=camera_name
+      - FRIGATE_CAMERA_2_IP=192.168.178.02
+      - FRIGATE_CAMERA_2_USERNAME=camera_username
+      - FRIGATE_CAMERA_2_PASSWORD=camera_password
+      - FRIGATE_CAMERA_3_NAME=camera_name
+      - FRIGATE_CAMERA_3_IP=192.168.178.02
+      - FRIGATE_CAMERA_3_USERNAME=camera_username
+      - FRIGATE_CAMERA_3_PASSWORD=camera_password
 
 EOF
 fi
@@ -221,25 +229,26 @@ mqtt:
 detectors:
   cpu:
     type: cpu
-    num_threads: 3
+    num_threads: 2
 
 ffmpeg:
   hwaccel_args: preset-rpi-64-h264
 
 detect:
+  enabled: false
   width: 640
   height: 360
-  fps: 5
+  fps: 1
 
 objects:
   track:
     - person
-    - bird
-    - cat
-    - dog
-    - bicycle
-    - car
-    - motorcycle
+    # - bird
+    # - cat
+    # - dog
+    # - bicycle
+    # - car
+    # - motorcycle
   filters:
     person:
       min_score: 0.65
@@ -252,9 +261,9 @@ objects:
 record:
   enabled: true
   continuous:
-    days: 7
+    days: 2
   motion:
-    days: 7
+    days: 14
   alerts:
     retain:
       days: 14
@@ -272,7 +281,10 @@ snapshots:
 
 cameras:
   camera_1:
-    enabled: True
+    enabled: true
+    motion:
+      threshold: 30
+      contour_area: 100
     record:
       enabled: true
     ffmpeg:
@@ -283,6 +295,39 @@ cameras:
         - path: rtsp://{FRIGATE_CAMERA_1_USERNAME}:{FRIGATE_CAMERA_1_PASSWORD}@{FRIGATE_CAMERA_1_IP}/stream2
           roles:
             - detect
+
+  camera_2:
+    enabled: true
+    motion:
+      threshold: 30
+      contour_area: 100
+    record:
+      enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_CAMERA_2_USERNAME}:{FRIGATE_CAMERA_2_PASSWORD}@{FRIGATE_CAMERA_2_IP}/stream1
+          roles:
+            - record
+        - path: rtsp://{FRIGATE_CAMERA_2_USERNAME}:{FRIGATE_CAMERA_2_PASSWORD}@{FRIGATE_CAMERA_2_IP}/stream2
+          roles:
+            - detect
+
+  camera_3:
+    enabled: false
+    motion:
+      threshold: 30
+      contour_area: 100
+    record:
+      enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_CAMERA_3_USERNAME}:{FRIGATE_CAMERA_3_PASSWORD}@{FRIGATE_CAMERA_3_IP}/stream1
+          roles:
+            - record
+        - path: rtsp://{FRIGATE_CAMERA_3_USERNAME}:{FRIGATE_CAMERA_3_PASSWORD}@{FRIGATE_CAMERA_3_IP}/stream2
+          roles:
+            - detect
+
 EOF
 fi
 ```
@@ -339,7 +384,7 @@ EOF
 # Ensure permissions are correct
 chmod +x /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh
 
-# Add to crontab — runs daily at 3am
+# Add to crontab - runs every 12 hours (00:00 and 12:00)
 (crontab -u ${settings_pi_system_user} -l 2>/dev/null; echo "0 */12 * * * /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh >> /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.log 2>&1") | crontab -u ${settings_pi_system_user} -
 
 # Verify

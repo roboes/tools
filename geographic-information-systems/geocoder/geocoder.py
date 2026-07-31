@@ -13,10 +13,9 @@
 from datetime import datetime
 from itertools import batched
 
+import pandas as pd
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
-import pandas as pd
-
 
 # Settings
 
@@ -161,7 +160,7 @@ def geocoder(
 ):
     """Given a DataFrame input with location columns, split it into multiple chunks and run the geocoder, saving all chunks where the geocoder has already been run as a pickle file."""
     # Create variables
-    execution_start = datetime.now()
+    execution_start = datetime.now().astimezone()
 
     for column in df.columns[df.columns.str.startswith('address_')].tolist():
         # Remove leading/trailing whitespaces
@@ -335,7 +334,7 @@ def geocoder(
                 df_geolocation = None
 
     # Execution time
-    print(f'Execution time: {datetime.now() - execution_start}')
+    print(f'Execution time: {datetime.now().astimezone() - execution_start}')
 
     # Return objects
     return df_geolocation

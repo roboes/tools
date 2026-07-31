@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-05-27
+> Last update: 2026-07-26
 
 ```.sh
 # Settings
@@ -15,7 +15,8 @@ database_name="database_name"
 
 ## Notes
 
-Check for new [virtualmin-nginx module releases](https://github.com/virtualmin/virtualmin-nginx/releases).
+- Check for new [virtualmin-nginx module releases](https://github.com/virtualmin/virtualmin-nginx/releases).
+- Check for new [Cloudflare IP ranges](https://www.cloudflare.com/ips/).
 
 ## Initial setup
 
@@ -35,7 +36,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt a
 ## Check Current Locale Settings
 locale
 
-## Reconfigure Locales (en_US.UTF-8)
+## Reconfigure Locales (en_US.UTF-8; Optionally for dates: en_DK.UTF-8 UTF-8)
 sudo dpkg-reconfigure locales
 
 ## Update the Environment Variables
@@ -583,10 +584,10 @@ Configure notification message:
 # sudo apt install firewalld -y
 
 # Remove SSH service
-sudo firewall-cmd --zone=public --remove-service=ssh --permanent
+# sudo firewall-cmd --zone=public --remove-service=ssh --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
 
 # Remove Webmin port
-sudo firewall-cmd --zone=public --remove-port=10000/tcp --permanent
+# sudo firewall-cmd --zone=public --remove-port=10000/tcp --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
 
 # Remove unnecessary services
 sudo firewall-cmd --zone=public --remove-service=ftp --permanent
@@ -609,20 +610,57 @@ sudo firewall-cmd --zone=public --remove-port=20000/tcp --permanent
 sudo firewall-cmd --zone=public --remove-port=49152-65535/tcp --permanent
 sudo firewall-cmd --zone=public --remove-port=10001-10100/tcp --permanent
 
+# Create the zone
+sudo firewall-cmd --permanent --new-zone=cloudflare
+
+# Add Cloudflare IPv4 ranges (updated from https://www.cloudflare.com/ips/)
+for ip in \
+  173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 \
+  141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 \
+  197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 \
+  104.24.0.0/14 172.64.0.0/13 131.0.72.0/22; do
+  sudo firewall-cmd --permanent --zone=cloudflare --add-source=$ip
+done
+
+# Add Cloudflare IPv6 ranges (updated from https://www.cloudflare.com/ips/)
+for ip in \
+  2400:cb00::/32 2606:4700::/32 2803:f800::/32 \
+  2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32; do
+  sudo firewall-cmd --permanent --zone=cloudflare --add-source=$ip
+done
+
+# Allow HTTP/HTTPS in cloudflare zone only
+sudo firewall-cmd --permanent --zone=cloudflare --add-service=http
+sudo firewall-cmd --permanent --zone=cloudflare --add-service=https
+sudo firewall-cmd --permanent --zone=public --remove-service=http
+sudo firewall-cmd --permanent --zone=public --remove-service=https
+
+# Clean up unused zone services
+for zone in dmz home internal work; do
+  sudo firewall-cmd --permanent --zone=$zone --remove-service=ssh
+  sudo firewall-cmd --permanent --zone=$zone --remove-service=dhcpv6-client
+  sudo firewall-cmd --permanent --zone=$zone --remove-service=mdns
+  sudo firewall-cmd --permanent --zone=$zone --remove-service=samba-client
+done
+sudo firewall-cmd --reload
+
 # Reload firewall to apply changes
 sudo firewall-cmd --reload
 
 # Show interfaces
-sudo firewall-cmd --list-interfaces
+# sudo firewall-cmd --list-interfaces
 
 # Show services
-sudo firewall-cmd --list-services
-
-# Show zones
-sudo firewall-cmd --list-all-zones
+# sudo firewall-cmd --list-services
 
 # Show active rules
-sudo firewall-cmd --list-all
+# sudo firewall-cmd --list-all
+
+# Active zones and what's bound to them
+sudo firewall-cmd --get-active-zones
+
+# Active zones details
+sudo firewall-cmd --list-all-zones
 ```
 
 Now "Create Virtual Server".
@@ -918,11 +956,7 @@ http {
     fastcgi_cache_lock_timeout 5s;
     fastcgi_cache_background_update on;
 
-    # Include Virtual Host Configurations
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
-
-    # Cloudflare Real IP Restoration (updated from https://www.cloudflare.com/ips/)
+    # Cloudflare Real IP Restoration/Cloudflare IP ranges (updated from https://www.cloudflare.com/ips/)
     set_real_ip_from 173.245.48.0/20;
     set_real_ip_from 103.21.244.0/22;
     set_real_ip_from 103.22.200.0/22;
@@ -950,6 +984,10 @@ http {
     real_ip_header CF-Connecting-IP;
     real_ip_recursive off; # Not needed for CF-Connecting-IP (single IP)
 
+    # Include Virtual Host Configurations
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+
 }
 ```
 
@@ -974,7 +1012,7 @@ add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),
 server {
     # Settings
     set $domain website.com;
-    set $domain_root_path /home/${domain}/public_html;
+    set $domain_root_path /home/${domain};
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
     server_name website.com www.website.com;
@@ -984,11 +1022,11 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://api.wordpress.org https://*.google.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://td.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; script-src-elem 'self' 'unsafe-inline' https://*.cloudflare.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://googleads.g.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com https://api.wordpress.org https://*.google.com https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; script-src-elem 'self' 'unsafe-inline' https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
-    root ${domain_root_path};
+    root ${domain_root_path}/public_html;
     index index.php index.htm index.html;
 
     # Logging
@@ -1055,7 +1093,7 @@ server {
         log_not_found off;
     }
 
-    # Static Asset Caching
+    # Static asset caching
     location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
@@ -1170,7 +1208,7 @@ server {
     # Settings
     set $domain website.com;
     set $subdomain subdomain;
-    set $domain_root_path /home/${domain}/domains/${subdomain}.${domain}/public_html;
+    set $domain_root_path /home/${domain}/domains/${subdomain}.${domain};
     set $php_socket_id 100000000000000;
     set $php_socket_path unix:/run/php/${php_socket_id}.sock;
     server_name subdomain.website.com;
@@ -1183,7 +1221,7 @@ server {
 
 
     # Main Web Root Setup
-    root ${domain_root_path};
+    root ${domain_root_path}/public_html;
     index index.php index.htm index.html;
 
     # Logging
@@ -1623,8 +1661,7 @@ tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
 
 ```.sh
 # Clear nginx cache
-sudo rm -rf /var/cache/nginx/*
-sudo systemctl reload nginx
+sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
 ```
 
 ### Server stress test

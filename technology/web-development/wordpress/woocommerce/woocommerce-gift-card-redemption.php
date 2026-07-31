@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - Gift Card Redemption
-// Last update: 2026-03-28
+// Last update: 2026-07-13
 
 
 // Add this line to wp-config.php file
@@ -8,17 +8,63 @@
 
 /*
 // Manually send training confirmation email
-send_training_confirmation_email(
-    product_id: 22204,
-    customer_email: 'email@website.com',
-    customer_name: 'Customer Name',
-    product_variation_own_portafilter_machine: 'Mit',
-    product_variation_appointment_date: '2026-05-09',
-    product_variation_appointment_time: '14:30',
-    product_quantity: 1,
-    language: 'de',
-    order_notes: ''
+$product_id       = 22204;
+$customer_email   = 'email@website.com';
+$customer_name    = 'Customer Name';
+$own_portafilter  = 'Mit';
+$appointment_date = '2026-09-19';
+$appointment_time = '14:30';
+$product_quantity = 1;
+$language         = 'de';
+$order_notes      = '';
+
+$variation_id = find_variation_id(
+   product_id: $product_id,
+   appointment_date: $appointment_date,
+   appointment_time: $appointment_time,
+   own_portafilter: $own_portafilter
 );
+
+if ($variation_id > 0) {
+
+   $inserted_date = (new DateTimeImmutable('now', wp_timezone()))->format('Y-m-d H:i:s');
+   $product_name  = normalize_product_name(wc_get_product($product_id)->get_name());
+   $portafilter   = normalize_portafilter($own_portafilter);
+
+   send_training_confirmation_email(
+       product_id: $product_id,
+       customer_email: $customer_email,
+       customer_name: $customer_name,
+       product_variation_own_portafilter_machine: $own_portafilter,
+       product_variation_appointment_date: $appointment_date,
+       product_variation_appointment_time: $appointment_time,
+       product_quantity: $product_quantity,
+       language: $language,
+       order_notes: $order_notes,
+   );
+
+   reduce_variation_stock(variation_id: $variation_id, quantity: $product_quantity);
+
+   send_to_google_sheets(data_array: [
+       $inserted_date,
+       $appointment_date,
+       $appointment_time,
+       $product_name,
+       $product_quantity,
+       $portafilter,
+       '', // Order ID (not applicable)
+       '', // Gift Card ID (not applicable)
+       $customer_name,
+       $customer_email,
+       '', // Phone (not applicable)
+       $order_notes,
+   ]);
+
+   echo "Email sent, stock reduced by {$product_quantity}, row added to Google Sheets.\n";
+
+} else {
+   echo "Variation not found for product {$product_id} / {$appointment_date} {$appointment_time} / {$own_portafilter}\n";
+}
 */
 
 if (function_exists('WC')) {
@@ -29,6 +75,31 @@ if (function_exists('WC')) {
     if (!is_admin()) {
         add_action(hook_name: 'woocommerce_before_add_to_cart_button', callback: 'woocommerce_add_gift_card_checkbox', priority: 10, accepted_args: 1);
         add_action(hook_name: 'wp_footer', callback: 'cf7_prefill_script_add', priority: 10, accepted_args: 1);
+    }
+
+    function normalize_product_name(string $name): string
+    {
+        $name = preg_replace('/Kaffeetraining /', '', $name);
+        $name = preg_replace('/Coffee Training /', '', (string) $name);
+        return  preg_replace('/Homebarista/', 'Home Barista', (string) $name);
+    }
+
+    function normalize_portafilter(string $value): string
+    {
+        $value = preg_replace('/Mit/', 'With', $value);
+        return  preg_replace('/Ohne/', 'Without', (string) $value);
+    }
+
+    function reduce_variation_stock(int $variation_id, int $quantity): void
+    {
+        if ($variation_id <= 0 || $quantity <= 0) {
+            return;
+        }
+        $variation = wc_get_product($variation_id);
+        if ($variation instanceof WC_Product && $variation->exists() && $variation->get_manage_stock()) {
+            $new_stock = max(0, (int) $variation->get_stock_quantity() - $quantity);
+            wc_update_product_stock($variation->get_id(), $new_stock, 'set');
+        }
     }
 
     function woocommerce_add_gift_card_checkbox(): void
@@ -290,22 +361,17 @@ if (function_exists('WC')) {
             // Send training confirmation per email
             send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $browsing_language);
 
-            // Perform English version for Google Sheets
-            $product_name = preg_replace(pattern: '/Kaffeetraining /', replacement: '', subject: $product_name);
-            $product_name = preg_replace(pattern: '/Coffee Training /', replacement: '', subject: (string)$product_name);
-            $product_name = preg_replace(pattern: '/Homebarista/', replacement: 'Home Barista', subject: (string)$product_name);
+            // Reduce stock
+            reduce_variation_stock(variation_id: $product_variation_id, quantity: $product_quantity);
 
-            $product_variation_own_portafilter_machine = preg_replace(pattern: '/Mit/', replacement: 'With', subject: $product_variation_own_portafilter_machine);
-            $product_variation_own_portafilter_machine = preg_replace(pattern: '/Ohne/', replacement: 'Without', subject: (string)$product_variation_own_portafilter_machine);
-
-            // Prepare data for Google Sheets
+            // Prepare data for Google Sheets (normalise to English)
             $data_array = [
                 $inserted_date,
                 $product_variation_appointment_date,
                 $product_variation_appointment_time,
-                $product_name,
+                normalize_product_name($product_name),
                 $product_quantity,
-                $product_variation_own_portafilter_machine,
+                normalize_portafilter($product_variation_own_portafilter_machine),
                 '', // Order ID (not applicable in this context)
                 $gift_card_id,
                 $customer_name,
@@ -316,18 +382,6 @@ if (function_exists('WC')) {
 
             // Send data to Google Sheets
             send_to_google_sheets(data_array: $data_array);
-
-            // Reduce stock quantity for the product and variation
-            if ($product_id > 0 && $product_quantity > 0) {
-                $variation = wc_get_product($product_variation_id);
-
-                if ($variation instanceof WC_Product && $variation->exists() && $variation->get_manage_stock()) {
-                    $current_stock = (int) $variation->get_stock_quantity();
-                    $new_stock = max(0, $current_stock - $product_quantity);
-
-                    wc_update_product_stock($variation->get_id(), $new_stock, 'set');
-                }
-            }
         }
     }
 
@@ -418,22 +472,14 @@ if (function_exists('WC')) {
                 send_training_confirmation_email(product_id: $product_id, customer_email: $customer_email, customer_name: $customer_name, product_variation_own_portafilter_machine: $product_variation_own_portafilter_machine, product_variation_appointment_date: $product_variation_appointment_date, product_variation_appointment_time: $product_variation_appointment_time, product_quantity: $product_quantity, language: $browsing_language);
             }
 
-            // Perform English version for Google Sheets
-            $product_name = preg_replace('/Kaffeetraining /', '', $product_name);
-            $product_name = preg_replace('/Coffee Training /', '', (string)$product_name);
-            $product_name = preg_replace('/Homebarista/', 'Home Barista', (string)$product_name);
-
-            $product_variation_own_portafilter_machine = preg_replace('/Mit/', 'With', $product_variation_own_portafilter_machine);
-            $product_variation_own_portafilter_machine = preg_replace('/Ohne/', 'Without', (string)$product_variation_own_portafilter_machine);
-
-            // Prepare data for Google Sheets
+            // Prepare data for Google Sheets (normalise to English)
             $data_array = [
                 $inserted_date,
                 $product_variation_appointment_date,
                 $product_variation_appointment_time,
-                $product_name,
+                normalize_product_name($product_name),
                 $product_quantity,
-                $product_variation_own_portafilter_machine,
+                normalize_portafilter($product_variation_own_portafilter_machine),
                 (string)$order_id,
                 '', // Gift Card ID (not applicable in this context)
                 $customer_name,
@@ -485,7 +531,6 @@ if (function_exists('WC')) {
             error_log('Error sending data to Google Apps Script: ' . $response->get_error_message());
         }
     }
-
 
     function send_training_confirmation_email(int $product_id, string $customer_email, string $customer_name, string $product_variation_own_portafilter_machine, string $product_variation_appointment_date, string $product_variation_appointment_time, int $product_quantity, string $language = 'en', string $order_notes = ''): void
     {
@@ -637,7 +682,7 @@ if (function_exists('WC')) {
 
         // Get all completed orders from the last 3 months using wpdb (HPOS compatible)
         $order_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT DISTINCT o.id 
+            "SELECT DISTINCT o.id
             FROM {$wpdb->prefix}wc_orders o
             INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON o.id = oi.order_id
             INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
@@ -725,6 +770,50 @@ if (function_exists('WC')) {
         }
 
         return $order_ids;
+    }
+
+    function find_variation_id(int $product_id, string $appointment_date, string $appointment_time, string $own_portafilter): int
+    {
+        $product = wc_get_product($product_id);
+        if (!$product instanceof WC_Product_Variable) {
+            return 0;
+        }
+
+        foreach ($product->get_children() as $variation_id) {
+            $variation = new WC_Product_Variation($variation_id);
+            $attributes = $variation->get_variation_attributes();
+
+            $variation_appointment = '';
+            $variation_portafilter = '';
+
+            foreach ($attributes as $attribute => $value) {
+                $taxonomy = str_replace('attribute_', '', $attribute);
+                $term = get_term_by('slug', $value, $taxonomy);
+                $term_name = $term ? $term->name : $value;
+
+                if ($taxonomy === 'termin') {
+                    $variation_appointment = $term_name;
+                }
+                if ($taxonomy === 'pa_training-own-portafilter') {
+                    $variation_portafilter = $term_name;
+                }
+            }
+
+            $matches_appointment = str_contains($variation_appointment, DateTimeImmutable::createFromFormat('Y-m-d', $appointment_date)->format('d.m.Y')) && str_contains($variation_appointment, $appointment_time);
+            $matches_portafilter = $variation_portafilter === $own_portafilter;
+
+            if ($matches_appointment && $matches_portafilter) {
+                $stock = $variation->get_manage_stock()
+                ? (int) $variation->get_stock_quantity()
+                : 'stock management disabled';
+
+                echo "Found variation ID {$variation_id} - stock: {$stock}\n";
+
+                return $variation_id;
+            }
+        }
+
+        return 0;
     }
 
 }

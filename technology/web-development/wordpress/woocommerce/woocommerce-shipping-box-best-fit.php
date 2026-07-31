@@ -25,7 +25,7 @@ foreach ($orders as $order) {
 */
 
 
-// Requires BoxPacker 4.1.1 (https://github.com/dvdoug/BoxPacker) installed via Composer:
+// Requires BoxPacker 4.2.0 (https://github.com/dvdoug/BoxPacker) installed via Composer:
 // cd /home/website.com/public_html/wp-content/
 // composer require dvdoug/boxpacker
 require_once WP_CONTENT_DIR . '/vendor/autoload.php';

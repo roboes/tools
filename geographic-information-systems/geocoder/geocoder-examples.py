@@ -14,15 +14,14 @@ globals().clear()
 
 
 # Import packages
-from importlib.util import spec_from_file_location
 import os
 import sys
+from importlib.util import spec_from_file_location
 
-from geopy.extra.rate_limiter import RateLimiter
-from geopy.geocoders import Nominatim
 import overpy
 import pandas as pd
-
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
 
 # Import custom packages
 sys.dont_write_bytecode = True
