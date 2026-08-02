@@ -183,23 +183,25 @@ server {
         proxy_read_timeout 300s;
     }
 
-    # Urlaubsverwaltung - leave management
-    location /urlaubsverwaltung/ {
-        proxy_pass http://127.0.0.1:8010;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 300s;
-        client_max_body_size 16M;
-    }
-
     # Zeiterfassung - time tracking
     location /zeiterfassung/ {
         proxy_pass http://127.0.0.1:8011;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+        proxy_set_header X-Forwarded-Prefix /zeiterfassung;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+        client_max_body_size 16M;
+    }
+
+    # Urlaubsverwaltung - leave management
+    location /urlaubsverwaltung/ {
+        proxy_pass http://127.0.0.1:8010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+        proxy_set_header X-Forwarded-Prefix /urlaubsverwaltung;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 300s;
         client_max_body_size 16M;
@@ -235,6 +237,7 @@ cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import/url
   "realm": "urlaubsverwaltung",
   "enabled": true,
   "displayName": "$mail_from_name",
+  "loginTheme": "${system_user}",
   "sslRequired": "external",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
@@ -306,6 +309,16 @@ cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import/url
       {"name": "ZEITERFASSUNG_SETTINGS_GLOBAL",           "description": "Zeiterfassung: configure global application settings"}
     ]
   },
+  "smtpServer": {
+    "host": "$mail_host",
+    "port": "$mail_port",
+    "from": "$mail_from",
+    "fromDisplayName": "$mail_from_name",
+    "starttls": "true",
+    "auth": "true",
+    "user": "$mail_username",
+    "password": "$mail_password"
+  },
   "groups": [
     {
       "name": "${system_user}_hr",
@@ -335,6 +348,241 @@ cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import/url
       ]
     }
   ]
+}
+
+EOF
+```
+
+### Theme
+
+```.sh
+# Create theme directory structure
+mkdir -p "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/themes/${system_user}/login/resources/css"
+
+# theme.properties - extend built-in Keycloak login theme
+cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/themes/${system_user}/login/theme.properties"
+parent=keycloak
+import=common/keycloak
+styles=css/login.css
+EOF
+
+# login.css
+cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/themes/${system_user}/login/resources/css/login.css"
+:root {
+    --color-cararra: #ECEAE3;
+    --color-dove-gray-light: rgba(101, 101, 101, 0.1);
+    --color-mine-shaft: #262626;
+    --color-mongoose: #BCA38A;
+    --color-pampas: #F2F0EB;
+    --color-sandal: #AB8C6C;
+    --color-coffee-dark: #5c4033;
+    --color-white: #FFFFFF;
+}
+
+/* Page background */
+html, body, .login-pf, .login-pf body {
+    background: var(--color-pampas) !important;
+    background-image: none !important;
+    min-height: 100vh;
+}
+
+/* Align contents toward top */
+.login-pf-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start !important;
+    min-height: 100vh;
+    padding-top: 80px !important;
+    padding-bottom: 40px;
+}
+
+/* Logo container & HR Portal subtitle */
+#kc-header {
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+}
+
+#kc-header-wrapper {
+    font-size: 0 !important;
+    color: transparent !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#kc-header-wrapper::before {
+    content: '';
+    display: block;
+    width: 220px;
+    height: 70px;
+    background: url('https://${domain}/wp-content/uploads/${system_user}-logo.svg') no-repeat center / contain;
+    filter: invert(28%) sepia(21%) saturate(982%) hue-rotate(346deg) brightness(92%) contrast(88%);
+}
+
+#kc-header-wrapper::after {
+    content: 'HR Portal';
+    display: block;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-coffee-dark);
+    letter-spacing: 0.08em;
+    margin-top: 10px;
+}
+
+/* Hide default page title */
+#kc-page-title {
+    display: none !important;
+}
+
+/* Unified Card Container */
+#kc-container-wrapper,
+#kc-form-login-wrapper,
+#kc-container {
+    width: 100% !important;
+    max-width: 320px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
+.card-pf,
+.login-pf-page .card-pf {
+    background: var(--color-cararra) !important;
+    border: 1px solid var(--color-dove-gray-light) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    padding: 24px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+}
+
+/* Labels */
+label,
+.pf-c-form__label,
+.pf-v5-c-form__label,
+#kc-form-wrapper label {
+    color: var(--color-mine-shaft) !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    margin-bottom: 6px !important;
+    display: block;
+}
+
+/* Remove outer styling from patternfly input groups (prevents double background box) */
+.pf-c-input-group,
+.pf-c-input-group__item,
+.pf-v5-c-input-group,
+.pf-v5-c-input-group__item {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+/* Apply background styling directly to actual input elements */
+input.pf-c-form-control,
+input.pf-v5-c-form-control,
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    background-color: var(--color-dove-gray-light) !important;
+    background: var(--color-dove-gray-light) !important;
+    color: var(--color-mine-shaft) !important;
+    border: 1px solid var(--color-dove-gray-light) !important;
+    border-radius: 3px !important;
+    height: 40px !important;
+    padding: 0 10px !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+    width: 100% !important;
+}
+
+input:focus,
+.pf-c-form-control:focus,
+.pf-v5-c-form-control:focus {
+    border-color: var(--color-sandal) !important;
+    outline: none !important;
+}
+
+/* Hide Password Toggle Icon (Eye Button) */
+.pf-c-button.pf-m-control,
+.pf-v5-c-button.pf-m-control,
+button[aria-label*="password"],
+button[aria-label*="Password"],
+.pf-c-form-control + button,
+.pf-v5-c-form-control + button,
+#kc-input-wrapper button,
+.login-pf-settings + button,
+i.fa-eye,
+i.fa-eye-slash {
+    display: none !important;
+}
+
+/* Remember Me Checkbox */
+.login-pf-settings {
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+    display: flex;
+    align-items: center;
+}
+
+.login-pf-settings label {
+    font-size: 13px !important;
+    font-weight: normal !important;
+    margin-bottom: 0 !important;
+}
+
+/* Submit Button */
+.pf-c-button[type="submit"],
+.pf-v5-c-button[type="submit"],
+#kc-login {
+    background-color: var(--color-mine-shaft) !important;
+    border: 2px solid var(--color-mine-shaft) !important;
+    border-radius: 0 !important;
+    color: var(--color-white) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    height: auto !important;
+    width: auto !important;
+    min-width: 90px;
+    float: right;
+    cursor: pointer;
+    transition: all 0.3s !important;
+    margin-top: 10px !important;
+}
+
+.pf-c-button[type="submit"]:hover,
+.pf-v5-c-button[type="submit"]:hover,
+#kc-login:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* Bottom Links */
+#kc-form-options a,
+#kc-registration a,
+.login-pf-page a {
+    color: var(--color-sandal) !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+}
+
+#kc-form-options a:hover,
+#kc-registration a:hover,
+.login-pf-page a:hover {
+    color: var(--color-mongoose) !important;
 }
 
 EOF
@@ -404,6 +652,7 @@ services:
       - KC_CACHE=local
     volumes:
       - \${KEYCLOAK_IMPORT_LOCATION}:/opt/keycloak/data/import
+      - \${KEYCLOAK_THEMES_LOCATION}:/opt/keycloak/themes
 
 networks:
   default:
@@ -429,6 +678,7 @@ KEYCLOAK_DB_PASSWORD=$keycloak_db_password
 
 KEYCLOAK_DB_DATA_LOCATION=$domain_root_path/domains/$subdomain.$domain/hr/keycloak/postgres
 KEYCLOAK_IMPORT_LOCATION=$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import
+KEYCLOAK_THEMES_LOCATION=$domain_root_path/domains/$subdomain.$domain/hr/keycloak/themes
 
 EOF
 
@@ -439,13 +689,13 @@ chmod 600 "$domain_root_path/domains/$subdomain.$domain/hr/.env.keycloak"
 
 ```.sh
 # Create data directories
-mkdir -p "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/"{postgres,import}
+mkdir -p "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/"{postgres,import,themes}
 
 cd $domain_root_path/domains/$subdomain.$domain/hr
 docker compose -f docker-compose.keycloak.yml --env-file .env.keycloak up -d
 
-# Wait until Keycloak shows "started" in the logs (takes ~30-60s)
-watch -n5 'docker logs keycloak_server_'$system_user' 2>&1 | tail -5'
+# Watch for successful startup
+docker logs keycloak_server_${system_user} -f | grep -i "started\|error"
 ```
 
 ### Create User
@@ -555,7 +805,7 @@ services:
       - keycloak_default
     environment:
       - JAVA_TOOL_OPTIONS=-Xms64m -Xmx256m
-      - SERVER_FORWARD_HEADERS_STRATEGY=framework
+      - SERVER_FORWARD_HEADERS_STRATEGY=native
       - SERVER_SERVLET_CONTEXT_PATH=/zeiterfassung # Zeiterfassung is served under /zeiterfassung/ so it must generate correct links
 
       # PostgreSQL
@@ -567,7 +817,6 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_ID=\${OIDC_CLIENT_ID}
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_SECRET=\${OIDC_CLIENT_SECRET}
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_NAME=Keycloak
-      # roles scope: not needed - realm roles are included by default in Keycloak JWTs
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_SCOPE=openid,profile,email
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_AUTHORIZATION_GRANT_TYPE=authorization_code
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_REDIRECT_URI=https://\${ZEITERFASSUNG_DOMAIN}/zeiterfassung/login/oauth2/code/default
@@ -583,11 +832,6 @@ services:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
 
-      # ZT role resolution: read realm roles from the standard realm_access.roles claim.
-      # The group-claim mapper (CLAIM_MAPPERS_GROUP_CLAIM_ENABLED) maps group names, not role
-      # names, so it would require a group literally named "zeiterfassung_user" (lowercase).
-      # The realm-roles mapper reads Keycloak realm roles directly - no case issues.
-      - ZEITERFASSUNG_SECURITY_OIDC_CLIENT_REGISTRATION_ID=default
       - ZEITERFASSUNG_SECURITY_OIDC_LOGIN_FORM_URL=/oauth2/authorization/default
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_GROUP_CLAIM_ENABLED=false
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_REALM_ROLE_CLAIM_ENABLED=true
@@ -603,6 +847,10 @@ services:
       - SPRING_MAIL_PASSWORD=\${MAIL_PASSWORD}
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+
+      # SpringDoc
+      - SPRINGDOC_API_DOCS_ENABLED=false
+      - SPRINGDOC_SWAGGER_UI_ENABLED=false
 
       # Logging
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=WARN
@@ -731,7 +979,7 @@ services:
       - keycloak_default
     environment:
       - JAVA_TOOL_OPTIONS=-Xms64m -Xmx256m
-      - SERVER_FORWARD_HEADERS_STRATEGY=framework
+      - SERVER_FORWARD_HEADERS_STRATEGY=native
       - SERVER_SERVLET_CONTEXT_PATH=/urlaubsverwaltung # Urlaubsverwaltung is served under /urlaubsverwaltung/ so it must generate correct links
 
       # PostgreSQL
@@ -778,6 +1026,10 @@ services:
 
       # Launchpad
       - SPRING_APPLICATION_JSON={"launchpad":{"name-default-locale":"de","apps":[{"url":"https://${subdomain}.${domain}/zeiterfassung/","name":{"de":"Zeiterfassung","en":"Time Tracking"},"icon":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjEyIiB5MT0iNyIgeDI9IjEyIiB5Mj0iMTIiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTIiIHkxPSIxMiIgeDI9IjE2IiB5Mj0iMTQiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4="}]}}
+
+      # SpringDoc
+      - SPRINGDOC_API_DOCS_ENABLED=false
+      - SPRINGDOC_SWAGGER_UI_ENABLED=false
 
       # Logging
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=WARN
@@ -903,6 +1155,10 @@ HR Portal Access `Application name`: `HR Portal`. `Session Duration`: `1 month`.
 ---
 
 ## Settings
+
+### Keycloak
+
+`Manage realms` → `urlaubsverwaltung` → `Realm settings` → `Themes` → Set `Login theme`.
 
 ### Urlaubsverwaltung
 
