@@ -749,6 +749,7 @@ cat > Dockerfile << 'DOCKERFILE'
 FROM maven:3-eclipse-temurin-25 AS builder
 WORKDIR /app
 COPY . .
+RUN chmod +x ./mvnw
 RUN ./mvnw -q -DskipTests package
 
 # Runtime
@@ -923,6 +924,7 @@ cat > Dockerfile << 'DOCKERFILE'
 FROM maven:3-eclipse-temurin-25 AS builder
 WORKDIR /app
 COPY . .
+RUN chmod +x ./mvnw
 RUN ./mvnw -q -DskipTests package
 
 # Runtime
@@ -997,8 +999,8 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_PROVIDER=default
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_AUTHENTICATION_METHOD=client_secret_basic
 
-      # Authorization URI override - the browser is redirected to the PUBLIC HTTPS URL,
-      # not the internal Docker alias (which the browser can't reach)
+      # Authorization URI override - the browser is redirected to the PUBLIC HTTPS URL, not the internal Docker alias (which the browser can't reach)
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
 
       # Back-channel calls go to the internal Docker alias (no TLS, faster)
