@@ -3,8 +3,11 @@
 ## Positron
 
 ```.sh
+# Change current directory
+cd ~/.local/bin
+
 # Create a virtual environment
-uv venv
+# uv venv
 
 # Activate the virtual environment in the terminal (macOS/Linux)
 source .venv/bin/activate

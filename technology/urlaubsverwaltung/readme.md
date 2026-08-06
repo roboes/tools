@@ -46,7 +46,7 @@ domain_root_path="/home/$domain"
 subdomain="hr"
 system_user="website"
 
-urlaubsverwaltung_version="6.5.0"
+urlaubsverwaltung_version="6.6.0"
 zeiterfassung_version="3.2.0"
 keycloak_version="26.7.0"
 
@@ -263,7 +263,10 @@ cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import/url
       "publicClient": false,
       "fullScopeAllowed": true,
       "defaultClientScopes": ["web-origins","acr","profile","roles","email"],
-      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"]
+      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"],
+      "attributes": {
+        "post.logout.redirect.uris": "https://${subdomain}.${domain}/urlaubsverwaltung/*"
+      }
     },
     {
       "clientId": "zeiterfassung",
@@ -279,7 +282,10 @@ cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/hr/keycloak/import/url
       "publicClient": false,
       "fullScopeAllowed": true,
       "defaultClientScopes": ["web-origins","acr","profile","roles","email"],
-      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"]
+      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"],
+      "attributes": {
+        "post.logout.redirect.uris": "https://${subdomain}.${domain}/zeiterfassung/*"
+      }
     }
   ],
   "roles": {
@@ -838,8 +844,8 @@ services:
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_REALM_ROLE_CLAIM_ENABLED=true
       - ZEITERFASSUNG_SECURITY_OIDC_SERVER_URL=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
 
-      # Launchpad
-      - SPRING_APPLICATION_JSON={"launchpad":{"name-default-locale":"de","apps":[{"url":"https://${subdomain}.${domain}/urlaubsverwaltung/","name":{"de":"Urlaubsverwaltung","en":"Leave Management"},"icon":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHJlY3QgeD0iMyIgeT0iNCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDI5MmY0IiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMyIgeTE9IjkiIHgyPSIyMSIgeTI9IjkiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjgiIHkxPSI0IiB4Mj0iOCIgeTI9IjIiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjE2IiB5MT0iNCIgeDI9IjE2IiB5Mj0iMiIgc3Ryb2tlPSIjNDI5MmY0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4="}]}}
+      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
+      - ZEITERFASSUNG_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/zeiterfassung/pull/2205 pull request approval
 
       # Mail
       - SPRING_MAIL_HOST=\${MAIL_HOST}
@@ -848,6 +854,9 @@ services:
       - SPRING_MAIL_PASSWORD=\${MAIL_PASSWORD}
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+
+      # Launchpad
+      - SPRING_APPLICATION_JSON={"launchpad":{"name-default-locale":"de","apps":[{"url":"https://${subdomain}.${domain}/urlaubsverwaltung/","name":{"de":"Urlaubsverwaltung","en":"Leave Management"},"icon":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHJlY3QgeD0iMyIgeT0iNCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDI5MmY0IiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMyIgeTE9IjkiIHgyPSIyMSIgeTI9IjkiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjgiIHkxPSI0IiB4Mj0iOCIgeTI9IjIiIHN0cm9rZT0iIzQyOTJmNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjE2IiB5MT0iNCIgeDI9IjE2IiB5Mj0iMiIgc3Ryb2tlPSIjNDI5MmY0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4="}]}}
 
       # SpringDoc
       - SPRINGDOC_API_DOCS_ENABLED=false
@@ -1000,7 +1009,6 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_AUTHENTICATION_METHOD=client_secret_basic
 
       # Authorization URI override - the browser is redirected to the PUBLIC HTTPS URL, not the internal Docker alias (which the browser can't reach)
-      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
 
       # Back-channel calls go to the internal Docker alias (no TLS, faster)
@@ -1012,6 +1020,9 @@ services:
       # Resource server - issuer must match the "iss" claim Keycloak puts in JWTs (public URL, no trailing slash)
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
+
+      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
+      - UV_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/urlaubsverwaltung/pull/6475 pull request approval
 
       # Mail
       - UV_MAIL_FROM=\${MAIL_FROM}
