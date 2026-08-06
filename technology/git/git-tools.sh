@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2026-01-02
+# Last update: 2026-08-06
 
 
 # Start Bash (Unix Shell)
@@ -68,41 +68,6 @@ codespell . --ignore-words-list=alle,als,bootup,datas,deine,dokument,doubleclick
 git add -N .
 pre-commit run --all-files
 
-
-## Test for FutureWarning
-# python -m pip install pytest
-# pytest --override-ini "python_files=*.py python_classes=* python_functions=*" -W error::FutureWarning
-
-
-## Python requirements.txt file
-# python -m pip install pipreqs
-# if [ $(basename "$PWD") != "odoo-woocommerce-sync" ]; then
-#     if find . -type f -name "*.py" | grep -q .; then
-#         pipreqs --encoding utf-8 --force "./"
-#
-#         # Check if "janitor" is in requirements.txt and replace it with pyjanitor
-#         if grep -q "janitor" "requirements.txt"; then
-#             sed -i '/janitor/c\pyjanitor==0.32.23' requirements.txt
-#             pre-commit run --files "./requirements.txt"
-#         fi
-#
-#     fi
-# else
-#     echo "Skipping requirements update"
-# fi
-
-## Update requirements.txt
-# pip-compile --no-header --output-file=requirements-updated.txt requirements.txt
-# sed -i '/^ *#/d' requirements-updated.txt
-
-
-# Set working directory
-# cd ..
-
-
-# Delete files
-rm "./.php-cs-fixer.cache"
-find . -path './venv' -prune -o -name "__pycache__" -type d -exec rm -r {} +
 
 
 ## Git push
