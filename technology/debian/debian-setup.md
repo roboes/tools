@@ -10,6 +10,12 @@
 ```.sh
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+sudo snap refresh
+```
+
+```.sh
+# Install Snap
+sudo apt install -y snapd
 ```
 
 ```.sh
@@ -17,8 +23,6 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt cle
 sudo apt install -y composer \
   curl \
   git \
-  nodejs \
-  npm \
   python3 \
   python-is-python3 \
   python3-pip \
@@ -52,16 +56,17 @@ nano ~/.bashrc
 ```
 
 ```.sh
-# Node.js
-nvm install node
-node -v
-nvm alias default 25
-```
+# Install nvm (Node Version Manager)
+NVM_LATEST=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_LATEST}/install.sh" | bash
 
-```.sh
-# Prettier
-sudo npm install -g prettier
-sudo npm install -g glob
+# Reload .bashrc to load nvm without restarting terminal
+source ~/.bashrc
+
+# Install latest Node.js and set as default
+nvm install node
+nvm alias default node
+node -v
 ```
 
 ```.sh
@@ -77,6 +82,14 @@ sudo apt install -y dolphin \
 # Install tools for SSH and remote server connectivity - for Cloudflared: https://pkg.cloudflare.com/index.html
 sudo apt install -y cloudflared \
   sshpass
+```
+
+```.sh
+# R
+sudo apt install -y r-base r-base-dev
+
+# R Studio
+sudo snap install rstudio --classic
 ```
 
 ```.sh
