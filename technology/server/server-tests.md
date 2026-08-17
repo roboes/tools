@@ -3,18 +3,18 @@
 > [!NOTE]  
 > Last update: 2026-02-07
 
-```.sh
+```sh
 # Settings
 server_ip="100.00.000.01"
 domain="website.com"
 ```
 
-```.sh
+```sh
 # Install packages
 sudo apt install dnsutils nikto nmap sqlmap sslscan sublist3r -y
 ```
 
-```.sh
+```sh
 # Quick port scan to identify open services and their versions on the domain
 nmap -F -sV $domain
 

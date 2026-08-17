@@ -5,7 +5,7 @@
 
 ## Keyboard - US International
 
-```.sh
+```sh
 # Install fcitx5 - Wayland-native input method (required for XCompose on Wayland/KDE Plasma 6)
 sudo apt install fcitx5 fcitx5-frontend-qt5
 im-config -n fcitx5
@@ -19,7 +19,7 @@ fcitx5-configtool
 
 ## Change locale
 
-```.sh
+```sh
 # Check Current Locale Settings
 locale
 
@@ -35,7 +35,7 @@ nano ~/.bashrc
 
 ## KDE Plasma
 
-```.sh
+```sh
 # Clock Widget (Digital Clock Applet)
 
 ## ISO 8601
@@ -78,7 +78,7 @@ plasmashell --replace &
 
 ## Fingerprint
 
-```.sh
+```sh
 # Check if fingerprint reader is supported
 lsusb | grep -i finger
 

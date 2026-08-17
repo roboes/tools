@@ -10,7 +10,7 @@
 
 ##### Search website for a specific CSS class (using Command-Line Tools)
 
-```.sh
+```sh
 ### Settings
 website="website.com"
 
@@ -23,7 +23,7 @@ grep -r "css-class"
 
 ##### Search website for a specific CSS class (using JavaScript)
 
-```.js
+```js
 console.log(document.querySelectorAll('.css-class'));
 ```
 

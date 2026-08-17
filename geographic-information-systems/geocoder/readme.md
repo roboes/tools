@@ -20,7 +20,7 @@ This geocoder tool requires Python 3.12 because of the [`itertools.batched` func
 
 In case of `CERTIFICATE_VERIFY_FAILED` ("certificate verify failed: unable to get local issuer certificate") error, install the following package:
 
-```.sh
+```sh
 python -m pip install python-certifi-win32
 ```
 

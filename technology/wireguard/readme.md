@@ -7,13 +7,13 @@
 
 > Notes: No need to create a sub-server (e.g. `vpn.website.com`) in Virtualmin. The VPN runs independently on a DNS-only Cloudflare record.
 
-```.sh
+```sh
 sudo apt install -y wireguard
 ```
 
 ### Generate server keys
 
-```.sh
+```sh
 # Generate server private key and save it
 SERVER_PRIVATE_KEY=$(wg genkey | tee /etc/wireguard/server_private.key)
 
@@ -25,7 +25,7 @@ SERVER_PUBLIC_KEY=$(echo $SERVER_PRIVATE_KEY | wg pubkey | tee /etc/wireguard/se
 
 ### Create WireGuard server config
 
-```.sh
+```sh
 # Create wg0.conf with server interface and listen port
 cat <<EOF > "/etc/wireguard/wg0.conf"
 [Interface]
@@ -38,7 +38,7 @@ EOF
 
 ### Enable IP forwarding
 
-```.sh
+```sh
 # Create a dedicated configuration file for WireGuard forwarding
 echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-wireguard-forwarding.conf > /dev/null
 
@@ -52,7 +52,7 @@ sysctl net.ipv4.ip_forward
 
 ### Configure firewall
 
-```.sh
+```sh
 # Open UDP port 51820 in the "public" zone permanently
 sudo firewall-cmd --zone=public --add-port=51820/udp --permanent
 
@@ -71,7 +71,7 @@ sudo firewall-cmd --list-all
 
 ### Generate client keys
 
-```.sh
+```sh
 # Generate client private key
 CLIENT_PRIVATE_KEY=$(wg genkey | tee /etc/wireguard/client1_private.key)
 
@@ -83,7 +83,7 @@ CLIENT_PUBLIC_KEY=$(echo $CLIENT_PRIVATE_KEY | wg pubkey | tee /etc/wireguard/cl
 
 ### Add Client Peer to server config
 
-```.sh
+```sh
 # Append client peer block to server configuration
 cat <<EOF >> /etc/wireguard/wg0.conf
 # Client 1 configuration
@@ -98,7 +98,7 @@ EOF
 
 ### Start WireGuard
 
-```.sh
+```sh
 # Enable WireGuard to start on boot and start now
 sudo systemctl enable --now wg-quick@wg0
 
@@ -109,7 +109,7 @@ sudo systemctl restart wg-quick@wg0
 sudo wg show
 ```
 
-```.sh
+```sh
 echo "Client private key: $CLIENT_PRIVATE_KEY"
 echo "Server public key: $SERVER_PUBLIC_KEY"
 ```
@@ -128,16 +128,16 @@ Create a DNS record in Cloudflare:
 
 On the Raspberry Pi:
 
-```.sh
+```sh
 sudo apt install -y wireguard
 ```
 
-```.sh
+```sh
 # Paste the client configuration
 sudo nano /etc/wireguard/wg0.conf
 ```
 
-```.conf
+```conf
 [Interface]
 PrivateKey = $CLIENT_PRIVATE_KEY
 Address = 10.6.0.2/32
@@ -153,7 +153,7 @@ AllowedIPs = 10.6.0.0/24
 PersistentKeepalive = 25
 ```
 
-```.sh
+```sh
 # Enable WireGuard to start on boot and start now
 sudo systemctl enable --now wg-quick@wg0
 
@@ -166,7 +166,7 @@ sudo wg show
 
 ### Test
 
-```.sh
+```sh
 # Find interface name
 ip link show
 

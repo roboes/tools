@@ -2,23 +2,36 @@
 
 > [!NOTE] Last update: 2026-07-05
 
-```.sh
+```sh
 # Start Bash (Unix shell)
 [ -z "$BASH" ] && exec bash
 ```
 
-```.sh
+```sh
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+
+# Refresh all installed snap packages to their latest versions
+sudo snap refresh
+
+# Update all installed Flatpak packages and remove unused dependencies
+flatpak update -y && flatpak uninstall --unused -y
 ```
 
-```.sh
+```sh
+# Install Snap
+sudo apt install -y snapd
+sudo snap install core
+
+# Install Flatpak package
+sudo apt install -y flatpak
+```
+
+```sh
 # Install core tools and programming languages
 sudo apt install -y composer \
   curl \
   git \
-  nodejs \
-  npm \
   python3 \
   python-is-python3 \
   python3-pip \
@@ -26,13 +39,13 @@ sudo apt install -y composer \
   wget
 ```
 
-```.sh
+```sh
 # PHP
 sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
 sudo apt-get install php8.5
 ```
 
-```.sh
+```sh
 # Install GitHub CLI
 sudo apt install -y gh
 ```
@@ -44,42 +57,56 @@ sudo apt install -y codespell \
   pre-commit
 ```
 
-```.sh
+```sh
 # php-cs-fixer
 composer global require friendsofphp/php-cs-fixer
 nano ~/.bashrc
 # Then add to the bottom: export PATH="$PATH:$HOME/.config/composer/vendor/bin"
 ```
 
-```.sh
-# Node.js
+```sh
+# Install nvm (Node Version Manager)
+NVM_LATEST=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_LATEST}/install.sh" | bash
+
+# Reload .bashrc to load nvm without restarting terminal
+source ~/.bashrc
+
+# Install latest Node.js and set as default
 nvm install node
+nvm alias default node
 node -v
-nvm alias default 25
 ```
 
-```.sh
-# Prettier
-sudo npm install -g prettier
-sudo npm install -g glob
-```
-
-```.sh
+```sh
 # Install apps
 sudo apt install -y dolphin \
   konsole \
-  notepadqq \
   plasma-desktop \
   sddm
+
+# Install Notepad++
+# sudo snap install notepad-plus-plus
+
+# Install NotepadNext
+flatpak install flathub com.github.dail8859.NotepadNext
 ```
 
-```.sh
+```sh
 # Install tools for SSH and remote server connectivity - for Cloudflared: https://pkg.cloudflare.com/index.html
 sudo apt install -y cloudflared \
   sshpass
 ```
 
-```.sh
+```sh
+# R
+sudo apt install -y r-base r-base-dev
+
+# R Studio
+sudo snap install rstudio --classic
+```
+
+```sh
 # Wine - https://wiki.debian.org/Wine
 
 ## Check architecture
@@ -102,7 +129,7 @@ sudo apt install \
 
 Raspberry Pi removal of unneeded applications for headless setup:
 
-```.sh
+```sh
 sudo apt purge -y \
   adwaita-icon-theme adwaita-icon-theme-legacy \
   chromium chromium-common chromium-l10n \

@@ -3,7 +3,7 @@
 > [!NOTE]  
 > Last update: 2026-03-10
 
-```.sh
+```sh
 # Settings
 domain="website.com"
 domain_root_path="/home/$domain"
@@ -23,13 +23,13 @@ odoo_workers=2
 
 ## [Odoo](https://www.odoo.com)
 
-```.sh
+```sh
 # Create directories
 sudo mkdir -p $domain_root_path/domains/$subdomain.$domain/odoo
 sudo chown -R $system_user:$system_user $domain_root_path/domains/$subdomain.$domain/odoo
 ```
 
-```.sh
+```sh
 # Add the system user to the docker group
 sudo usermod -aG docker $system_user
 
@@ -39,7 +39,7 @@ groups $system_user
 
 ### OCA Submodules
 
-```.sh
+```sh
 # Initialize git repo in the root odoo folder
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 git config --global --add safe.directory "$domain_root_path/domains/$subdomain.$domain/odoo"
@@ -62,7 +62,7 @@ git commit -m "Add OCA submodules for Odoo $odoo_version"
 
 ### Dockerfile & Docker Compose
 
-```.sh
+```sh
 cat <<'EOF' > "$domain_root_path/domains/$subdomain.$domain/odoo/Dockerfile"
 ARG ODOO_VERSION
 FROM odoo:${ODOO_VERSION}
@@ -90,7 +90,7 @@ USER odoo
 EOF
 ```
 
-```.sh
+```sh
 # Create docker-compose.yml
 cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/odoo/docker-compose.yml"
 name: odoo
@@ -143,7 +143,7 @@ services:
 EOF
 ```
 
-```.sh
+```sh
 # Create .env file
 cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/odoo/.env"
 # Odoo version
@@ -173,7 +173,7 @@ EOF
 chmod 600 "$domain_root_path/domains/$subdomain.$domain/odoo/.env"
 ```
 
-```.sh
+```sh
 # Create config directory
 sudo mkdir -p $domain_root_path/domains/$subdomain.$domain/odoo/config
 
@@ -211,7 +211,7 @@ channels = root:2
 EOF
 ```
 
-```.sh
+```sh
 # Create data directories
 sudo mkdir -p "$domain_root_path/domains/$subdomain.$domain/odoo/data"
 sudo mkdir -p "$domain_root_path/domains/$subdomain.$domain/odoo/postgres"
@@ -235,13 +235,13 @@ echo "Postgres UID: $postgres_uid, GID: $postgres_gid"
 sudo chown -R $postgres_uid:$postgres_gid "$domain_root_path/domains/$subdomain.$domain/odoo/postgres"
 ```
 
-```.sh
+```sh
 # Build custom Odoo image
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 docker compose build --no-cache # --progress=plain
 ```
 
-```.sh
+```sh
 # Initialize Odoo database with core modules
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 
@@ -251,13 +251,13 @@ docker compose run --rm odoo odoo \
   --stop-after-init
 ```
 
-```.sh
+```sh
 # Start containers
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 docker compose up -d
 ```
 
-```.sh
+```sh
 # Define modules to install
 modules=(
     base_multi_image
@@ -296,12 +296,12 @@ if [ ${#modules_available[@]} -gt 0 ]; then
 fi
 ```
 
-```.sh
+```sh
 # Confirm docker is running
 docker ps
 ```
 
-```.sh
+```sh
 # View logs
 # docker logs odoo_server_${system_user}
 # docker logs odoo_postgres_${system_user}
@@ -312,7 +312,7 @@ docker ps
 
 ### Nginx directives
 
-```.txt
+```txt
 server {
     client_max_body_size 512M;
     proxy_buffering off;
@@ -348,14 +348,14 @@ server {
 }
 ```
 
-```.sh
+```sh
 # Restart Nginx
 sudo systemctl reload nginx
 ```
 
 ### Useful Commands
 
-```.sh
+```sh
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 
 # Rebuild containers
@@ -386,7 +386,7 @@ docker compose down && docker compose up -d --remove-orphans
 
 ### Update OCA Submodules
 
-```.sh
+```sh
 # Update all OCA submodules to latest
 cd $domain_root_path/domains/$subdomain.$domain/odoo
 git submodule update --remote --merge
@@ -401,7 +401,7 @@ docker compose up -d
 
 ### Add New OCA Submodule
 
-```.sh
+```sh
 # Example: add a new OCA repo
 cd $domain_root_path/domains/$subdomain.$domain/odoo/addons
 git submodule add --branch $odoo_version https://github.com/OCA/account-financial-tools.git oca/account-financial-tools
@@ -426,7 +426,7 @@ docker compose up -d
 
 ## Uninstall
 
-```.sh
+```sh
 # cd $domain_root_path/domains/$subdomain.$domain/odoo
 
 # Stop and remove containers + volumes

@@ -3,7 +3,7 @@
 > [!NOTE]  
 > Last update: 2026-07-26
 
-```.sh
+```sh
 # Settings
 server_ip="100.00.000.01"
 domain="website.com"
@@ -20,17 +20,17 @@ database_name="database_name"
 
 ## Initial setup
 
-```.sh
+```sh
 # Check Debian version
 cat /etc/os-release
 ```
 
-```.sh
+```sh
 # Update packages
 sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt autoremove -y && sudo apt clean
 ```
 
-```.sh
+```sh
 # Change locale
 
 ## Check Current Locale Settings
@@ -46,7 +46,7 @@ nano ~/.bashrc
 # export LANG=en_US.UTF-8
 ```
 
-```.sh
+```sh
 # Install packages
 sudo apt install -y \
   curl \
@@ -81,17 +81,17 @@ sudo apt install -y \
 
 ## DNS
 
-```.sh
+```sh
 # Check if resolvconf is running
 sudo systemctl status resolvconf.service
 ```
 
-```.sh
+```sh
 # Edit the resolvconf "head" file
 sudo nano /etc/resolvconf/resolv.conf.d/head
 ```
 
-```.txt
+```txt
 # Cloudflare DNS (IPv4)
 nameserver 1.1.1.1
 nameserver 1.0.0.1
@@ -101,19 +101,19 @@ nameserver 2606:4700:4700::1111
 nameserver 2606:4700:4700::1001
 ```
 
-```.sh
+```sh
 # Apply the changes
 sudo resolvconf -u
 ```
 
-```.sh
+```sh
 # Verify the DNS
 time nslookup google.com
 ```
 
 ## User management
 
-```.sh
+```sh
 # Create the admin user
 sudo adduser $admin_user
 
@@ -125,7 +125,7 @@ sudo usermod -aG sudo $admin_user
 
 (Local machine) Generate SSH key pair.
 
-```.sh
+```sh
 if [ -n "$admin_user" ] && [ -n "$domain" ] && [ -n "$server_ip" ]; then
     ssh-keygen -t ed25519 -C "$admin_user@$server_ip" -f ~/.ssh/id_ed25519_$domain
 else
@@ -133,7 +133,7 @@ else
 fi
 ```
 
-```.sh
+```sh
 # (Optional) Backup SSH key to another folder
 cp ~/.ssh/id_ed25519_$domain /mnt/c/Users/$USER/Documents/
 cp ~/.ssh/id_ed25519_$domain.pub /mnt/c/Users/$USER/Documents/
@@ -141,17 +141,17 @@ cp ~/.ssh/id_ed25519_$domain.pub /mnt/c/Users/$USER/Documents/
 
 (Local machine) Get the SSH public key string.
 
-```.sh
+```sh
 cat ~/.ssh/id_ed25519_$domain.pub
 ```
 
-```.sh
+```sh
 # echo sshpass -P \"passphrase\" -p \"PASSPHRASE\" -v ssh -i \"~/.ssh/id_ed25519_$domain\" -o ProxyCommand=\"cloudflared access ssh --hostname ssh.$domain\" \"$admin_user@$server_ip\"
 ```
 
 (Server) Add the ssh public key to the authorized keys.
 
-```.sh
+```sh
 # The public key string you copied from your local machine
 ssh_public_key="ssh-ed25519 AAAA... $admin_user@$server_ip"
 
@@ -169,34 +169,34 @@ chmod 600 /home/$admin_user/.ssh/authorized_keys
 
 Configure SSH to use key-based authentication by adding "$admin_user" to the `AllowUsers` directive.
 
-```.sh
+```sh
 sudo nano /etc/ssh/sshd_config
 ```
 
-```.txt
+```txt
 PubkeyAuthentication yes
 AllowUsers $admin_user
 ```
 
-```.sh
+```sh
 sudo systemctl reload sshd
 ```
 
 (Local machine) Test the SSH connection.
 
-```.sh
+```sh
 ssh -i ~/.ssh/id_ed25519_$domain $admin_user@$server_ip
 ```
 
 Removing "root" from the `AllowUsers` directive. Completely disable "root" login.
 
-```.sh
+```sh
 sudo nano /etc/ssh/sshd_config
 ```
 
 Complete file:
 
-```.txt
+```txt
 # This is the sshd server system-wide configuration file. See
 # sshd_config(5) for more information.
 
@@ -246,7 +246,7 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 
 Tests before restarting the ssh:
 
-```.sh
+```sh
 # Check SSH key existence
 sudo ls -la /home/$admin_user/.ssh/authorized_keys
 
@@ -259,7 +259,7 @@ sudo chmod 600 /home/$admin_user/.ssh/authorized_keys
 sudo sshd -t
 ```
 
-```.sh
+```sh
 sudo systemctl reload sshd
 ```
 
@@ -267,19 +267,19 @@ Keep current terminal window open and open a new terminal window trying to login
 
 (Server) Remove any server-generated SSH keys if needed. After confirming key-based login works, remove old server-generated keys if they exist.
 
-```.sh
+```sh
 ls -la /root/.ssh/
 ls -la /home/$admin_user/.ssh/
 # sudo rm -f /root/.ssh/id_rsa
 ```
 
-```.sh
+```sh
 sudo systemctl reload sshd
 ```
 
 ## Virtualmin
 
-```.sh
+```sh
 # Installation
 wget https://software.virtualmin.com/gpl/scripts/install.sh
 chmod a+x install.sh
@@ -309,7 +309,7 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Enable HTTP2 protocol support: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Enable HTTP2 protocol support` → `Yes`.
 
-```.sh
+```sh
 # Alternatively
 # virtualmin modify-web --domain $domain --protocols "http/1.1 h2"
 # virtualmin list-domains --domain $domain --multiline | grep "HTTP protocols"
@@ -359,7 +359,7 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Fail2Ban: `Webmin` → `Networking` → `Fail2Ban Intrusion Detector` → `Edit Config Files` → `/etc/fail2ban/jail.local`
 
-```.toml
+```toml
 [DEFAULT]
 bantime = 1440m
 findtime = 60m
@@ -403,13 +403,13 @@ port = 10000
 journalmatch = _SYSTEMD_UNIT=webmin.service
 ```
 
-```.sh
+```sh
 sudo systemctl restart fail2ban
 ```
 
 #### SASL Authentication Daemon
 
-```.sh
+```sh
 # sudo systemctl status saslauthd
 # sudo systemctl enable saslauthd
 ```
@@ -427,7 +427,7 @@ Public hostnames:
 1. `Public hostname`: `ssh.website.com`; `Service`: `ssh://localhost:22`.
 2. `Public hostname`: `virtualmin.website.com`; `Service`: `https://localhost:10000`; `Additional application settings` → `TLS` → Enable `No TLS Verify`.
 
-```.sh
+```sh
 sudo systemctl status cloudflared
 ```
 
@@ -435,7 +435,7 @@ sudo systemctl status cloudflared
 
 Optional second Cloudflared Zero Trust.
 
-```.sh
+```sh
 cat <<EOF > /etc/systemd/system/cloudflared-website2.service
 [Unit]
 Description=cloudflared website2
@@ -454,18 +454,18 @@ WantedBy=multi-user.target
 EOF
 ```
 
-```.sh
+```sh
 # Reload the system manager
 sudo systemctl daemon-reload
 ```
 
-```.sh
+```sh
 # Start the new service
 sudo systemctl enable cloudflared-website2
 sudo systemctl start cloudflared-website2
 ```
 
-```.sh
+```sh
 sudo systemctl status cloudflared-website2
 ```
 
@@ -493,33 +493,33 @@ See [How to set up Cloudflare Tunnel to work properly with Webmin?](https://webm
 
 ###### /etc/webmin/config
 
-```.sh
+```sh
 sudo nano /etc/webmin/config
 ```
 
 Add to the end of the file:
 
-```.txt
+```txt
 referers=virtualmin.website.com
 ```
 
 ###### /etc/webmin/miniserv.conf
 
-```.sh
+```sh
 sudo nano /etc/webmin/miniserv.conf
 ```
 
-```.txt
+```txt
 redirect_host=virtualmin.website.com
 ```
 
-```.sh
+```sh
 sudo systemctl restart webmin
 ```
 
 #### Login alerts
 
-```.sh
+```sh
 # Display all recorded login sessions for root user
 sudo wtmpdb last | grep root
 ```
@@ -544,7 +544,7 @@ Define query and alert condition:
 
 - Loki query:
 
-```.txt
+```txt
 sum by (instance, job, log_line) (
   count_over_time(
     {job="ssh_auth"}
@@ -579,7 +579,7 @@ Configure notification message:
 
 #### FirewallD
 
-```.sh
+```sh
 # sudo apt update
 # sudo apt install firewalld -y
 
@@ -673,14 +673,14 @@ Now "Create Virtual Server".
 
 [Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
 
-```.sh
+```sh
 php_version_current="8.5"
 sudo apt install php${php_version_current}-sqlite3 php${php_version_current}-igbinary php${php_version_current}-redis
 ```
 
 Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
 
-```.sh
+```sh
 # Remove older PHP Versions
 php_version_old="8.4"
 sudo apt purge "php${php_version_old}*"
@@ -695,7 +695,7 @@ virtualmin check-config
 
 ### Packages
 
-```.sh
+```sh
 sudo apt install htop \
   libnginx-mod-http-brotli-filter \
   redis
@@ -715,31 +715,31 @@ Additionally, enable `Email` → `DMARC Management`, which will add a DMARC reco
 
 #### Create Sender Canonical Map
 
-```.sh
+```sh
 nano /etc/postfix/sender_canonical
 ```
 
 Add mappings for each virtual server user:
 
-```.txt
+```txt
 website    noreply@website.com
 ```
 
 #### Configure Postfix
 
-```.sh
+```sh
 nano /etc/postfix/main.cf
 ```
 
 Add this line:
 
-```.txt
+```txt
 sender_canonical_maps = hash:/etc/postfix/sender_canonical
 ```
 
 Apply changes:
 
-```.sh
+```sh
 postmap /etc/postfix/sender_canonical
 systemctl reload postfix
 ```
@@ -750,7 +750,7 @@ To verify: `Webmin` → `Servers` → `Postfix Mail Server` → `Canonical Mappi
 
 To diagnose general email sending/receiving issues: Open server's mail log in real-time to monitor activity:
 
-```.sh
+```sh
 # sudo tail -f /var/log/mail.log
 journalctl -u postfix -f
 ```
@@ -761,7 +761,7 @@ When configuring the email client (e.g. Thunderbird), ensure the server hostname
 
 Additional troubleshooting:
 
-```.sh
+```sh
 dovecot -n
 sudo journalctl -u dovecot.service -f
 sudo journalctl -u postfix.service -f
@@ -771,7 +771,7 @@ sudo journalctl -u postfix.service -f
 
 To fix "Command died with status 126: Exec format error" that prevents local mail delivery, check for an architecture mismatch:
 
-```.sh
+```sh
 # Check the procmail-wrapper binary's type:
 file /usr/bin/procmail-wrapper
 # file /usr/share/webmin/virtual-server/procmail-wrapper
@@ -783,7 +783,7 @@ dpkg --print-architecture
 
 If an architecture mismatch is detected (e.g. `file` shows a 32-bit x86 executable, but `dpkg` shows `arm64`), recompile procmail-wrapper for your server's correct architecture:
 
-```.sh
+```sh
 # Navigate to a temporary directory
 cd /tmp/
 
@@ -825,7 +825,7 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 
 `Webmin` → `System` → `Bootup and Shutdown`.
 
-```.sh
+```sh
 # Disable services
 services=(
   dovecot.service
@@ -840,13 +840,13 @@ for srv in "${services[@]}"; do
 done
 ```
 
-### Nginx directives
+### Nginx Directives
 
 #### Webmin → Servers → Nginx Webserver → Edit Configuration Files
 
 ##### /etc/nginx/nginx.conf
 
-```.nginx
+```nginx
 # Global Settings
 
 ## User and worker processes
@@ -993,12 +993,12 @@ http {
 
 ##### /etc/nginx/snippets/security-headers.conf
 
-```.sh
+```sh
 sudo mkdir -p /etc/nginx/snippets
 sudo nano /etc/nginx/snippets/security-headers.conf
 ```
 
-```.nginx
+```nginx
 add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
 add_header X-Frame-Options "SAMEORIGIN" always;
 add_header X-Content-Type-Options "nosniff" always;
@@ -1008,7 +1008,7 @@ add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),
 
 ##### /etc/nginx/sites-available/domain.com.conf
 
-```.nginx
+```nginx
 server {
     # Settings
     set $domain website.com;
@@ -1022,7 +1022,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com https://api.wordpress.org https://*.google.com https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://www.mercadolibre.com https://api-static.mercadopago.com; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; script-src-elem 'self' 'unsafe-inline' https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://c.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://www.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com https://*.pagseguro.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; script-src-elem 'self' 'unsafe-inline' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://*.pagseguro.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
 
 
     # Main Web Root Setup
@@ -1203,7 +1203,7 @@ server {
 
 This Nginx configuration serves as a template for a subdomain (`subdomain.domain.com`) that redirects all traffic to a specific path on the main domain (e.g. <https://domain.com/path>). Its primary roles are to facilitate SSL certificate issuance via ACME challenges and to provide these redirects.
 
-```.nginx
+```nginx
 server {
     # Settings
     set $domain website.com;
@@ -1287,14 +1287,14 @@ server {
 }
 ```
 
-```.sh
+```sh
 # Restart Nginx
 nginx -t && systemctl reload nginx
 ```
 
 #### Clear cache
 
-```.sh
+```sh
 sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
 ```
 
@@ -1310,7 +1310,7 @@ Cloudflare → Website → `DNS` → `Settings` → Enable `DNSSEC`.
 
 #### Security
 
-Cloudflare → Website → `Security` → `Security rules`.
+Cloudflare → Website → `Security` → `Security rules` → `Custom rules`:
 
 1. ACME Challenge Passthrough
 
@@ -1336,6 +1336,18 @@ Cloudflare → Website → `Security` → `Security rules`.
 - `Expression`: `(http.request.uri.path contains "/wp-admin/" or http.request.uri.path contains "/wp-login.php" or http.request.uri.path contains "/xmlrpc.php" or http.request.uri.path contains "/my-account/" or http.request.uri.path contains "/mein-account/" or http.request.uri.path contains "/gift-card-redemption/" or http.request.uri.path contains "/gutschein-einlosen/") and not (http.request.uri.path contains "/wp-admin/admin-ajax.php" or http.request.uri.path contains "/wp-admin/css/" or http.request.uri.path contains "/wp-admin/js/")`
 - `Choose action`: `Managed Challenge`.
 
+Cloudflare → Website → `Security` → `Security rules` → `Rate limiting rules`:
+
+1. ACME Challenge Rate Limiting
+
+- `Rule name`: `ACME Challenge Rate Limiting`.
+- `Expression`: `(http.request.uri.path contains "/.well-known/acme-challenge/")`.
+- `With the same characteristics...`: `IP`.
+- `When rate exceeds...`: `Requests`: `10`, `Period`: `10 seconds`.
+- `Then take action...`: `Block`.
+- `For duration...`: `10 seconds`.
+- `Status`: `Active`.
+
 #### Caching
 
 Cloudflare → Website → `Caching` → `Cache Rules`.
@@ -1351,7 +1363,7 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 - Rule name: `Cache Bypass`.
 - If incoming requests match...: `Custom filter expression`:
 
-```.txt
+```txt
 (http.request.method in {"POST" "PUT" "DELETE"}) or
 (http.cookie contains "PHPSESSID") or
 (http.request.uri.path contains "/wp-admin") or
@@ -1375,7 +1387,7 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 - Rule name: `Cache Bypass - Virtualmin`.
 - If incoming requests match...: `Custom filter expression`:
 
-```.txt
+```txt
 (starts_with(http.host, "virtualmin."))
 ```
 
@@ -1406,7 +1418,7 @@ Cloudflare → Website → `Rules` → `Page Rules` → `Create Page Rule`.
 
 ### PHP-FPM Configuration
 
-```.sh
+```sh
 # Create PHP slow log
 sudo touch /home/$domain/logs/php_slow.log
 
@@ -1419,7 +1431,7 @@ sudo chmod 664 /home/$domain/logs/php_slow.log
 
 #### Local
 
-```.txt
+```txt
 [100000000000000]
 ; Settings
 user = $system_user
@@ -1480,7 +1492,7 @@ php_admin_value[opcache.revalidate_freq] = 0
 request_slowlog_timeout = 5s
 ```
 
-```.sh
+```sh
 # Restart PHP-FPM service
 sudo systemctl restart php*-fpm
 ```
@@ -1489,7 +1501,7 @@ sudo systemctl restart php*-fpm
 
 `Webmin` → `Tools` → `PHP Configuration` → `Module config` (⚙) → `Configurable options`:
 
-```.txt
+```txt
 /etc/php*/cgi/php.ini,/etc/php/*/cgi/php.ini=Configuration for CGI
 /etc/php*/cli/php.ini,/etc/php/*/cli/php.ini=Configuration for CLI
 /etc/php*/fpm/php.ini,/etc/php/*/fpm/php.ini=Configuration for PHP-FPM
@@ -1497,7 +1509,7 @@ sudo systemctl restart php*-fpm
 
 Select `/etc/php/*/fpm/php.ini` → `Edit Manually`:
 
-```.txt
+```txt
 [opcache]
 opcache.enable=1
 opcache.enable_cli=1
@@ -1514,17 +1526,17 @@ opcache.save_comments=1
 opcache.huge_code_pages=0
 ```
 
-```.sh
+```sh
 sudo systemctl restart php*-fpm
 ```
 
 ### MariaDB
 
-```.sh
+```sh
 sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
 ```
 
-```.txt
+```txt
 [mariadbd]
 # Connections
 max_connections = 100
@@ -1543,7 +1555,7 @@ max_heap_table_size = 128M
 join_buffer_size = 4M
 ```
 
-```.sh
+```sh
 sudo systemctl restart mariadb
 ```
 
@@ -1557,12 +1569,12 @@ sudo systemctl restart mariadb
 
 If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (orange cloud) to "DNS only" (gray cloud) for the domain.
 
-```.sh
+```sh
 # Forces Let's Encrypt renewal via CLI (alternative to Virtualmin UI)
 # virtualmin generate-letsencrypt-cert --domain $domain --renew --email-error
 ```
 
-```.sh
+```sh
 # Delete certificate
 # sudo certbot delete --cert-name autodiscover.$domain
 ```
@@ -1571,7 +1583,7 @@ If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (oran
 
 - `Virtualmin` → Choose Virtual Server → `Web Configuration` → `PHP Options` → `PHP script execution mode`: `FPM`.
 
-```.sh
+```sh
 # Alternatively
 # virtualmin modify-web --domain $domain --mode fpm
 # virtualmin list-domains --domain $domain --multiline | grep "PHP mode"
@@ -1584,7 +1596,7 @@ If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (oran
 
 ### Database migration
 
-```.sh
+```sh
 # Import .sql
 mysql -u "$system_user" -p "$database_name" < $domain_root_path/public_html/"$database_name".sql
 
@@ -1594,7 +1606,7 @@ rm $domain_root_path/public_html/"$database_name".sql
 
 ### Files migration
 
-```.sh
+```sh
 # Extract the contents of the "wordpress_export.zip" file to the $domain_root_path/public_html folder
 unzip "$domain_root_path/public_html/wordpress_export.zip" "*" -d $domain_root_path/public_html
 
@@ -1604,7 +1616,7 @@ rm "$domain_root_path/public_html/wordpress_export.zip"
 
 ### Ownership and permission
 
-```.sh
+```sh
 # Set ownership
 chown -R "$system_user" $domain_root_path/public_html
 
@@ -1616,14 +1628,14 @@ chmod 600 $domain_root_path/public_html/wp-config.php
 
 ## Tools
 
-```.sh
+```sh
 # Delete empty folders recursively
 # find /var/www/vhosts/"$domain"/httpdocs/wp-content/uploads -type d -empty -delete
 ```
 
 ### Emails migration
 
-```.sh
+```sh
 imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "password-server1" \
   --host2 $server_ip --user2 "email@domain.com" --password2 "password-server2" \
   --exclude "Spam"
@@ -1631,7 +1643,7 @@ imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "pass
 
 ### Export MariaDB database
 
-```.sh
+```sh
 # Create dump
 mysqldump -u root -p $database_name > $(dirname "$domain_root_path/public_html")/backup.sql
 
@@ -1643,7 +1655,7 @@ rm $(dirname "$domain_root_path/public_html")/backup.sql
 
 ### Logs
 
-```.sh
+```sh
 # Nginx
 tail -n 50 /var/log/nginx/error.log
 tail -n 50 /var/log/virtualmin/${domain}_error_log
@@ -1659,20 +1671,20 @@ tail -n 50 $(dirname "$domain_root_path/public_html")/logs/php_log
 
 ### Cache
 
-```.sh
+```sh
 # Clear nginx cache
 sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
 ```
 
 ### Server stress test
 
-```.sh
+```sh
 ab -n 10 $domain
 ```
 
 #### Virtualmin Nginx module
 
-```.sh
+```sh
 # Verify version
 cat /usr/share/webmin/virtualmin-nginx/module.info | grep version
 

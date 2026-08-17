@@ -8,7 +8,7 @@
 
 ### Python dependencies
 
-```.ps1
+```ps1
 python -m pip install gpxpy pandas werkzeug
 ```
 
@@ -16,7 +16,7 @@ python -m pip install gpxpy pandas werkzeug
 
 #### gpsmycity_tour_import
 
-```.py
+```py
 gpsmycity_tour_import(urls=['https://www.gpsmycity.com/tours/munich-introduction-walking-tour-6446.html', 'https://www.gpsmycity.com/blog/main-sights-to-see-in-augsburg-3414.html', 'https://www.gpsmycity.com/tours/edinburgh-introduction-walking-tour-6397.html'])
 ```
 

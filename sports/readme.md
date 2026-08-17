@@ -78,7 +78,7 @@ Map base: OpenStreetMap (OSM).
 
 #### Python dependencies
 
-```.ps1
+```ps1
 python -m pip install numpy pandas python-dateutil
 ```
 
@@ -94,7 +94,7 @@ python -m pip install numpy pandas python-dateutil
 
 #### Python dependencies
 
-```.ps1
+```ps1
 python -m pip install openpyxl pandas python-dateutil requests
 ```
 

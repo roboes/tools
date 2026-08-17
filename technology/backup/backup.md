@@ -4,7 +4,7 @@
 
 Recovery script for copying all files from a damaged external drive to a healthy one, skipping bad sectors and logging results.
 
-```.ps1
+```ps1
 $drive_damaged = "A:\"
 $drive_output = "B:\RescueBackup"
 
