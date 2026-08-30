@@ -915,8 +915,9 @@
       if (v) filters[col.key] = v;
       else complete = false;
     });
-    if (complete) {
-      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+    const selectedNameForMatch = grid.querySelector('[data-attr="product-name"]')?.value || '';
+    if (complete && selectedNameForMatch) {
+      const match = products.find((p) => p.name === selectedNameForMatch && ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
       if (match) {
         row.dataset.unitPrice = match.price.replace(',', '.');
         nameLine.textContent = '';
@@ -960,8 +961,10 @@
     document.querySelectorAll('.order-row').forEach((row) => {
       row.querySelectorAll('.row-error').forEach((e) => e.remove());
 
+      const selectedName = row.querySelector('[data-attr="product-name"]')?.value || '';
+
       const filters = {};
-      let rowComplete = true;
+      let rowComplete = !!selectedName;
       ATTR_COLUMNS.forEach((col) => {
         const v = row.querySelector(`[data-attr="${col.key}"]`)?.value;
         if (v) filters[col.key] = v;
@@ -977,7 +980,7 @@
         return;
       }
 
-      const match = products.find((p) => ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
+      const match = products.find((p) => p.name === selectedName && ATTR_COLUMNS.every((col) => p.attributes[col.key] === filters[col.key]));
       if (!match) {
         const err = document.createElement('p');
         err.className = 'row-error';

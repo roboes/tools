@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-06-15
+// Last update: 2026-08-25
 
 
 /*
@@ -261,6 +261,7 @@ if (function_exists('WC')) {
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
                     $coupon->set_usage_limit(usage_limit: 1);
+                    $coupon->set_limit_usage_to_x_items(limit_usage_to_x_items: 1); // Only discount 1 course item in the cart, even if multiple eligible courses are present
                     $coupon->set_individual_use(is_individual_use: false);
                     // if (class_exists('WooCommerce_Germanized')) {
                     //     $coupon->update_meta_data('is_voucher', 'no');

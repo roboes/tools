@@ -7,21 +7,21 @@ set -euo pipefail
 
 settings_origin="${1:-origin/main}"
 
-echo "=== Fixing line endings and permissions to match $settings_origin ==="
+echo "=== Fixing line endings and permissions to match ${settings_origin} ==="
 
-git diff "$settings_origin" --name-only | while IFS= read -r file; do
-    [[ -f "$file" ]] || continue
+git diff "${settings_origin}" --name-only | while IFS= read -r file; do
+    [[ -f "${file}" ]] || continue
 
     # Fix line endings
-    dos2unix -q "$file" 2>/dev/null || true
+    dos2unix -q "${file}" 2>/dev/null || true
 
     # Fix permissions to match origin
-    case "$(git ls-tree "$settings_origin" "$file" 2>/dev/null | awk '{print $1}')" in
-        100755) chmod +x "$file" ;;
-        100644) chmod -x "$file" ;;
+    case "$(git ls-tree "${settings_origin}" "${file}" 2>/dev/null | awk '{print $1}')" in
+        100755) chmod +x "${file}" ;;
+        100644) chmod -x "${file}" ;;
     esac
 done
 
 echo ""
 echo "=== Final diff ==="
-git diff "$settings_origin" --name-only
+git diff "${settings_origin}" --name-only

@@ -3,7 +3,7 @@
 
 
 # Start Bash (Unix Shell)
-[ -z "$BASH" ] && exec bash
+[ -z "${BASH}" ] && exec bash
 
 
 # Install gpsbabel
@@ -20,7 +20,7 @@ fi
 
 # For all .gpx files, add faketime with 2 seconds increment between each trackpoint and export it to .tcx
 for file in ./*.gpx; do
-    gpsbabel -t -i gpx -f "$file" -x track,faketime=f20220605200000+2 -o gtrnctr,course=0  -F "${file%.*}.tcx"
+    gpsbabel -t -i gpx -f "${file}" -x track,faketime=f20220605200000+2 -o gtrnctr,course=0  -F "${file%.*}.tcx"
     echo ${file%.*}
 done
 
@@ -32,13 +32,13 @@ done
 file_type="tcx"
 
 files=""
-for file in ./*."$file_type"; do
-    files="$files -f $file"
+for file in ./*."${file_type}"; do
+    files="${files} -f ${file}"
 done
 
-if [ "$file_type" == "tcx" ]; then format="gtrnctr"; elif [ "$file_type" == "fit" ]; then format="garmin_fit"; elif [ "$file_type" == "gpx" ]; then format="gpx"; fi
+if [ "${file_type}" == "tcx" ]; then format="gtrnctr"; elif [ "${file_type}" == "fit" ]; then format="garmin_fit"; elif [ "${file_type}" == "gpx" ]; then format="gpx"; fi
 
-gpsbabel -t -r -w -i $format $files -o gtrnctr,course=0 -F activities_combined.tcx
+gpsbabel -t -r -w -i ${format} ${files} -o gtrnctr,course=0 -F activities_combined.tcx
 
 
 # Merge two .fit files (including heart rate data) into a single .gpx file for Strava upload (order matters)

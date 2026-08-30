@@ -3,7 +3,7 @@
 
 
 # Start Bash (Unix Shell)
-[ -z "$BASH" ] && exec bash
+[ -z "${BASH}" ] && exec bash
 
 
 # Install ghostscript
@@ -43,11 +43,11 @@ fi
 file_type="jpg"
 
 files=""
-for file in ./*."$file_type"; do
-    files="$files $file"
+for file in ./*."${file_type}"; do
+    files="${files} ${file}"
 done
 
-convert $files -quality 100 -density 150 -define pdf:author="" -define pdf:creator="" -define pdf:producer="" -define pdf:title="" images_combined.pdf
+convert ${files} -quality 100 -density 150 -define pdf:author="" -define pdf:creator="" -define pdf:producer="" -define pdf:title="" images_combined.pdf
 
 
 # View .pdf metadata
@@ -56,7 +56,7 @@ pdfinfo images_combined.pdf
 
 # Optical Character Recognition (OCR) PDF document
 ocrmypdf -l por "file_A.pdf" "file_B.pdf"
-# for file in *.pdf; do ocrmypdf -l por "$file" "${file%.pdf}_ocr.pdf"; done
+# for file in *.pdf; do ocrmypdf -l por "${file}" "${file%.pdf}_ocr.pdf"; done
 
 
 # Decrypt PDF password
@@ -90,16 +90,22 @@ soffice --infilter=impress_pdf_import --convert-to ppt "./input.pdf"
 # Convert .md to .docx
 pandoc "input.md" -o "output.docx"
 
+# Convert .md to .html
+pandoc "input.md" -o "input.html" \
+  -f markdown-implicit_figures \
+  --embed-resources --standalone \
+  -H <(echo '<style>body{font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:24px 16px 60px;line-height:1.4;font-size:14px}</style>')
+
 
 # Count the number of files categorized by their root-level directory and file type
 find . -type f | while IFS= read -r file; do
     # Extract the first directory and the file extension
-    dir=$(echo "$file" | cut -d'/' -f2- | awk -F/ '{print $1}')
+    dir=$(echo "${file}" | cut -d'/' -f2- | awk -F/ '{print $1}')
     ext="${file##*.}"
 
     # Ensure the extension is valid (not the whole filename) and is not a path
-    if [ "$ext" != "$file" ] && [[ "$ext" != */* ]]; then
-        ext=$(echo "$ext" | tr '[:upper:]' '[:lower:]')  # Convert extension to lowercase
-        echo "$dir,.$ext"
+    if [ "${ext}" != "${file}" ] && [[ "${ext}" != */* ]]; then
+        ext=$(echo "${ext}" | tr '[:upper:]' '[:lower:]')  # Convert extension to lowercase
+        echo "${dir},.${ext}"
     fi
 done | sort | uniq -c | awk '{count=$1; $1=""; sub(/^ /, ""); gsub(/ ,/, ","); print $0 "," count}'

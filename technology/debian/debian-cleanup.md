@@ -3,9 +3,12 @@
 > [!NOTE]  
 > Last update: 2026-07-26
 
-```.sh
+```sh
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+
+# Refresh all installed snap packages to their latest versions
+sudo snap refresh
 
 # Homebrew update
 brew update && brew upgrade && brew cleanup
@@ -14,7 +17,7 @@ brew update && brew upgrade && brew cleanup
 # sudo journalctl --vacuum-time=7d
 ```
 
-```.sh
+```sh
 # pip cache
 
 ## Check cache size
@@ -24,7 +27,7 @@ python -m pip cache info
 python -m pip cache purge
 ```
 
-```.sh
+```sh
 # Docker cleanup
 
 ## Stopped containers

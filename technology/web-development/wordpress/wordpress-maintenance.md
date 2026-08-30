@@ -3,7 +3,7 @@
 > [!NOTE]  
 > Last update: 2025-11-25
 
-```.sh
+```sh
 # Settings
 domain="website.com"
 domain_root_path="/home/$domain/public_html"
@@ -19,7 +19,7 @@ wordpress_site_subdir="public_html"
 
 ### WP-CLI maintenance commands
 
-```.sh
+```sh
 # Change current directory
 cd "$domain_root_path"
 
@@ -60,7 +60,7 @@ wp wc hpos status
 # wp wc hpos cleanup all
 ```
 
-```.sh
+```sh
 for site in "$wordpress_sites_root_path"/*; do
   if [ -d "$site/$wordpress_site_subdir" ]; then
     echo "========================================="
@@ -273,7 +273,7 @@ echo "All sites processed!"
 echo "========================================="
 ```
 
-```.sh
+```sh
 # Find and replace
 # wp search-replace 'https://oldwebsite.com' 'https://website.com' --dry-run
 ```

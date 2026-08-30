@@ -19,6 +19,8 @@
 # git config --global user.name "username"
 # git config --global --list
 
+## Ignore executable bit changes
+git config --global core.filemode false
 
 # Git ignore
 # https://github.com/github/gitignore/blob/main/Python.gitignore

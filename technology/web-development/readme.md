@@ -10,12 +10,12 @@
 
 ##### Search website for a specific CSS class (using Command-Line Tools)
 
-```.sh
+```sh
 ### Settings
 website="website.com"
 
 ### Change current directory
-cd /var/www/vhosts/"$website"/
+cd /var/www/vhosts/"${website}"/
 
 ### Search through files
 grep -r "css-class"
@@ -23,7 +23,7 @@ grep -r "css-class"
 
 ##### Search website for a specific CSS class (using JavaScript)
 
-```.js
+```js
 console.log(document.querySelectorAll('.css-class'));
 ```
 

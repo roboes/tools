@@ -3,7 +3,7 @@
 > [!NOTE]  
 > Last update: 2026-06-28
 
-```.sh
+```sh
 # Settings
 settings_tv_ip="192.168.178.28"
 settings_custom_launcher="com.overdevs.at4k"
@@ -12,9 +12,9 @@ settings_stock_launcher="com.google.android.tvlauncher"
 
 ## Initial connection
 
-```.sh
+```sh
 # Connect via ADB over network
-adb connect $settings_tv_ip:5555
+adb connect ${settings_tv_ip}:5555
 
 # List connected devices
 adb devices
@@ -22,7 +22,7 @@ adb devices
 
 ## Identifying installed packages
 
-```.sh
+```sh
 # List all installed packages
 adb shell pm list packages
 
@@ -35,7 +35,7 @@ adb shell pm list packages | grep -i <keyword>
 
 ## Removing/disabling bloatware
 
-```.sh
+```sh
 # Remove packages
 adb shell pm uninstall -k --user 0 com.xiaomi.mimusic2
 adb shell pm uninstall -k --user 0 com.xiaomi.statistic

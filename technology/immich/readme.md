@@ -5,35 +5,35 @@
 
 ## Installation
 
-```.sh
+```sh
 # Settings
 domain="website.com"
-domain_root_path="/home/$domain"
+domain_root_path="/home/${domain}"
 subdomain="photos"
 system_user="website"
 # system_user="www-data:www-data"
 postgres_password=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9')
 ```
 
-```.sh
+```sh
 # Create directories
-sudo mkdir -p $domain_root_path/domains/$subdomain.$domain/immich/library
-sudo mkdir -p $domain_root_path/domains/$subdomain.$domain/immich/postgres
-sudo chown -R $system_user:$system_user $domain_root_path/domains/$subdomain.$domain/immich
+sudo mkdir -p ${domain_root_path}/domains/${subdomain}.${domain}/immich/library
+sudo mkdir -p ${domain_root_path}/domains/${subdomain}.${domain}/immich/postgres
+sudo chown -R ${system_user}:${system_user} ${domain_root_path}/domains/${subdomain}.${domain}/immich
 ```
 
-```.sh
+```sh
 # Add the system user to the docker group
-sudo usermod -aG docker $system_user
+sudo usermod -aG docker ${system_user}
 
 # Verify the user is in the docker group
-groups $system_user
+groups ${system_user}
 ```
 
-```.sh
+```sh
 # Create docker-compose.yml - https://github.com/immich-app/immich/releases/latest/download/docker-compose.yml
 # Immich Upload Optimizer - https://github.com/miguelangel-nubla/immich-upload-optimizer
-cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/docker-compose.yml"
+cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/immich/docker-compose.yml"
 name: immich
 
 services:
@@ -108,14 +108,14 @@ volumes:
 EOF
 ```
 
-```.sh
+```sh
 # Create .env file - https://docs.immich.app/install/docker-compose/
-cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/.env"
+cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/immich/.env"
 # The location where your uploaded files are stored
-UPLOAD_LOCATION=$domain_root_path/domains/$subdomain.$domain/immich/library
+UPLOAD_LOCATION=${domain_root_path}/domains/${subdomain}.${domain}/immich/library
 
 # The location where your database files are stored. Network shares are not supported for the database
-DB_DATA_LOCATION=$domain_root_path/domains/$subdomain.$domain/immich/postgres
+DB_DATA_LOCATION=${domain_root_path}/domains/${subdomain}.${domain}/immich/postgres
 
 # To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 # TZ=Etc/UTC
@@ -125,7 +125,7 @@ IMMICH_VERSION=release
 
 # Connection secret for postgres. You should change it to a random password
 # Please use only the characters A-Za-z0-9, without special characters or spaces
-DB_PASSWORD=$postgres_password
+DB_PASSWORD=${postgres_password}
 
 # The values below this line do not need to be changed
 ###################################################################################
@@ -137,8 +137,8 @@ EOF
 
 Original (Lossless/Preservation):
 
-```.sh
-cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
+```sh
+cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/immich/tasks.yaml"
 tasks:
   # JPEG → JXL (lossless JPEG preservation)
   - name: images-jpeg-to-jxl
@@ -216,8 +216,8 @@ EOF
 
 Alternative (Aggressive Storage Saving):
 
-```.sh
-cat <<EOF > "$domain_root_path/domains/$subdomain.$domain/immich/tasks.yaml"
+```sh
+cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/immich/tasks.yaml"
 tasks:
   # Aggressive Image Reduction: Resize to 1000px + Lossy JXL (-d 2.5)
   - name: images-resize-to-jxl
@@ -278,15 +278,15 @@ tasks:
 EOF
 ```
 
-```.sh
-cd $domain_root_path/domains/$subdomain.$domain/immich
-sudo -u $system_user docker compose up -d
+```sh
+cd ${domain_root_path}/domains/${subdomain}.${domain}/immich
+sudo -u ${system_user} docker compose up -d
 
 # Restart docker
 # sudo docker compose restart
 ```
 
-```.sh
+```sh
 # Confirm docker is running
 docker ps
 
@@ -296,32 +296,37 @@ docker ps
 
 Storage Template:
 
-```.txt
+```txt
 {{y}}/{{y}}-{{MM}}-{{dd}}, {{HH}}.{{mm}}.{{ss}}.{{SSS}}_{{assetIdShort}}
 ```
 
-### Cloudflare Zero Trust
+## Cloudflare Zero Trust
 
 Cloudflare → `Zero Trust`.
 
-#### Service Token
+### Service Token
 
-`Access controls` → `Service credentials` → `Service Tokens` → `Add a service token`:
+`Access controls` → `Service credentials` → `Create Service Token`:
 
-- `Service token name`: `Immich Access`.
+- `Service token name`: `Immich Mobile`.
 - `Service Token Duration`: `Non-expiring`.
 
-#### Policy
+### Policies
 
-`Access` → `Policies` → `Add a policy`.
+`Access controls` → `Policies` → `Add a policy`:
 
-`Policy name`: `Immich Access`. `Action`: `Bypass`. `Session duration`: `Same as application session timeout`.
+- Immich: `Policy name`: `Immich`. `Action`: `Allow`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `Emails`.
+- Immich Mobile: `Policy name`: `Immich Mobile`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `Service Token`, `Value`: `Immich Mobile`.
+- ACME Challenge Passthrough: `Policy name`: `ACME Challenge Passthrough`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Everyone`.
 
-`Add rules` → `Include`. `Selector`: `Service Token`. `Value`: `Immich Mobile Access`.
+### Applications
 
-Then, add the newly created policy to your Immich Cloudflare Zero Trust application.
+`Access controls` → `Applications` → `Create new application` → `Self-hosted and private` → `Public DNS` → `Continue with Self-hosted and private`:
 
-#### Security
+- Immich: `Application name`: `Immich`. `Session Duration`: `1 month`. `Public hostname`: `photos.website.com`. `Access policies`: `Select existing policies`: `Immich`, `Immich Mobile`.
+- Immich ACME Challenge Passthrough: `Application name`: `Immich ACME Challenge Passthrough`. `Session Duration`: `24 hours`. `Public hostname`: `photos.website.com/.well-known/acme-challenge/*`. `Access policies`: `Select existing policies`: `ACME Challenge Passthrough`.
+
+### Security
 
 Cloudflare → Website → `Security` → `Security rules`.
 
@@ -331,74 +336,35 @@ Cloudflare → Website → `Security` → `Security rules`.
 - `Expression`: `(http.request.headers["cf-access-client-id"][0] eq "CF-ACCESS-CLIENT-ID")`.
 - `Choose action`: `Skip` (select all `WAF components to skip`).
 
-#### Immich Mobile App
+### Cloudflare Caching
+
+Cloudflare → Website → `Caching` → `Cache Rules`.
+
+1. Cache Bypass
+
+- `Rule name`: `Cache Bypass - Immich`.
+- `If incoming requests match...`: `(starts_with(http.host, "photos."))`
+- `Then...`: `Bypass cache`.
+- `Browser TTL`: `Respect origin TTL`.
+- `Place at`: `Last`.
+
+### Immich Mobile App
 
 Add both `CF-Access-Client-Id` and `CF-Access-Client-Secret` to the Immich mobile app.
 
-### Nginx
+---
 
-/etc/nginx/sites-available/subdomain.domain.com.conf
+## Nginx Directives
 
-```.nginx
+### /etc/nginx/sites-available/photos.website.com.conf
+
+```nginx
 server {
-    # Settings
-    set $domain website.com;
-    set $subdomain subdomain;
-    set $domain_root_path /home/${domain}/domains/${subdomain}.${domain}/public_html;
-    set $php_socket_id 100000000000000;
-    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
-    server_name subdomain.website.com;
-    listen 100.00.000.01;
-    listen 100.00.000.01:443 ssl;
-    listen [1000:0000:0000:0000:0000:0000:0000:0000];
-    listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
-    ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.cert;
-    ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-
-
-    # Main Web Root Setup
-    root ${domain_root_path};
-    index index.php index.htm index.html;
-
-    # Logging
-    access_log /var/log/virtualmin/${domain}_access_log;
-    error_log /var/log/virtualmin/${domain}_error_log warn;
-
-
-    # Rewrites and Redirects
-
-    ## Admin & Webmail redirects
-    if ($host = webmail.${domain}) {
-        rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
-    }
-    if ($host = admin.${domain}) {
-        rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
-    }
-
-    ## AWStats CGI rewrite
-    rewrite /awstats/awstats.pl /cgi-bin/awstats.pl;
-
-    ## Well-known and ACME challenges for SSL certificate renewal
-    location ^~ /.well-known/acme-challenge/ {
-        allow all;
-        default_type "text/plain";
-        add_header Content-Type text/plain;
-        try_files $uri =404;
-    }
-
-    location ^~ /.well-known/ {
-        try_files $uri /;
-    }
-
-    # Location Blocks - General & Security
-
-    ## Block access to sensitive files
-    location ~ ^/\.user\.ini {
-        deny all;
-    }
+    # ...
 
     client_max_body_size 50000M;
 
+    ## Main application entry point
     location / {
         proxy_pass http://127.0.0.1:2283;
         proxy_set_header Host $host;
@@ -425,14 +391,14 @@ server {
 }
 ```
 
-```.sh
+```sh
 # Restart Nginx
-sudo systemctl reload nginx
+nginx -t && systemctl reload nginx
 ```
 
 ### Bulk Upload
 
-```.sh
+```sh
 # (Server) Install Immich CLI
 sudo npm i -g @immich/cli
 
@@ -448,11 +414,11 @@ npx @immich/cli@latest upload --recursive "./"
 
 ## Update
 
-```.sh
-cd $domain_root_path/domains/$subdomain.$domain/immich
+```sh
+cd ${domain_root_path}/domains/${subdomain}.${domain}/immich
 ```
 
-```.sh
+```sh
 # Stop Immich
 docker compose down
 
@@ -463,7 +429,7 @@ docker compose pull
 docker compose up -d
 ```
 
-```.sh
+```sh
 # Clean up old images
 docker image prune -f
 ```
