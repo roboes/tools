@@ -21,6 +21,7 @@ function WooCommerceOrdersRetrieve() {
     woocommerce_site_url: 'https://website.com',
     woocommerce_consumer_key: 'ck_xxxxxxxx',
     woocommerce_consumer_secret: 'cs_xxxxxxxx',
+    integration_header_value: 'google-apps-script-integration',
     google_sheets_id: '1ABC',
     google_sheets_tab_name: 'sales_orders_articles',
     max_orders_per_run: 1000, // Set to 0 for unlimited
@@ -64,7 +65,7 @@ function WooCommerceOrdersRetrieve() {
           method: 'get',
           headers: {
             Authorization: 'Basic ' + Utilities.base64Encode(options.woocommerce_consumer_key + ':' + options.woocommerce_consumer_secret),
-            'X-App-Name': 'woocommerce-orders-retrieve-to-google-sheets',
+            'X-App-Name': options.integration_header_value,
           },
           muteHttpExceptions: true,
         });

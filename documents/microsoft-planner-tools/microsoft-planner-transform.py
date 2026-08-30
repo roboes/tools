@@ -14,16 +14,15 @@ globals().clear()
 
 
 # Import packages
-from datetime import datetime
 import os
 import shutil
+from datetime import datetime
 
+import pandas as pd
+import xlwings as xw
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
-import pandas as pd
-import xlwings as xw
-
 
 ###########
 # Functions
@@ -190,7 +189,7 @@ def microsoft_planner_transform(
 ):
     """Create a tasks summary for the most recent export and compare both existing and new tasks marked as completed during each month, saving the output as a Microsoft Excel file."""
     # Create variables
-    execution_start = datetime.now()
+    execution_start = datetime.now().astimezone()
 
     # Check if the output file needs to be copied to the output directory
     if os.path.dirname(input_filepath) != output_path:
@@ -325,7 +324,7 @@ def microsoft_planner_transform(
                             startcol=0,
                         )
 
-                    print('')
+                    print()
                     print(f"'{file_name}' file was updated in the '{output_path}' folder.")
 
             else:
@@ -358,7 +357,7 @@ def microsoft_planner_transform(
                             freeze_panes=(1, 0),
                         )
 
-                print('')
+                print()
                 print(f"'{file_name}' file was created and saved to the '{output_path}' folder.")
 
             if len(microsoft_planner_checklists_df) > 0:
@@ -404,8 +403,8 @@ def microsoft_planner_transform(
                     app.quit()
 
     # Execution time
-    print('')
-    print(f'Execution time: {datetime.now() - execution_start}')
+    print()
+    print(f'Execution time: {datetime.now().astimezone() - execution_start}')
 
 
 def microsoft_excel_pivot_table_refresh(*, input_filepath, sheet_name, pivot_table_name):
@@ -423,11 +422,11 @@ def microsoft_excel_pivot_table_refresh(*, input_filepath, sheet_name, pivot_tab
         # Save the workbook back to the file
         workbook.save(filename=input_filepath)
 
-        print('')
+        print()
         print(f"Pivot table '{pivot_table_name}' was refreshed.")
 
     else:
-        print('')
+        print()
         print(f"Pivot table '{pivot_table_name}' was not found.")
 
 

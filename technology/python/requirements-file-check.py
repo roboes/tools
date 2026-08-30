@@ -14,8 +14,9 @@
 
 # Import packages
 import os
-import requests
 import re
+
+import requests
 
 
 def get_latest_version(*, package_name):

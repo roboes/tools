@@ -2,7 +2,7 @@
 
 ## Windows Updates
 
-```.ps1
+```ps1
 # Update Windows applications
 winget upgrade --all --accept-package-agreements --silent
 
@@ -15,9 +15,9 @@ python -m pip_review --local --auto
 
 ### Windows Subsystem for Linux (WSL)
 
-```.bash
+```bash
 # Start Windows Subsystem for Linux (WSL)
-[ -z "$BASH" ] && exec bash
+[ -z "${BASH}" ] && exec bash
 
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean

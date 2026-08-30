@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Automated course coupon system
-// Last update: 2026-06-15
+// Last update: 2026-08-25
 
 
 /*
@@ -27,7 +27,7 @@ Notes:
 */
 
 /*
-// Manually generate training coupon (100%)
+// Manually generate training coupon (100%) - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'       => 'Firstname Lastname',
     'email'      => 'email@website.com',
@@ -38,7 +38,7 @@ generate_coupon_on_purchase(input: [
 */
 
 /*
-// Manually generate a fixed cart discount (gift card) coupon
+// Manually generate a fixed cart discount (gift card) coupon - sends coupon email + PDF to customer
 generate_coupon_on_purchase(input: [
     'name'     => 'Firstname Lastname',
     'email'    => 'email@website.com',
@@ -110,7 +110,7 @@ if (!$found) echo "Error: Could not match coupon #{$coupon_id} to any item in Or
 
 
 
-// Requires Dompdf 3.1.4 (https://github.com/dompdf/dompdf) installed via Composer:
+// Requires Dompdf 3.1.6 (https://github.com/dompdf/dompdf) installed via Composer:
 // cd /home/website.com/public_html/wp-content/
 // composer require dompdf/dompdf
 use Dompdf\Dompdf;
@@ -261,6 +261,7 @@ if (function_exists('WC')) {
                     $coupon->set_amount(amount: 100);
                     $coupon->set_discount_type(discount_type: 'percent');
                     $coupon->set_usage_limit(usage_limit: 1);
+                    $coupon->set_limit_usage_to_x_items(limit_usage_to_x_items: 1); // Only discount 1 course item in the cart, even if multiple eligible courses are present
                     $coupon->set_individual_use(is_individual_use: false);
                     // if (class_exists('WooCommerce_Germanized')) {
                     //     $coupon->update_meta_data('is_voucher', 'no');

@@ -1,5 +1,5 @@
 // Preprocess Quarto files (.qmd) for Prettier
-// Last update: 2025-10-26
+// Last update: 2026-08-09
 
 // Notes: Preprocess a Quarto file to fix common formatting issues with Prettier
 
@@ -21,21 +21,25 @@ function preprocessQuartoFile(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
+    let linesAdded = false;
 
     const modifiedLines = lines.reduce((acc, line, i) => {
       const trimmed = line.trim();
       const isColonOnly = /^:+$/.test(trimmed);
 
       if (isColonOnly && acc.length > 0 && acc[acc.length - 1].trim() !== '') {
-        acc.push(''); // Add a blank line before colon-only line
+        acc.push('');
+        linesAdded = true;
       }
 
       acc.push(line);
       return acc;
     }, []);
 
-    fs.writeFileSync(filePath, modifiedLines.join('\n'), 'utf8');
-    console.log(`Successfully added blank lines to ${filePath}`);
+    if (linesAdded) {
+      fs.writeFileSync(filePath, modifiedLines.join('\n'), 'utf8');
+      console.log(`Successfully added blank lines to ${filePath}`);
+    }
   } catch (err) {
     console.error('Error processing file:', err.message);
     process.exit(1);

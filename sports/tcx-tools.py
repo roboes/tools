@@ -18,7 +18,6 @@ import glob
 import os
 import re
 
-
 # Settings
 
 ## Set working directory
@@ -82,8 +81,8 @@ def tcx_combine(*, directory, filepath_output):
             )
             file_text = file_text.split(sep='\n')
 
-            index_activity_start = [index for index, item in enumerate(file_text) if item.startswith('<Activity Sport')][0]
-            index_activity_end = [index for index, item in enumerate(file_text) if item.endswith('</Activity>')][0]
+            index_activity_start = next(index for index, item in enumerate(file_text) if item.startswith('<Activity Sport'))
+            index_activity_end = next(index for index, item in enumerate(file_text) if item.endswith('</Activity>'))
 
             if index_activity_start == index_activity_end:
                 file_text = ''.join(file_text[index_activity_start])

@@ -5,16 +5,16 @@
 
 ## Installation
 
-```.sh
+```sh
 # Settings
 domain="website.com"
-domain_root_path="/home/$domain"
+domain_root_path="/home/${domain}"
 subdomain="subdomain"
 system_user="system_user"
-installation_target="vps"
+installation_target="pi"
 ```
 
-```
+```sh
 if [ "${installation_target}" = "pi" ]; then
   installation_path="/home/${system_user}"
 else
@@ -22,17 +22,17 @@ else
 fi
 ```
 
-```.sh
+```sh
 if [ "${installation_target}" = "vps" ]; then
     # Create subdomain
-    virtualmin create-domain --domain $subdomain.$domain --parent $domain --dir --logrotate --virtualmin-nginx --virtualmin-awstats
+    virtualmin create-domain --domain ${subdomain}.${domain} --parent ${domain} --dir --logrotate --virtualmin-nginx --virtualmin-awstats
 
     # List domains
     virtualmin list-domains --name-only
 fi
 ```
 
-```.sh
+```sh
 # Create directories
 if [ "${installation_target}" = "pi" ]; then
     sudo mkdir -p ${installation_path}/homeassistant
@@ -46,10 +46,10 @@ if [ "${installation_target}" = "pi" ]; then
 fi
 
 sudo mkdir -p ${installation_path}/homeassistant/config
-sudo chown -R $system_user:$system_user ${installation_path}/homeassistant
+sudo chown -R ${system_user}:${system_user} ${installation_path}/homeassistant
 ```
 
-```.sh
+```sh
 # Add the system user to the docker group
 sudo usermod -aG docker ${system_user}
 
@@ -57,7 +57,7 @@ sudo usermod -aG docker ${system_user}
 groups ${system_user}
 ```
 
-```.sh
+```sh
 # Create docker-compose.yml - https://www.home-assistant.io/installation/alternative/#docker-compose
 if [ "${installation_target}" = "vps" ]; then
 cat <<EOF > "${installation_path}/homeassistant/docker-compose.yml"
@@ -119,7 +119,7 @@ services:
     image: ghcr.io/blakeblackshear/frigate:stable
     privileged: true
     restart: unless-stopped
-    shm_size: "128mb"
+    shm_size: "256mb"
     volumes:
       - "${installation_path}/homeassistant/frigate:/config"
       - /etc/localtime:/etc/localtime:ro
@@ -138,12 +138,20 @@ services:
       - FRIGATE_CAMERA_1_IP=192.168.178.02
       - FRIGATE_CAMERA_1_USERNAME=camera_username
       - FRIGATE_CAMERA_1_PASSWORD=camera_password
+      - FRIGATE_CAMERA_2_NAME=camera_name
+      - FRIGATE_CAMERA_2_IP=192.168.178.02
+      - FRIGATE_CAMERA_2_USERNAME=camera_username
+      - FRIGATE_CAMERA_2_PASSWORD=camera_password
+      - FRIGATE_CAMERA_3_NAME=camera_name
+      - FRIGATE_CAMERA_3_IP=192.168.178.02
+      - FRIGATE_CAMERA_3_USERNAME=camera_username
+      - FRIGATE_CAMERA_3_PASSWORD=camera_password
 
 EOF
 fi
 ```
 
-```.sh
+```sh
 if [ "${installation_target}" = "vps" ]; then
     # Find Docker network details
     docker network inspect bridge | grep Gateway
@@ -153,7 +161,7 @@ if [ "${installation_target}" = "vps" ]; then
 fi
 ```
 
-```.txt
+```txt
 default_config:
 
 http:
@@ -164,32 +172,32 @@ http:
     - 172.16.0.0/12
 ```
 
-```.sh
+```sh
 cd ${installation_path}/homeassistant
 sudo -u ${system_user} docker compose up -d
 ```
 
-```.sh
+```sh
 # Install HACS (Home Assistant Community Store) directly into the running container
 docker exec -it "homeassistant_${system_user}" bash -c "wget -O - https://get.hacs.xyz | bash -"
 
-# Restart the compose stack to load HACS components into memory
+# Restart containers to load HACS components into memory
 docker compose down && docker compose up -d --remove-orphans
 ```
 
-```.sh
+```sh
 # Confirm docker is running
 docker ps
 ```
 
-```.sh
+```sh
 # Start docker
 # sudo docker start "homeassistant_${system_user}"
 
 # Stop docker
 # sudo docker stop "homeassistant_${system_user}"
 
-# Restart docker
+# Restart containers
 # docker compose down && docker compose up -d --remove-orphans
 
 # Logs
@@ -199,7 +207,7 @@ docker ps
 
 ### Recordings
 
-```.sh
+```sh
 if [ "${installation_target}" = "pi" ]; then
 cat <<EOF > "${installation_path}/homeassistant/mosquitto/config/mosquitto.conf"
 listener 1883
@@ -210,7 +218,7 @@ EOF
 fi
 ```
 
-```.sh
+```sh
 if [ "${installation_target}" = "pi" ]; then
 cat <<EOF > "${installation_path}/homeassistant/frigate/config.yml"
 mqtt:
@@ -221,25 +229,26 @@ mqtt:
 detectors:
   cpu:
     type: cpu
-    num_threads: 3
+    num_threads: 2
 
 ffmpeg:
   hwaccel_args: preset-rpi-64-h264
 
 detect:
+  enabled: false
   width: 640
   height: 360
-  fps: 5
+  fps: 1
 
 objects:
   track:
     - person
-    - bird
-    - cat
-    - dog
-    - bicycle
-    - car
-    - motorcycle
+    # - bird
+    # - cat
+    # - dog
+    # - bicycle
+    # - car
+    # - motorcycle
   filters:
     person:
       min_score: 0.65
@@ -252,9 +261,9 @@ objects:
 record:
   enabled: true
   continuous:
-    days: 7
+    days: 2
   motion:
-    days: 7
+    days: 14
   alerts:
     retain:
       days: 14
@@ -272,7 +281,10 @@ snapshots:
 
 cameras:
   camera_1:
-    enabled: True
+    enabled: true
+    motion:
+      threshold: 30
+      contour_area: 100
     record:
       enabled: true
     ffmpeg:
@@ -283,6 +295,39 @@ cameras:
         - path: rtsp://{FRIGATE_CAMERA_1_USERNAME}:{FRIGATE_CAMERA_1_PASSWORD}@{FRIGATE_CAMERA_1_IP}/stream2
           roles:
             - detect
+
+  camera_2:
+    enabled: true
+    motion:
+      threshold: 30
+      contour_area: 100
+    record:
+      enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_CAMERA_2_USERNAME}:{FRIGATE_CAMERA_2_PASSWORD}@{FRIGATE_CAMERA_2_IP}/stream1
+          roles:
+            - record
+        - path: rtsp://{FRIGATE_CAMERA_2_USERNAME}:{FRIGATE_CAMERA_2_PASSWORD}@{FRIGATE_CAMERA_2_IP}/stream2
+          roles:
+            - detect
+
+  camera_3:
+    enabled: false
+    motion:
+      threshold: 30
+      contour_area: 100
+    record:
+      enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_CAMERA_3_USERNAME}:{FRIGATE_CAMERA_3_PASSWORD}@{FRIGATE_CAMERA_3_IP}/stream1
+          roles:
+            - record
+        - path: rtsp://{FRIGATE_CAMERA_3_USERNAME}:{FRIGATE_CAMERA_3_PASSWORD}@{FRIGATE_CAMERA_3_IP}/stream2
+          roles:
+            - detect
+
 EOF
 fi
 ```
@@ -293,7 +338,7 @@ Backup to the VPS.
 
 In Raspberry Pi:
 
-```.sh
+```sh
 # Settings
 settings_pi_system_user="system_user"
 settings_vps_user="${settings_pi_system_user}_homeassistant"
@@ -301,7 +346,7 @@ settings_vps_ip="10.6.0.1"
 settings_vps_backup_path="/backups/homeassistant/${settings_pi_system_user}"
 ```
 
-```.sh
+```sh
 # Create backup script
 cat <<EOF > /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh
 #!/bin/bash
@@ -339,14 +384,14 @@ EOF
 # Ensure permissions are correct
 chmod +x /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh
 
-# Add to crontab — runs daily at 3am
+# Add to crontab - runs every 12 hours (00:00 and 12:00)
 (crontab -u ${settings_pi_system_user} -l 2>/dev/null; echo "0 */12 * * * /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.sh >> /home/${settings_pi_system_user}/homeassistant/homeassistant-backup.log 2>&1") | crontab -u ${settings_pi_system_user} -
 
 # Verify
 crontab -u ${settings_pi_system_user} -e
 ```
 
-```.sh
+```sh
 # Generate SSH key pair
 ssh-keygen -t ed25519 \
   -C "pi-backup" \
@@ -354,14 +399,14 @@ ssh-keygen -t ed25519 \
   -N ""
 ```
 
-```.sh
+```sh
 # Copy the SSH public key
 cat /home/${settings_pi_system_user}/.ssh/id_backup.pub
 ```
 
 In the VPS:
 
-```.sh
+```sh
 # Settings
 domain="website.com"
 subdomain="subdomain"
@@ -369,12 +414,12 @@ settings_pi_system_user="system_user"
 settings_vps_backup_path="/backups/homeassistant/${settings_pi_system_user}"
 ```
 
-```.sh
+```sh
 # Create the user with a home directory and bash shell
 useradd -m -s /bin/bash ${settings_pi_system_user}_homeassistant
 ```
 
-```.sh
+```sh
 # Create .ssh directory
 mkdir -p /home/${settings_pi_system_user}_homeassistant/.ssh
 nano /home/${settings_pi_system_user}_homeassistant/.ssh/authorized_keys
@@ -383,28 +428,28 @@ nano /home/${settings_pi_system_user}_homeassistant/.ssh/authorized_keys
 
 Configure SSH to use key-based authentication by adding "${settings_pi_system_user}\_homeassistant" to the `AllowUsers` directive.
 
-```.sh
+```sh
 sudo nano /etc/ssh/sshd_config
 ```
 
-```.txt
+```txt
 PubkeyAuthentication yes
 AllowUsers ${settings_pi_system_user}_homeassistant
 ```
 
-```.sh
+```sh
 chmod 700 /home/${settings_pi_system_user}_homeassistant/.ssh
 chmod 600 /home/${settings_pi_system_user}_homeassistant/.ssh/authorized_keys
 chown -R ${settings_pi_system_user}_homeassistant:${settings_pi_system_user}_homeassistant /home/${settings_pi_system_user}_homeassistant/.ssh
 ```
 
-```.sh
+```sh
 # Create backup directory
 mkdir -p ${settings_vps_backup_path}
 chown -R ${settings_pi_system_user}_homeassistant:${settings_pi_system_user}_homeassistant ${settings_vps_backup_path}
 ```
 
-```.sh
+```sh
 # Restart SSH
 sudo systemctl restart ssh
 ```
@@ -418,37 +463,47 @@ sudo systemctl restart ssh
 
 Expose local Home Assistant instance using Nginx and WireGuard.
 
-```.sh
+```sh
 # Settings
 settings_pi_system_user="system_user"
 ```
 
-```.sh
+```sh
 nano "/home/${settings_pi_system_user}/homeassistant/config/configuration.yaml"
 ```
 
 Add:
 
-```.yaml
+```yaml
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 10.6.0.1
 ```
 
-```.sh
-# Restart Docker
+```sh
+# Restart containers
 cd /home/${settings_pi_system_user}/homeassistant
 docker compose down && docker compose up -d --remove-orphans
 ```
 
-### Cloudflare Zero Trust
+## Cloudflare Zero Trust
 
 Cloudflare → `Zero Trust`.
 
-#### Service Token
+### Policies
 
-`Access controls` → `Applications` → `Create new application` → `Self-hosted and private` → `Continue with Self-hosted and private`.
+`Access controls` → `Policies` → `Add a policy`:
+
+- Home Assistant: `Policy name`: `Home Assistant`. `Action`: `Allow`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `Emails`.
+- ACME Challenge Passthrough: `Policy name`: `ACME Challenge Passthrough`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Everyone`.
+
+### Applications
+
+`Access controls` → `Applications` → `Create new application` → `Self-hosted and private` → `Public DNS` → `Continue with Self-hosted and private`:
+
+- Home Assistant: `Application name`: `Home Assistant`. `Session Duration`: `1 month`. `Public hostname`: `homeassistant.website.com`. `Access policies`: `Select existing policies`: `Home Assistant`.
+- Home Assistant ACME Challenge Passthrough: `Application name`: `Home Assistant ACME Challenge Passthrough`. `Session Duration`: `24 hours`. `Public hostname`: `homeassistant.website.com/.well-known/acme-challenge/*`. `Access policies`: `Select existing policies`: `ACME Challenge Passthrough`.
 
 ### Cloudflare Caching
 
@@ -456,24 +511,19 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 1. Cache Bypass
 
-- Rule name: `Cache Bypass - Home Assistant`.
-- If incoming requests match...: `Custom filter expression`:
+- `Rule name`: `Cache Bypass - Home Assistant`.
+- `If incoming requests match...`: `(starts_with(http.host, "homeassistant."))`
+- `Then...`: `Bypass cache`.
+- `Browser TTL`: `Respect origin TTL`.
+- `Place at`: `Last`.
 
-```.txt
-(starts_with(http.host, "homeassistant."))
-```
+---
 
-- Then... `Bypass cache`.
+## Nginx Directives
 
-- Browser TTL: `Respect origin TTL`.
+### /etc/nginx/sites-available/homeassistant.website.com.conf
 
-- Place at: `Last`.
-
-### Nginx
-
-/etc/nginx/sites-available/subdomain.domain.com.conf
-
-```.nginx
+```nginx
 server {
     # ...
 
@@ -507,7 +557,7 @@ server {
 }
 ```
 
-```.sh
+```sh
 # Restart Nginx
 nginx -t && systemctl reload nginx
 ```

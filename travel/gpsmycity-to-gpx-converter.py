@@ -14,15 +14,14 @@ globals().clear()
 
 
 # Import packages
-from io import StringIO
 import os
 import re
+from io import StringIO
 
 import gpxpy
 import pandas as pd
 import requests
 from werkzeug.utils import secure_filename
-
 
 ###########
 # Functions
@@ -39,12 +38,12 @@ def gpsmycity_tour_import(*, urls, output_folder):
         # Create variables
 
         # tour_name
-        tour_name = [s for s in page_source if s.startswith('<TITLE>') and s.endswith('</TITLE>\r')][0]
+        tour_name = next(s for s in page_source if s.startswith('<TITLE>') and s.endswith('</TITLE>\r'))
         tour_name = re.sub(pattern=r'^<TITLE>', repl=r'', string=tour_name)
         tour_name = re.sub(pattern=r'</TITLE>\r$', repl=r'', string=tour_name)
 
         # tour_map
-        tour_map = [s for s in page_source if s.startswith('jarr')][0]
+        tour_map = next(s for s in page_source if s.startswith('jarr'))
         tour_map = re.sub(pattern=r'^jarr = ', repl=r'', string=tour_map)
         tour_map = re.sub(pattern=r';\r$', repl=r'', string=tour_map)
 

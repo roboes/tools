@@ -14,12 +14,11 @@ globals().clear()
 
 
 # Import packages
-from importlib.util import spec_from_file_location
 import os
 import sys
+from importlib.util import spec_from_file_location
 
 import pandas as pd
-
 
 # Import custom packages
 sys.dont_write_bytecode = True

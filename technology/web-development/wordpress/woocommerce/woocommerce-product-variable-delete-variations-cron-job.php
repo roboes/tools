@@ -1,7 +1,7 @@
 <?php
 
 // WordPress WooCommerce - Variable product delete variations (cron job)
-// Last update: 2026-02-04
+// Last update: 2026-08-24
 
 
 // Unschedule all events attached to a given hook
@@ -28,32 +28,42 @@ add_action(hook_name: 'init', callback: function (): void {
 
 add_action(hook_name: 'cron_job_schedule_variable_product_delete_variations', callback: 'product_variable_delete_variations', priority: 10, accepted_args: 0);
 
+if (!function_exists('get_product_translation_ids')) {
+    function get_product_translation_ids(int $product_id): array
+    {
+        $ids = [];
 
-function product_variable_delete_variations(): void
+        $languages = apply_filters('wpml_active_languages', null, ['skip_missing' => 0]);
+
+        if (is_array($languages)) {
+            $type = get_post_type($product_id) ?: 'product';
+
+            foreach (array_keys($languages) as $lang_code) {
+                $translated_id = apply_filters('wpml_object_id', $product_id, $type, false, $lang_code);
+                if ($translated_id) {
+                    $ids[] = (int) $translated_id;
+                }
+            }
+        }
+
+        if (empty($ids)) {
+            $ids[] = $product_id;
+        }
+
+        return array_unique($ids);
+    }
+}
+
+function product_variable_delete_variations(array $product_ids = [17739, 22204], bool $delete = true): void
 {
     if (!function_exists('WC')) {
         return;
     }
 
-    // Settings
-    $product_ids = [17739, 22204];
-    $delete = true;
-
     $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
 
     foreach ($product_ids as $product_id) {
-        $product_ids_to_process = [];
-
-        // Handle Polylang/WPML translations
-        $translations = apply_filters('wpml_get_element_translations', null, $product_id, 'post_product');
-
-        if (!empty($translations) && is_array($translations)) {
-            $product_ids_to_process = array_merge($product_ids_to_process, array_values(array_filter(array_column($translations, 'element_id'))));
-        } else {
-            $product_ids_to_process[] = (int) $product_id;
-        }
-
-        $product_ids_to_process = array_unique($product_ids_to_process);
+        $product_ids_to_process = get_product_translation_ids($product_id);
 
         // Loop through all product IDs (original + translations)
         foreach ($product_ids_to_process as $product_id_current) {

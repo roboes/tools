@@ -15,12 +15,11 @@ globals().clear()
 
 # Import packages
 import os
-import defusedxml.ElementTree as ET
 
-from dateutil import parser
+import defusedxml.ElementTree as ET
 import numpy as np
 import pandas as pd
-
+from dateutil import parser
 
 ###########
 # Functions

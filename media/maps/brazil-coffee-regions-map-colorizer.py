@@ -29,7 +29,6 @@ import re
 
 from lxml import etree
 
-
 HIGHLIGHT_STROKE = '#ffffff'  # stroke for coloured regions only
 
 COLORS = {
@@ -250,7 +249,7 @@ def process_svg(*, input_file, output_file):
             print(f'   - {n}')
 
     # Find names that were in your list but not in the .svg
-    not_found_list = [name for name in lookup.keys() if name not in matched_keys]
+    not_found_list = [name for name in lookup if name not in matched_keys]
 
     if not_found_list:
         print(f'\n❌ {len(not_found_list)} cities were NOT found in the .svg:')

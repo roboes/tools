@@ -15,18 +15,18 @@ globals().clear()
 
 # Import packages
 import glob
-from io import BytesIO
 import json
 import os
-from pathlib import Path
 import re
 import shutil
-from zipfile import ZipFile, ZIP_DEFLATED
+from io import BytesIO
+from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
-from dateutil import parser
 import numpy as np
 import pandas as pd
 import requests
+from dateutil import parser
 
 # fit2gpx
 with ZipFile(
@@ -42,7 +42,6 @@ del zip_file
 os.chdir(path=os.path.join(os.path.expanduser('~'), 'Downloads', 'fit2gpx', 'fit2gpx-main', 'src'))
 
 from fit2gpx import Converter
-
 
 ###########
 # Functions

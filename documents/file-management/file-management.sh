@@ -3,7 +3,7 @@
 
 
 # Start Bash (Unix Shell)
-[ -z "$BASH" ] && exec bash
+[ -z "${BASH}" ] && exec bash
 
 
 # Install rnr
@@ -62,5 +62,5 @@ patterns=(
 
 ## Loop through patterns and replacements
 for ((i=0; i<${#patterns[@]}; i+=2)); do
-    rnr regex --include-dirs --recursive "${patterns[$i]}" "${patterns[$i+1]}" './' # --force
+    rnr regex --include-dirs --recursive "${patterns[${i}]}" "${patterns[${i}+1]}" './' # --force
 done

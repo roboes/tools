@@ -10,18 +10,18 @@
 [Xenu's Link Sleuth](https://home.snafu.de/tilman/xenulink.html): Checks website for broken links.\
 [WinSCP](https://winscp.net): Search for automatically generated WordPress media sizes using the following command:
 
-```.sh
+```sh
 *-???x???.jpg
 ```
 
 After removing all unused media sizes, regenerate thumbnails using [Force Regenerate Thumbnails](https://wordpress.org/plugins/force-regenerate-thumbnails/) and clean up the orphaned media entries.
 
-```.php
+```php
 # See defined functions
 get_defined_functions()['user'];
 ```
 
-```.php
+```php
 # List all registered hooks
 global $wp_filter;
 print_r(array_keys($wp_filter));
@@ -54,7 +54,7 @@ if (isset($wp_filter[$hook_name])) {
 
 Disable the Polylang language cookie by adding the following line to `wp-config.php`:
 
-```.php
+```php
 define('PLL_COOKIE', false);
 ```
 
@@ -62,7 +62,7 @@ define('PLL_COOKIE', false);
 
 [World Flags](https://gitlab.com/catamphetamine/country-flag-icons/-/tree/master/flags/3x2).
 
-```.sh
+```sh
 for file in ./*.svg; do
     magick convert -monitor "$file" -resize 22x13 "${file%.svg}.png"
 done

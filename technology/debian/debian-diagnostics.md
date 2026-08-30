@@ -5,7 +5,7 @@
 
 ## System Check
 
-```.sh
+```sh
 # Failed services
 systemctl --failed
 
@@ -33,7 +33,7 @@ sudo docker ps --format "table {{.Names}}\t{{.Ports}}"
 
 ## Fixes
 
-```.sh
+```sh
 # Disable rpcbind
 if systemctl is-active --quiet rpcbind; then
     sudo systemctl disable rpcbind --now

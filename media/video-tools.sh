@@ -3,7 +3,7 @@
 
 
 # Start Bash (Unix Shell)
-[ -z "$BASH" ] && exec bash
+[ -z "${BASH}" ] && exec bash
 
 
 # Install FFmpeg
@@ -29,12 +29,12 @@ ffmpeg -i "./input.avi" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:
 
 # Batch convert .avi to .mp4 preserving quality and deinterlacing (lossy compression) (recursive)
 find . -type f -name "*.avi" | while IFS= read -r file; do
-  ffmpeg -nostdin -i "$file" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k "${file%.*}.mp4"
+  ffmpeg -nostdin -i "${file}" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k "${file%.*}.mp4"
 done
 
 # Batch convert .avi to .mp4 preserving quality and deinterlacing (lossy compression)
 find . -maxdepth 1 -type f -name "*.avi" | while IFS= read -r file; do
-  ffmpeg -nostdin -i "$file" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k "${file%.*}.mp4"
+  ffmpeg -nostdin -i "${file}" -vf yadif -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k "${file%.*}.mp4"
 done
 
 # Reduce video size (web)
