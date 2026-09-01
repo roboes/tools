@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-08-16
+> Last update: 2026-09-01
 
 ---
 
@@ -46,9 +46,9 @@ domain_root_path="/home/${domain}"
 subdomain="hr"
 system_user="website"
 
-urlaubsverwaltung_version="6.7.0"
+urlaubsverwaltung_version="6.9.0"
 zeiterfassung_version="3.2.2"
-keycloak_version="26.7.1"
+keycloak_version="26.7.3"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
@@ -698,13 +698,33 @@ echo "==> Group: ${keycloak_user_group}"
 git clone --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 cd /tmp/zeiterfassung-build
 
+# Fetch PR branches explicitly from GitHub
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
 git fetch origin pull/2205/head:pr-2205
 git fetch origin pull/2217/head:pr-2217
 
-git checkout -b my-build origin/main
-git merge pr-2184 pr-2189 pr-2205 pr-2217
+# Create new local build branch starting from origin/main
+git checkout -B my-build origin/main
+
+# Merge PR 2189 first (establishes the new dropdown menu UI)
+git merge pr-2189 -m "Merge PR 2189"
+
+# Merge remaining PRs ONE BY ONE sequentially (resolves template collisions automatically)
+git merge pr-2184 -X ours --no-edit
+git merge pr-2205 -X ours --no-edit
+git merge pr-2217 -X ours --no-edit
+
+# Apply PR 2217's reverse-proxy fix (@{...}) to PR 2189's dropdown links
+sed -i 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
+sed -i 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
+
+# Commit the URL fix
+git add src/main/resources/templates/reports/user-report-*.html
+git commit -m "Apply PR 2217 context path fix to PR 2189 dropdown links"
+
+# Verify conflict markers are completely gone
+grep -rn "merge_file" src/ && echo "ERROR: Conflicts present!" || echo "SUCCESS: Clean build ready!"
 
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
@@ -888,10 +908,9 @@ git clone --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github
 cd /tmp/urlaubsverwaltung-build
 
 git fetch origin pull/6522/head:pr-6522
-git fetch origin pull/6521/head:pr-6521
 
 git checkout -b my-build origin/main
-git merge pr-6522 pr-6521
+git merge pr-6522
 
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
@@ -1158,6 +1177,111 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 - `Browser TTL`: `Respect origin TTL`.
 - `Place at`: `Last`.
 
+#### Dynamic IP
+
+##### Lists
+
+Cloudflare → `Zero Trust` →`Reuseable components` →`Lists` →`Create manual list`:
+
+- `List name`: `Office IPs`.
+- `List type`: `IP addresses`.
+- `Add entry`: Current IPv4/32 (Placeholder as it will get overwritten later).
+
+Press `Save`.
+
+Get `Account ID` and `List ID`: Go back into the list, from the URL: `https://dash.cloudflare.com/<account_id>/one/reusable-components/lists/<list_id>`.
+
+##### Policies
+
+`Access controls` → `Policies` → `Add a policy`:
+
+- HR Portal IP Bypass: `Policy name`: `HR Portal IP Bypass`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `IP list`: `Office IPs`.
+
+##### Token
+
+Dashboard → Profile Icon → `My Profile` → `API Tokens` → `Create Token` → `Create Custom Token` → `Get started`:
+
+- `Token name`: `Office IP Fetch`.
+- `Permissions`: `Account` → `Zero Trust` → `Edit`.
+- `Account Resources`: `Include` → Select specific account only.
+
+Create and copy the token.
+
+##### Worker
+
+Dashboard → `Compute` → `Workers & Pages` → `Create application` → `Start with Hello World!`:
+
+- `Worker name`: `ip-sync.<your-subdomain>.workers.dev`.
+
+Press `Deploy`.
+
+`Settings` → `Runtime variables and secrets` → `Add variable`:
+
+- `ACCOUNT_ID`: `<account_id>`. Enable `Secret`.
+- `LIST_ID`: `<list_id>`. Enable `Secret`.
+- `CF_API_TOKEN`: Scoped API token. Enable `Secret`.
+- `SHARED_SECRET`: Random key/passphrase. Enable `Secret`.
+
+`Edit code` → `workers.js`:
+
+```js
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const ip = url.searchParams.get('ip');
+    const key = url.searchParams.get('key');
+
+    if (key !== env.SHARED_SECRET) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    if (!ip || !/^[0-9a-fA-F.:]+$/.test(ip)) {
+      return new Response('Bad IP', { status: 400 });
+    }
+
+    const cidr = ip.includes(':') ? `${ip}/128` : `${ip}/32`;
+
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/gateway/lists/${env.LIST_ID}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${env.CF_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: [{ value: cidr }],
+      }),
+    });
+
+    const body = await res.text();
+    return new Response(res.ok ? 'OK' : `Error: ${body}`, {
+      status: res.ok ? 200 : 502,
+    });
+  },
+};
+```
+
+Press `Deploy it`.
+
+Test: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=100.100.100.01&key=SHARED_SECRET`.
+
+##### Router
+
+Open FRITZ!Box admin UI: `http://fritz.box`.
+
+Disable IPv6 on the WAN interface: `Home Network` → `Network` → `Network Settings` → `Advanced Network Settings` → `Change Advanced Network Settings` → `IPv6`:
+
+- Disable `Also announce DNSv6 server via router advertisement (RFC 5006)`.
+- Disable `Router advertisement enabled in the LAN`.
+- Enable `Disable DHCPv6 server in the FRITZ!Box`.
+
+Enable DynDNS: `Internet` → `Permit Access` → `DynDNS` → Enable `DynDNS enabled`:
+
+- Update URL: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=<ipaddr>&key=YOUR_SHARED_SECRET`.
+- Domain names: `office.local`.
+- Username: `dummy`.
+- Password: `dummy`.
+
+Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`.
+
 ---
 
 ## Nginx Directives
@@ -1385,6 +1509,8 @@ EOF
 echo "==> Sync bot user provisioned and granted OFFICE role successfully."
 ```
 
+Then log-in once with the `${sync_bot_username}`.
+
 #### Environment File
 
 ```sh
@@ -1425,6 +1551,9 @@ set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 
 # Cron - Run every 2 hours from 08:00 to 20:00
 # (crontab -l 2>/dev/null; echo "0 8-20/2 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py >> sync_absences.log 2>&1") | crontab -
+
+# Test
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
 
 ### Sync Overtime (Zeiterfassung → Urlaubsverwaltung)
@@ -1471,6 +1600,9 @@ set -a; source .env.zeiterfassung_urlaubsverwaltung_sync_overtime; set +a
 
 # Cron - Run daily at 03:00
 # (crontab -l 2>/dev/null; echo "0 3 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && .venv/bin/python3 zeiterfassung_urlaubsverwaltung_sync_overtime.py >> zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
+
+# Test
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
 
 ---

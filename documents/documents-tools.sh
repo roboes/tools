@@ -78,6 +78,8 @@ gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -sOUTPUTFILE="./output.pdf" -dBATCH "./fi
 # Extract embedded images from a PDF
 pdfimages -all -p -print-filenames "./input.pdf" "./output"
 
+# Compare folders
+meld "folder_1" "folder_2"
 
 # Compare PDFs
 diff-pdf --output-diff=diff.pdf file_A.pdf file_B.pdf
