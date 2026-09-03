@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-09-01
+> Last update: 2026-09-03
 
 ---
 
@@ -45,6 +45,7 @@ domain="website.com"
 domain_root_path="/home/${domain}"
 subdomain="hr"
 system_user="website"
+server_ip="100.00.000.01"
 
 urlaubsverwaltung_version="6.9.0"
 zeiterfassung_version="3.2.2"
@@ -701,7 +702,6 @@ cd /tmp/zeiterfassung-build
 # Fetch PR branches explicitly from GitHub
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
-git fetch origin pull/2205/head:pr-2205
 git fetch origin pull/2217/head:pr-2217
 
 # Create new local build branch starting from origin/main
@@ -712,7 +712,6 @@ git merge pr-2189 -m "Merge PR 2189"
 
 # Merge remaining PRs ONE BY ONE sequentially (resolves template collisions automatically)
 git merge pr-2184 -X ours --no-edit
-git merge pr-2205 -X ours --no-edit
 git merge pr-2217 -X ours --no-edit
 
 # Apply PR 2217's reverse-proxy fix (@{...}) to PR 2189's dropdown links
@@ -786,6 +785,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:\${ZEITERFASSUNG_HTTP_PORT}:8080"
+    extra_hosts:
+      - "\${ZEITERFASSUNG_DOMAIN}=${server_ip}"
     networks:
       - default
       - keycloak_default
@@ -810,6 +811,7 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_AUTHENTICATION_METHOD=client_secret_basic
 
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_TOKEN_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/token
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_USER_INFO_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/userinfo
@@ -822,9 +824,6 @@ services:
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_GROUP_CLAIM_ENABLED=false
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_REALM_ROLE_CLAIM_ENABLED=true
       - ZEITERFASSUNG_SECURITY_OIDC_SERVER_URL=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
-
-      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
-      - ZEITERFASSUNG_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/zeiterfassung/pull/2205 pull request approval
 
       # Mail
       - SPRING_MAIL_HOST=\${MAIL_HOST}
@@ -972,6 +971,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:\${URLAUBSVERWALTUNG_HTTP_PORT}:8080"
+    extra_hosts:
+      - "\${URLAUBSVERWALTUNG_DOMAIN}=${server_ip}"
     networks:
       - default
       - keycloak_default
@@ -997,6 +998,7 @@ services:
 
       # Authorization URI override - the browser is redirected to the PUBLIC HTTPS URL, not the internal Docker alias (which the browser can't reach)
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
 
       # Back-channel calls go to the internal Docker alias (no TLS, faster)
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_TOKEN_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/token
@@ -1007,9 +1009,6 @@ services:
       # Resource server - issuer must match the "iss" claim Keycloak puts in JWTs (public URL, no trailing slash)
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
-
-      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
-      - UV_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/urlaubsverwaltung/pull/6475 pull request approval
 
       # Mail
       - UV_MAIL_FROM=\${MAIL_FROM}
@@ -1217,8 +1216,8 @@ Press `Deploy`.
 
 `Settings` → `Runtime variables and secrets` → `Add variable`:
 
-- `ACCOUNT_ID`: `<account_id>`. Enable `Secret`.
-- `LIST_ID`: `<list_id>`. Enable `Secret`.
+- `ACCOUNT_ID`: `<account_id>`.
+- `LIST_ID`: `<list_id>`.
 - `CF_API_TOKEN`: Scoped API token. Enable `Secret`.
 - `SHARED_SECRET`: Random key/passphrase. Enable `Secret`.
 
@@ -1261,13 +1260,13 @@ export default {
 
 Press `Deploy it`.
 
-Test: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=100.100.100.01&key=SHARED_SECRET`.
+Test: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=100.100.100.1&key=SHARED_SECRET`.
 
 ##### Router
 
 Open FRITZ!Box admin UI: `http://fritz.box`.
 
-Disable IPv6 on the WAN interface: `Home Network` → `Network` → `Network Settings` → `Advanced Network Settings` → `Change Advanced Network Settings` → `IPv6`:
+Prevent LAN devices from obtaining IPv6: `Home Network` → `Network` → `Network Settings` → `Advanced Network Settings` → `Change Advanced Network Settings` → `IPv6`:
 
 - Disable `Also announce DNSv6 server via router advertisement (RFC 5006)`.
 - Disable `Router advertisement enabled in the LAN`.
@@ -1280,7 +1279,7 @@ Enable DynDNS: `Internet` → `Permit Access` → `DynDNS` → Enable `DynDNS en
 - Username: `dummy`.
 - Password: `dummy`.
 
-Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`.
+Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`. Check if the `Office IPs` Cloudflare List was updated.
 
 ---
 
