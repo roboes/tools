@@ -1,5 +1,5 @@
 ## Documents Tools
-# Last update: 2025-11-23
+# Last update: 2026-09-05
 
 
 # Start Bash (Unix Shell)
@@ -93,10 +93,12 @@ soffice --infilter=impress_pdf_import --convert-to ppt "./input.pdf"
 pandoc "input.md" -o "output.docx"
 
 # Convert .md to .html
-pandoc "input.md" -o "input.html" \
-  -f markdown-implicit_figures \
-  --embed-resources --standalone \
-  -H <(echo '<style>body{font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:24px 16px 60px;line-height:1.4;font-size:14px}</style>')
+pandoc "input.md" -o "output.html" \
+  --metadata pagetitle="Document" \
+  --standalone \
+  --embed-resources \
+  --css=https://cdn.jsdelivr.net/npm/water.css@2/out/light.css \
+  --mathml
 
 
 # Count the number of files categorized by their root-level directory and file type

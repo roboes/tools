@@ -47,7 +47,7 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.9.0"
+urlaubsverwaltung_version="6.10.0"
 zeiterfassung_version="3.2.2"
 keycloak_version="26.7.3"
 
@@ -699,31 +699,69 @@ echo "==> Group: ${keycloak_user_group}"
 git clone --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 cd /tmp/zeiterfassung-build
 
-# Fetch PR branches explicitly from GitHub
+
+
+set -e
+
+git config user.name "BuildBot"
+git config user.email "build@local"
+export GIT_EDITOR=true
+
+# Fetch PR branches
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
 git fetch origin pull/2217/head:pr-2217
 
-# Create new local build branch starting from origin/main
+# --- Rebase each PR onto the tip you're actually building from ---
+# PR 2189's branch is based on a commit ~76 commits behind main, and PR 2217 was already merged upstream (as "Kontextpfad in Templates absichern" #2259) - rebasing first means Git only shows the real, intentional diffs instead of drift from commits these branches never saw
+
+git checkout -B pr-2189-rebased pr-2189
+if ! git rebase origin/main; then
+  # Real conflict: main still has the old single "CSV Download" button; PR 2189 replaces it with the export dropdown. Take PR 2189's version - it's the feature being added, not a competing unrelated change
+  git checkout --theirs src/main/resources/templates/reports/user-report-week.html \
+                        src/main/resources/templates/reports/user-report-month.html
+  git add src/main/resources/templates/reports/user-report-week.html \
+          src/main/resources/templates/reports/user-report-month.html
+  git rebase --continue
+fi
+
+git checkout -B pr-2217-rebased pr-2217
+git rebase origin/main   # expected clean, or a no-op if already merged upstream
+
+# --- Build the actual branch ---
 git checkout -B my-build origin/main
+git merge --no-edit pr-2189-rebased
+git merge --no-edit pr-2217-rebased
+git merge --no-edit pr-2184
 
-# Merge PR 2189 first (establishes the new dropdown menu UI)
-git merge pr-2189 -m "Merge PR 2189"
+# Sanity check: no leftover conflict markers anywhere
+if grep -rn "^<<<<<<< " src/; then
+  echo "ERROR: Git conflict markers present!"; exit 1
+fi
 
-# Merge remaining PRs ONE BY ONE sequentially (resolves template collisions automatically)
-git merge pr-2184 -X ours --no-edit
-git merge pr-2217 -X ours --no-edit
-
-# Apply PR 2217's reverse-proxy fix (@{...}) to PR 2189's dropdown links
-sed -i 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
-sed -i 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
-
-# Commit the URL fix
+# PR 2189's dropdown links predate the upstream context-path fix (#2259),
+# so they still need the @{...} wrapper applied manually
+sed -i 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' \
+  src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
+sed -i 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' \
+  src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
 git add src/main/resources/templates/reports/user-report-*.html
-git commit -m "Apply PR 2217 context path fix to PR 2189 dropdown links"
+git commit -m "Apply context-path fix to PR 2189 dropdown links"
 
-# Verify conflict markers are completely gone
-grep -rn "merge_file" src/ && echo "ERROR: Conflicts present!" || echo "SUCCESS: Clean build ready!"
+# Verify every #{...} i18n key used in the touched templates actually exists
+# in both properties files — catches exactly the bug you hit earlier
+missing=0
+for f in src/main/resources/templates/reports/user-report-week.html \
+         src/main/resources/templates/reports/user-report-month.html; do
+  for key in $(grep -oP '#\{\K[a-zA-Z0-9._-]+(?=\})' "$f" | sort -u); do
+    grep -q "^${key}=" src/main/resources/messages.properties    || { echo "MISSING (default): $key"; missing=1; }
+    grep -q "^${key}=" src/main/resources/messages_en.properties || { echo "MISSING (en): $key"; missing=1; }
+  done
+done
+[ "$missing" -eq 0 ] && echo "SUCCESS: all i18n keys present, clean build ready!" || exit 1
+
+
+
 
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
@@ -905,11 +943,6 @@ docker logs zeiterfassung_${system_user} -f | grep -i "started\|error\|oauth"
 # git clone --depth=1 --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
 git clone --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
 cd /tmp/urlaubsverwaltung-build
-
-git fetch origin pull/6522/head:pr-6522
-
-git checkout -b my-build origin/main
-git merge pr-6522
 
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
@@ -1182,7 +1215,7 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 Cloudflare → `Zero Trust` →`Reuseable components` →`Lists` →`Create manual list`:
 
-- `List name`: `Office IPs`.
+- `List name`: `Office IP`.
 - `List type`: `IP addresses`.
 - `Add entry`: Current IPv4/32 (Placeholder as it will get overwritten later).
 
@@ -1240,7 +1273,7 @@ export default {
     const cidr = ip.includes(':') ? `${ip}/128` : `${ip}/32`;
 
     const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/gateway/lists/${env.LIST_ID}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${env.CF_API_TOKEN}`,
         'Content-Type': 'application/json',
