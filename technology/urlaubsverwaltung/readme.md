@@ -1137,7 +1137,7 @@ KEYCLOAK_TOKEN=$(curl -s \
   http://localhost:${keycloak_http_port}/realms/master/protocol/openid-connect/token \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
-echo "email,firstname,lastname,temp_password" > new_employees.csv
+# echo "email,firstname,lastname,temp_password" > new_employees.csv
 
 while IFS='|' read -r new_email new_firstname new_lastname; do
   [ -z "$new_email" ] && continue
@@ -1160,13 +1160,13 @@ while IFS='|' read -r new_email new_firstname new_lastname; do
 
   if [ "$http_code" = "201" ]; then
     echo "==> Created: ${new_email} / temp password: ${new_password}"
-    echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
+    # echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
   else
     echo "!! FAILED (${http_code}): ${new_email}"
   fi
 done <<< "$employees"
 
-echo "==> Done. Credentials saved to new_employees.csv"
+echo "==> Done"
 ```
 
 ---
@@ -1227,7 +1227,7 @@ Get `Account ID` and `List ID`: Go back into the list, from the URL: `https://da
 
 `Access controls` → `Policies` → `Add a policy`:
 
-- HR Portal IP Bypass: `Policy name`: `HR Portal IP Bypass`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `IP list`: `Office IPs`.
+- HR Portal IP Bypass: `Policy name`: `HR Portal IP Bypass`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `IP list`: `Office IP`.
 
 ##### Token
 
@@ -1273,12 +1273,13 @@ export default {
     const cidr = ip.includes(':') ? `${ip}/128` : `${ip}/32`;
 
     const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/gateway/lists/${env.LIST_ID}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${env.CF_API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        name: 'Office IP',
         items: [{ value: cidr }],
       }),
     });
@@ -1312,7 +1313,7 @@ Enable DynDNS: `Internet` → `Permit Access` → `DynDNS` → Enable `DynDNS en
 - Username: `dummy`.
 - Password: `dummy`.
 
-Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`. Check if the `Office IPs` Cloudflare List was updated.
+Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`. Check if the `Office IP` Cloudflare List was updated.
 
 ---
 
