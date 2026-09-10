@@ -1,6 +1,7 @@
 # Debian Setup
 
-> [!NOTE] Last update: 2026-07-05
+> [!NOTE]  
+> Last update: 2026-07-05
 
 ```sh
 # Start Bash (Unix shell)
@@ -104,6 +105,26 @@ sudo apt install -y r-base r-base-dev
 
 # R Studio
 sudo snap install rstudio --classic
+```
+
+```sh
+# ONLYOFFICE - https://helpcenter.onlyoffice.com/desktop/installation/desktop-install-ubuntu.aspx
+
+# Add GPG key
+mkdir -p -m 700 ~/.gnupg
+gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+chmod 644 /tmp/onlyoffice.gpg
+sudo chown root:root /tmp/onlyoffice.gpg
+sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
+
+# Add desktop editors repository
+echo 'deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+
+# Update the package manager cache
+sudo apt-get update
+
+# Install
+sudo apt-get install onlyoffice-desktopeditors
 ```
 
 ```sh

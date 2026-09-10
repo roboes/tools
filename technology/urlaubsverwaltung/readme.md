@@ -47,8 +47,8 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.10.0"
-zeiterfassung_version="3.2.2"
+urlaubsverwaltung_version="6.12.0"
+zeiterfassung_version="3.3.0"
 keycloak_version="26.7.3"
 
 keycloak_http_port=8090
@@ -699,8 +699,6 @@ echo "==> Group: ${keycloak_user_group}"
 git clone --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 cd /tmp/zeiterfassung-build
 
-
-
 set -e
 
 git config user.name "BuildBot"
@@ -710,10 +708,9 @@ export GIT_EDITOR=true
 # Fetch PR branches
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
-git fetch origin pull/2217/head:pr-2217
 
 # --- Rebase each PR onto the tip you're actually building from ---
-# PR 2189's branch is based on a commit ~76 commits behind main, and PR 2217 was already merged upstream (as "Kontextpfad in Templates absichern" #2259) - rebasing first means Git only shows the real, intentional diffs instead of drift from commits these branches never saw
+# PR 2189's branch is based on a commit ~76 commits behind main - rebasing first means Git only shows the real, intentional diff instead of drift from commits it never saw
 
 git checkout -B pr-2189-rebased pr-2189
 if ! git rebase origin/main; then
@@ -725,13 +722,9 @@ if ! git rebase origin/main; then
   git rebase --continue
 fi
 
-git checkout -B pr-2217-rebased pr-2217
-git rebase origin/main   # expected clean, or a no-op if already merged upstream
-
 # --- Build the actual branch ---
 git checkout -B my-build origin/main
 git merge --no-edit pr-2189-rebased
-git merge --no-edit pr-2217-rebased
 git merge --no-edit pr-2184
 
 # Sanity check: no leftover conflict markers anywhere
@@ -759,8 +752,6 @@ for f in src/main/resources/templates/reports/user-report-week.html \
   done
 done
 [ "$missing" -eq 0 ] && echo "SUCCESS: all i18n keys present, clean build ready!" || exit 1
-
-
 
 
 # Create multi-stage Dockerfile
