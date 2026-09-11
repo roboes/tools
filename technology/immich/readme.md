@@ -1,7 +1,7 @@
 # Immich
 
 > [!NOTE]  
-> Last update: 2026-01-03
+> Last update: 2026-09-11
 
 ## Installation
 
@@ -101,6 +101,8 @@ services:
       - \${DB_DATA_LOCATION}:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
+    healthcheck:
+      disable: false
 
 volumes:
   model-cache:

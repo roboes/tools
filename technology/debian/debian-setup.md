@@ -128,6 +128,13 @@ sudo apt-get install onlyoffice-desktopeditors
 ```
 
 ```sh
+# dupeGuru
+sudo add-apt-repository ppa:dupeguru/ppa
+sudo apt update
+sudo apt install -y dupeguru
+```
+
+```sh
 # Wine - https://wiki.debian.org/Wine
 
 ## Check architecture

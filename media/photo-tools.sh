@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2026-02-17
+# Last update: 2026-09-11
 
 
 # Rename: ExifTool
@@ -19,12 +19,51 @@
 # Install FFmpeg
 # sudo apt install -y ffmpeg
 
+# Install iFuse
+# sudo apt install -y ifuse
+
 # Install ImageMagick
 # sudo apt install -y imagemagick
 
 # Install Inkscape
 # sudo apt install inkscape -y
 
+
+# Import photos from iPhone
+mkdir -p ~/iphone ~/Pictures/Staging ~/Pictures/Import
+
+if ifuse ~/iphone; then
+    echo "Transferring files from iPhone to Staging..."
+    rsync -rlt --info=progress2 --timeout=30 ~/iphone/DCIM/ ~/Pictures/Staging/
+    echo ""
+
+    fusermount -u ~/iphone
+    echo "Transfer complete! Safely unmounted iPhone."
+
+    echo "Renaming and flattening files locally..."
+    exiftool \
+        -recurse \
+        -dateFormat '%Y-%m-%d, %H.%M.%S' \
+        "-Directory=${HOME}/Pictures/Import" \
+        '-FileName<REVIEW ${FileModifyDate}%-c.%e' \
+        '-FileName<${DateTimeOriginal}%+c.%e' \
+        '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
+        ~/Pictures/Staging/
+
+    if [ -z "$(find ~/Pictures/Staging -mindepth 1 -type f -print -quit)" ]; then
+        rm -rf ~/Pictures/Staging
+        echo "Done! Staging cleaned."
+    else
+        echo "Warning: Leftover files remain in ~/Pictures/Staging. Check before deleting."
+    fi
+else
+    echo "Failed to mount iPhone. Ensure the screen is unlocked."
+fi
+
+
+## ExifTool
+# %e  - extension
+# %+c - copy number on collision same
 
 
 # Settings
@@ -35,21 +74,14 @@ else
 fi
 
 
-## ExifTool
-# %e - extension
-# %c - increment option starting from space
-# %+.nc - increment option starting from 1
-# To include subdirectories (recursively): -recurse
-
-
 # Check exiftool version
 exiftool -ver
 
 
 # Photos rename - Rename only photos and videos which contain DateTimeOriginal metadata
 exiftool \
-    '-FileName<${DateTimeOriginal}%+.nc.%e' \
-    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
+    '-FileName<${DateTimeOriginal}%+c.%e' \
+    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
     -dateFormat '%Y-%m-%d, %H.%M.%S' \
     -recurse \
     .
@@ -58,25 +90,25 @@ exiftool \
 # Photos rename - Rename all photos and videos given available metadata (where FileModifyDate metadata is the least relevant parameter for the file name and DateTimeOriginal the most relevant)
 exiftool \
     -if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
-    '-FileName<Apple Live Photo ${CreationDate}%+.nc.%e' \
-    '-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+.nc.%e' \
+    '-FileName<Apple Live Photo ${CreationDate}%+c.%e' \
+    '-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+c.%e' \
     -execute \
     -if '($FileTypeExtension eq "mov" and not defined $ContentIdentifier)' \
-    '-FileName<${MediaCreateDate}%+.nc.%e' \
-    '-FileName<${CreationDate}%+.nc.%e' \
-    '-FileName<${CreationDate}.${SubSecTime}%+.nc.%e' \
+    '-FileName<${MediaCreateDate}%+c.%e' \
+    '-FileName<${CreationDate}%+c.%e' \
+    '-FileName<${CreationDate}.${SubSecTime}%+c.%e' \
     -execute \
     -if '($FileTypeExtension ne "mov")' \
-    '-FileName<${FileModifyDate}%+.nc.%e' \
-    '-FileName<${ModifyDate}%+.nc.%e' \
-    '-FileName<${ModifyDate}.${SubSecTime}%+.nc.%e' \
-    '-FileName<${CreateDate}%+.nc.%e' \
-    '-FileName<${CreateDate}.${SubSecTime}%+.nc.%e' \
-    '-FileName<${FileCreateDate}%+.nc.%e' \
-    '-FileName<${FileCreateDate}.${SubSecTime}%+.nc.%e' \
-    '-FileName<${MediaCreateDate}%+.nc.%e' \
-    '-FileName<${DateTimeOriginal}%+.nc.%e' \
-    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+.nc.%e' \
+    '-FileName<${FileModifyDate}%+c.%e' \
+    '-FileName<${ModifyDate}%+c.%e' \
+    '-FileName<${ModifyDate}.${SubSecTime}%+c.%e' \
+    '-FileName<${CreateDate}%+c.%e' \
+    '-FileName<${CreateDate}.${SubSecTime}%+c.%e' \
+    '-FileName<${FileCreateDate}%+c.%e' \
+    '-FileName<${FileCreateDate}.${SubSecTime}%+c.%e' \
+    '-FileName<${MediaCreateDate}%+c.%e' \
+    '-FileName<${DateTimeOriginal}%+c.%e' \
+    '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
     -common_args \
     -dateFormat '%Y-%m-%d, %H.%M.%S' \
     -recurse \
@@ -125,7 +157,7 @@ exiftool -overwrite_original -rotation=90 .
 exiftool -overwrite_original '-title<${FileName;s/ \([0-9]{1,5}\)(\.[^.]*)$//}' .
 
 # Title to FileName
-exiftool '-FileName<${xmp:Title}%+.nc.%e' .
+exiftool '-FileName<${xmp:Title}%+c.%e' .
 
 # FileModifyDate to DateTimeOriginal
 exiftool -overwrite_original '-DateTimeOriginal<FileModifyDate' .
