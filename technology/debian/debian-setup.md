@@ -135,6 +135,11 @@ sudo apt install -y dupeguru
 ```
 
 ```sh
+# FreeFileSync
+sudo apt install -y freefilesync
+```
+
+```sh
 # Wine - https://wiki.debian.org/Wine
 
 ## Check architecture
