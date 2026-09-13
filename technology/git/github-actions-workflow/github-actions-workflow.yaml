@@ -1,5 +1,5 @@
 ## GitHub Actions Workflow
-# Last update: 2026-05-22
+# Last update: 2026-09-13
 
 # Save this file to '.github/workflows/github-actions-workflow.yaml'
 
@@ -25,7 +25,7 @@ jobs:
     # Sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout repository content - https://github.com/actions/checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Google Chrome - https://github.com/browser-actions/setup-chrome
         uses: browser-actions/setup-chrome@v2
@@ -33,7 +33,7 @@ jobs:
           chrome-version: stable
 
       - name: Setup Python - https://github.com/actions/setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.x' #  Latest stable major version of Python
           cache: 'pip' # Enables pip caching
@@ -47,4 +47,4 @@ jobs:
       #   run: which python
 
       - name: Run Python script
-        run: python strava-club-scraper.py
+        run: python app.py

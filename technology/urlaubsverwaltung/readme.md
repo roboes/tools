@@ -197,6 +197,7 @@ cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/hr/keycloak/impo
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 2592000,
+  "rememberMe": true,
   "clients": [
     {
       "clientId": "urlaubsverwaltung",

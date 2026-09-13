@@ -20,7 +20,7 @@ python -m pip_review --local --auto
 [ -z "${BASH}" ] && exec bash
 
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
-sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 
 # Homebrew update
 brew update && brew upgrade && brew cleanup

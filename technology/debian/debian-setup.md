@@ -10,7 +10,7 @@
 
 ```sh
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
-sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 
 # Refresh all installed snap packages to their latest versions
 sudo snap refresh

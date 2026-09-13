@@ -1,5 +1,5 @@
 ## Dockerfile Strava Club Scraper
-# Last update: 2023-07-05
+# Last update: 2026-09-13
 
 
 # Base image
@@ -7,56 +7,37 @@ FROM python:latest
 
 
 # Set working directory
-WORKDIR /
+WORKDIR /app
 
 
-# Debian - Install packages
-RUN apt-get update && apt-get install -y \
-    cron \
-	wget
+# Install cron and Google Chrome using a repository-scoped signing key
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates cron curl gnupg \
+	&& install -d -m 0755 /etc/apt/keyrings \
+	&& curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
+		| gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg \
+	&& echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
+		> /etc/apt/sources.list.d/google-chrome.list \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends google-chrome-stable \
+	&& rm -rf /var/lib/apt/lists/*
 
 
-# Install Google Chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-RUN apt-get -y update && apt-get install -y \
-	google-chrome-stable
-
-
-# Python - Install dependencies
-RUN python -m pip install --upgrade pip
-RUN python -m pip install python-dateutil geopy google-api-python-client google-auth lxml numpy pandas selenium webdriver-manager
-
-
-# Python - Get Python pathway
-RUN which python
+# Install Python dependencies
+RUN python -m pip install --no-cache-dir --upgrade pip \
+	&& python -m pip install --no-cache-dir python-dateutil geopy google-api-python-client google-auth lxml numpy pandas selenium webdriver-manager
 
 
 # Copy all files to the container
-COPY . .
+COPY . /app
 
 
-# Create 'crontab-scheduler' configuration file
-RUN echo "00 10 * * * cd / && /usr/local/bin/python strava-club-scraper.py 2>&1" >> crontab-scheduler
-RUN echo "00 17 * * * cd / && /usr/local/bin/python strava-club-scraper.py 2>&1" >> crontab-scheduler
-RUN echo "30 21 * * * cd / && /usr/local/bin/python strava-club-scraper.py 2>&1" >> crontab-scheduler
-# RUN echo "30 20 * * 1,4 cd / && /usr/local/bin/python strava-club-scraper-activities.py 2>&1" >> crontab-scheduler
-
-
-# Copy 'crontab-scheduler' configuration file to '/etc/cron.d/'
-COPY crontab-scheduler /etc/cron.d/crontab-scheduler
-
-
-# List all directories and files (in a Linux container)
-RUN dir -s
-
-
-# Run the Python code once while building the container
-RUN /usr/local/bin/python strava-club-scraper.py
-
-
-# Apply cron job given crontab-scheduler configuration file
-RUN crontab crontab-scheduler
+# Create and install the schedule
+RUN for t in "00 10" "00 17" "30 21"; do \
+		echo "$t * * * cd /app && /usr/local/bin/python app.py >> /proc/1/fd/1 2>> /proc/1/fd/2"; \
+	done > /etc/cron.d/app \
+	&& chmod 0644 /etc/cron.d/app \
+	&& crontab /etc/cron.d/app
 
 
 # Command to execute cron job on container startup
