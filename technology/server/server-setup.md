@@ -973,10 +973,10 @@ http {
     fastcgi_send_timeout 30s;
 
     ## FastCGI buffers
-    fastcgi_buffer_size 32k;
-    fastcgi_buffers 8 32k;
-    fastcgi_busy_buffers_size 64k;
-    fastcgi_temp_file_write_size 128k;
+    fastcgi_buffer_size 128k;
+    fastcgi_buffers 8 128k;
+    fastcgi_busy_buffers_size 256k;
+    fastcgi_temp_file_write_size 256k;
 
     ## FastCGI cache lock settings
     fastcgi_cache_lock on;
@@ -1015,6 +1015,30 @@ http {
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
 
+}
+```
+
+##### /etc/nginx/snippets/logs-silence.conf
+
+```sh
+sudo mkdir -p /etc/nginx/snippets
+sudo nano /etc/nginx/snippets/logs-silence.conf
+```
+
+```nginx
+location = /favicon.ico {
+    log_not_found off;
+    access_log off;
+}
+
+location = /apple-touch-icon.png {
+    log_not_found off;
+    access_log off;
+}
+
+location = /apple-touch-icon-precomposed.png {
+    log_not_found off;
+    access_log off;
 }
 ```
 
@@ -1059,6 +1083,7 @@ server {
     # Logging
     access_log /var/log/virtualmin/${domain}_access_log;
     error_log /var/log/virtualmin/${domain}_error_log warn;
+    include /etc/nginx/snippets/logs-silence.conf;
 
     # Enable HTTP/2 protocol support
     http2 on;
@@ -1260,8 +1285,9 @@ server {
     index index.php index.htm index.html;
 
     # Logging
-    access_log /var/log/virtualmin/${domain}_access_log;
-    error_log /var/log/virtualmin/${domain}_error_log warn;
+    access_log /var/log/virtualmin/${subdomain}.${domain}_access_log;
+    error_log /var/log/virtualmin/${subdomain}.${domain}_error_log warn;
+    include /etc/nginx/snippets/logs-silence.conf;
 
     # Enable HTTP/2 protocol support
     http2 on;
@@ -1707,7 +1733,10 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 # PHP
 tail -n 50 /var/log/php8.5-fpm.log
-tail -n 50 $(dirname "${domain_root_path}/public_html")/logs/php_log
+tail -n 50 $(dirname "${domain_root_path}")/logs/php_log
+
+# Check system daemon errors and crashed services
+systemctl --failed
 ```
 
 ### Cache
@@ -1715,6 +1744,13 @@ tail -n 50 $(dirname "${domain_root_path}/public_html")/logs/php_log
 ```sh
 # Clear nginx cache
 sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
+```
+
+### Redis
+
+```sh
+# Clear Redis object cache
+redis-cli FLUSHALL
 ```
 
 ### Server stress test
