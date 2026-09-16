@@ -7,7 +7,7 @@
 
 
 # Install rsync
-# sudo apt install rsync
+# sudo apt install -y rsync
 
 
 # Settings

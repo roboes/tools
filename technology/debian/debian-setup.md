@@ -42,8 +42,8 @@ sudo apt install -y composer \
 
 ```sh
 # PHP
-sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
-sudo apt-get install php8.5
+sudo apt install -y apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
+sudo apt install -y php8.5
 ```
 
 ```sh
@@ -105,6 +105,13 @@ sudo apt install -y r-base r-base-dev
 
 # R Studio
 sudo snap install rstudio --classic
+
+# Quarto
+QUARTO_VERSION=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest | grep -oP '"tag_name": "v\K[^"]+')
+wget "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb"
+sudo dpkg -i "quarto-${QUARTO_VERSION}-linux-amd64.deb"
+sudo apt install -y -f
+rm "quarto-${QUARTO_VERSION}-linux-amd64.deb"
 ```
 
 ```sh
@@ -121,10 +128,10 @@ sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
 echo 'deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 
 # Update the package manager cache
-sudo apt-get update
+sudo apt update
 
 # Install
-sudo apt-get install onlyoffice-desktopeditors
+sudo apt install -y onlyoffice-desktopeditors
 ```
 
 ```sh
@@ -149,7 +156,7 @@ dpkg --print-architecture
 sudo dpkg --add-architecture i386 && sudo apt update
 
 ## Install Wine
-sudo apt install \
+sudo apt install -y \
   wine \
   wine32 \
   wine64 \

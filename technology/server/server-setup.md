@@ -583,7 +583,7 @@ Configure notification message:
 
 ```sh
 # sudo apt update
-# sudo apt install firewalld -y
+# sudo apt install -y firewalld
 
 # Remove SSH service
 # sudo firewall-cmd --zone=public --remove-service=ssh --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
@@ -700,10 +700,10 @@ Now "Create Virtual Server".
 php_version_current="8.5"
 
 # Enable Sury/PHP repository
-sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
+sudo apt install -y apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
 
 # Install PHP packages
-sudo apt-get install php${php_version_current}-{cli,curl,fpm,gd,igbinary,intl,mbstring,mysql,redis,sqlite3,xml,zip}
+sudo apt install -y php${php_version_current}-{cli,curl,fpm,gd,igbinary,intl,mbstring,mysql,redis,sqlite3,xml,zip}
 ```
 
 Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
@@ -724,7 +724,7 @@ virtualmin check-config
 ### Packages
 
 ```sh
-sudo apt install htop \
+sudo apt install -y htop \
   libnginx-mod-http-brotli-filter \
   redis
 ```

@@ -7,7 +7,7 @@
 
 ```sh
 # Install fcitx5 - Wayland-native input method (required for XCompose on Wayland/KDE Plasma 6)
-sudo apt install fcitx5 fcitx5-frontend-qt5
+sudo apt install -y fcitx5 fcitx5-frontend-qt5
 im-config -n fcitx5
 
 # XCompose rules: maps 'c = ç (Windows US International behavior) (https://github.com/raelgc/win_us_intl)
@@ -83,7 +83,7 @@ plasmashell --replace &
 lsusb | grep -i finger
 
 # Install fprintd
-sudo apt install fprintd libpam-fprintd
+sudo apt install -y fprintd libpam-fprintd
 
 # Enroll fingerprint
 fprintd-enroll

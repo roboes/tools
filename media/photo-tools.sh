@@ -26,7 +26,7 @@
 # sudo apt install -y imagemagick
 
 # Install Inkscape
-# sudo apt install inkscape -y
+# sudo apt install -y inkscape
 
 
 # Import photos from iPhone

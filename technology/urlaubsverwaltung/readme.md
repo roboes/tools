@@ -47,7 +47,7 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.12.0"
+urlaubsverwaltung_version="6.12.2"
 zeiterfassung_version="3.3.0"
 keycloak_version="26.7.3"
 
@@ -710,49 +710,72 @@ export GIT_EDITOR=true
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
 
-# --- Rebase each PR onto the tip you're actually building from ---
-# PR 2189's branch is based on a commit ~76 commits behind main - rebasing first means Git only shows the real, intentional diff instead of drift from commits it never saw
-
-git checkout -B pr-2189-rebased pr-2189
-if ! git rebase origin/main; then
-  # Real conflict: main still has the old single "CSV Download" button; PR 2189 replaces it with the export dropdown. Take PR 2189's version - it's the feature being added, not a competing unrelated change
-  git checkout --theirs src/main/resources/templates/reports/user-report-week.html \
-                        src/main/resources/templates/reports/user-report-month.html
-  git add src/main/resources/templates/reports/user-report-week.html \
-          src/main/resources/templates/reports/user-report-month.html
-  git rebase --continue
-fi
-
-# --- Build the actual branch ---
+# Create working build branch directly from current main
 git checkout -B my-build origin/main
-git merge --no-edit pr-2189-rebased
+
+# Merge PR 2189 (taking PR 2189's new features on conflict)
+git merge --no-edit pr-2189 || {
+  echo "Merge conflict detected during PR 2189 merge, taking PR 2189 template additions..."
+  git checkout --theirs src/main/resources/templates/reports/user-report-month.html
+  git checkout --theirs src/main/resources/templates/reports/user-report-week.html
+  git add src/main/resources/templates/reports/
+  git commit --no-edit
+}
+
+# Merge PR 2184
 git merge --no-edit pr-2184
 
-# Sanity check: no leftover conflict markers anywhere
-if grep -rn "^<<<<<<< " src/; then
-  echo "ERROR: Git conflict markers present!"; exit 1
+# --- Restore ALL PR #2217 context-path wrappers (CSV + Navigation URLs) ---
+REPORT_TEMPLATES=(
+  "src/main/resources/templates/reports/user-report-month.html"
+  "src/main/resources/templates/reports/user-report-week.html"
+)
+
+for template in "${REPORT_TEMPLATES[@]}"; do
+  if [ -f "$template" ]; then
+    sed -i \
+      -e 's|th:href="${userReportPreviousSectionUrl}"|th:href="@{__${userReportPreviousSectionUrl}__}"|g' \
+      -e 's|th:href="${userReportTodaySectionUrl}"|th:href="@{__${userReportTodaySectionUrl}__}"|g' \
+      -e 's|th:href="${userReportNextSectionUrl}"|th:href="@{__${userReportNextSectionUrl}__}"|g' \
+      -e 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' \
+      -e 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' \
+      "$template"
+  fi
+done
+
+# Audit _user-select.html without making speculative changes
+USER_SELECT_TEMPLATE="src/main/resources/templates/reports/_user-select.html"
+if [ -f "$USER_SELECT_TEMPLATE" ]; then
+  echo "=== _user-select.html URL bindings ==="
+  grep -nE 'th:(href|action)=' "$USER_SELECT_TEMPLATE" || true
 fi
 
-# PR 2189's dropdown links predate the upstream context-path fix (#2259),
-# so they still need the @{...} wrapper applied manually
-sed -i 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' \
-  src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
-sed -i 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' \
-  src/main/resources/templates/reports/user-report-month.html src/main/resources/templates/reports/user-report-week.html
-git add src/main/resources/templates/reports/user-report-*.html
-git commit -m "Apply context-path fix to PR 2189 dropdown links"
+# Stage and commit template repairs if modified
+git add "${REPORT_TEMPLATES[@]}"
 
-# Verify every #{...} i18n key used in the touched templates actually exists
-# in both properties files — catches exactly the bug you hit earlier
-missing=0
-for f in src/main/resources/templates/reports/user-report-week.html \
-         src/main/resources/templates/reports/user-report-month.html; do
-  for key in $(grep -oP '#\{\K[a-zA-Z0-9._-]+(?=\})' "$f" | sort -u); do
-    grep -q "^${key}=" src/main/resources/messages.properties    || { echo "MISSING (default): $key"; missing=1; }
-    grep -q "^${key}=" src/main/resources/messages_en.properties || { echo "MISSING (en): $key"; missing=1; }
-  done
+if ! git diff --cached --quiet; then
+  git commit -m "Restore PR 2217 context-path wrappers on PR 2189 templates"
+fi
+
+# Explicitly verify that ALL required context-path wrappers are present
+for template in "${REPORT_TEMPLATES[@]}"; do
+  grep -q 'th:href="@{__${userReportPreviousSectionUrl}__}"' "$template" \
+    || { echo "ERROR: PreviousSectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportTodaySectionUrl}__}"' "$template" \
+    || { echo "ERROR: TodaySectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportNextSectionUrl}__}"' "$template" \
+    || { echo "ERROR: NextSectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportCsvDownloadUrlDetailed}__}"' "$template" \
+    || { echo "ERROR: CsvDownloadUrlDetailed context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportCsvDownloadUrlAggregated}__}"' "$template" \
+    || { echo "ERROR: CsvDownloadUrlAggregated context-path wrapper missing in $template"; exit 1; }
 done
-[ "$missing" -eq 0 ] && echo "SUCCESS: all i18n keys present, clean build ready!" || exit 1
+
+echo "SUCCESS: All PR 2217 navigation and CSV context-path wrappers are present."
+
+# --- Log resulting report-template diff ---
+echo "=== Report template diff relative to origin/main ==="
+git diff origin/main...HEAD -- src/main/resources/templates/reports/
 
 
 # Create multi-stage Dockerfile
@@ -1575,7 +1598,7 @@ set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py
 
 # Cron - Run every 2 hours from 08:00 to 20:00
-# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py >> sync_absences.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/sync_absences.log 2>&1") | crontab -
 
 # Test
 crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
@@ -1624,13 +1647,33 @@ set -a; source .env.zeiterfassung_urlaubsverwaltung_sync_overtime; set +a
 .venv/bin/python3 zeiterfassung_urlaubsverwaltung_sync_overtime.py
 
 # Cron - Run daily at 03:00
-# (crontab -l 2>/dev/null; echo "0 3 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && .venv/bin/python3 zeiterfassung_urlaubsverwaltung_sync_overtime.py >> zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 3 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
 
 # Test
 crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
 
 ---
+
+## Tests
+
+```.sh
+docker exec -it "zeiterfassung_postgres_${system_user}" psql -U "${zeiterfassung_db_user}" -d "${zeiterfassung_db_name}"
+```
+
+```sql
+SELECT
+    id,
+    uuid,
+    given_name,
+    family_name,
+    email,
+    tenant_id,
+    status
+FROM tenant_user
+WHERE deleted_at IS NULL
+ORDER BY family_name, given_name;
+```
 
 ## Uninstall
 
