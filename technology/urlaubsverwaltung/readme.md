@@ -49,7 +49,7 @@ server_ip="100.00.000.01"
 
 urlaubsverwaltung_version="6.12.2"
 zeiterfassung_version="3.3.0"
-keycloak_version="26.7.3"
+keycloak_version="26.7.4"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
