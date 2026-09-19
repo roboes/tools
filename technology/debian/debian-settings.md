@@ -7,7 +7,7 @@
 
 ```sh
 # Install fcitx5 - Wayland-native input method (required for XCompose on Wayland/KDE Plasma 6)
-sudo apt install fcitx5 fcitx5-frontend-qt5
+sudo apt install -y fcitx5 fcitx5-frontend-qt5
 im-config -n fcitx5
 
 # XCompose rules: maps 'c = ç (Windows US International behavior) (https://github.com/raelgc/win_us_intl)
@@ -15,6 +15,28 @@ wget https://raw.githubusercontent.com/raelgc/win_us_intl/master/.XCompose
 
 # Restart PC, then open fcitx5-configtool and add: "English (US, intl., with dead keys)"
 fcitx5-configtool
+```
+
+## System Settings
+
+Configure systemd-journald globally to automatically cap log retention, limit disk space usage, and prevent log flooding:
+
+```sh
+sudo nano /etc/systemd/journald.conf
+```
+
+```conf
+[Journal]
+MaxRetentionSec=30day
+SystemMaxUse=1G
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+Storage=persistent
+```
+
+```sh
+sudo systemctl restart systemd-journald
 ```
 
 ## Change locale
@@ -83,7 +105,7 @@ plasmashell --replace &
 lsusb | grep -i finger
 
 # Install fprintd
-sudo apt install fprintd libpam-fprintd
+sudo apt install -y fprintd libpam-fprintd
 
 # Enroll fingerprint
 fprintd-enroll

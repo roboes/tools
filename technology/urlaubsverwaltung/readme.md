@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-08-16
+> Last update: 2026-09-03
 
 ---
 
@@ -45,10 +45,11 @@ domain="website.com"
 domain_root_path="/home/${domain}"
 subdomain="hr"
 system_user="website"
+server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.7.0"
-zeiterfassung_version="3.2.2"
-keycloak_version="26.7.1"
+urlaubsverwaltung_version="6.13.0"
+zeiterfassung_version="3.3.0"
+keycloak_version="26.7.4"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
@@ -196,6 +197,7 @@ cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/hr/keycloak/impo
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 2592000,
+  "rememberMe": true,
   "clients": [
     {
       "clientId": "urlaubsverwaltung",
@@ -698,13 +700,83 @@ echo "==> Group: ${keycloak_user_group}"
 git clone --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 cd /tmp/zeiterfassung-build
 
+set -e
+
+git config user.name "BuildBot"
+git config user.email "build@local"
+export GIT_EDITOR=true
+
+# Fetch PR branches
 git fetch origin pull/2184/head:pr-2184
 git fetch origin pull/2189/head:pr-2189
-git fetch origin pull/2205/head:pr-2205
-git fetch origin pull/2217/head:pr-2217
 
-git checkout -b my-build origin/main
-git merge pr-2184 pr-2189 pr-2205 pr-2217
+# Create working build branch directly from current main
+git checkout -B my-build origin/main
+
+# Merge PR 2189 (taking PR 2189's new features on conflict)
+git merge --no-edit pr-2189 || {
+  echo "Merge conflict detected during PR 2189 merge, taking PR 2189 template additions..."
+  git checkout --theirs src/main/resources/templates/reports/user-report-month.html
+  git checkout --theirs src/main/resources/templates/reports/user-report-week.html
+  git add src/main/resources/templates/reports/
+  git commit --no-edit
+}
+
+# Merge PR 2184
+git merge --no-edit pr-2184
+
+# --- Restore ALL PR #2217 context-path wrappers (CSV + Navigation URLs) ---
+REPORT_TEMPLATES=(
+  "src/main/resources/templates/reports/user-report-month.html"
+  "src/main/resources/templates/reports/user-report-week.html"
+)
+
+for template in "${REPORT_TEMPLATES[@]}"; do
+  if [ -f "$template" ]; then
+    sed -i \
+      -e 's|th:href="${userReportPreviousSectionUrl}"|th:href="@{__${userReportPreviousSectionUrl}__}"|g' \
+      -e 's|th:href="${userReportTodaySectionUrl}"|th:href="@{__${userReportTodaySectionUrl}__}"|g' \
+      -e 's|th:href="${userReportNextSectionUrl}"|th:href="@{__${userReportNextSectionUrl}__}"|g' \
+      -e 's|th:href="${userReportCsvDownloadUrlDetailed}"|th:href="@{__${userReportCsvDownloadUrlDetailed}__}"|g' \
+      -e 's|th:href="${userReportCsvDownloadUrlAggregated}"|th:href="@{__${userReportCsvDownloadUrlAggregated}__}"|g' \
+      "$template"
+  fi
+done
+
+# Audit _user-select.html without making speculative changes
+USER_SELECT_TEMPLATE="src/main/resources/templates/reports/_user-select.html"
+if [ -f "$USER_SELECT_TEMPLATE" ]; then
+  echo "=== _user-select.html URL bindings ==="
+  grep -nE 'th:(href|action)=' "$USER_SELECT_TEMPLATE" || true
+fi
+
+# Stage and commit template repairs if modified
+git add "${REPORT_TEMPLATES[@]}"
+
+if ! git diff --cached --quiet; then
+  git commit -m "Restore PR 2217 context-path wrappers on PR 2189 templates"
+fi
+
+# Explicitly verify that ALL required context-path wrappers are present
+for template in "${REPORT_TEMPLATES[@]}"; do
+  grep -q 'th:href="@{__${userReportPreviousSectionUrl}__}"' "$template" \
+    || { echo "ERROR: PreviousSectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportTodaySectionUrl}__}"' "$template" \
+    || { echo "ERROR: TodaySectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportNextSectionUrl}__}"' "$template" \
+    || { echo "ERROR: NextSectionUrl context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportCsvDownloadUrlDetailed}__}"' "$template" \
+    || { echo "ERROR: CsvDownloadUrlDetailed context-path wrapper missing in $template"; exit 1; }
+  grep -q 'th:href="@{__${userReportCsvDownloadUrlAggregated}__}"' "$template" \
+    || { echo "ERROR: CsvDownloadUrlAggregated context-path wrapper missing in $template"; exit 1; }
+done
+
+echo "SUCCESS: All PR 2217 navigation and CSV context-path wrappers are present."
+
+# --- Log resulting report-template diff ---
+echo "=== Report template diff relative to origin/main ==="
+git diff origin/main...HEAD -- src/main/resources/templates/reports/
+
 
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
@@ -766,6 +838,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:\${ZEITERFASSUNG_HTTP_PORT}:8080"
+    extra_hosts:
+      - "\${ZEITERFASSUNG_DOMAIN}=${server_ip}"
     networks:
       - default
       - keycloak_default
@@ -790,6 +864,7 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_AUTHENTICATION_METHOD=client_secret_basic
 
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_TOKEN_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/token
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_USER_INFO_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/userinfo
@@ -802,9 +877,6 @@ services:
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_GROUP_CLAIM_ENABLED=false
       - ZEITERFASSUNG_SECURITY_OIDC_CLAIM_MAPPERS_REALM_ROLE_CLAIM_ENABLED=true
       - ZEITERFASSUNG_SECURITY_OIDC_SERVER_URL=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung
-
-      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
-      - ZEITERFASSUNG_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${ZEITERFASSUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/zeiterfassung/pull/2205 pull request approval
 
       # Mail
       - SPRING_MAIL_HOST=\${MAIL_HOST}
@@ -887,12 +959,6 @@ docker logs zeiterfassung_${system_user} -f | grep -i "started\|error\|oauth"
 git clone --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
 cd /tmp/urlaubsverwaltung-build
 
-git fetch origin pull/6522/head:pr-6522
-git fetch origin pull/6521/head:pr-6521
-
-git checkout -b my-build origin/main
-git merge pr-6522 pr-6521
-
 # Create multi-stage Dockerfile
 cat > Dockerfile << 'DOCKERFILE'
 # Build JAR inside container (no host Java/Maven needed)
@@ -953,6 +1019,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:\${URLAUBSVERWALTUNG_HTTP_PORT}:8080"
+    extra_hosts:
+      - "\${URLAUBSVERWALTUNG_DOMAIN}=${server_ip}"
     networks:
       - default
       - keycloak_default
@@ -978,6 +1046,7 @@ services:
 
       # Authorization URI override - the browser is redirected to the PUBLIC HTTPS URL, not the internal Docker alias (which the browser can't reach)
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/auth
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
 
       # Back-channel calls go to the internal Docker alias (no TLS, faster)
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_TOKEN_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/token
@@ -988,9 +1057,6 @@ services:
       # Resource server - issuer must match the "iss" claim Keycloak puts in JWTs (public URL, no trailing slash)
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/urlaubsverwaltung/protocol/openid-connect/certs
-
-      # Relying Party-initiated logout end session endpoint (manual, since no issuer-uri/discovery is used above)
-      - UV_SECURITY_OIDC_END_SESSION_ENDPOINT=https://\${URLAUBSVERWALTUNG_DOMAIN}/realms/urlaubsverwaltung/protocol/openid-connect/logout # Depends on https://github.com/urlaubsverwaltung/urlaubsverwaltung/pull/6475 pull request approval
 
       # Mail
       - UV_MAIL_FROM=\${MAIL_FROM}
@@ -1086,7 +1152,7 @@ KEYCLOAK_TOKEN=$(curl -s \
   http://localhost:${keycloak_http_port}/realms/master/protocol/openid-connect/token \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
-echo "email,firstname,lastname,temp_password" > new_employees.csv
+# echo "email,firstname,lastname,temp_password" > new_employees.csv
 
 while IFS='|' read -r new_email new_firstname new_lastname; do
   [ -z "$new_email" ] && continue
@@ -1109,13 +1175,13 @@ while IFS='|' read -r new_email new_firstname new_lastname; do
 
   if [ "$http_code" = "201" ]; then
     echo "==> Created: ${new_email} / temp password: ${new_password}"
-    echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
+    # echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
   else
     echo "!! FAILED (${http_code}): ${new_email}"
   fi
 done <<< "$employees"
 
-echo "==> Done. Credentials saved to new_employees.csv"
+echo "==> Done"
 ```
 
 ---
@@ -1157,6 +1223,112 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 - `Then...`: `Bypass cache`.
 - `Browser TTL`: `Respect origin TTL`.
 - `Place at`: `Last`.
+
+#### Dynamic IP
+
+##### Lists
+
+Cloudflare → `Zero Trust` →`Reuseable components` →`Lists` →`Create manual list`:
+
+- `List name`: `Office IP`.
+- `List type`: `IP addresses`.
+- `Add entry`: Current IPv4/32 (Placeholder as it will get overwritten later).
+
+Press `Save`.
+
+Get `Account ID` and `List ID`: Go back into the list, from the URL: `https://dash.cloudflare.com/<account_id>/one/reusable-components/lists/<list_id>`.
+
+##### Policies
+
+`Access controls` → `Policies` → `Add a policy`:
+
+- HR Portal IP Bypass: `Policy name`: `HR Portal IP Bypass`. `Action`: `Bypass`. `Session duration`: `Same as application session duration`. `Policy rules` → `Include`: `Selector is...`: `IP list`: `Office IP`.
+
+##### Token
+
+Dashboard → Profile Icon → `My Profile` → `API Tokens` → `Create Token` → `Create Custom Token` → `Get started`:
+
+- `Token name`: `Office IP Fetch`.
+- `Permissions`: `Account` → `Zero Trust` → `Edit`.
+- `Account Resources`: `Include` → Select specific account only.
+
+Create and copy the token.
+
+##### Worker
+
+Dashboard → `Compute` → `Workers & Pages` → `Create application` → `Start with Hello World!`:
+
+- `Worker name`: `ip-sync.<your-subdomain>.workers.dev`.
+
+Press `Deploy`.
+
+`Settings` → `Runtime variables and secrets` → `Add variable`:
+
+- `ACCOUNT_ID`: `<account_id>`.
+- `LIST_ID`: `<list_id>`.
+- `CF_API_TOKEN`: Scoped API token. Enable `Secret`.
+- `SHARED_SECRET`: Random key/passphrase. Enable `Secret`.
+
+`Edit code` → `workers.js`:
+
+```js
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const ip = url.searchParams.get('ip');
+    const key = url.searchParams.get('key');
+
+    if (key !== env.SHARED_SECRET) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    if (!ip || !/^[0-9a-fA-F.:]+$/.test(ip)) {
+      return new Response('Bad IP', { status: 400 });
+    }
+
+    const cidr = ip.includes(':') ? `${ip}/128` : `${ip}/32`;
+
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/gateway/lists/${env.LIST_ID}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${env.CF_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: 'Office IP',
+        items: [{ value: cidr }],
+      }),
+    });
+
+    const body = await res.text();
+    return new Response(res.ok ? 'OK' : `Error: ${body}`, {
+      status: res.ok ? 200 : 502,
+    });
+  },
+};
+```
+
+Press `Deploy it`.
+
+Test: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=100.100.100.1&key=SHARED_SECRET`.
+
+##### Router
+
+Open FRITZ!Box admin UI: `http://fritz.box`.
+
+Prevent LAN devices from obtaining IPv6: `Home Network` → `Network` → `Network Settings` → `Advanced Network Settings` → `Change Advanced Network Settings` → `IPv6`:
+
+- Disable `Also announce DNSv6 server via router advertisement (RFC 5006)`.
+- Disable `Router advertisement enabled in the LAN`.
+- Enable `Disable DHCPv6 server in the FRITZ!Box`.
+
+Enable DynDNS: `Internet` → `Permit Access` → `DynDNS` → Enable `DynDNS enabled`:
+
+- Update URL: `https://ip-sync.<your-subdomain>.workers.dev/update?ip=<ipaddr>&key=YOUR_SHARED_SECRET`.
+- Domain names: `office.local`.
+- Username: `dummy`.
+- Password: `dummy`.
+
+Test: `Internet` → `Online Monitor` → `Connection Details` → `Reconnect`. Check if the `Office IP` Cloudflare List was updated.
 
 ---
 
@@ -1385,6 +1557,8 @@ EOF
 echo "==> Sync bot user provisioned and granted OFFICE role successfully."
 ```
 
+Then log-in once with the `${sync_bot_username}`.
+
 #### Environment File
 
 ```sh
@@ -1424,7 +1598,10 @@ set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py
 
 # Cron - Run every 2 hours from 08:00 to 20:00
-# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py >> sync_absences.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/sync_absences.log 2>&1") | crontab -
+
+# Test
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
 
 ### Sync Overtime (Zeiterfassung → Urlaubsverwaltung)
@@ -1470,10 +1647,62 @@ set -a; source .env.zeiterfassung_urlaubsverwaltung_sync_overtime; set +a
 .venv/bin/python3 zeiterfassung_urlaubsverwaltung_sync_overtime.py
 
 # Cron - Run daily at 03:00
-# (crontab -l 2>/dev/null; echo "0 3 * * * cd ${domain_root_path}/domains/${subdomain}.${domain}/hr && set -a && . .env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && .venv/bin/python3 zeiterfassung_urlaubsverwaltung_sync_overtime.py >> zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 3 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
+
+# Test
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
 
 ---
+
+## Tests
+
+```sh
+cd ${domain_root_path}/domains/${subdomain}.${domain}/hr
+```
+
+```sh
+docker exec -it "zeiterfassung_postgres_${system_user}" psql -U "${zeiterfassung_db_user}" -d "${zeiterfassung_db_name}"
+```
+
+```sql
+-- Fetch active users
+SELECT
+    id,
+    uuid,
+    given_name,
+    family_name,
+    email,
+    tenant_id,
+    status
+FROM tenant_user
+WHERE deleted_at IS NULL
+ORDER BY given_name, family_name;
+```
+
+```sql
+-- Detect overlapping time entries
+SELECT
+    time_entry_1.owner,
+    tenant_user.email,
+    tenant_user.given_name,
+    tenant_user.family_name,
+    time_entry_1.id AS entry1_id,
+    time_entry_1.start AS entry1_start,
+    time_entry_1.end AS entry1_end,
+    time_entry_2.id AS entry2_id,
+    time_entry_2.start AS entry2_start,
+    time_entry_2.end AS entry2_end
+FROM time_entry AS time_entry_1
+JOIN time_entry AS time_entry_2
+    ON time_entry_1.owner = time_entry_2.owner
+   AND time_entry_1.id < time_entry_2.id
+   AND time_entry_1.start < time_entry_2.end
+   AND time_entry_1.end > time_entry_2.start
+LEFT JOIN tenant_user
+    ON time_entry_1.owner = tenant_user.uuid
+ORDER BY time_entry_1.start DESC;
+```
 
 ## Uninstall
 

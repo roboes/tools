@@ -1,7 +1,7 @@
 # Home Assistant
 
 > [!NOTE]  
-> Last update: 2026-06-01
+> Last update: 2026-09-13
 
 ## Installation
 
@@ -9,7 +9,7 @@
 # Settings
 domain="website.com"
 domain_root_path="/home/${domain}"
-subdomain="subdomain"
+subdomain="homeassistant"
 system_user="system_user"
 installation_target="pi"
 ```
@@ -463,29 +463,10 @@ sudo systemctl restart ssh
 
 Expose local Home Assistant instance using Nginx and WireGuard.
 
-```sh
-# Settings
-settings_pi_system_user="system_user"
-```
+`Settings` → `System` → `Network` → `HTTP server` → `Reverse proxy`:
 
-```sh
-nano "/home/${settings_pi_system_user}/homeassistant/config/configuration.yaml"
-```
-
-Add:
-
-```yaml
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 10.6.0.1
-```
-
-```sh
-# Restart containers
-cd /home/${settings_pi_system_user}/homeassistant
-docker compose down && docker compose up -d --remove-orphans
-```
+- Enable `Trust X-Forwarded-For`.
+- `Trusted proxies`: `10.6.0.1/32`.
 
 ## Cloudflare Zero Trust
 
@@ -566,3 +547,22 @@ In Home Assistant: `Settings` → `System` → `Network` → `Home Assistant URL
 
 - Internal URL: `http://192.168.x.x:8123`.
 - External URL: `https://homeassistant.website.com`.
+
+## Update
+
+```sh
+cd ${installation_path}/homeassistant
+```
+
+```sh
+# Pull the new container images
+docker compose pull
+
+# Restart with the new version
+docker compose up -d --remove-orphans
+```
+
+```sh
+# Clean up old images
+docker image prune -f
+```
