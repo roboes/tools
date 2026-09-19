@@ -47,7 +47,7 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.12.2"
+urlaubsverwaltung_version="6.13.0"
 zeiterfassung_version="3.3.0"
 keycloak_version="26.7.4"
 
@@ -1657,11 +1657,16 @@ crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences
 
 ## Tests
 
-```.sh
+```sh
+cd ${domain_root_path}/domains/${subdomain}.${domain}/hr
+```
+
+```sh
 docker exec -it "zeiterfassung_postgres_${system_user}" psql -U "${zeiterfassung_db_user}" -d "${zeiterfassung_db_name}"
 ```
 
 ```sql
+-- Fetch active users
 SELECT
     id,
     uuid,
@@ -1672,7 +1677,31 @@ SELECT
     status
 FROM tenant_user
 WHERE deleted_at IS NULL
-ORDER BY family_name, given_name;
+ORDER BY given_name, family_name;
+```
+
+```sql
+-- Detect overlapping time entries
+SELECT
+    time_entry_1.owner,
+    tenant_user.email,
+    tenant_user.given_name,
+    tenant_user.family_name,
+    time_entry_1.id AS entry1_id,
+    time_entry_1.start AS entry1_start,
+    time_entry_1.end AS entry1_end,
+    time_entry_2.id AS entry2_id,
+    time_entry_2.start AS entry2_start,
+    time_entry_2.end AS entry2_end
+FROM time_entry AS time_entry_1
+JOIN time_entry AS time_entry_2
+    ON time_entry_1.owner = time_entry_2.owner
+   AND time_entry_1.id < time_entry_2.id
+   AND time_entry_1.start < time_entry_2.end
+   AND time_entry_1.end > time_entry_2.start
+LEFT JOIN tenant_user
+    ON time_entry_1.owner = tenant_user.uuid
+ORDER BY time_entry_1.start DESC;
 ```
 
 ## Uninstall

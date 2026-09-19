@@ -21,43 +21,69 @@ database_name="database_name"
 ## Initial setup
 
 ```sh
-# Check Debian version
-cat /etc/os-release
-```
-
-```sh
 # Update packages
 sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 ```
 
-```sh
-# Change locale
+### System Settings
 
-## Check Current Locale Settings
+```sh
+# Check Debian version
+cat /etc/os-release
+```
+
+Change locale:
+
+```sh
+# Check Current Locale Settings
 locale
 
-## Reconfigure Locales (en_US.UTF-8; Optionally for dates: en_DK.UTF-8 UTF-8)
+# Reconfigure Locales (en_US.UTF-8; Optionally for dates: en_DK.UTF-8 UTF-8)
 sudo dpkg-reconfigure locales
 
-## Update the Environment Variables
+# Update the Environment Variables
 nano ~/.bashrc
+```
 
-## Add or update the following line
-# export LANG=en_US.UTF-8
+Configure systemd-journald globally to automatically cap log retention, limit disk space usage, and prevent log flooding:
+
+```sh
+sudo nano /etc/systemd/journald.conf
+```
+
+```conf
+[Journal]
+MaxRetentionSec=30day
+SystemMaxUse=1G
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+Storage=persistent
 ```
 
 ```sh
-# Install packages
+sudo systemctl restart systemd-journald
+```
+
+```conf
+export LANG=en_US.UTF-8
+```
+
+### Packages
+
+```sh
+# Install core tools
 sudo apt install -y \
   curl \
   dnsutils \
   git \
+  python3 \
+  python3-pip \
+  python3-venv \
+  unzip \
   wget \
   wtmpdb \
   libpam-wtmpdb \
-  python-is-python3 \
-  python3-pip \
-  python3-venv \
   resolvconf
 
 # sudo apt install -y composer

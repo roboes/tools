@@ -17,6 +17,28 @@ wget https://raw.githubusercontent.com/raelgc/win_us_intl/master/.XCompose
 fcitx5-configtool
 ```
 
+## System Settings
+
+Configure systemd-journald globally to automatically cap log retention, limit disk space usage, and prevent log flooding:
+
+```sh
+sudo nano /etc/systemd/journald.conf
+```
+
+```conf
+[Journal]
+MaxRetentionSec=30day
+SystemMaxUse=1G
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+Storage=persistent
+```
+
+```sh
+sudo systemctl restart systemd-journald
+```
+
 ## Change locale
 
 ```sh

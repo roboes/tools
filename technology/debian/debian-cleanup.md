@@ -10,8 +10,11 @@ sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo ap
 # Refresh all installed snap packages to their latest versions
 sudo snap refresh
 
+# Update all installed Flatpak packages and remove unused dependencies
+flatpak update -y && flatpak uninstall --unused -y
+
 # Journald logs (keep last 7 days)
-# sudo journalctl --vacuum-time=7d
+sudo journalctl --vacuum-time=7d
 ```
 
 ```sh

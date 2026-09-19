@@ -29,14 +29,14 @@ sudo apt install -y flatpak
 ```
 
 ```sh
-# Install core tools and programming languages
+# Install core tools
 sudo apt install -y composer \
   curl \
   git \
   python3 \
-  python-is-python3 \
   python3-pip \
   python3-venv \
+  unzip \
   wget
 ```
 
