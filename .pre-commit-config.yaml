@@ -54,7 +54,7 @@ repos:
     rev: 4.3.0
     hooks:
       - id: sqlfluff-fix
-        args: ['--dialect=mysql', '--exclude-rules=ambiguous.column_count, layout.long_lines, references.keywords']
+        args: ['--dialect=mysql', '--templater=jinja', '--exclude-rules=ambiguous.column_count,layout.long_lines,references.keywords']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.8
