@@ -47,7 +47,7 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.13.0"
+urlaubsverwaltung_version="6.13.1"
 zeiterfassung_version="3.3.0"
 keycloak_version="26.7.4"
 
