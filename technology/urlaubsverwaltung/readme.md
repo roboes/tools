@@ -1704,6 +1704,13 @@ LEFT JOIN tenant_user
 ORDER BY time_entry_1.start DESC;
 ```
 
+```sql
+-- Pause time entries
+SELECT *
+FROM time_entry
+WHERE is_break IS TRUE;
+```
+
 ## Uninstall
 
 ```sh

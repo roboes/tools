@@ -484,6 +484,7 @@ Cloudflare → `Zero Trust`.
 `Access controls` → `Applications` → `Create new application` → `Self-hosted and private` → `Public DNS` → `Continue with Self-hosted and private`:
 
 - Home Assistant: `Application name`: `Home Assistant`. `Session Duration`: `1 month`. `Public hostname`: `homeassistant.website.com`. `Access policies`: `Select existing policies`: `Home Assistant`.
+  - Additional settings: `Additional settings` → `Cookie settings` → `Same Site Attribute`: `Lax`.
 - Home Assistant ACME Challenge Passthrough: `Application name`: `Home Assistant ACME Challenge Passthrough`. `Session Duration`: `24 hours`. `Public hostname`: `homeassistant.website.com/.well-known/acme-challenge/*`. `Access policies`: `Select existing policies`: `ACME Challenge Passthrough`.
 
 ### Cloudflare Caching
