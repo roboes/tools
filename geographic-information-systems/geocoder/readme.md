@@ -16,7 +16,7 @@ The Geocoder can also be used with alternative mapping data sources, such as the
 
 The [geocoder-examples.py](./geocoder-examples.py) contains some examples and use cases on how to use the [geocoder.py](./geocoder.py).
 
-This geocoder tool requires Python 3.12 because of the [`itertools.batched` function]([https://docs.python.org/3/library/itertools.html#itertools.batched).
+This geocoder tool requires Python 3.12 because of the [`itertools.batched` function](https://docs.python.org/3/library/itertools.html#itertools.batched).
 
 In case of `CERTIFICATE_VERIFY_FAILED` ("certificate verify failed: unable to get local issuer certificate") error, install the following package:
 

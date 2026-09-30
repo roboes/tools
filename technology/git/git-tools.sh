@@ -6,12 +6,6 @@
 [ -z "${BASH}" ] && exec bash
 
 
-# Ignore certificate validation
-# echo insecure >> ~/.curlrc
-# HOMEBREW_CURLRC=1
-# export HOMEBREW_CURLRC
-
-
 # Settings
 git_hostname="github.com"
 git_account="$(git config user.name)" # Username or Organization
@@ -51,9 +45,6 @@ if [ "${git_repository}" == "tools" ]; then
     cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
 fi
 
-
-## Prettier
-# prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 '**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,md,yaml,yml}'
 
 ## PHP
 find . -type f -name "*.php" | grep -q . && php-cs-fixer fix . --rules=@PSR12 --using-cache=no --no-interaction

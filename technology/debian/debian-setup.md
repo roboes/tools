@@ -1,6 +1,7 @@
 # Debian Setup
 
-> [!NOTE] Last update: 2026-07-05
+> [!NOTE]  
+> Last update: 2026-07-05
 
 ```sh
 # Start Bash (Unix shell)
@@ -9,7 +10,7 @@
 
 ```sh
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
-sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean
+sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 
 # Refresh all installed snap packages to their latest versions
 sudo snap refresh
@@ -28,21 +29,21 @@ sudo apt install -y flatpak
 ```
 
 ```sh
-# Install core tools and programming languages
+# Install core tools
 sudo apt install -y composer \
   curl \
   git \
   python3 \
-  python-is-python3 \
   python3-pip \
   python3-venv \
+  unzip \
   wget
 ```
 
 ```sh
 # PHP
-sudo apt-get -y install apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
-sudo apt-get install php8.5
+sudo apt install -y apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
+sudo apt install -y php8.5
 ```
 
 ```sh
@@ -104,6 +105,45 @@ sudo apt install -y r-base r-base-dev
 
 # R Studio
 sudo snap install rstudio --classic
+
+# Quarto
+QUARTO_VERSION=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest | grep -oP '"tag_name": "v\K[^"]+')
+wget "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb"
+sudo dpkg -i "quarto-${QUARTO_VERSION}-linux-amd64.deb"
+sudo apt install -y -f
+rm "quarto-${QUARTO_VERSION}-linux-amd64.deb"
+```
+
+```sh
+# ONLYOFFICE - https://helpcenter.onlyoffice.com/desktop/installation/desktop-install-ubuntu.aspx
+
+# Add GPG key
+mkdir -p -m 700 ~/.gnupg
+gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+chmod 644 /tmp/onlyoffice.gpg
+sudo chown root:root /tmp/onlyoffice.gpg
+sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
+
+# Add desktop editors repository
+echo 'deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+
+# Update the package manager cache
+sudo apt update
+
+# Install
+sudo apt install -y onlyoffice-desktopeditors
+```
+
+```sh
+# dupeGuru
+sudo add-apt-repository ppa:dupeguru/ppa
+sudo apt update
+sudo apt install -y dupeguru
+```
+
+```sh
+# FreeFileSync
+sudo apt install -y freefilesync
 ```
 
 ```sh
@@ -116,7 +156,7 @@ dpkg --print-architecture
 sudo dpkg --add-architecture i386 && sudo apt update
 
 ## Install Wine
-sudo apt install \
+sudo apt install -y \
   wine \
   wine32 \
   wine64 \

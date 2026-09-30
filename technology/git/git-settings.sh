@@ -22,5 +22,8 @@
 ## Ignore executable bit changes
 git config --global core.filemode false
 
+# Line endings: Convert CRLF to LF on commit (for Linux/macOS)
+git config --global core.autocrlf input
+
 # Git ignore
 # https://github.com/github/gitignore/blob/main/Python.gitignore

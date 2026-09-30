@@ -1,5 +1,5 @@
 ## Server Backup
-# Last update: 2026-02-22
+# Last update: 2026-09-13
 
 
 # Start Bash (Unix Shell)
@@ -7,7 +7,7 @@
 
 
 # Install rsync
-# sudo apt install rsync
+# sudo apt install -y rsync
 
 
 # Settings
@@ -15,9 +15,9 @@ settings_vps_host="ssh.website.com"
 settings_vps_user="sysadmin"
 settings_vps_passphrase="passphrase"
 settings_vps_ssh_key="${HOME}/.ssh/id_ed25519_website.com"
-settings_vps_cloudflared="/home/linuxbrew/.linuxbrew/bin/cloudflared"
+settings_vps_cloudflared="/usr/bin/cloudflared"
 settings_vps_backup_directory="/backups"
-settings_local_backup_directory="/mnt/c/Users/${USER}/Downloads/virtualmin_backups"
+settings_local_backup_directory="${HOME}/Downloads/virtualmin_backups"
 settings_files_to_skip=(
   "photos.website.com.tar.gz*"
 )

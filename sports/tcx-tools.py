@@ -1,5 +1,5 @@
 ## .tcx Tools
-# Last update: 2023-09-03
+# Last update: 2026-09-13
 
 
 """About: Script that performs a series of transformations to the Training Center XML (.tcx) workout data file."""
@@ -81,8 +81,11 @@ def tcx_combine(*, directory, filepath_output):
             )
             file_text = file_text.split(sep='\n')
 
-            index_activity_start = next(index for index, item in enumerate(file_text) if item.startswith('<Activity Sport'))
-            index_activity_end = next(index for index, item in enumerate(file_text) if item.endswith('</Activity>'))
+            index_activity_start = next((index for index, item in enumerate(file_text) if item.startswith('<Activity Sport')), None)
+            index_activity_end = next((index for index, item in enumerate(file_text) if item.endswith('</Activity>')), None)
+
+            if index_activity_start is None or index_activity_end is None or index_activity_end < index_activity_start:
+                raise ValueError(f'Could not find a complete Activity element in {file}')
 
             if index_activity_start == index_activity_end:
                 file_text = ''.join(file_text[index_activity_start])
