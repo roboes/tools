@@ -1,5 +1,5 @@
 ## Geocoder Tools Examples
-# Last update: 2024-03-27
+# Last update: 2026-09-13
 
 
 """About: Geocoder Tools Examples."""
@@ -16,31 +16,30 @@ globals().clear()
 # Import packages
 import os
 import sys
-from importlib.util import spec_from_file_location
+from importlib.util import module_from_spec, spec_from_file_location
 
 import pandas as pd
 
 # Import custom packages
 sys.dont_write_bytecode = True
 
-geocoder_tools = spec_from_file_location(
+geocoder_tools_spec = spec_from_file_location(
     name='geocoder_tools',
-    location=os.path.join(
-        os.path.expanduser('~'),
-        'Documents',
-        'Tools',
-        'geocoder',
-        'geocoder-tools.py',
-    ),
-).loader.load_module()
+    location=os.path.join(os.path.dirname(__file__), 'geocoder-tools.py'),
+)
+if geocoder_tools_spec is None or geocoder_tools_spec.loader is None:
+    raise ImportError('Could not load geocoder-tools.py')
+
+geocoder_tools = module_from_spec(geocoder_tools_spec)
+geocoder_tools_spec.loader.exec_module(geocoder_tools)
 
 
 download_world_boundaries_shapefile = geocoder_tools.download_world_boundaries_shapefile
 geocoder_country_code = geocoder_tools.geocoder_country_code
-countries_alpha_3_to_2 = geocoder_tools.countries_alpha_3_to_2
+countries = geocoder_tools.countries
 
 # Delete objects
-del spec_from_file_location, geocoder_tools
+del geocoder_tools_spec, module_from_spec, spec_from_file_location, geocoder_tools
 
 
 #######################
@@ -98,4 +97,4 @@ df_geo = geocoder_country_code(
 )
 
 # Download and import world countries in multiple languages with associated alpha-2, alpha-3, and numeric codes as defined by the ISO 3166 standard
-countries_alpha_3_to_2_df = countries_alpha_3_to_2()
+countries_df = countries()

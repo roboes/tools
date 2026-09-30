@@ -1,7 +1,7 @@
 <?php
 
 // WooCommerce - Add "Delete Account" button to "Account Details" page
-// Last update: 2026-01-15
+// Last update: 2026-09-14
 
 
 if (function_exists('WC') && !is_admin()) {
@@ -32,16 +32,14 @@ if (function_exists('WC') && !is_admin()) {
         // Get current language (Polylang/WPML)
         $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
 
-        $button_text = esc_html($messages['account_delete_button'][$browsing_language]);
-        $confirm_text = esc_js($messages['confirm_deletion'][$browsing_language]);
+        $button_text = esc_html($messages['account_delete_button'][$browsing_language] ?? $messages['account_delete_button']['en']);
+        $confirm_text = esc_js($messages['confirm_deletion'][$browsing_language] ?? $messages['confirm_deletion']['en']);
 
         echo '<br>
-        <p>
-            <form method="post" action="' . esc_url(get_permalink()) . '" onsubmit="return confirm(\'' . $confirm_text . '\');">
-                ' . wp_nonce_field('delete_account_nonce', 'delete_account_nonce_field', true, false) . '
-                <button type="submit" name="delete-account" class="elementor-widget-button" style="background-color: #d9534f; color: white; border: none; padding: 10px 20px; cursor: pointer;">' . $button_text . '</button>
-            </form>
-        </p>';
+        <form method="post" action="' . esc_url(wc_get_account_endpoint_url('edit-account')) . '" onsubmit="return confirm(\'' . $confirm_text . '\');">
+            ' . wp_nonce_field('delete_account_nonce', 'delete_account_nonce_field', true, false) . '
+            <button type="submit" name="delete-account" class="elementor-widget-button" style="background-color: #d9534f; color: white; border: none; padding: 10px 20px; cursor: pointer;">' . $button_text . '</button>
+        </form>';
     }
 
 
@@ -50,10 +48,10 @@ if (function_exists('WC') && !is_admin()) {
 
     function account_deletion_handler(): void
     {
-        if (is_admin()) {
+        if (is_admin() || !function_exists('WC')) {
             return;
         }
-        if (!is_user_logged_in() || !isset($_POST['delete-account'])) {
+        if (!is_user_logged_in() || !isset($_POST['delete-account']) || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             return;
         }
 
@@ -69,20 +67,21 @@ if (function_exists('WC') && !is_admin()) {
         if (check_admin_referer('delete_account_nonce', 'delete_account_nonce_field')) {
             $user_id = (int) get_current_user_id();
 
-            if (!current_user_can('administrator') && account_deletion_verifier($user_id)) {
+            if (account_deletion_verifier($user_id)) {
                 // Delete user and redirect
                 require_once(ABSPATH . 'wp-admin/includes/user.php');
-                wp_delete_user($user_id);
-                wp_redirect(home_url());
-                exit;
-            } else {
-                // Get current language
-                $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
-
-                wc_add_notice($messages['account_delete_error'][$browsing_language], 'error');
-                wp_redirect(wc_get_account_endpoint_url('edit-account'));
-                exit;
+                if (wp_delete_user($user_id)) {
+                    wp_safe_redirect(home_url('/'));
+                    exit;
+                }
             }
+
+            // Get current language
+            $browsing_language = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : 'en';
+
+            wc_add_notice($messages['account_delete_error'][$browsing_language] ?? $messages['account_delete_error']['en'], 'error');
+            wp_safe_redirect(wc_get_account_endpoint_url('edit-account'));
+            exit;
         }
     }
 
@@ -110,8 +109,23 @@ if (function_exists('WC') && !is_admin()) {
 
         // Check if the user role is allowed to delete account
         if (!empty(array_intersect($user->roles, $allowed_roles))) {
-            // Get completed orders
-            $orders = wc_get_orders(['customer_id' => $user_id, 'status' => array_keys(wc_get_order_statuses()), 'limit' => 1, 'orderby' => 'date', 'order' => 'DESC']);
+            $all_order_statuses = array_keys(wc_get_order_statuses());
+            $incomplete_order_statuses = array_values(array_diff($all_order_statuses, ['wc-completed']));
+
+            // Block deletion when any order is not completed.
+            $incomplete_orders = wc_get_orders([
+                'customer_id' => $user_id,
+                'status' => $incomplete_order_statuses,
+                'limit' => 1,
+                'return' => 'ids',
+            ]);
+
+            if (!empty($incomplete_orders)) {
+                return false;
+            }
+
+            // Get the most recent completed order.
+            $orders = wc_get_orders(['customer_id' => $user_id, 'status' => 'completed', 'limit' => 1, 'orderby' => 'date', 'order' => 'DESC']);
 
             // Check if there are completed orders
             if (!empty($orders)) {

@@ -11,7 +11,7 @@ domain="website.com"
 
 ```sh
 # Install packages
-sudo apt install dnsutils nikto nmap sqlmap sslscan sublist3r -y
+sudo apt install -y dnsutils nikto nmap sqlmap sslscan sublist3r
 ```
 
 ```sh

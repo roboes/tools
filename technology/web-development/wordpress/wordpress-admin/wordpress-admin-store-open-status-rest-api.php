@@ -1,7 +1,7 @@
 <?php
 
 // WordPress Admin - Store open status (using REST API)
-// Last update: 2026-01-15
+// Last update: 2026-09-13
 
 
 add_action(hook_name: 'rest_api_init', callback: 'register_store_hours_endpoint', priority: 10, accepted_args: 1);
@@ -62,6 +62,27 @@ function store_hours_shortcode(): string
     );
 }
 
+function get_easter_sunday(int $year, DateTimeZone $timezone): DateTimeImmutable
+{
+    // Anonymous Gregorian algorithm (Meeus/Jones/Butcher) - doesn't require the ext-calendar extension
+    $a = $year % 19;
+    $b = intdiv($year, 100);
+    $c = $year % 100;
+    $d = intdiv($b, 4);
+    $e = $b % 4;
+    $f = intdiv($b + 8, 25);
+    $g = intdiv($b - $f + 1, 3);
+    $h = (19 * $a + $b - $d - $g + 15) % 30;
+    $i = intdiv($c, 4);
+    $k = $c % 4;
+    $l = (32 + 2 * $e + 2 * $i - $h - $k) % 7;
+    $m = intdiv($a + 11 * $h + 22 * $l, 451);
+    $month = intdiv($h + $l - 7 * $m + 114, 31);
+    $day = (($h + $l - 7 * $m + 114) % 31) + 1;
+
+    return new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day), $timezone);
+}
+
 function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
 {
     // Settings
@@ -74,20 +95,46 @@ function get_store_hours_rest(WP_REST_Request $request): WP_REST_Response
         'Saturday' => ['10:00', '14:00'],
     ];
     $special_opening_hours = [
-        '2024-12-24' => ['10:00', '14:00'],
         '2025-12-24' => ['10:00', '14:00'],
     ];
-    $public_holidays = ['2026-01-01', '2026-01-06', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-06-04', '2026-08-08', '2026-08-15', '2026-10-03', '2026-12-25', '2026-12-26', '2027-01-01', '2027-01-06', '2027-03-26', '2027-03-29', '2027-05-01', '2027-05-06', '2027-05-17', '2027-05-27', '2027-11-01', '2027-12-25'];
+    // Fixed-date public holidays for Augsburg, Bavaria (month-day, so no year needed)
+    $public_holidays_fixed = [
+        '01-01', // New Year's Day
+        '01-06', // Epiphany
+        '05-01', // Labour Day
+        '08-08', // Augsburger Hohes Friedensfest (Augsburg only)
+        '08-15', // Assumption Day
+        '10-03', // German Unity Day
+        '11-01', // All Saints' Day
+        '12-25', // Christmas Day
+        '12-26', // Boxing Day
+    ];
     $closed_days = ['2026-12-24', '2026-12-31', '2027-12-24', '2027-12-31'];
-    $special_days = ['2024-06-28', '2024-06-29', '2024-07-01', '2024-07-02', '2024-07-03'];
+    $special_days = [];
 
     $current_datetime = new DateTimeImmutable(datetime: 'now', timezone: wp_timezone());
     $current_day_of_week = $current_datetime->format('l');
     $current_date = $current_datetime->format('Y-m-d');
+    $current_date_md = $current_datetime->format('m-d');
+
+    // Easter-based public holidays move every year, so they're calculated instead of hardcoded
+    $easter_sunday = get_easter_sunday((int) $current_datetime->format('Y'), wp_timezone());
+    $public_holidays_movable = [
+        $easter_sunday->modify('-2 days')->format('Y-m-d'),  // Good Friday
+        $easter_sunday->modify('+1 day')->format('Y-m-d'),   // Easter Monday
+        $easter_sunday->modify('+39 days')->format('Y-m-d'), // Ascension Day
+        $easter_sunday->modify('+50 days')->format('Y-m-d'), // Whit Monday
+        $easter_sunday->modify('+60 days')->format('Y-m-d'), // Corpus Christi
+    ];
+
+    $is_public_holiday = in_array($current_date_md, $public_holidays_fixed, true)
+        || in_array($current_date, $public_holidays_movable, true);
 
     $browsing_language = filter_var($request->get_param('lang') ?: 'en', FILTER_DEFAULT, FILTER_THROW_ON_FAILURE);
 
-    if (in_array($current_date, $public_holidays, true)) {
+    // Only call out "holiday" on a day the store would otherwise be open;
+    // a holiday falling on an already-closed day (e.g. Sunday) just shows the normal closed status.
+    if ($is_public_holiday && isset($opening_hours[$current_day_of_week])) {
         $message = generate_message('holiday', $browsing_language);
     } elseif (in_array($current_date, $closed_days, true)) {
         $message = generate_message('closed_date', $browsing_language);

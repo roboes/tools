@@ -1,9 +1,9 @@
 <?php
 
 // Elementor - Scroll to Loop Grid and activate Taxonomy Filter via button clicks or URL parameters
-// Last update: 2026-01-14
+// Last update: 2026-09-13
 
-if (is_plugin_active('elementor/elementor.php')) {
+if (class_exists('\Elementor\Plugin')) {
 
     // Create a CSS ID to be used on buttons, where on click it scrolls down to the Loop Grid and selects a specific Taxonomy Filter
     add_action(hook_name: 'wp_footer', callback: 'elementor_loop_grid_button_taxonomy_filter', priority: 10, accepted_args: 1);

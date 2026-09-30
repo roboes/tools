@@ -84,7 +84,7 @@ dpkg -l | grep -i "bookworm"
 sudo apt purge --autoremove dovecot-core dovecot-imapd dovecot-pop3d
 
 ## Install packages with fresh config files
-sudo apt install dovecot-core dovecot-imapd dovecot-pop3d
+sudo apt install -y dovecot-core dovecot-imapd dovecot-pop3d
 
 ## Restart the service
 systemctl restart dovecot

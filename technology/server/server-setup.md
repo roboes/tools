@@ -1,7 +1,7 @@
 # Debian and Virtualmin Server Setup
 
 > [!NOTE]  
-> Last update: 2026-07-26
+> Last update: 2026-09-13
 
 ```sh
 # Settings
@@ -15,49 +15,75 @@ database_name="database_name"
 
 ## Notes
 
-- Check for new [virtualmin-nginx module releases](https://github.com/virtualmin/virtualmin-nginx/releases).
 - Check for new [Cloudflare IP ranges](https://www.cloudflare.com/ips/).
+- Check [Cloudflare HTTP/3 support](https://developers.cloudflare.com/speed/optimization/protocol/http3/): "This setting is for connection between the user and Cloudflare. HTTP/3 connection to the origin is not yet supported."
 
 ## Initial setup
+
+```sh
+# Update packages
+sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
+```
+
+### System Settings
 
 ```sh
 # Check Debian version
 cat /etc/os-release
 ```
 
-```sh
-# Update packages
-sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y && sudo apt autoremove -y && sudo apt clean
-```
+Change locale:
 
 ```sh
-# Change locale
-
-## Check Current Locale Settings
+# Check Current Locale Settings
 locale
 
-## Reconfigure Locales (en_US.UTF-8; Optionally for dates: en_DK.UTF-8 UTF-8)
+# Reconfigure Locales (en_US.UTF-8; Optionally for dates: en_DK.UTF-8 UTF-8)
 sudo dpkg-reconfigure locales
 
-## Update the Environment Variables
+# Update the Environment Variables
 nano ~/.bashrc
+```
 
-## Add or update the following line
-# export LANG=en_US.UTF-8
+Configure systemd-journald globally to automatically cap log retention, limit disk space usage, and prevent log flooding:
+
+```sh
+sudo nano /etc/systemd/journald.conf
+```
+
+```conf
+[Journal]
+MaxRetentionSec=30day
+SystemMaxUse=1G
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+Storage=persistent
 ```
 
 ```sh
-# Install packages
+sudo systemctl restart systemd-journald
+```
+
+```conf
+export LANG=en_US.UTF-8
+```
+
+### Packages
+
+```sh
+# Install core tools
 sudo apt install -y \
   curl \
   dnsutils \
   git \
+  python3 \
+  python3-pip \
+  python3-venv \
+  unzip \
   wget \
   wtmpdb \
   libpam-wtmpdb \
-  python-is-python3 \
-  python3-pip \
-  python3-venv \
   resolvconf
 
 # sudo apt install -y composer
@@ -155,16 +181,16 @@ cat ~/.ssh/id_ed25519_${domain}.pub
 # The public key string you copied from your local machine
 ssh_public_key="ssh-ed25519 AAAA... ${admin_user}@${server_ip}"
 
-# Create the directory for the admin user and set permissions
-sudo mkdir -p /home/${admin_user}/.ssh
-chmod 700 /home/${admin_user}/.ssh
+# Create the directory for the admin user with the correct ownership and permissions
+sudo install -d -m 700 -o "${admin_user}" -g "${admin_user}" "/home/${admin_user}/.ssh"
 
 # Append the key only if it doesn't already exist in the file
 if ! grep -qF "${ssh_public_key}" /home/${admin_user}/.ssh/authorized_keys 2>/dev/null; then
-    echo "${ssh_public_key}" >> /home/${admin_user}/.ssh/authorized_keys
+  echo "${ssh_public_key}" | sudo tee -a "/home/${admin_user}/.ssh/authorized_keys" >/dev/null
 fi
 
-chmod 600 /home/${admin_user}/.ssh/authorized_keys
+sudo chown "${admin_user}:${admin_user}" "/home/${admin_user}/.ssh/authorized_keys"
+sudo chmod 600 "/home/${admin_user}/.ssh/authorized_keys"
 ```
 
 Configure SSH to use key-based authentication by adding "${admin_user}" to the `AllowUsers` directive.
@@ -280,20 +306,15 @@ sudo systemctl reload sshd
 ## Virtualmin
 
 ```sh
-# Installation
-wget https://software.virtualmin.com/gpl/scripts/install.sh
-chmod a+x install.sh
-./install.sh
-
-sudo apt install webmin --install-recommends -y
+# Install Virtualmin GPL with Nginx and MariaDB on a fresh, supported Debian system
+sudo sh -c "$(curl -fsSL https://download.virtualmin.com/virtualmin-install)" -- --bundle LEMP
 ```
 
 After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 ### Nginx webserver
 
-- [Configure nginx as default webserver](https://www.virtualmin.com/docs/server-components/configuring-nginx-as-default-webserver/). Note: If the "Disable Apache as a Virtualmin feature" step fails with an error stating that the feature is in use, you may need to delete the existing virtual server first by running `virtualmin delete-domain --domain 100.00.000.01.vps.com`.
-- Check if it worked: `Virtualmin` → `System Settings` → `Features and Plugins` → Ensure that `Nginx Website` and `Nginx SSL Website are enabled`.
+- Check the LEMP installation: `Virtualmin` → `System Settings` → `Features and Plugins` → Ensure that `Nginx Website` and `Nginx SSL Website` are enabled.
 
 ### Virtualmin
 
@@ -307,6 +328,8 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Change default domain for server IP address: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Default website for IP address` → `Yes`.
 
+- Redirect HTTP requests after the domain has a valid SSL certificate: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Redirect all requests to SSL site` → `Yes`. Keep port 80 enabled for the redirect and Let's Encrypt HTTP-01 challenges.
+
 - Enable HTTP2 protocol support: `Virtualmin` → Choose Virtual Server → `Web Configuration` → `Website Options` → `Enable HTTP2 protocol support` → `Yes`.
 
 ```sh
@@ -314,6 +337,8 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 # virtualmin modify-web --domain ${domain} --protocols "http/1.1 h2"
 # virtualmin list-domains --domain ${domain} --multiline | grep "HTTP protocols"
 ```
+
+Server Template: `Virtualmin` → `System Settings` → `Server Templates` → `Default Settings` → `PHP options`: `Default PHP execution mode`: `FPM`.
 
 #### Security
 
@@ -352,7 +377,7 @@ After installation, login to Virtualmin and run the "Post-Installation Wizard".
 
 - Scheduled Upgrades:
   - Virtualmin → Dashboard → Package updates → Scheduled Upgrades:
-    - `Check for updates on schedule`: `Yes, every week`.
+    - `Check for updates on schedule`: `Yes, every day`.
     - `Action when update needed`: `Install security updates`.
 
 ##### Fail2Ban
@@ -445,7 +470,7 @@ Wants=network-online.target
 [Service]
 TimeoutStartSec=0
 Type=notify
-ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run --token 12345
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate run --token 12345
 Restart=on-failure
 RestartSec=5s
 
@@ -579,9 +604,12 @@ Configure notification message:
 
 #### FirewallD
 
+> [!IMPORTANT]  
+> The mail-related removal rules below are for a web-only server. If this server hosts email, do not remove SMTP, submission, SMTPS, IMAP, or IMAPS from the firewall.
+
 ```sh
 # sudo apt update
-# sudo apt install firewalld -y
+# sudo apt install -y firewalld
 
 # Remove SSH service
 # sudo firewall-cmd --zone=public --remove-service=ssh --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
@@ -663,9 +691,29 @@ sudo firewall-cmd --get-active-zones
 sudo firewall-cmd --list-all-zones
 ```
 
+If the email server is used, omit the mail-related firewall removal rules above and verify that only the required mail ports are open.
+
+If SSH works through Cloudflare Access or WireGuard, remove it from the public zone after testing a second active session. Otherwise, restrict public SSH to known source addresses instead of exposing it globally.
+
+```sh
+# Run only after testing the private access path and keeping the current session open
+# sudo firewall-cmd --permanent --zone=public --remove-service=ssh
+# sudo firewall-cmd --reload
+```
+
+Docker-published ports can bypass the intended firewalld zone policy. Review every published binding and bind private services to loopback or a private interface instead of `0.0.0.0` or `::`.
+
+```sh
+sudo ss -lntup
+sudo docker ps --format 'table {{.Names}}\t{{.Ports}}'
+```
+
 Now "Create Virtual Server".
 
 ### Virtualmin settings (optional)
+
+> [!NOTE]  
+> If Cloudflare Zero Trust is enabled, add phpMyAdmin and RoundCube as protected Applications behind the tunnel, the same way SSH and Virtualmin are configured.
 
 - Apps: `Virtualmin` → Choose Virtual Server → `Manage Web Apps` → Install `phpMyAdmin` and `RoundCube`.
 
@@ -674,8 +722,14 @@ Now "Create Virtual Server".
 [Configuring Multiple PHP Versions](https://www.virtualmin.com/docs/server-components/configuring-multiple-php-versions/)
 
 ```sh
+# Settings
 php_version_current="8.5"
-sudo apt install php${php_version_current}-sqlite3 php${php_version_current}-igbinary php${php_version_current}-redis
+
+# Enable Sury/PHP repository
+sudo apt install -y apt-transport-https lsb-release ca-certificates curl && sudo curl -sSL -o /usr/share/keyrings/debsuryorg-archive-keyring.gpg https://packages.sury.org/php/apt.gpg && sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-debian-php-$(lsb_release -sc).list' && sudo apt-get update
+
+# Install PHP packages
+sudo apt install -y php${php_version_current}-{cli,curl,fpm,gd,igbinary,intl,mbstring,mysql,redis,sqlite3,xml,zip}
 ```
 
 Important: Upgrading or downgrading PHP versions via control panels like Virtualmin often triggers an automatic rewrite of Nginx configuration files, which can inadvertently strip out essential FastCGI parameters.
@@ -696,7 +750,7 @@ virtualmin check-config
 ### Packages
 
 ```sh
-sudo apt install htop \
+sudo apt install -y htop \
   libnginx-mod-http-brotli-filter \
   redis
 ```
@@ -781,26 +835,13 @@ file /usr/bin/procmail-wrapper
 dpkg --print-architecture
 ```
 
-If an architecture mismatch is detected (e.g. `file` shows a 32-bit x86 executable, but `dpkg` shows `arm64`), recompile procmail-wrapper for your server's correct architecture:
+If an architecture mismatch is detected (e.g. `file` shows a 32-bit x86 executable, but `dpkg` shows `arm64`), reinstall the signed package that owns the wrapper:
 
 ```sh
-# Navigate to a temporary directory
-cd /tmp/
-
-# Download the source file
-wget http://software.virtualmin.com/lib/procmail-wrapper.c
-
-# Compile the source code
-gcc -o procmail-wrapper procmail-wrapper.c
-
-# Verify the newly compiled binary
-file procmail-wrapper
-
-# Replace the old binary
-sudo mv /usr/bin/procmail-wrapper /usr/bin/procmail-wrapper.old  # Backup the old one
-sudo mv /tmp/procmail-wrapper /usr/bin/                         # Move the new one from /tmp
-sudo chmod 4755 /usr/bin/procmail-wrapper                     # Set permissions
-sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
+package=$(dpkg-query -S /usr/bin/procmail-wrapper | cut -d: -f1)
+sudo apt update
+sudo apt install --reinstall "${package}"
+file /usr/bin/procmail-wrapper
 ```
 
 ### Backup
@@ -821,9 +862,14 @@ sudo chown root:root /usr/bin/procmail-wrapper                # Set ownership
 - `Backup level`: `Full (all files)`.
 - `Scheduled backup time` → `Simple schedule`: `Weekly (on Sundays)`.
 
+Also send encrypted backups to an offsite, versioned destination and test a restore regularly. A backup stored only on this server does not protect against disk loss or server compromise.
+
 ### Bootup and Shutdown
 
 `Webmin` → `System` → `Bootup and Shutdown`.
+
+> [!IMPORTANT]  
+> Only disable these services on a web-only server. Keep Postfix and Dovecot enabled when the email server is used.
 
 ```sh
 # Disable services
@@ -892,6 +938,13 @@ http {
     # Client Request Limits
     client_max_body_size 50M;
 
+    # Login rate limiting (report-only until logs confirm an appropriate threshold)
+    map $request_uri $login_limit_key {
+      default "";
+      ~^/wp-login\.php$ $binary_remote_addr;
+    }
+    limit_req_zone $login_limit_key zone=login_limit:10m rate=10r/m;
+
     # MIME Types
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
@@ -925,19 +978,19 @@ http {
 
     # Proxy Settings
     proxy_http_version 1.1;
-    proxy_set_header Connection "keep-alive";
+    proxy_set_header Connection "";
     proxy_buffering on;
     proxy_cache_revalidate on;
-    proxy_buffer_size 512k;
-    proxy_buffers 16 512k;
-    proxy_busy_buffers_size 512k;
+    proxy_buffer_size 16k;
+    proxy_buffers 8 16k;
+    proxy_busy_buffers_size 32k;
     proxy_read_timeout 30s;
     proxy_send_timeout 30s;
 
     # FastCGI Global Settings
 
     ## FastCGI cache path definition
-    fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
+    fastcgi_cache_path /var/cache/nginx levels=1:2 keys_zone=MYCACHE:100m inactive=4h max_size=2g min_free=1g use_temp_path=off loader_files=500 loader_sleep=50ms loader_threshold=300ms;
     fastcgi_cache_key "$scheme$request_method$host$request_uri";
 
     ## FastCGI timeouts
@@ -946,10 +999,10 @@ http {
     fastcgi_send_timeout 30s;
 
     ## FastCGI buffers
-    fastcgi_buffer_size 32k;
-    fastcgi_buffers 8 32k;
-    fastcgi_busy_buffers_size 64k;
-    fastcgi_temp_file_write_size 128k;
+    fastcgi_buffer_size 128k;
+    fastcgi_buffers 8 128k;
+    fastcgi_busy_buffers_size 256k;
+    fastcgi_temp_file_write_size 256k;
 
     ## FastCGI cache lock settings
     fastcgi_cache_lock on;
@@ -991,6 +1044,30 @@ http {
 }
 ```
 
+##### /etc/nginx/snippets/logs-silence.conf
+
+```sh
+sudo mkdir -p /etc/nginx/snippets
+sudo nano /etc/nginx/snippets/logs-silence.conf
+```
+
+```nginx
+location = /favicon.ico {
+    log_not_found off;
+    access_log off;
+}
+
+location = /apple-touch-icon.png {
+    log_not_found off;
+    access_log off;
+}
+
+location = /apple-touch-icon-precomposed.png {
+    log_not_found off;
+    access_log off;
+}
+```
+
 ##### /etc/nginx/snippets/security-headers.conf
 
 ```sh
@@ -1014,7 +1091,6 @@ server {
     set $domain website.com;
     set $domain_root_path /home/${domain};
     set $php_socket_id 100000000000000;
-    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
     server_name website.com www.website.com;
     listen 100.00.000.01:80; # HTTP IPv4 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:80; # HTTP IPv6 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
@@ -1023,6 +1099,7 @@ server {
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
     set $content_security_policy "default-src 'self'; connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com https://*.pagseguro.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; script-src-elem 'self' 'unsafe-inline' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://*.pagseguro.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    # Important: Before saving, scroll down to the `location ~ "\.php(/|$)" {` block and replace `fastcgi_pass unix:/run/php/${php_socket_id}.sock;` with the literal socket path for this domain
 
 
     # Main Web Root Setup
@@ -1032,6 +1109,7 @@ server {
     # Logging
     access_log /var/log/virtualmin/${domain}_access_log;
     error_log /var/log/virtualmin/${domain}_error_log warn;
+    include /etc/nginx/snippets/logs-silence.conf;
 
     # Enable HTTP/2 protocol support
     http2 on;
@@ -1062,12 +1140,14 @@ server {
     # Location Blocks - General & Security
 
     ## Block access to sensitive files
-    location ~ ^/\.user\.ini {
+    location ~ /\.(?!well-known(?:/|$)) {
         deny all;
+      access_log off;
+      log_not_found off;
     }
 
-    ## Block access to .yml files
-    location ~* \.(yml)$ {
+    ## Block access to backup and configuration files
+    location ~* (?:\.(?:bak|old|orig|save|sql|swp|yml|yaml)|~)$ {
         deny all;
         access_log off;
         log_not_found off;
@@ -1094,7 +1174,7 @@ server {
     }
 
     # Static asset caching
-    location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|htm|html|ico|img|iso|jpeg|jpg|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
+    location ~* ^(?!.*phast\\.php).*\.(ac3|avi|avif|bmp|bz2|cue|dat|doc|docx|dts|eot|exe|flv|gif|gz|ico|img|iso|jpeg|jpg|mkv|mp3|mp4|mpeg|mpg|ogg|otf|pdf|png|ppt|pptx|qt|rar|rmf|rtf|svg|swf|tar|tgz|ttf|wav|woff|woff2|zip|webm|webp)$ {
         etag on;
         if_modified_since exact;
         expires 1y;
@@ -1121,13 +1201,14 @@ server {
 
     location ~ "\.php(/|$)" {
         try_files $uri $fastcgi_script_name =404;
+      limit_req zone=login_limit burst=10 nodelay;
 
         # PHP Processing
         fastcgi_split_path_info "^(.+\\.php)(/.+)$";
 
         # FastCGI core settings
         include fastcgi_params;
-        fastcgi_pass ${php_socket_path};
+        fastcgi_pass unix:/run/php/${php_socket_id}.sock; # Important: Virtualmin detects PHP-FPM by scanning this file for a literal fastcgi_pass unix:/run/php/<id>.sock; - it does NOT resolve nginx variables. Replace this line with the real socket path for this domain, e.g. fastcgi_pass unix:/run/php/100000000000000.sock; Using a $variable here will make Virtualmin show "PHP Options: disabled" even though PHP actually works
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param PATH_INFO $fastcgi_path_info;
@@ -1145,7 +1226,13 @@ server {
         if ($http_cookie ~* "PHPSESSID") {
             set $skip_cache 1;
         }
-        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php") {
+        if ($http_authorization != "") {
+          set $skip_cache 1;
+        }
+        if ($request_uri ~* "/wp-admin/|/wp-login\\.php|/wp-cron\\.php|/wp-json/|/wc-api/|/admin-ajax\\.php|/cart/|/checkout/|/my-account/|/mein-account/|/kasse/|/finalizacao-de-compra/") {
+          set $skip_cache 1;
+        }
+        if ($args ~* "(^|&)add-to-cart=") {
             set $skip_cache 1;
         }
         if ($http_cookie ~* "wordpress_logged_in_|wordpress_sec_|wp-settings-|wp-settings-time-") {
@@ -1210,7 +1297,6 @@ server {
     set $subdomain subdomain;
     set $domain_root_path /home/${domain}/domains/${subdomain}.${domain};
     set $php_socket_id 100000000000000;
-    set $php_socket_path unix:/run/php/${php_socket_id}.sock;
     server_name subdomain.website.com;
     listen 100.00.000.01:80; # HTTP IPv4 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:80; # HTTP IPv6 - required for Let's Encrypt HTTP-01 challenges and HTTP traffic
@@ -1225,15 +1311,16 @@ server {
     index index.php index.htm index.html;
 
     # Logging
-    access_log /var/log/virtualmin/${domain}_access_log;
-    error_log /var/log/virtualmin/${domain}_error_log warn;
+    access_log /var/log/virtualmin/${subdomain}.${domain}_access_log;
+    error_log /var/log/virtualmin/${subdomain}.${domain}_error_log warn;
+    include /etc/nginx/snippets/logs-silence.conf;
 
     # Enable HTTP/2 protocol support
     http2 on;
 
     # Security Headers
     include /etc/nginx/snippets/security-headers.conf;
-    add_header Content-Security-Policy $content_security_policy always;
+    add_header Content-Security-Policy "default-src 'self'" always;
 
 
     # Rewrites and Redirects
@@ -1253,12 +1340,14 @@ server {
     # Location Blocks - General & Security
 
     ## Block access to sensitive files
-    location ~ ^/\.user\.ini {
+    location ~ /\.(?!well-known(?:/|$)) {
         deny all;
+      access_log off;
+      log_not_found off;
     }
 
-    ## Block access to .yml files
-    location ~* \.(yml)$ {
+    ## Block access to backup and configuration files
+    location ~* (?:\.(?:bak|old|orig|save|sql|swp|yml|yaml)|~)$ {
         deny all;
         access_log off;
         log_not_found off;
@@ -1281,7 +1370,8 @@ server {
     location / {
         try_files $uri $uri/ /index.php?$args;
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
+        # add_header Content-Security-Policy $content_security_policy always;
+        add_header Content-Security-Policy "default-src 'self'" always;
     }
 
 }
@@ -1476,7 +1566,6 @@ pm.start_servers = 6
 pm.min_spare_servers = 4
 pm.max_spare_servers = 10
 pm.max_requests = 500
-pm.process_idle_timeout = 30s
 
 ; Process Management (medium-traffic)
 ; pm = static
@@ -1486,10 +1575,9 @@ pm.process_idle_timeout = 30s
 ; Per-Domain OPcache Logic
 php_admin_flag[opcache.enable] = on
 php_admin_value[opcache.validate_timestamps] = 0
-php_admin_value[opcache.revalidate_freq] = 0
 
 ; PHP slow log
-request_slowlog_timeout = 5s
+; request_slowlog_timeout = 5s
 ```
 
 ```sh
@@ -1512,7 +1600,7 @@ Select `/etc/php/*/fpm/php.ini` → `Edit Manually`:
 ```txt
 [opcache]
 opcache.enable=1
-opcache.enable_cli=1
+opcache.enable_cli=0
 opcache.memory_consumption=384
 opcache.interned_strings_buffer=48
 opcache.max_accelerated_files=40000
@@ -1521,7 +1609,7 @@ opcache.revalidate_freq=2
 opcache.enable_file_override=1
 ; opcache.optimization_level=0x7FFFBFFF
 opcache.jit=off ; SIGSEGV (Signal 11) during loops/updates, see: https://github.com/php/php-src/issues/20166
-opcache.jit_buffer_size=128M
+opcache.jit_buffer_size=0
 opcache.save_comments=1
 opcache.huge_code_pages=0
 ```
@@ -1544,19 +1632,24 @@ table_open_cache = 2000
 
 # InnoDB Performance
 innodb_buffer_pool_size = 4G
-innodb_buffer_pool_instances = 4
 innodb_log_file_size = 512M
-innodb_flush_log_at_trx_commit = 2
-innodb_flush_method = O_DIRECT
+innodb_flush_log_at_trx_commit = 1
 
 # Query optimizations
 tmp_table_size = 128M
 max_heap_table_size = 128M
-join_buffer_size = 4M
+join_buffer_size = 512K
 ```
 
 ```sh
 sudo systemctl restart mariadb
+```
+
+#### Verify MariaDB is not publicly exposed
+
+```sh
+# Should show 127.0.0.1:3306 (loopback only), not 0.0.0.0:3306
+sudo ss -lntp | grep 3306
 ```
 
 ### SSL Certificate
@@ -1598,7 +1691,7 @@ If it doesn't work, temporarily set the Cloudflare DNS mode from "Proxied" (oran
 
 ```sh
 # Import .sql
-mysql -u "${system_user}" -p "${database_name}" < ${domain_root_path}/public_html/"${database_name}".sql
+mariadb -u "${system_user}" -p "${database_name}" < ${domain_root_path}/public_html/"${database_name}".sql
 
 # Delete dataset
 rm ${domain_root_path}/public_html/"${database_name}".sql
@@ -1645,7 +1738,7 @@ imapsync --host1 "imap.server1.com" --user1 "email@domain.com" --password1 "pass
 
 ```sh
 # Create dump
-mysqldump -u root -p ${database_name} > $(dirname "${domain_root_path}/public_html")/backup.sql
+mariadb-dump -u root -p ${database_name} > $(dirname "${domain_root_path}/public_html")/backup.sql
 
 # Delete file after downloading it
 rm $(dirname "${domain_root_path}/public_html")/backup.sql
@@ -1666,7 +1759,10 @@ tail -n 50 /var/log/virtualmin/${domain}_error_log
 
 # PHP
 tail -n 50 /var/log/php8.5-fpm.log
-tail -n 50 $(dirname "${domain_root_path}/public_html")/logs/php_log
+tail -n 50 $(dirname "${domain_root_path}")/logs/php_log
+
+# Check system daemon errors and crashed services
+systemctl --failed
 ```
 
 ### Cache
@@ -1676,35 +1772,15 @@ tail -n 50 $(dirname "${domain_root_path}/public_html")/logs/php_log
 sudo rm -rf /var/cache/nginx/* && sudo systemctl reload nginx
 ```
 
+### Redis
+
+```sh
+# Clear Redis object cache
+redis-cli FLUSHALL
+```
+
 ### Server stress test
 
 ```sh
 ab -n 10 ${domain}
-```
-
-#### Virtualmin Nginx module
-
-```sh
-# Verify version
-cat /usr/share/webmin/virtualmin-nginx/module.info | grep version
-
-# Backup current module
-cp -r /usr/share/webmin/virtualmin-nginx /usr/share/webmin/virtualmin-nginx.bak
-
-# Download latest from GitHub
-cd /tmp
-wget https://github.com/virtualmin/virtualmin-nginx/archive/refs/heads/master.zip
-unzip master.zip
-
-# Install it
-cp -r virtualmin-nginx-master/* /usr/share/webmin/virtualmin-nginx/
-
-# Restart Webmin
-systemctl restart webmin
-
-# Verify version
-cat /usr/share/webmin/virtualmin-nginx/module.info | grep version
-
-# Remove the backup
-# rm -rf /usr/share/webmin/virtualmin-nginx.bak
 ```
