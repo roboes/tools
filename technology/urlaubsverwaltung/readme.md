@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-09-03
+> Last update: 2026-10-09
 
 ---
 
@@ -47,8 +47,8 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.16.0"
-zeiterfassung_version="3.3.0"
+urlaubsverwaltung_version="6.17.0"
+zeiterfassung_version="3.4.0"
 keycloak_version="26.8.0"
 
 keycloak_http_port=8090
@@ -1597,12 +1597,23 @@ python3 -m venv .venv
 set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py
 
+# Quick manual test run
+set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_user_status.py
+
 # Cron - Run every 2 hours from 08:00 to 20:00
-# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/sync_absences.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.log 2>&1") | crontab -
+
+# Cron - Run daily at 22:00
+# (crontab -l 2>/dev/null; echo "0 22 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_user_status.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_user_status.log 2>&1") | crontab -
 
 # Test
-crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|urlaubsverwaltung_zeiterfassung_sync_user_status|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
+
+`Webmin` → `System` → `Log File Rotation` → `Add a new log file to rotate`:
+
+- `Log files to rotate:` `/home/*/domains/hr.*/hr/*.log`.
+- `Rotation schedule`: `Weekly`.
 
 ### Sync Overtime (Zeiterfassung → Urlaubsverwaltung)
 
@@ -1650,8 +1661,13 @@ set -a; source .env.zeiterfassung_urlaubsverwaltung_sync_overtime; set +a
 # (crontab -l 2>/dev/null; echo "0 3 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
 
 # Test
-crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|urlaubsverwaltung_zeiterfassung_sync_user_status|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
+
+`Webmin` → `System` → `Log File Rotation` → `Add a new log file to rotate`:
+
+- `Log files to rotate:` `/home/*/domains/hr.*/hr/*.log`.
+- `Rotation schedule`: `Weekly`.
 
 ---
 
