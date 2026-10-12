@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-10-09
+> Last update: 2026-10-12
 
 ---
 
@@ -192,6 +192,7 @@ cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/hr/keycloak/impo
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
+  "registrationEmailAsUsername": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "accessTokenLifespan": 300,
@@ -1403,7 +1404,7 @@ nginx -t && systemctl reload nginx
 
 ### Keycloak
 
-`Manage realms` → `urlaubsverwaltung` → `Realm settings` → `Themes` → Set `Login theme`.
+`Keycloak` → `Manage realms` → `urlaubsverwaltung` → `Users` → Choose the user and update the `Email` field (the username follows automatically). Keep `Email verified` on.
 
 ### Zeiterfassung
 
@@ -1512,7 +1513,7 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" \
   -H "Content-Type: application/json" \
   http://localhost:${keycloak_http_port}/admin/realms/urlaubsverwaltung/users \
   -d "{
-    \"username\":      \"${sync_bot_username}\",
+    \"username\":      \"${sync_bot_username}@${subdomain}.${domain}\",
     \"email\":         \"${sync_bot_username}@${subdomain}.${domain}\",
     \"firstName\":     \"Sync\",
     \"lastName\":      \"Bot\",
@@ -1522,7 +1523,7 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" \
     \"credentials\":   [{\"type\":\"password\",\"value\":\"${sync_bot_password}\",\"temporary\":false}]
   }"
 
-echo "==> Sync bot ready: ${sync_bot_username}"
+echo "==> Sync bot ready: ${sync_bot_username}@${subdomain}.${domain}"
 ```
 
 ```sh
@@ -1535,29 +1536,29 @@ docker exec -i urlaubsverwaltung_postgres_${system_user} psql \
 INSERT INTO person (id, username, email, first_name, last_name, created_at)
 SELECT
   COALESCE((SELECT MAX(id) FROM person), 0) + 1,
-  '${sync_bot_username}',
+  '${sync_bot_username}@${subdomain}.${domain}',
   '${sync_bot_username}@${subdomain}.${domain}',
   'Sync',
   'Bot',
   NOW()
 WHERE NOT EXISTS (
-  SELECT 1 FROM person WHERE username = '${sync_bot_username}'
+  SELECT 1 FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 );
 
 -- Grant USER and OFFICE permissions in person_permissions
 INSERT INTO person_permissions (person_id, permissions)
-SELECT id, 'USER' FROM person WHERE username = '${sync_bot_username}'
+SELECT id, 'USER' FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO person_permissions (person_id, permissions)
-SELECT id, 'OFFICE' FROM person WHERE username = '${sync_bot_username}'
+SELECT id, 'OFFICE' FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 ON CONFLICT DO NOTHING;
 EOF
 
 echo "==> Sync bot user provisioned and granted OFFICE role successfully."
 ```
 
-Then log-in once with the `${sync_bot_username}`.
+Then log-in once with the `${sync_bot_username}@${subdomain}.${domain}`.
 
 #### Environment File
 
@@ -1567,7 +1568,7 @@ UV_BASE_URL=http://localhost:${urlaubsverwaltung_http_port}/urlaubsverwaltung
 KEYCLOAK_TOKEN_URL=http://localhost:${keycloak_http_port}/realms/urlaubsverwaltung/protocol/openid-connect/token
 UV_OIDC_CLIENT_ID=${sync_client_id}
 UV_OIDC_CLIENT_SECRET=${sync_client_secret}
-SYNC_BOT_USERNAME=${sync_bot_username}
+SYNC_BOT_USERNAME=${sync_bot_username}@${subdomain}.${domain}
 SYNC_BOT_PASSWORD=${sync_bot_password}
 
 ZF_DB_HOST=localhost
@@ -1598,7 +1599,8 @@ set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py
 
 # Quick manual test run
-set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_user_status.py
+set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
+.venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_user_status.py
 
 # Cron - Run every 2 hours from 08:00 to 20:00
 # (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.log 2>&1") | crontab -
@@ -1668,6 +1670,62 @@ crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences
 
 - `Log files to rotate:` `/home/*/domains/hr.*/hr/*.log`.
 - `Rotation schedule`: `Weekly`.
+
+---
+
+## Update User's Email Address
+
+### Keycloak
+
+`Keycloak` → `Manage realms` → `urlaubsverwaltung` → `Users` → Choose the user and update the `Username` and `Email` fields.
+
+### Zeiterfassung
+
+```sh
+docker exec -it "zeiterfassung_postgres_${system_user}" psql -U "${zeiterfassung_db_user}" -d "${zeiterfassung_db_name}"
+```
+
+```sql
+BEGIN;
+
+UPDATE tenant_user
+SET email = 'email_new@website.com'
+WHERE email = 'email_old@website.com' AND deleted_at IS NULL;
+
+-- Should say UPDATE 1. If it says anything else, run ROLLBACK;
+SELECT id, uuid, given_name, family_name, email FROM tenant_user
+WHERE email = 'email_new@website.com';
+
+COMMIT;
+```
+
+```sql
+exit
+```
+
+### Urlaubsverwaltung
+
+```sh
+docker exec -it "urlaubsverwaltung_postgres_${system_user}" psql -U "${urlaubsverwaltung_db_user}" -d "${urlaubsverwaltung_db_name}"
+```
+
+```sql
+BEGIN;
+
+UPDATE person
+SET email = 'email_new@website.com'
+WHERE email = 'email_old@website.com';
+
+-- Should say UPDATE 1. If it says anything else, run ROLLBACK;
+SELECT id, username, email, first_name, last_name FROM person
+WHERE email = 'email_new@website.com';
+
+COMMIT;
+```
+
+```sql
+exit
+```
 
 ---
 
