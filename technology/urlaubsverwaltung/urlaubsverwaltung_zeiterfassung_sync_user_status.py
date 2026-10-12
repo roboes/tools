@@ -64,8 +64,10 @@ def load_uv_people_by_email(token: str) -> tuple[dict[str, bool], set[str]]:
     ambiguous_emails: set[str] = set()
 
     for active in (True, False):
+        label = 'active' if active else 'inactive'
+        log.info('Fetching %s persons from Urlaubsverwaltung...', label)
         people = get_uv_people(token, active)
-        log.info('Found %d %s person(s) in Urlaubsverwaltung', len(people), 'active' if active else 'inactive')
+        log.info('Found %d %s person(s) in Urlaubsverwaltung', len(people), label)
 
         for person in people:
             email = (person.get('email') or '').strip().lower()
@@ -130,19 +132,16 @@ def load_zf_users_by_email(connection) -> tuple[dict[str, tuple[int, str]], set[
     return users_by_email, ambiguous_emails
 
 
-def synchronize_statuses(connection, uv_people: dict[str, bool], zf_users: dict[str, tuple[int, str]]) -> tuple[int, int]:
-    updated = unchanged = unmatched = unmatched_inactive = 0
+def synchronize_statuses(connection, uv_people: dict[str, bool], zf_users: dict[str, tuple[int, str]]) -> tuple[int, int, set[str], set[str]]:
+    updated = unchanged = 0
+    unmatched_active: set[str] = set()
+    unmatched_inactive: set[str] = set()
 
     with connection.cursor() as cursor:
         for email, active in uv_people.items():
             zf_user = zf_users.get(email)
             if zf_user is None:
-                unmatched += 1
-                if active:
-                    log.warning('No Zeiterfassung user matches active Urlaubsverwaltung email %s', email)
-                else:
-                    unmatched_inactive += 1
-                    log.error('Inactive Urlaubsverwaltung user %s has no Zeiterfassung row; this sync cannot block their first login', email)
+                (unmatched_active if active else unmatched_inactive).add(email)
                 continue
 
             user_id, current_status = zf_user
@@ -167,23 +166,36 @@ def synchronize_statuses(connection, uv_people: dict[str, bool], zf_users: dict[
             log.info('Set %s (%s) from %s to %s', email, user_id, current_status, next_status)
             updated += 1
 
-    return updated, unmatched, unmatched_inactive
+    return updated, unchanged, unmatched_active, unmatched_inactive
 
 
 def main() -> int:
-    log.info('Starting user-status sync')
+    log.info('Fetching Urlaubsverwaltung token for sync-bot...')
     token = get_uv_token()
     uv_people, _ = load_uv_people_by_email(token)
 
     connection = zf_connect()
     try:
         zf_users, _ = load_zf_users_by_email(connection)
-        log.info('Loaded %d non-deleted Zeiterfassung user(s)', len(zf_users))
-        updated, unmatched, unmatched_inactive = synchronize_statuses(connection, uv_people, zf_users)
+        log.info('Loaded %d Zeiterfassung user(s) for email matching', len(zf_users))
+        updated, unchanged, unmatched_active, unmatched_inactive = synchronize_statuses(connection, uv_people, zf_users)
+
+        if unmatched_active:
+            log.warning(
+                'Skipped %d active Urlaubsverwaltung person(s) with no matching Zeiterfassung user by email: %s',
+                len(unmatched_active),
+                ', '.join(sorted(unmatched_active)),
+            )
+        if unmatched_inactive:
+            log.error(
+                'Skipped %d inactive Urlaubsverwaltung person(s) with no Zeiterfassung row (cannot block their first login): %s',
+                len(unmatched_inactive),
+                ', '.join(sorted(unmatched_inactive)),
+            )
 
         connection.commit()
 
-        log.info('User-status sync complete: %d changed, %d unchanged, %d unmatched', updated, len(uv_people) - updated - unmatched, unmatched)
+        log.info('Updated %d user status(es) in Zeiterfassung (%d unchanged)', updated, unchanged)
     except Exception:
         connection.rollback()
         raise
