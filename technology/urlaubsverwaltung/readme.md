@@ -49,7 +49,7 @@ server_ip="100.00.000.01"
 
 urlaubsverwaltung_version="6.17.0"
 zeiterfassung_version="3.4.0"
-keycloak_version="26.8.0"
+keycloak_version="26.8.1"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
@@ -1141,47 +1141,87 @@ Two patterns: **employee** (both apps, standard access) and **HR admin** (full p
 **Employee** - can request leave in Urlaubsverwaltung (`USER`) and clock in/out in Zeiterfassung (`ZEITERFASSUNG_USER`):
 
 ```sh
+# Options (override via environment: CREATE_CSV=true ./script.sh)
+CREATE_CSV="${CREATE_CSV:-false}"
+CSV_FILE="${CSV_FILE:-new_employees.csv}"
+
 # One row per employee: email|firstname|lastname
 employees=$(cat <<'EOF'
 email@website.com|Name|Lastname
 EOF
 )
 
-KEYCLOAK_TOKEN=$(curl -s \
-  -d "client_id=admin-cli&grant_type=password" \
-  -d "username=${keycloak_admin_user}&password=${keycloak_admin_password}" \
-  http://localhost:${keycloak_http_port}/realms/master/protocol/openid-connect/token \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+base="http://localhost:${keycloak_http_port}"
 
-# echo "email,firstname,lastname,temp_password" > new_employees.csv
+get_token() {
+  curl -s \
+    -d "client_id=admin-cli&grant_type=password" \
+    -d "username=${keycloak_admin_user}&password=${keycloak_admin_password}" \
+    "$base/realms/master/protocol/openid-connect/token" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
+}
+
+# create the CSV with a header only if enabled
+if [ "$CREATE_CSV" = "true" ]; then
+  echo "email,firstname,lastname,temp_password" > "$CSV_FILE"
+  chmod 600 "$CSV_FILE"   # it contains passwords
+fi
 
 while IFS='|' read -r new_email new_firstname new_lastname; do
   [ -z "$new_email" ] && continue
-  new_password=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9')
 
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    -H "Authorization: Bearer ${KEYCLOAK_TOKEN}" \
+  # trim whitespace
+  new_email=$(echo "$new_email" | xargs)
+  new_firstname=$(echo "$new_firstname" | xargs)
+  new_lastname=$(echo "$new_lastname" | xargs)
+
+  # fresh token per user, so it can't expire
+  TOKEN=$(get_token)
+  [ -z "$TOKEN" ] && { echo "No token, aborting"; exit 1; }
+
+  # random part + guaranteed upper/lower/digit/special
+  new_password="$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')Aa1!"
+
+  payload=$(python3 -c 'import json,sys; print(json.dumps({
+    "username": sys.argv[1], "email": sys.argv[1],
+    "firstName": sys.argv[2], "lastName": sys.argv[3],
+    "enabled": True, "emailVerified": True,
+    "credentials": [{"type":"password","value":sys.argv[4],"temporary":True}]}))' \
+    "$new_email" "$new_firstname" "$new_lastname" "$new_password")
+
+  response=$(curl -si -X POST \
+    -H "Authorization: Bearer ${TOKEN}" \
     -H "Content-Type: application/json" \
-    http://localhost:${keycloak_http_port}/admin/realms/urlaubsverwaltung/users \
-    -d "{
-      \"username\":      \"${new_email}\",
-      \"email\":         \"${new_email}\",
-      \"firstName\":     \"${new_firstname}\",
-      \"lastName\":      \"${new_lastname}\",
-      \"enabled\":       true,
-      \"emailVerified\": true,
-      \"realmRoles\":    [\"USER\", \"ZEITERFASSUNG_USER\"],
-      \"credentials\":   [{\"type\":\"password\",\"value\":\"${new_password}\",\"temporary\":true}]
-    }")
+    "$base/admin/realms/urlaubsverwaltung/users" -d "$payload")
+
+  http_code=$(echo "$response" | head -n1 | awk '{print $2}')
 
   if [ "$http_code" = "201" ]; then
+    user_id=$(echo "$response" | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')
+
+    # assign realm roles
+    for r in USER ZEITERFASSUNG_USER; do
+      role_json=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+        "$base/admin/realms/urlaubsverwaltung/roles/$r")
+      curl -s -X POST \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -H "Content-Type: application/json" \
+        "$base/admin/realms/urlaubsverwaltung/users/${user_id}/role-mappings/realm" \
+        -d "[${role_json}]"
+    done
+
     echo "==> Created: ${new_email} / temp password: ${new_password}"
-    # echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
+
+    if [ "$CREATE_CSV" = "true" ]; then
+      echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> "$CSV_FILE"
+    fi
   else
     echo "!! FAILED (${http_code}): ${new_email}"
+    echo "$response" | tail -n1   # the error body from Keycloak
   fi
 done <<< "$employees"
 
+[ "$CREATE_CSV" = "true" ] && echo "==> CSV written to ${CSV_FILE}"
 echo "==> Done"
 ```
 
