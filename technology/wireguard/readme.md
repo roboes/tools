@@ -1,7 +1,7 @@
 # WireGuard
 
 > [!NOTE]  
-> Last update: 2026-06-01
+> Last update: 2026-10-16
 
 ## Installation
 
@@ -14,6 +14,9 @@ sudo apt install -y wireguard
 ### Generate server keys
 
 ```sh
+# Make new files readable by root only
+umask 077
+
 # Generate server private key and save it
 SERVER_PRIVATE_KEY=$(wg genkey | tee /etc/wireguard/server_private.key)
 
@@ -56,8 +59,12 @@ sysctl net.ipv4.ip_forward
 # Open UDP port 51820 in the "public" zone permanently
 sudo firewall-cmd --zone=public --add-port=51820/udp --permanent
 
-# Add the WireGuard interface to the "trusted" zone
-sudo firewall-cmd --zone=trusted --add-interface=wg0 --permanent
+# Create a dedicated zone for the WireGuard interface ("trusted" allows every service)
+sudo firewall-cmd --permanent --new-zone=wireguard
+sudo firewall-cmd --zone=wireguard --add-interface=wg0 --permanent
+
+# Allow only the services VPN clients need
+sudo firewall-cmd --zone=wireguard --add-service=ssh --permanent
 
 # Enable masquerading (NAT) for outgoing VPN traffic
 sudo firewall-cmd --zone=public --add-masquerade --permanent
@@ -92,8 +99,10 @@ cat <<EOF >> /etc/wireguard/wg0.conf
 PublicKey = ${CLIENT_PUBLIC_KEY}
 # IP assigned to client inside VPN
 AllowedIPs = 10.6.0.2/32
-PersistentKeepalive = 25
 EOF
+
+# Make sure only root can read keys and config
+chmod 600 /etc/wireguard/*.key /etc/wireguard/wg0.conf
 ```
 
 ### Start WireGuard
@@ -135,6 +144,9 @@ sudo apt install -y wireguard
 ```sh
 # Paste the client configuration
 sudo nano /etc/wireguard/wg0.conf
+
+# Make sure only root can read the config
+sudo chmod 600 /etc/wireguard/wg0.conf
 ```
 
 ```conf
