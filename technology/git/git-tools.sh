@@ -40,6 +40,8 @@ mkdir -p "./.github/workflows"
 curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
 
 pre-commit autoupdate
+pre-commit install-hooks
+pre-commit gc
 
 if [ "${git_repository}" == "tools" ]; then
     cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"

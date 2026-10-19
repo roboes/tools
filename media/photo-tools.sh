@@ -1,5 +1,5 @@
 ## Photo Tools
-# Last update: 2026-09-11
+# Last update: 2026-10-18
 
 
 # Rename: ExifTool
@@ -41,20 +41,33 @@ if ifuse ~/iphone; then
     echo "Transfer complete! Safely unmounted iPhone."
 
     echo "Renaming and flattening files locally..."
-    exiftool \
-        -recurse \
-        -dateFormat '%Y-%m-%d, %H.%M.%S' \
-        "-Directory=${HOME}/Pictures/Import" \
-        '-FileName<REVIEW ${FileModifyDate}%-c.%e' \
-        '-FileName<${DateTimeOriginal}%+c.%e' \
-        '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
-        ~/Pictures/Staging/
+	exiftool \
+		'-FileName<REVIEW ${FileModifyDate}%-c.%e' \
+		-if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
+		'-FileName<Apple Live Photo ${CreationDate}%+c.%e' \
+		'-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+c.%e' \
+		-execute \
+		-if 'not ($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
+		'-FileName<${DateTimeOriginal}%+c.%e' \
+		'-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
+		-common_args \
+		-dateFormat '%Y-%m-%d, %H.%M.%S' \
+		-recurse \
+		"-Directory=${HOME}/Pictures/Import" \
+		~/Pictures/Staging/
 
-    if [ -z "$(find ~/Pictures/Staging -mindepth 1 -type f -print -quit)" ]; then
+    # Remove sidecar files, then empty subfolders
+    find ~/Pictures/Staging -type f -iname '*.AAE' -delete
+    find ~/Pictures/Staging -mindepth 1 -type d -empty -delete
+
+    # Check what's left
+    if [ -z "$(find ~/Pictures/Staging -type f -print -quit)" ]; then
         rm -rf ~/Pictures/Staging
         echo "Done! Staging cleaned."
     else
-        echo "Warning: Leftover files remain in ~/Pictures/Staging. Check before deleting."
+        echo "Warning: These files remain in ~/Pictures/Staging:"
+        find ~/Pictures/Staging -type f
+        echo "Check before deleting."
     fi
 else
     echo "Failed to mount iPhone. Ensure the screen is unlocked."
@@ -80,8 +93,14 @@ exiftool -ver
 
 # Photos rename - Rename only photos and videos which contain DateTimeOriginal metadata
 exiftool \
+    -if '($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
+    '-FileName<Apple Live Photo ${CreationDate}%+c.%e' \
+    '-FileName<Apple Live Photo ${CreationDate}.${SubSecTime}%+c.%e' \
+    -execute \
+    -if 'not ($FileTypeExtension eq "mov" and defined $ContentIdentifier)' \
     '-FileName<${DateTimeOriginal}%+c.%e' \
     '-FileName<${DateTimeOriginal}.${SubSecTimeOriginal}%+c.%e' \
+    -common_args \
     -dateFormat '%Y-%m-%d, %H.%M.%S' \
     -recurse \
     .

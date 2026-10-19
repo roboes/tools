@@ -113,3 +113,44 @@ find . -type f | while IFS= read -r file; do
         echo "${dir},.${ext}"
     fi
 done | sort | uniq -c | awk '{count=$1; $1=""; sub(/^ /, ""); gsub(/ ,/, ","); print $0 "," count}'
+
+
+# Recursively move all video files from the source folder to the destination, keeping the folder structure and not overwriting existing files
+move_videos() {
+  [[ $# -ge 2 ]] || { echo "Usage: move_videos <pictures_path> <videos_path> [--dry-run]" >&2; return 1; }
+  [[ -d $1 ]]    || { echo "Not a directory: $1" >&2; return 1; }
+
+  local src dst dry=false
+  src=$(cd "$1" && pwd) && mkdir -p "$2" && dst=$(cd "$2" && pwd) || return 1
+  [[ ${3:-} == --dry-run ]] && dry=true
+
+  local -a names=()
+  local ext
+  for ext in mp4 mkv avi mov wmv flv webm m4v mpg mpeg 3gp mts m2ts vob ogv; do
+    names+=(-o -iname "*.$ext")
+  done
+
+  local file target base n count=0
+  while IFS= read -r -d '' file; do
+    target=$dst/${file#"$src"/}
+
+    # Avoid overwriting: add _1, _2, ... if the name already exists
+    if [[ -e $target ]]; then
+      base=${target%.*} ext=${target##*.} n=1
+      while [[ -e ${base}_$n.$ext ]]; do n=$((n + 1)); done
+      target=${base}_$n.$ext
+    fi
+
+    if $dry; then
+      echo "[dry-run] $file -> $target"
+    else
+      mkdir -p "${target%/*}" && mv -- "$file" "$target"
+      echo "Moved: $file -> $target"
+    fi
+    count=$((count + 1))
+  done < <(find "$src" -type f -not -path "$dst/*" \( "${names[@]:1}" \) -print0)
+
+  echo "Done. ${count} video(s) processed."
+}
+
+move_videos ~/Photos ~/Videos --dry-run

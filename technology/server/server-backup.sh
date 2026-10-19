@@ -1,5 +1,5 @@
 ## Server Backup
-# Last update: 2026-09-13
+# Last update: 2026-10-18
 
 
 # Start Bash (Unix Shell)
@@ -17,6 +17,9 @@ settings_vps_passphrase="passphrase"
 settings_vps_ssh_key="${HOME}/.ssh/id_ed25519_website.com"
 settings_vps_cloudflared="/usr/bin/cloudflared"
 settings_vps_backup_directory="/backups"
+settings_vps_backup_extra_directories=(
+  "${settings_vps_backup_directory}/homeassistant"
+)
 settings_local_backup_directory="${HOME}/Downloads/virtualmin_backups"
 settings_files_to_skip=(
   "photos.website.com.tar.gz*"
@@ -61,6 +64,18 @@ backup_sync_latest_locally() {
   rsync_remote "${settings_vps_user}@${settings_vps_host}:${latest_remote_backup}/" "${settings_local_backup_directory}/"
 }
 
+backup_sync_extra_directories() {
+  local remote_dir folder_name
+  for remote_dir in "${settings_vps_backup_extra_directories[@]}"; do
+    folder_name="$(basename "${remote_dir}")"
+    echo "📁 Syncing extra directory: ${remote_dir}"
+
+    mkdir -p "${settings_local_backup_directory}/${folder_name}"
+    rsync_remote "${settings_vps_user}@${settings_vps_host}:${remote_dir}/" \
+      "${settings_local_backup_directory}/${folder_name}/"
+  done
+}
 
 # Backup
-backup_sync_latest_locally
+backup_sync_latest_locally || exit 1
+backup_sync_extra_directories
