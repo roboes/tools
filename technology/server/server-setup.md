@@ -551,9 +551,9 @@ sudo wtmpdb last | grep root
 
 ##### Grafana
 
-Email alerts for any `root` or `$admin_user` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+Email alerts for any SSH login (successful or failed, any user) and any successful Virtualmin/Webmin or server VNC console login. Failed Webmin logins are handled by Fail2Ban (`webmin-auth`), because Webmin's PAM `authentication failure` line also fires on every Webmin startup (reboots, restarts) and caused false alarms. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
 
-`Grafana` → `Alerts & IRM` → `Alerting` → `Manage contact points` → `Create contact point`:
+`Grafana` → `Alerts & IRM` → `Alerting` → `Notification configuration` → `New contact point`:
 
 - `Name`: `Email Notifications`.
 - `Integration`: `Email`.
@@ -573,8 +573,9 @@ Define query and alert condition:
 sum by (instance, job, log_line) (
   count_over_time(
     {job="ssh_auth"}
-    |~ "(?i)(sshd.*(accepted|failed).*for (root|$admin_user)|pam_unix\\((webmin|login):session\\).*session opened for user (root|$admin_user)|pam_unix\\(webmin:auth\\).*authentication failure.*user.*(root|$admin_user))"
+    |~ "(?i)(sshd.*(accepted|failed).* for |pam_unix\\((webmin|login):session\\).*session opened for user )"
     !~ "(?i)(sudo:session|systemd-user:session)"
+    !~ "Accepted publickey for systemuser_homeassistant from "
     | label_format log_line="{{ __line__ }}"
     [5m]
   )
@@ -612,7 +613,7 @@ Configure notification message:
 # sudo apt install -y firewalld
 
 # Remove SSH service
-# sudo firewall-cmd --zone=public --remove-service=ssh --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
+# sudo firewall-cmd --zone=public --remove-service=ssh --permanent && sudo firewall-cmd --reload # Only run these after confirming Cloudflare Zero Trust tunnel works
 
 # Remove Webmin port
 # sudo firewall-cmd --zone=public --remove-port=10000/tcp --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
