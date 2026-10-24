@@ -15,9 +15,8 @@ flatpak update -y && flatpak uninstall --unused -y
 
 # Journald logs (keep last 7 days)
 sudo journalctl --vacuum-time=7d
-```
 
-```sh
+
 # pip cache
 
 ## Check cache size
@@ -25,9 +24,8 @@ python -m pip cache info
 
 ## Clear entire pip cache (safe - won't affect installed packages)
 python -m pip cache purge
-```
 
-```sh
+
 # Docker cleanup
 
 ## Stopped containers - safe, only removes exited/created containers
