@@ -21,7 +21,7 @@ database_name="database_name"
 ## Initial setup
 
 ```sh
-# Update packages
+# Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 ```
 
@@ -551,9 +551,9 @@ sudo wtmpdb last | grep root
 
 ##### Grafana
 
-Email alerts for any `root` or `$admin_user` login attempt (successful or failed) on the server via SSH, Virtualmin web panel, or server VNC console. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
+Email alerts for any SSH login (successful or failed, any user) and any successful Virtualmin/Webmin or server VNC console login. Failed Webmin logins are handled by Fail2Ban (`webmin-auth`), because Webmin's PAM `authentication failure` line also fires on every Webmin startup (reboots, restarts) and caused false alarms. Logs are stored externally in Grafana Cloud's free tier, ensuring they remain accessible even if the server is compromised and local logs are deleted.
 
-`Grafana` → `Alerts & IRM` → `Alerting` → `Manage contact points` → `Create contact point`:
+`Grafana` → `Alerts & IRM` → `Alerting` → `Notification configuration` → `New contact point`:
 
 - `Name`: `Email Notifications`.
 - `Integration`: `Email`.
@@ -573,8 +573,9 @@ Define query and alert condition:
 sum by (instance, job, log_line) (
   count_over_time(
     {job="ssh_auth"}
-    |~ "(?i)(sshd.*(accepted|failed).*for (root|$admin_user)|pam_unix\\((webmin|login):session\\).*session opened for user (root|$admin_user)|pam_unix\\(webmin:auth\\).*authentication failure.*user.*(root|$admin_user))"
+    |~ "(?i)(sshd.*(accepted|failed).* for |pam_unix\\((webmin|login):session\\).*session opened for user )"
     !~ "(?i)(sudo:session|systemd-user:session)"
+    !~ "Accepted publickey for systemuser_homeassistant from "
     | label_format log_line="{{ __line__ }}"
     [5m]
   )
@@ -612,7 +613,7 @@ Configure notification message:
 # sudo apt install -y firewalld
 
 # Remove SSH service
-# sudo firewall-cmd --zone=public --remove-service=ssh --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
+# sudo firewall-cmd --zone=public --remove-service=ssh --permanent && sudo firewall-cmd --reload # Only run these after confirming Cloudflare Zero Trust tunnel works
 
 # Remove Webmin port
 # sudo firewall-cmd --zone=public --remove-port=10000/tcp --permanent # Only run these after confirming Cloudflare Zero Trust tunnel works
@@ -1098,7 +1099,7 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com https://*.pagseguro.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; script-src-elem 'self' 'unsafe-inline' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://*.pagseguro.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.stripe.com https://*.googleapis.com https://*.pagseguro.com.br; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+    set $content_security_policy "default-src 'self'; connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com https://*.pagseguro.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
     # Important: Before saving, scroll down to the `location ~ "\.php(/|$)" {` block and replace `fastcgi_pass unix:/run/php/${php_socket_id}.sock;` with the literal socket path for this domain
 
 
@@ -1585,7 +1586,7 @@ php_admin_value[opcache.validate_timestamps] = 0
 sudo systemctl restart php*-fpm
 ```
 
-#### OPcache
+#### PHP Configuration
 
 `Webmin` → `Tools` → `PHP Configuration` → `Module config` (⚙) → `Configurable options`:
 
@@ -1598,6 +1599,9 @@ sudo systemctl restart php*-fpm
 Select `/etc/php/*/fpm/php.ini` → `Edit Manually`:
 
 ```txt
+[PHP]
+fatal_error_backtraces = 0
+
 [opcache]
 opcache.enable=1
 opcache.enable_cli=0
@@ -1612,6 +1616,10 @@ opcache.jit=off ; SIGSEGV (Signal 11) during loops/updates, see: https://github.
 opcache.jit_buffer_size=0
 opcache.save_comments=1
 opcache.huge_code_pages=0
+
+[Session]
+session.upload_progress.enabled = Off
+session.use_strict_mode = 1
 ```
 
 ```sh

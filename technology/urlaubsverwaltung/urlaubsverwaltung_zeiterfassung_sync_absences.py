@@ -172,7 +172,7 @@ def build_email_to_zf_user_id_map(conn) -> dict[str, str]:
     """
     with conn.cursor() as cur:
         cur.execute(
-            'SELECT lower(email), uuid FROM tenant_user WHERE tenant_id = %s AND deactivated_at IS NULL AND deleted_at IS NULL',
+            "SELECT lower(email), uuid FROM tenant_user WHERE tenant_id = %s AND status IN ('ACTIVE', 'UNKNOWN') AND deleted_at IS NULL",
             (ZF_TENANT_ID,),
         )
         return {row[0]: row[1] for row in cur.fetchall()}

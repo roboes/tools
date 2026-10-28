@@ -1,7 +1,7 @@
 # Immich
 
 > [!NOTE]  
-> Last update: 2026-09-11
+> Last update: 2026-10-18
 
 ## Installation
 
@@ -41,7 +41,7 @@ services:
     container_name: "immich_upload_optimizer_${system_user}"
     image: ghcr.io/miguelangel-nubla/immich-upload-optimizer:latest
     ports:
-      - "2283:2283"
+      - "127.0.0.1:2283:2283"
     environment:
       - IUO_UPSTREAM=http://immich-server:2283
       - IUO_TASKS_FILE=/app/config/tasks.yaml
@@ -176,9 +176,9 @@ tasks:
       - tif
       - webp
 
-  # Video compression with HandBrake
+  # Video compression (metadata and rotation preserved)
   - name: video-compress-h264-1080p
-    command: HandBrakeCLI --preset "Fast 1080p30" --encoder x264 --keep-display-aspect -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    command: ffmpeg -nostdin -i {{.folder}}/{{.name}}.{{.extension}} -map 0:v:0 -map 0:a? -map_metadata 0 -movflags +faststart+use_metadata_tags -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -vf scale=1920:1920:force_original_aspect_ratio=decrease:force_divisible_by=2 -c:a aac -b:a 128k {{.folder}}/{{.name}}-new.mp4 && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
       - 3gpp
@@ -223,7 +223,7 @@ cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/immich/tasks.yam
 tasks:
   # Aggressive Image Reduction: Resize to 1000px + Lossy JXL (-d 2.5)
   - name: images-resize-to-jxl
-    command: convert {{.folder}}/{{.name}}.{{.extension}} -resize 1000x1000\> /tmp/{{.name}}-tmp.png && cjxl /tmp/{{.name}}-tmp.png {{.folder}}/{{.name}}-new.jxl -d 2.5 --effort 7 && rm {{.folder}}/{{.name}}.{{.extension}} /tmp/{{.name}}-tmp.png
+    command: convert {{.folder}}/{{.name}}.{{.extension}} -auto-orient -resize 1000x1000\> {{.folder}}/{{.name}}-tmp.png && cjxl {{.folder}}/{{.name}}-tmp.png {{.folder}}/{{.name}}-new.jxl -d 2.5 --effort 7 && rm {{.folder}}/{{.name}}.{{.extension}} {{.folder}}/{{.name}}-tmp.png
     extensions:
       - jpg
       - jpeg
@@ -243,9 +243,9 @@ tasks:
       - pfm
       - exr
 
-  # Aggressive Video Reduction: 720p + x265 + Original Audio (with fallback)
+  # Aggressive Video Reduction: max 1280px on the long side + x265, MP4 output (metadata and rotation preserved)
   - name: video-compress-hevc-720p
-    command: HandBrakeCLI --preset "H.265 MKV 720p30" --encoder-preset faster --quality 26 --aencoder copy --audio-fallback av_aac --all-subtitles -i {{.folder}}/{{.name}}.{{.extension}} -o {{.folder}}/{{.name}}-new.mkv && rm {{.folder}}/{{.name}}.{{.extension}}
+    command: ffmpeg -nostdin -i {{.folder}}/{{.name}}.{{.extension}} -map 0:v:0 -map 0:a? -map_metadata 0 -movflags +faststart+use_metadata_tags -c:v libx265 -preset faster -crf 28 -tag:v hvc1 -pix_fmt yuv420p -vf scale=1280:1280:force_original_aspect_ratio=decrease:force_divisible_by=2 -c:a aac -b:a 96k {{.folder}}/{{.name}}-new.mp4 && rm {{.folder}}/{{.name}}.{{.extension}}
     extensions:
       - 3gp
       - 3gpp
@@ -354,6 +354,9 @@ Cloudflare → Website → `Caching` → `Cache Rules`.
 
 Add both `CF-Access-Client-Id` and `CF-Access-Client-Secret` to the Immich mobile app.
 
+> [!NOTE]  
+> Cloudflare's proxy limits request bodies to 100 MB on Free/Pro plans, so larger videos can fail to upload through `photos.website.com`. Use the SSH tunnel ([Bulk Upload](#bulk-upload)) for big files.
+
 ---
 
 ## Nginx Directives
@@ -413,6 +416,10 @@ immich login http://localhost:2283/api API_KEY
 # (Local machine, Terminal 2) Bulk Upload
 npx @immich/cli@latest upload --recursive "./"
 ```
+
+## Backup
+
+Immich writes automatic database dumps to `immich/library/backups`. Back up the whole `immich/library` folder (originals + dumps) and `.env` off the server, e.g. with restic or borg. Don't rely on copying the live `postgres` folder.
 
 ## Update
 

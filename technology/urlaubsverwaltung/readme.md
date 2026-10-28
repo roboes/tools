@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-09-03
+> Last update: 2026-10-12
 
 ---
 
@@ -47,9 +47,9 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.13.1"
-zeiterfassung_version="3.3.0"
-keycloak_version="26.7.4"
+urlaubsverwaltung_version="6.20.0"
+zeiterfassung_version="3.5.0"
+keycloak_version="26.8.1"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
@@ -192,6 +192,7 @@ cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/hr/keycloak/impo
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
+  "registrationEmailAsUsername": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "accessTokenLifespan": 300,
@@ -696,6 +697,7 @@ echo "==> Group: ${keycloak_user_group}"
 
 ```sh
 # Clone source code
+rm -rf /tmp/zeiterfassung-build
 # git clone --depth=1 --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 git clone --branch zeiterfassung-${zeiterfassung_version} https://github.com/urlaubsverwaltung/zeiterfassung.git /tmp/zeiterfassung-build
 cd /tmp/zeiterfassung-build
@@ -708,14 +710,14 @@ export GIT_EDITOR=true
 
 # Fetch PR branches
 git fetch origin pull/2184/head:pr-2184
-git fetch origin pull/2189/head:pr-2189
+git fetch origin pull/2335/head:pr-2335
 
 # Create working build branch directly from current main
 git checkout -B my-build origin/main
 
-# Merge PR 2189 (taking PR 2189's new features on conflict)
-git merge --no-edit pr-2189 || {
-  echo "Merge conflict detected during PR 2189 merge, taking PR 2189 template additions..."
+# Merge PR 2335 (taking PR 2335's new features on conflict)
+git merge --no-edit pr-2335 || {
+  echo "Merge conflict detected during PR 2335 merge, taking PR 2335 template additions..."
   git checkout --theirs src/main/resources/templates/reports/user-report-month.html
   git checkout --theirs src/main/resources/templates/reports/user-report-week.html
   git add src/main/resources/templates/reports/
@@ -754,7 +756,7 @@ fi
 git add "${REPORT_TEMPLATES[@]}"
 
 if ! git diff --cached --quiet; then
-  git commit -m "Restore PR 2217 context-path wrappers on PR 2189 templates"
+  git commit -m "Restore PR 2217 context-path wrappers on PR 2335 templates"
 fi
 
 # Explicitly verify that ALL required context-path wrappers are present
@@ -1140,47 +1142,87 @@ Two patterns: **employee** (both apps, standard access) and **HR admin** (full p
 **Employee** - can request leave in Urlaubsverwaltung (`USER`) and clock in/out in Zeiterfassung (`ZEITERFASSUNG_USER`):
 
 ```sh
+# Options (override via environment: CREATE_CSV=true ./script.sh)
+CREATE_CSV="${CREATE_CSV:-false}"
+CSV_FILE="${CSV_FILE:-new_employees.csv}"
+
 # One row per employee: email|firstname|lastname
 employees=$(cat <<'EOF'
 email@website.com|Name|Lastname
 EOF
 )
 
-KEYCLOAK_TOKEN=$(curl -s \
-  -d "client_id=admin-cli&grant_type=password" \
-  -d "username=${keycloak_admin_user}&password=${keycloak_admin_password}" \
-  http://localhost:${keycloak_http_port}/realms/master/protocol/openid-connect/token \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+base="http://localhost:${keycloak_http_port}"
 
-# echo "email,firstname,lastname,temp_password" > new_employees.csv
+get_token() {
+  curl -s \
+    -d "client_id=admin-cli&grant_type=password" \
+    -d "username=${keycloak_admin_user}&password=${keycloak_admin_password}" \
+    "$base/realms/master/protocol/openid-connect/token" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
+}
+
+# create the CSV with a header only if enabled
+if [ "$CREATE_CSV" = "true" ]; then
+  echo "email,firstname,lastname,temp_password" > "$CSV_FILE"
+  chmod 600 "$CSV_FILE"   # it contains passwords
+fi
 
 while IFS='|' read -r new_email new_firstname new_lastname; do
   [ -z "$new_email" ] && continue
-  new_password=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9')
 
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    -H "Authorization: Bearer ${KEYCLOAK_TOKEN}" \
+  # trim whitespace
+  new_email=$(echo "$new_email" | xargs)
+  new_firstname=$(echo "$new_firstname" | xargs)
+  new_lastname=$(echo "$new_lastname" | xargs)
+
+  # fresh token per user, so it can't expire
+  TOKEN=$(get_token)
+  [ -z "$TOKEN" ] && { echo "No token, aborting"; exit 1; }
+
+  # random part + guaranteed upper/lower/digit/special
+  new_password="$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')Aa1!"
+
+  payload=$(python3 -c 'import json,sys; print(json.dumps({
+    "username": sys.argv[1], "email": sys.argv[1],
+    "firstName": sys.argv[2], "lastName": sys.argv[3],
+    "enabled": True, "emailVerified": True,
+    "credentials": [{"type":"password","value":sys.argv[4],"temporary":True}]}))' \
+    "$new_email" "$new_firstname" "$new_lastname" "$new_password")
+
+  response=$(curl -si -X POST \
+    -H "Authorization: Bearer ${TOKEN}" \
     -H "Content-Type: application/json" \
-    http://localhost:${keycloak_http_port}/admin/realms/urlaubsverwaltung/users \
-    -d "{
-      \"username\":      \"${new_email}\",
-      \"email\":         \"${new_email}\",
-      \"firstName\":     \"${new_firstname}\",
-      \"lastName\":      \"${new_lastname}\",
-      \"enabled\":       true,
-      \"emailVerified\": true,
-      \"realmRoles\":    [\"USER\", \"ZEITERFASSUNG_USER\"],
-      \"credentials\":   [{\"type\":\"password\",\"value\":\"${new_password}\",\"temporary\":true}]
-    }")
+    "$base/admin/realms/urlaubsverwaltung/users" -d "$payload")
+
+  http_code=$(echo "$response" | head -n1 | awk '{print $2}')
 
   if [ "$http_code" = "201" ]; then
+    user_id=$(echo "$response" | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')
+
+    # assign realm roles
+    for r in USER ZEITERFASSUNG_USER; do
+      role_json=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+        "$base/admin/realms/urlaubsverwaltung/roles/$r")
+      curl -s -X POST \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -H "Content-Type: application/json" \
+        "$base/admin/realms/urlaubsverwaltung/users/${user_id}/role-mappings/realm" \
+        -d "[${role_json}]"
+    done
+
     echo "==> Created: ${new_email} / temp password: ${new_password}"
-    # echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> new_employees.csv
+
+    if [ "$CREATE_CSV" = "true" ]; then
+      echo "${new_email},${new_firstname},${new_lastname},${new_password}" >> "$CSV_FILE"
+    fi
   else
     echo "!! FAILED (${http_code}): ${new_email}"
+    echo "$response" | tail -n1   # the error body from Keycloak
   fi
 done <<< "$employees"
 
+[ "$CREATE_CSV" = "true" ] && echo "==> CSV written to ${CSV_FILE}"
 echo "==> Done"
 ```
 
@@ -1403,7 +1445,7 @@ nginx -t && systemctl reload nginx
 
 ### Keycloak
 
-`Manage realms` → `urlaubsverwaltung` → `Realm settings` → `Themes` → Set `Login theme`.
+`Keycloak` → `Manage realms` → `urlaubsverwaltung` → `Users` → Choose the user and update the `Email` field (the username follows automatically). Keep `Email verified` on.
 
 ### Zeiterfassung
 
@@ -1512,7 +1554,7 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" \
   -H "Content-Type: application/json" \
   http://localhost:${keycloak_http_port}/admin/realms/urlaubsverwaltung/users \
   -d "{
-    \"username\":      \"${sync_bot_username}\",
+    \"username\":      \"${sync_bot_username}@${subdomain}.${domain}\",
     \"email\":         \"${sync_bot_username}@${subdomain}.${domain}\",
     \"firstName\":     \"Sync\",
     \"lastName\":      \"Bot\",
@@ -1522,7 +1564,7 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" \
     \"credentials\":   [{\"type\":\"password\",\"value\":\"${sync_bot_password}\",\"temporary\":false}]
   }"
 
-echo "==> Sync bot ready: ${sync_bot_username}"
+echo "==> Sync bot ready: ${sync_bot_username}@${subdomain}.${domain}"
 ```
 
 ```sh
@@ -1535,29 +1577,29 @@ docker exec -i urlaubsverwaltung_postgres_${system_user} psql \
 INSERT INTO person (id, username, email, first_name, last_name, created_at)
 SELECT
   COALESCE((SELECT MAX(id) FROM person), 0) + 1,
-  '${sync_bot_username}',
+  '${sync_bot_username}@${subdomain}.${domain}',
   '${sync_bot_username}@${subdomain}.${domain}',
   'Sync',
   'Bot',
   NOW()
 WHERE NOT EXISTS (
-  SELECT 1 FROM person WHERE username = '${sync_bot_username}'
+  SELECT 1 FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 );
 
 -- Grant USER and OFFICE permissions in person_permissions
 INSERT INTO person_permissions (person_id, permissions)
-SELECT id, 'USER' FROM person WHERE username = '${sync_bot_username}'
+SELECT id, 'USER' FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO person_permissions (person_id, permissions)
-SELECT id, 'OFFICE' FROM person WHERE username = '${sync_bot_username}'
+SELECT id, 'OFFICE' FROM person WHERE username = '${sync_bot_username}@${subdomain}.${domain}'
 ON CONFLICT DO NOTHING;
 EOF
 
 echo "==> Sync bot user provisioned and granted OFFICE role successfully."
 ```
 
-Then log-in once with the `${sync_bot_username}`.
+Then log-in once with the `${sync_bot_username}@${subdomain}.${domain}`.
 
 #### Environment File
 
@@ -1567,7 +1609,7 @@ UV_BASE_URL=http://localhost:${urlaubsverwaltung_http_port}/urlaubsverwaltung
 KEYCLOAK_TOKEN_URL=http://localhost:${keycloak_http_port}/realms/urlaubsverwaltung/protocol/openid-connect/token
 UV_OIDC_CLIENT_ID=${sync_client_id}
 UV_OIDC_CLIENT_SECRET=${sync_client_secret}
-SYNC_BOT_USERNAME=${sync_bot_username}
+SYNC_BOT_USERNAME=${sync_bot_username}@${subdomain}.${domain}
 SYNC_BOT_PASSWORD=${sync_bot_password}
 
 ZF_DB_HOST=localhost
@@ -1597,12 +1639,24 @@ python3 -m venv .venv
 set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
 .venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_absences.py
 
+# Quick manual test run
+set -a; source .env.urlaubsverwaltung_zeiterfassung_sync_absences; set +a
+.venv/bin/python3 urlaubsverwaltung_zeiterfassung_sync_user_status.py
+
 # Cron - Run every 2 hours from 08:00 to 20:00
-# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/sync_absences.log 2>&1") | crontab -
+# (crontab -l 2>/dev/null; echo "0 8-20/2 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_absences.log 2>&1") | crontab -
+
+# Cron - Run daily at 22:00
+# (crontab -l 2>/dev/null; echo "0 22 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung_zeiterfassung_sync_absences && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_user_status.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/urlaubsverwaltung_zeiterfassung_sync_user_status.log 2>&1") | crontab -
 
 # Test
-crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|urlaubsverwaltung_zeiterfassung_sync_user_status|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
 ```
+
+`Webmin` → `System` → `Log File Rotation` → `Add a new log file to rotate`:
+
+- `Log files to rotate:` `/home/*/domains/hr.*/hr/*.log`.
+- `Rotation schedule`: `Weekly`.
 
 ### Sync Overtime (Zeiterfassung → Urlaubsverwaltung)
 
@@ -1650,7 +1704,68 @@ set -a; source .env.zeiterfassung_urlaubsverwaltung_sync_overtime; set +a
 # (crontab -l 2>/dev/null; echo "0 3 * * * set -a && . ${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.zeiterfassung_urlaubsverwaltung_sync_overtime && set +a && ${domain_root_path}/domains/${subdomain}.${domain}/hr/.venv/bin/python3 ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.py >> ${domain_root_path}/domains/${subdomain}.${domain}/hr/zeiterfassung_urlaubsverwaltung_sync_overtime.log 2>&1") | crontab -
 
 # Test
-crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
+crontab -l 2>/dev/null | grep -E "(urlaubsverwaltung_zeiterfassung_sync_absences|urlaubsverwaltung_zeiterfassung_sync_user_status|zeiterfassung_urlaubsverwaltung_sync_overtime)\.py"
+```
+
+`Webmin` → `System` → `Log File Rotation` → `Add a new log file to rotate`:
+
+- `Log files to rotate:` `/home/*/domains/hr.*/hr/*.log`.
+- `Rotation schedule`: `Weekly`.
+
+---
+
+## Update User's Email Address
+
+### Keycloak
+
+`Keycloak` → `Manage realms` → `urlaubsverwaltung` → `Users` → Choose the user and update the `Username` and `Email` fields.
+
+### Zeiterfassung
+
+```sh
+docker exec -it "zeiterfassung_postgres_${system_user}" psql -U "${zeiterfassung_db_user}" -d "${zeiterfassung_db_name}"
+```
+
+```sql
+BEGIN;
+
+UPDATE tenant_user
+SET email = 'email_new@website.com'
+WHERE email = 'email_old@website.com' AND deleted_at IS NULL;
+
+-- Should say UPDATE 1. If it says anything else, run ROLLBACK;
+SELECT id, uuid, given_name, family_name, email FROM tenant_user
+WHERE email = 'email_new@website.com';
+
+COMMIT;
+```
+
+```sql
+exit
+```
+
+### Urlaubsverwaltung
+
+```sh
+docker exec -it "urlaubsverwaltung_postgres_${system_user}" psql -U "${urlaubsverwaltung_db_user}" -d "${urlaubsverwaltung_db_name}"
+```
+
+```sql
+BEGIN;
+
+UPDATE person
+SET email = 'email_new@website.com'
+WHERE email = 'email_old@website.com';
+
+-- Should say UPDATE 1. If it says anything else, run ROLLBACK;
+SELECT id, username, email, first_name, last_name FROM person
+WHERE email = 'email_new@website.com';
+
+COMMIT;
+```
+
+```sql
+exit
 ```
 
 ---

@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2026-08-16
+# Last update: 2026-10-28
 
 
 # Start Bash (Unix Shell)
@@ -13,6 +13,10 @@ git_repository="tools"
 git_branch="main"
 # git_branch="18.0"
 local_repository="${git_repository}"
+
+
+# GitHub account to commit with
+gh auth switch --user "${git_account}"
 
 
 # Set working directory
@@ -33,13 +37,15 @@ cd "${local_repository}"
 
 
 # Download .pre-commit-config.yaml file
-curl -o "./.pre-commit-config.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml"
+curl --location --output "./.pre-commit-config.yaml" "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml"
 
 # Download pre-commit-workflow.yaml
 mkdir -p "./.github/workflows"
-curl -o "./.github/workflows/pre-commit-workflow.yaml" --remote-name --location "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
+curl --location --output "./.github/workflows/pre-commit-workflow.yaml" "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/pre-commit-workflow.yaml"
 
 pre-commit autoupdate
+pre-commit install-hooks
+pre-commit gc
 
 if [ "${git_repository}" == "tools" ]; then
     cp "./.pre-commit-config.yaml" "./technology/git/pre-commit/.pre-commit-config.yaml"
@@ -66,20 +72,14 @@ pre-commit run --all-files
 
 ## Git push
 
-# Start git repository
-git init
-
-# Create the target branch locally if it doesn't exist
-git checkout -b "${git_branch}"
-
-# Switch to the target branch
-git switch "${git_branch}"
+# Switch to the target branch (create it locally if it doesn't exist)
+git switch "${git_branch}" 2>/dev/null || git switch --create "${git_branch}"
 
 # Add all files from the working directory to the staging area
 git add --all
 
-# Create a snapshot of all staged committed changes
-git commit --all --message="Update"
+# Create a snapshot of all staged changes
+git commit --message="Update"
 
 # Change git remote repository URL
 # git remote add origin "https://${git_hostname}/${git_account}/${git_repository}.git"
@@ -99,24 +99,21 @@ git push --force origin "${git_branch}"
 ## Squash commit history - https://stackoverflow.com/a/56878987/9195104
 
 # Count of commits
-git rev-list --count HEAD "${git_branch}"
-
+git rev-list --count HEAD
 
 # Create a temporary file to store commits to keep
-export TOKEEP=$(mktemp)
-
+export TOKEEP="$(mktemp)"
 
 # Extracts the timestamps of the commits to keep (the last of the day)
 DATE=
 for time in $(git log --date=raw --pretty=format:%cd|cut -d\  -f1); do
-   CDATE=$(date -d @${time} +%Y%m%d) # Per day
-   # CDATE=$(date -d @${time} +%Y%m) # Per month
+   CDATE=$(date -d "@${time}" +%Y%m%d) # Per day
+   # CDATE=$(date -d "@${time}" +%Y%m) # Per month
    if [ "${DATE}" != "${CDATE}" ] ; then
-       echo @${time} >> ${TOKEEP}
+       echo "@${time}" >> "${TOKEEP}"
        DATE=${CDATE}
    fi
 done
-
 
 # Scan the repository keeping only selected commits
 git filter-branch --force --commit-filter '
@@ -126,14 +123,11 @@ git filter-branch --force --commit-filter '
         skip_commit "$@"
     fi' HEAD
 
-
 # Remove the temporary file
-rm --force ${TOKEEP}
-
+rm --force "${TOKEEP}"
 
 # Repository force update
 git push --force origin "${git_branch}"
 
-
 # New count of commits
-git rev-list --count HEAD "${git_branch}"
+git rev-list --count HEAD

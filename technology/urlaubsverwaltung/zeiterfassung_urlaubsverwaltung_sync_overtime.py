@@ -129,7 +129,7 @@ def build_email_maps(zf_conn, uv_conn):
             LEFT JOIN overtime_account oa
                 ON oa.user_id = tu.id AND oa.tenant_id = %s
             WHERE tu.tenant_id = %s
-              AND tu.deactivated_at IS NULL
+              AND tu.status IN ('ACTIVE', 'UNKNOWN')
               AND tu.deleted_at IS NULL
               AND COALESCE(oa.allowed, true) = true
             """,

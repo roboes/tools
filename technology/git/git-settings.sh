@@ -1,29 +1,33 @@
 ## Git Settings
-# Last update: 2025-09-28
+# Last update: 2026-10-28
 
 
-# GitHub login
+# GitHub account to commit with
+git_account="roboes"
+
+# Log in once (first time only), then select the account
 # gh auth login
+gh auth switch --user "${git_account}"
 
-# Display git custom settings
-# git config --list
+# Show current settings
+# git config --global --list
 
-# Remove git custom settings
+# Reset all global settings
 # rm ~/.gitconfig
 
 
-# Git settings
-# GitHub private email address: https://github.com/settings/emails
-# git config --global core.editor "nano"
-# git config --global user.email "email@example.com"
-# git config --global user.name "username"
-# git config --global --list
+# Identity: GitHub masked noreply email (https://github.com/settings/emails)
+git_id="$(gh api "users/${git_account}" --jq '.id')"
+git config --global user.name "${git_account}"
+git config --global user.email "${git_id}+${git_account}@users.noreply.github.com"
 
-## Ignore executable bit changes
+# Default editor
+git config --global core.editor "nano"
+
+# Ignore executable bit changes
 git config --global core.filemode false
 
-# Line endings: Convert CRLF to LF on commit (for Linux/macOS)
+# Line endings: convert CRLF to LF on commit (Linux/macOS/WSL)
 git config --global core.autocrlf input
 
-# Git ignore
-# https://github.com/github/gitignore/blob/main/Python.gitignore
+# Git ignore templates: https://github.com/github/gitignore

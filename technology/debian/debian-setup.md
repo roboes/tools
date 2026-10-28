@@ -12,18 +12,11 @@
 # Update package lists, upgrade installed packages, remove unused packages, and clean cache
 sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean
 
-# Refresh all installed snap packages to their latest versions
-sudo snap refresh
-
 # Update all installed Flatpak packages and remove unused dependencies
 flatpak update -y && flatpak uninstall --unused -y
 ```
 
 ```sh
-# Install Snap
-sudo apt install -y snapd
-sudo snap install core
-
 # Install Flatpak package
 sudo apt install -y flatpak
 ```
@@ -104,7 +97,7 @@ sudo apt install -y cloudflared \
 sudo apt install -y r-base r-base-dev
 
 # R Studio
-sudo snap install rstudio --classic
+# https://docs.posit.co/ide/user/#rstudio-ide-oss-downloads
 
 # Quarto
 QUARTO_VERSION=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest | grep -oP '"tag_name": "v\K[^"]+')
