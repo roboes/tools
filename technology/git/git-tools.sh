@@ -1,5 +1,5 @@
 ## Git Tools
-# Last update: 2026-10-28
+# Last update: 2026-10-29
 
 
 # Start Bash (Unix Shell)
@@ -8,7 +8,7 @@
 
 # Settings
 git_hostname="github.com"
-git_account="$(git config user.name)" # Username or Organization
+git_account="roboes"
 git_repository="tools"
 git_branch="main"
 # git_branch="18.0"
@@ -17,6 +17,7 @@ local_repository="${git_repository}"
 
 # GitHub account to commit with
 gh auth switch --user "${git_account}"
+gh auth setup-git
 
 
 # Set working directory
@@ -34,6 +35,16 @@ fi
 
 # Set working directory
 cd "${local_repository}"
+
+
+# Switch to the target branch (create it locally if it doesn't exist)
+git switch "${git_branch}" 2>/dev/null || git switch --create "${git_branch}"
+
+
+# Configure commit identity for this repository only (before making commits)
+read -r git_user_id git_user_login <<< "$(gh api user --jq '"\(.id) \(.login)"')"
+git config user.name "${git_user_login}"
+git config user.email "${git_user_id}+${git_user_login}@users.noreply.github.com"
 
 
 # Download .pre-commit-config.yaml file
@@ -72,21 +83,19 @@ pre-commit run --all-files
 
 ## Git push
 
-# Switch to the target branch (create it locally if it doesn't exist)
-git switch "${git_branch}" 2>/dev/null || git switch --create "${git_branch}"
-
 # Add all files from the working directory to the staging area
 git add --all
 
 # Create a snapshot of all staged changes
-git commit --message="Update"
+if ! git diff --cached --quiet; then
+    git commit --message="Update"
+fi
 
 # Change git remote repository URL
-# git remote add origin "https://${git_hostname}/${git_account}/${git_repository}.git"
 git remote set-url origin "https://${git_hostname}/${git_account}/${git_repository}.git"
 
 # Write commits to remote repository
-git push --force origin "${git_branch}"
+git push --force-with-lease origin "${git_branch}"
 
 
 
@@ -98,36 +107,39 @@ git push --force origin "${git_branch}"
 
 ## Squash commit history - https://stackoverflow.com/a/56878987/9195104
 
-# Count of commits
-git rev-list --count HEAD
+read -r -p "Squash commit history (one commit per day) and force push? [Y/N] " confirm
+if [ "${confirm}" = "Y" ]; then
+    # Count of commits
+    git rev-list --count HEAD
 
-# Create a temporary file to store commits to keep
-export TOKEEP="$(mktemp)"
+    # Create a temporary file to store commits to keep
+    export TOKEEP="$(mktemp)"
 
-# Extracts the timestamps of the commits to keep (the last of the day)
-DATE=
-for time in $(git log --date=raw --pretty=format:%cd|cut -d\  -f1); do
-   CDATE=$(date -d "@${time}" +%Y%m%d) # Per day
-   # CDATE=$(date -d "@${time}" +%Y%m) # Per month
-   if [ "${DATE}" != "${CDATE}" ] ; then
-       echo "@${time}" >> "${TOKEEP}"
-       DATE=${CDATE}
-   fi
-done
+    # Extracts the timestamps of the commits to keep (the last of the day)
+    DATE=
+    for time in $(git log --date=raw --pretty=format:%cd|cut -d\  -f1); do
+       CDATE=$(date -d "@${time}" +%Y%m%d) # Per day
+       # CDATE=$(date -d "@${time}" +%Y%m) # Per month
+       if [ "${DATE}" != "${CDATE}" ] ; then
+           echo "@${time}" >> "${TOKEEP}"
+           DATE=${CDATE}
+       fi
+    done
 
-# Scan the repository keeping only selected commits
-git filter-branch --force --commit-filter '
-    if grep -q ${GIT_COMMITTER_DATE% *} ${TOKEEP} ; then
-        git commit-tree "$@"
-    else
-        skip_commit "$@"
-    fi' HEAD
+    # Scan the repository keeping only selected commits
+    git filter-branch --force --commit-filter '
+        if grep -q ${GIT_COMMITTER_DATE% *} ${TOKEEP} ; then
+            git commit-tree "$@"
+        else
+            skip_commit "$@"
+        fi' HEAD
 
-# Remove the temporary file
-rm --force "${TOKEEP}"
+    # Remove the temporary file
+    rm --force "${TOKEEP}"
 
-# Repository force update
-git push --force origin "${git_branch}"
+    # Repository force update
+    git push --force-with-lease origin "${git_branch}"
 
-# New count of commits
-git rev-list --count HEAD
+    # New count of commits
+    git rev-list --count HEAD
+fi
