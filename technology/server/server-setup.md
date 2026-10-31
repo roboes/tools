@@ -706,7 +706,7 @@ Docker-published ports can bypass the intended firewalld zone policy. Review eve
 
 ```sh
 sudo ss -lntup
-sudo docker ps --format 'table {{.Names}}\t{{.Ports}}'
+sudo docker ps --format 'table {{.Names}}    {{.Ports}}'
 ```
 
 Now "Create Virtual Server".
@@ -1077,11 +1077,30 @@ sudo nano /etc/nginx/snippets/security-headers.conf
 ```
 
 ```nginx
-add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 add_header X-Frame-Options "SAMEORIGIN" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self)" always;
+add_header Permissions-Policy "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self \"https://www.youtube-nocookie.com\" \"https://www.youtube.com\")" always;
+```
+
+##### /etc/nginx/snippets/content-security-policy.conf
+
+```sh
+sudo mkdir -p /etc/nginx/snippets
+sudo nano /etc/nginx/snippets/content-security-policy.conf
+```
+
+```nginx
+set $content_security_policy "default-src 'self'; ";
+set $content_security_policy "${content_security_policy}connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; ";
+set $content_security_policy "${content_security_policy}font-src 'self' data: https://fonts.gstatic.com; ";
+set $content_security_policy "${content_security_policy}worker-src 'self' blob:; ";
+set $content_security_policy "${content_security_policy}frame-src 'self' https://woocommerceenvios.com https://*.woocommerceenvios.com https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; ";
+set $content_security_policy "${content_security_policy}img-src 'self' data: https:; ";
+set $content_security_policy "${content_security_policy}script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://static.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; ";
+set $content_security_policy "${content_security_policy}style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
+add_header Content-Security-Policy $content_security_policy always;
 ```
 
 ##### /etc/nginx/sites-available/domain.com.conf
@@ -1099,7 +1118,6 @@ server {
     listen [1000:0000:0000:0000:0000:0000:0000:0000]:443 ssl;
     ssl_certificate /etc/ssl/virtualmin/100000000000000/ssl.combined;
     ssl_certificate_key /etc/ssl/virtualmin/100000000000000/ssl.key;
-    set $content_security_policy "default-src 'self'; connect-src 'self' https://*.cloudflareinsights.com https://api.wordpress.org https://*.googleusercontent.com https://pagead2.googlesyndication.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.googleadservices.com https://*.googleapis.com https://*.paypal.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.pagseguro.uol.com.br https://brasilapi.com.br https://viacep.com.br; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://*.doubleclick.net https://recaptcha.google.com https://www.youtube-nocookie.com https://*.paypal.com https://*.stripe.com https://*.pagbank.com.br https://*.pagseguro.uol.com.br; img-src 'self' data: https://ps.w.org https://s.w.org https://*.paypal.com https://www.paypalobjects.com https://www.google.com https://www.google.de https://www.google-analytics.com https://www.googletagmanager.com https://*.doubleclick.net https://pagead2.googlesyndication.com https://*.stripe.com https://*.mercadopago.com https://*.mercadolibre.com https://http2.mlstatic.com https://*.pagseguro.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://applepay.cdn-apple.com https://*.cloudflare.com https://*.cloudflareinsights.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://*.doubleclick.net https://pay.google.com https://www.youtube.com https://www.youtube-nocookie.com https://*.paypal.com https://www.paypalobjects.com https://*.mercadopago.com https://http2.mlstatic.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.pagseguro.com https://*.pagseguro.com.br https://*.stripe.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://www.gstatic.com https://http2.mlstatic.com;";
     # Important: Before saving, scroll down to the `location ~ "\.php(/|$)" {` block and replace `fastcgi_pass unix:/run/php/${php_socket_id}.sock;` with the literal socket path for this domain
 
 
@@ -1117,7 +1135,9 @@ server {
 
     # Security Headers
     include /etc/nginx/snippets/security-headers.conf;
-    add_header Content-Security-Policy $content_security_policy always;
+
+    # Content Security Policy
+    include /etc/nginx/snippets/content-security-policy.conf;
 
 
     # Rewrites and Redirects
@@ -1159,7 +1179,6 @@ server {
         allow all;
         auth_basic off;
         default_type "text/plain";
-        add_header Content-Type text/plain;
         try_files $uri =404;
     }
 
@@ -1180,7 +1199,6 @@ server {
         if_modified_since exact;
         expires 1y;
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
         add_header Cache-Control "public, immutable";
     }
 
@@ -1189,14 +1207,12 @@ server {
         if_modified_since exact;
         expires 30d;
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
         add_header Cache-Control "public";
     }
 
     location ~* \.(csv|json|rss|txt|xls|xlsx|xml)$ {
         expires 5m;
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
         add_header Cache-Control "public";
     }
 
@@ -1251,7 +1267,7 @@ server {
         fastcgi_no_cache $skip_cache;
 
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
+        include /etc/nginx/snippets/content-security-policy.conf;
         add_header X-Nginx-Cache-Status $upstream_cache_status always;
     }
 
@@ -1265,8 +1281,7 @@ server {
         try_files $uri.avif $uri =404;
 
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
-        add_header Cache-Control "public, no-transform, immutable";
+        add_header Cache-Control "public, immutable";
     }
 
     # Error Handling
@@ -1281,7 +1296,7 @@ server {
     location / {
         try_files $uri $uri/ /index.php?$args;
         include /etc/nginx/snippets/security-headers.conf;
-        add_header Content-Security-Policy $content_security_policy always;
+        include /etc/nginx/snippets/content-security-policy.conf;
     }
 
 }
@@ -1321,17 +1336,18 @@ server {
 
     # Security Headers
     include /etc/nginx/snippets/security-headers.conf;
-    add_header Content-Security-Policy "default-src 'self'" always;
 
+    # Content Security Policy
+    add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
 
     # Rewrites and Redirects
 
     ## Admin & Webmail redirects
-    if ($host = webmail.${domain}) {
-        rewrite "^/(.*)$" "https://${domain}:20000/$1" redirect;
+    if ($host = webmail.${subdomain}.${domain}) {
+        rewrite "^/(.*)$" "https://${subdomain}.${domain}:20000/$1" redirect;
     }
-    if ($host = admin.${domain}) {
-        rewrite "^/(.*)$" "https://${domain}:10000/$1" redirect;
+    if ($host = admin.${subdomain}.${domain}) {
+        rewrite "^/(.*)$" "https://${subdomain}.${domain}:10000/$1" redirect;
     }
 
     ## AWStats CGI rewrite
@@ -1359,20 +1375,18 @@ server {
         allow all;
         auth_basic off;
         default_type "text/plain";
-        add_header Content-Type text/plain;
         try_files $uri =404;
     }
 
     location ^~ /.well-known/ {
-        try_files $uri /;
+        try_files $uri =404;
     }
 
     ## Main application entry point
     location / {
-        try_files $uri $uri/ /index.php?$args;
         include /etc/nginx/snippets/security-headers.conf;
-        # add_header Content-Security-Policy $content_security_policy always;
-        add_header Content-Security-Policy "default-src 'self'" always;
+        add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
+        return 301 https://website.com/path;
     }
 
 }

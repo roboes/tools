@@ -43,3 +43,6 @@ gpsbabel -t -r -w -i ${format} ${files} -o gtrnctr,course=0 -F activities_combin
 
 # Merge two .fit files (including heart rate data) into a single .gpx file for Strava upload (order matters)
 gpsbabel -t -r -w -i garmin_fit -f activity_file_1.fit -f activity_file_2.fit -o gpx,garminextensions -F activity_merged.gpx
+
+# Combine two .fit files
+# https://jmallach.github.io/fitstitch/
