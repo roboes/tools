@@ -36,9 +36,9 @@ gpsmycity_tour_import(
 
 ## Apps
 
-### Organic Maps
+### CoMaps
 
-([Website](https://organicmaps.app) | [GitHub](https://github.com/organicmaps/organicmaps) | [Android](https://play.google.com/store/apps/details?id=app.organicmaps) | [iOS](https://apps.apple.com/app/organic-maps/id1567437057))
+([Website](https://www.comaps.app) | [GitHub](https://github.com/comaps/comaps) | [Android](https://play.google.com/store/apps/details?id=app.comaps.google) | [iOS](https://apps.apple.com/app/comaps/id6747180809))
 
 #### Description
 
