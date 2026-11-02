@@ -82,7 +82,7 @@ git commit --message="Update"
 
 # Pull any new contributor commits, then push to the contributor's branch
 git pull --ff-only
-read -r -p "Push to the contributor's PR branch? [Y/N] " confirm
+read -r -p "Push to the contributor's PR branch? [Y/n] " confirm
 if [ "${confirm}" = "Y" ]; then
     git push
 fi

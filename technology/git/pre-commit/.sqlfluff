@@ -2,4 +2,4 @@
 dialect = mysql
 templater = jinja
 large_file_skip_byte_limit = 0
-exclude_rules = ambiguous.column_count,layout.long_lines,references.keywords
+exclude_rules = ambiguous.column_count,layout.long_lines,references.keywords,structure.column_order

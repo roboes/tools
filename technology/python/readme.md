@@ -14,6 +14,12 @@ source .venv/bin/activate
 
 # Install packages
 uv pip install pandas
+
+# Install pip-review
+uv pip install pip-review
+
+# Update all packages
+uv run pip-review --local --auto
 ```
 
 Select Session > New Console Session...

@@ -46,6 +46,9 @@ read -r git_user_id git_user_login <<< "$(gh api user --jq '"\(.id) \(.login)"')
 git config user.name "${git_user_login}"
 git config user.email "${git_user_id}+${git_user_login}@users.noreply.github.com"
 
+git config user.name
+git config user.email
+
 
 # Download .pre-commit-config.yaml file
 curl --location --output "./.pre-commit-config.yaml" "https://raw.githubusercontent.com/roboes/tools/main/technology/git/pre-commit/.pre-commit-config.yaml"
@@ -107,7 +110,7 @@ git push --force-with-lease origin "${git_branch}"
 
 ## Squash commit history - https://stackoverflow.com/a/56878987/9195104
 
-read -r -p "Squash commit history (one commit per day) and force push? [Y/N] " confirm
+read -r -p "Squash commit history (one commit per day) and force push? [Y/n] " confirm
 if [ "${confirm}" = "Y" ]; then
     # Count of commits
     git rev-list --count HEAD
