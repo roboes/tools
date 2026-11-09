@@ -47,9 +47,9 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.20.0"
-zeiterfassung_version="3.5.0"
-keycloak_version="26.8.1"
+urlaubsverwaltung_version="6.22.0"
+zeiterfassung_version="3.6.0"
+keycloak_version="26.8.2"
 
 keycloak_http_port=8090
 keycloak_db_name="${system_user}_keycloak"
@@ -784,6 +784,12 @@ git diff origin/main...HEAD -- src/main/resources/templates/reports/
 cat > Dockerfile << 'DOCKERFILE'
 # Build JAR inside container (no host Java/Maven needed)
 FROM maven:3-eclipse-temurin-25 AS builder
+
+# Node (downloaded by frontend-maven-plugin) needs libatomic
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libatomic1 \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY . .
 RUN chmod +x ./mvnw
@@ -957,6 +963,7 @@ docker logs zeiterfassung_${system_user} -f | grep -i "started\|error\|oauth"
 
 ```sh
 # Clone source code
+rm -rf /tmp/urlaubsverwaltung-build
 # git clone --depth=1 --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
 git clone --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
 cd /tmp/urlaubsverwaltung-build
@@ -965,6 +972,12 @@ cd /tmp/urlaubsverwaltung-build
 cat > Dockerfile << 'DOCKERFILE'
 # Build JAR inside container (no host Java/Maven needed)
 FROM maven:3-eclipse-temurin-25 AS builder
+
+# Node (downloaded by frontend-maven-plugin) needs libatomic
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libatomic1 \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY . .
 RUN chmod +x ./mvnw
