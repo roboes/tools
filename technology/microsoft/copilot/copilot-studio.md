@@ -19,6 +19,7 @@ Add the languages the agent should support, for example:
 ### Create the Language Detection Tool
 
 `Tools` → `Add a tool` → `Prompt`:
+
 - `Name`: `Detect User Language`.
 - `Description`: `Detects the primary language of a user message and returns its BCP 47 language tag.`.
 - `Additional details`: `When this tool may be used`: `Only when referenced by topics or agents`.
@@ -60,8 +61,8 @@ Save the tool.
 ### Create the Language Detector Topic
 
 `Topics` → `Add a topic` → `From blank`:
-- `Name`: `Language Detector`.
 
+- `Name`: `Language Detector`.
 
 Open the topic's code editor and replace the generated YAML with (replace `SCHEMA_NAME` with the agent's schema name - Find the agent schema name under: `Settings` → `Advanced` → `Metadata`):
 
@@ -143,9 +144,9 @@ The agent should switch to French.
 Temporarily add this to the end of the topic YAML:
 
 ```yaml
-    - kind: SendActivity
-      id: ShowCurrentLanguage
-      activity: "Detected: {Topic.predictionOutput.text}; current language: {System.User.Language}"
+- kind: SendActivity
+  id: ShowCurrentLanguage
+  activity: 'Detected: {Topic.predictionOutput.text}; current language: {System.User.Language}'
 ```
 
 Example output:

@@ -101,18 +101,32 @@ pandoc "input.md" -o "output.html" \
   --mathml
 
 
-# Count the number of files categorized by their root-level directory and file type
-find . -type f | while IFS= read -r file; do
-    # Extract the first directory and the file extension
-    dir=$(echo "${file}" | cut -d'/' -f2- | awk -F/ '{print $1}')
-    ext="${file##*.}"
+# Count files and total size (MB) by root-level directory and file extension
+echo "directory,extension,file_count,size_mb"
+find . -type f -printf '%s\t%P\n' | awk -F'\t' '
+{
+    size = $1
+    path = $2
 
-    # Ensure the extension is valid (not the whole filename) and is not a path
-    if [ "${ext}" != "${file}" ] && [[ "${ext}" != */* ]]; then
-        ext=$(echo "${ext}" | tr '[:upper:]' '[:lower:]')  # Convert extension to lowercase
-        echo "${dir},.${ext}"
-    fi
-done | sort | uniq -c | awk '{count=$1; $1=""; sub(/^ /, ""); gsub(/ ,/, ","); print $0 "," count}'
+    # First path component = root-level directory ("." for files directly in the current dir)
+    n = index(path, "/")
+    dir = (n > 0) ? substr(path, 1, n - 1) : "."
+
+    # Extension of the filename only (ignore dots in directory names)
+    file = path
+    sub(/.*\//, "", file)
+    if (file ~ /^[^.]+$/ || file ~ /^\.[^.]*$/ || file ~ /\.$/) next
+    ext = tolower(file)
+    sub(/.*\./, "", ext)
+
+    key = dir "," "." ext
+    count[key]++
+    bytes[key] += size
+}
+END {
+    for (k in count)
+        printf "%s,%d,%.2f\n", k, count[k], bytes[k]/1048576
+}' | sort -t, -k1,1 -k2,2
 
 
 # Recursively move all video files from the source folder to the destination, keeping the folder structure and not overwriting existing files

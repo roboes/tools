@@ -1,5 +1,5 @@
-// Google Apps Script - Syncs contact birthdays from the People API to a dedicated Google Calendar, recreating events daily
-// Last update: 2026-07-19
+// Google Apps Script - Syncs contact birthdays from the People API to a dedicated Google Calendar (diff-based)
+// Last update: 2026-11-17
 
 // https://script.google.com → New project →
 // - Editor → Services → Add a service → Peopleapi
@@ -14,55 +14,88 @@
 const options = {
   calendar_name: 'Birthdays',
   max_contacts_per_page: 250,
+  pause_ms: 250,
 };
 
 function getOrCreateCalendar(name) {
   const found = CalendarApp.getCalendarsByName(name);
-  return found.length > 0 ? found[0] : CalendarApp.createCalendar(name);
+  const cal = found.find((c) => c.isOwnedByMe()) || CalendarApp.createCalendar(name);
+  if (cal.getTimeZone() !== Session.getScriptTimeZone()) {
+    cal.setTimeZone(Session.getScriptTimeZone());
+  }
+  return cal;
 }
 
-function syncBirthdays() {
-  const calendar = getOrCreateCalendar(options.calendar_name);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+// Build a timezone-safe key like "2026-12-25|Jane Doe's Birthday"
+function eventKey(title, date, tz) {
+  const dateStr = Utilities.formatDate(new Date(date), tz, 'yyyy-MM-dd');
+  return `${dateStr}|${title}`;
+}
 
-  // Wipe from today (not "now") so today's birthdays aren't skipped
-  const oneYearOut = new Date(todayStart.getFullYear() + 1, todayStart.getMonth(), todayStart.getDate());
-  calendar.getEvents(todayStart, oneYearOut).forEach((e) => e.deleteEvent());
+function fetchWantedBirthdays(todayStart, tz) {
+  const wanted = new Map();
+  let pageToken = undefined;
 
-  // Fetch contacts via People API (ContactsApp is deprecated)
-  // Requires: Services → People API → Add
-  let pageToken = '';
   do {
     const response = People.People.Connections.list('people/me', {
       personFields: 'names,birthdays',
       pageSize: options.max_contacts_per_page,
-      pageToken: pageToken,
+      pageToken,
     });
 
-    (response.connections || [])
-      .sort((a, b) => {
-        const nameA = a.names?.[0]?.displayName || '';
-        const nameB = b.names?.[0]?.displayName || '';
-        return nameA.localeCompare(nameB);
-      })
-      .forEach((person) => {
-        const bd = person.birthdays?.[0]?.date;
-        if (!bd?.month || !bd?.day) return;
+    (response.connections || []).forEach((person) => {
+      const bd = person.birthdays?.[0]?.date;
+      if (!bd?.month || !bd?.day) return;
 
-        const name = person.names?.[0]?.displayName || 'Unknown';
-        const month = bd.month - 1; // People API is 1-based, JS is 0-based
-        const day = bd.day; // .day is the day of month (not .getDay()!)
+      const name = person.names?.[0]?.displayName || 'Unknown';
+      const date = new Date(todayStart.getFullYear(), bd.month - 1, bd.day);
+      if (date < todayStart) date.setFullYear(date.getFullYear() + 1);
 
-        let date = new Date(todayStart.getFullYear(), month, day);
-        if (date < todayStart) date.setFullYear(date.getFullYear() + 1);
-
-        calendar.createAllDayEvent(`${name}'s Birthday`, date);
-        Logger.log(`Synced: ${name}`);
-      });
+      const title = `${name}'s Birthday`;
+      wanted.set(eventKey(title, date, tz), { title, date });
+    });
 
     pageToken = response.nextPageToken;
   } while (pageToken);
 
-  Logger.log('Done.');
+  return wanted;
+}
+
+function syncBirthdays() {
+  const calendar = getOrCreateCalendar(options.calendar_name);
+  const tz = Session.getScriptTimeZone();
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const oneYearOut = new Date(todayStart.getFullYear() + 1, todayStart.getMonth(), todayStart.getDate());
+
+  const wanted = fetchWantedBirthdays(todayStart, tz);
+
+  // Index existing events; delete duplicates and anything no longer wanted
+  const existing = new Set();
+  let deleted = 0;
+  calendar.getEvents(todayStart, oneYearOut).forEach((e) => {
+    // Skip non-all-day events just in case something else was manually added
+    if (!e.isAllDayEvent()) return;
+
+    const key = eventKey(e.getTitle(), e.getAllDayStartDate(), tz);
+    if (wanted.has(key) && !existing.has(key)) {
+      existing.add(key);
+    } else {
+      e.deleteEvent();
+      deleted++;
+      Utilities.sleep(options.pause_ms);
+    }
+  });
+
+  // Create only what's missing
+  let created = 0;
+  wanted.forEach(({ title, date }, key) => {
+    if (existing.has(key)) return;
+    calendar.createAllDayEvent(title, date);
+    created++;
+    Utilities.sleep(options.pause_ms);
+  });
+
+  Logger.log(`Done. Created ${created}, deleted ${deleted}, unchanged ${existing.size}.`);
 }

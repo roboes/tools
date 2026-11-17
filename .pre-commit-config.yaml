@@ -11,6 +11,7 @@ repos:
         name: prettier
         entry: prettier --write --print-width 220 --prose-wrap never --semi true --single-quote true --tab-width 2 --trailing-comma es5 --ignore-unknown
         language: node
+        language_version: 'lts'
         files: \.(js|jsx|ts|tsx|mjs|cjs|json|css|scss|html|md|yaml|yml)$
         # exclude: \.(html|jsx?)$
 
