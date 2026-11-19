@@ -1,6 +1,6 @@
 <?php
 // WooCommerce - WooCommerce Coupons Export
-// Last update: 2026-02-15
+// Last update: 2026-11-19
 
 
 if (function_exists('WC') && is_admin()) {
@@ -68,6 +68,10 @@ if (function_exists('WC') && is_admin()) {
             'settings_coupon_code_prefixes' => array_filter(array_map('trim', explode(',', $_GET['settings_coupon_code_prefixes'] ?? ''))),
         ];
 
+        if (empty($filters['settings_coupon_code_prefixes'])) {
+            wp_die('Please enter at least one coupon code prefix.');
+        }
+
         $data = get_coupons_detailed_report_data($filters);
 
         if (empty($data)) {
@@ -75,7 +79,7 @@ if (function_exists('WC') && is_admin()) {
         }
 
         header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename=' . "woocommerce_coupons_export_" . date('Y-m-d_Hmi') . ".csv");
+        header('Content-Disposition: attachment; filename=' . "woocommerce_coupons_export_" . date('Y-m-d_His') . ".csv");
 
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM
@@ -100,8 +104,11 @@ if (function_exists('WC') && is_admin()) {
         // Base Query
         $query = "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_coupon' AND post_title REGEXP %s";
 
-        if (!empty($filters['settings_date_sold_from']) && !empty($filters['settings_date_sold_to'])) {
-            $query .= $wpdb->prepare(" AND post_date BETWEEN %s AND %s", $filters['settings_date_sold_from'] . ' 00:00:00', $filters['settings_date_sold_to'] . ' 23:59:59');
+        if (!empty($filters['settings_date_sold_from'])) {
+            $query .= $wpdb->prepare(" AND post_date >= %s", $filters['settings_date_sold_from'] . ' 00:00:00');
+        }
+        if (!empty($filters['settings_date_sold_to'])) {
+            $query .= $wpdb->prepare(" AND post_date <= %s", $filters['settings_date_sold_to'] . ' 23:59:59');
         }
 
         $coupons = $wpdb->get_results($wpdb->prepare($query, $regex));
@@ -158,35 +165,51 @@ if (function_exists('WC') && is_admin()) {
                 $amount_current = $coupon_amount_current;
             }
 
+            // Active status (is_valid() needs a cart context, so it is wrong in admin for percent coupons)
+            $usage_limit = (int) $coupon->get_usage_limit();
+            $coupon_is_active = get_post_status($coupon->get_id()) === 'publish'
+                && (!$coupon_expiry_timestamp || $coupon_expiry_timestamp >= time())
+                && $amount_current > 0
+                && ($discount_type !== 'percent' || $usage_limit === 0 || $coupon->get_usage_count() < $usage_limit);
+
             // Tax Rate
             $coupon_tax_rate = '0%';
             if ($coupon_purchased_on_order_id !== 'N/A') {
                 $order = wc_get_order($coupon_purchased_on_order_id);
                 if ($order) {
                     foreach ($order->get_items() as $item) {
-                        if ($item->get_meta('_coupon_code') === $coupon_code) {
-                            $taxes = $item->get_taxes();
-                            if (!empty($taxes['total'])) {
-                                $tax_ids = array_keys($taxes['total']);
-                                $coupon_tax_rate = WC_Tax::get_rate_percent_value($tax_ids[0]) . '%';
-                            }
-                            break;
+                        $item_product_id = $item->get_variation_id() ?: $item->get_product_id();
+                        $coupon_data     = get_coupon_variation_validation($item_product_id);
+                        if (!$coupon_data) {
+                            continue;
                         }
+                        if (strtoupper($order->get_meta('_coupon_code_' . $coupon_data->config['meta_key_suffix'])) !== strtoupper($coupon_code)) {
+                            continue;
+                        }
+                        $taxes = $item->get_taxes();
+                        if (!empty($taxes['total'])) {
+                            $tax_ids = array_keys($taxes['total']);
+                            $coupon_tax_rate = WC_Tax::get_rate_percent_value($tax_ids[0]) . '%';
+                        }
+                        break;
                     }
                 }
             }
+
+            $converted = json_decode((string) $coupon->get_meta('_coupon_converted_from'), true) ?: [];
 
             $coupon_report_df[] = [
                 'coupon_id'                 => $coupon->get_id(),
                 'coupon_name'               => $coupon->get_description(),
                 'coupon_multi_purpose'      => $coupon_is_multi_purpose,
                 'coupon_type'               => $discount_type,
+                'coupon_converted_on'       => $converted['converted_on'] ?? '',
                 'coupon_tax_rate'           => $coupon_tax_rate,
                 'coupon_sold_at'            => $coupon->get_date_created() ? $coupon->get_date_created()->date('Y-m-d') : 'N/A',
                 'coupon_purchased_in_order' => $coupon_purchased_on_order_id,
                 'coupon_valid_until'        => $coupon_expiry_date ? $coupon_expiry_date->date('Y-m-d') : 'N/A',
                 'coupon_code'               => $coupon_code,
-                'coupon_is_active'          => $coupon->is_valid() ? 'Yes' : 'No',
+                'coupon_is_active'          => $coupon_is_active ? 'Yes' : 'No',
                 'coupon_usage_count'        => $coupon->get_usage_count(),
                 'coupon_redeemed_in_orders' => $coupon_redeemed_orders,
                 'coupon_amount_initial'     => $coupon_amount_initial,
