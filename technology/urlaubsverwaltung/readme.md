@@ -1,7 +1,7 @@
 # Urlaubsverwaltung + Zeiterfassung + Keycloak
 
 > [!NOTE]  
-> Last update: 2026-10-12
+> Last update: 2026-11-21
 
 ---
 
@@ -47,8 +47,7 @@ subdomain="hr"
 system_user="website"
 server_ip="100.00.000.01"
 
-urlaubsverwaltung_version="6.24.1"
-zeiterfassung_version="3.7.0"
+zeiterfassung_version="3.8.0"
 keycloak_version="26.8.2"
 
 keycloak_http_port=8090
@@ -103,7 +102,6 @@ echo "domain_root_path:              ${domain_root_path}"
 echo "subdomain:                     ${subdomain}"
 echo "system_user:                   ${system_user}"
 echo "---"
-echo "urlaubsverwaltung_version:     ${urlaubsverwaltung_version}"
 echo "zeiterfassung_version:         ${zeiterfassung_version}"
 echo "keycloak_version:              ${keycloak_version}"
 echo "---"
@@ -956,48 +954,6 @@ docker logs zeiterfassung_${system_user} -f | grep -i "started\|error\|oauth"
 
 ## Urlaubsverwaltung
 
-### ARM64 Native Build
-
-> [!NOTE]  
-> Re-run the build whenever you upgrade `urlaubsverwaltung_version`.
-
-```sh
-# Clone source code
-rm -rf /tmp/urlaubsverwaltung-build
-# git clone --depth=1 --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
-git clone --branch urlaubsverwaltung-${urlaubsverwaltung_version} https://github.com/urlaubsverwaltung/urlaubsverwaltung.git /tmp/urlaubsverwaltung-build
-cd /tmp/urlaubsverwaltung-build
-
-# Create multi-stage Dockerfile
-cat > Dockerfile << 'DOCKERFILE'
-# Build JAR inside container (no host Java/Maven needed)
-FROM maven:3-eclipse-temurin-25 AS builder
-
-# Node (downloaded by frontend-maven-plugin) needs libatomic
-RUN apt-get update \
- && apt-get install -y --no-install-recommends libatomic1 \
- && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY . .
-RUN chmod +x ./mvnw
-RUN ./mvnw -q -DskipTests package
-
-# Runtime
-FROM eclipse-temurin:25-jre
-WORKDIR /app
-COPY --from=builder /app/target/urlaubsverwaltung-*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-DOCKERFILE
-
-# Build native ARM64 image
-docker build --no-cache -t urlaubsverwaltung/urlaubsverwaltung:${urlaubsverwaltung_version}-arm64 .
-
-# Clean up source directory
-cd / && rm -rf /tmp/urlaubsverwaltung-build
-```
-
 ### Docker Compose
 
 ```sh
@@ -1027,7 +983,7 @@ services:
 
   urlaubsverwaltung:
     container_name: "urlaubsverwaltung_${system_user}"
-    image: urlaubsverwaltung/urlaubsverwaltung:\${URLAUBSVERWALTUNG_VERSION}-arm64
+    image: urlaubsverwaltung/urlaubsverwaltung:\${URLAUBSVERWALTUNG_VERSION}
     restart: unless-stopped
     depends_on:
       urlaubsverwaltung_db:
@@ -1108,7 +1064,7 @@ EOF
 
 ```sh
 cat <<EOF > "${domain_root_path}/domains/${subdomain}.${domain}/hr/.env.urlaubsverwaltung"
-URLAUBSVERWALTUNG_VERSION=${urlaubsverwaltung_version}
+URLAUBSVERWALTUNG_VERSION=$(curl -fsS "https://hub.docker.com/v2/repositories/urlaubsverwaltung/urlaubsverwaltung/tags?page_size=100" | grep -oE '"name": ?"[0-9]+\.[0-9]+\.[0-9]+"' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
 URLAUBSVERWALTUNG_HTTP_PORT=${urlaubsverwaltung_http_port}
 URLAUBSVERWALTUNG_DOMAIN=${subdomain}.${domain}
 
